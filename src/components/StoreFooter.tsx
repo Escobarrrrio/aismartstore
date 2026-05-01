@@ -9,7 +9,7 @@ const StoreFooter = () => {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <img src={logo} alt="AI Smart Store" className="h-8 w-8 object-contain" />
-              <span className="font-display font-bold gradient-brand-text">Smart Store</span>
+              <span className="font-brand font-bold gradient-brand-text">Smart Store</span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
               Your premium destination for smart products, powered by AI.

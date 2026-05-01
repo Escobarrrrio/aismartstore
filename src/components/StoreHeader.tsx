@@ -14,7 +14,7 @@ const StoreHeader = () => {
         <Link to="/" className="flex items-center gap-3 group">
           <img src={logo} alt="AI Smart Store" className="h-10 w-10 object-contain" />
           <div className="flex flex-col leading-tight">
-            <span className="text-lg font-display font-bold gradient-brand-text">
+            <span className="text-lg font-brand font-bold gradient-brand-text tracking-tight">
               Smart Store
             </span>
           </div>

@@ -1,44 +1,102 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Product } from "./CartContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (product: Omit<Product, "id" | "createdAt">) => void;
-  deleteProduct: (id: string) => void;
+  loading: boolean;
+  addProduct: (product: Omit<Product, "id" | "createdAt">) => Promise<void>;
+  addProducts: (products: Omit<Product, "id" | "createdAt">[]) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   getProduct: (id: string) => Product | undefined;
+  refetch: () => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-const STORAGE_KEY = "ai-smart-store-products";
-
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  }, [products]);
+  const fetchProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  const addProduct = (product: Omit<Product, "id" | "createdAt">) => {
-    const newProduct: Product = {
-      ...product,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    setProducts((prev) => [newProduct, ...prev]);
+    if (error) {
+      toast({ title: "Error loading products", description: error.message, variant: "destructive" });
+    } else {
+      setProducts(
+        (data || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || "",
+          price: Number(p.price),
+          category: p.category || "",
+          images: p.images || [],
+          inStock: p.in_stock,
+          createdAt: p.created_at,
+        }))
+      );
+    }
+    setLoading(false);
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const addProduct = async (product: Omit<Product, "id" | "createdAt">) => {
+    const { error } = await supabase.from("products").insert({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      category: product.category,
+      images: product.images,
+      in_stock: product.inStock,
+    });
+    if (error) {
+      toast({ title: "Error adding product", description: error.message, variant: "destructive" });
+    } else {
+      await fetchProducts();
+    }
+  };
+
+  const addProducts = async (items: Omit<Product, "id" | "createdAt">[]) => {
+    const rows = items.map((p) => ({
+      name: p.name,
+      description: p.description,
+      price: p.price,
+      category: p.category,
+      images: p.images,
+      in_stock: p.inStock,
+    }));
+    const { error } = await supabase.from("products").insert(rows);
+    if (error) {
+      toast({ title: "Error importing products", description: error.message, variant: "destructive" });
+    } else {
+      await fetchProducts();
+      toast({ title: "Products imported", description: `${items.length} products added successfully.` });
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error deleting product", description: error.message, variant: "destructive" });
+    } else {
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    }
   };
 
   const getProduct = (id: string) => products.find((p) => p.id === id);
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, deleteProduct, getProduct }}>
+    <ProductContext.Provider value={{ products, loading, addProduct, addProducts, deleteProduct, getProduct, refetch: fetchProducts }}>
       {children}
     </ProductContext.Provider>
   );

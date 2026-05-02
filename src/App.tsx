@@ -42,6 +42,7 @@ const App = () => (
                 </Routes>
               </main>
               <StoreFooter />
+              <ChatWidget />
             </div>
           </BrowserRouter>
         </CartProvider>

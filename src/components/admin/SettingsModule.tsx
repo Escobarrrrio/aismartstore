@@ -1,0 +1,111 @@
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Key, Bot, Link2, Package, Bell, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface SettingsModuleProps {
+  settings: Record<string, string>;
+  setSettings: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+}
+
+const SettingsSection = ({ icon, title, description, children }: { icon: React.ReactNode; title: string; description: string; children: React.ReactNode }) => (
+  <div className="bg-card border border-border rounded-xl p-5">
+    <div className="flex items-start gap-3 mb-4 pb-3 border-b border-border">
+      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">{icon}</div>
+      <div>
+        <h3 className="font-display font-bold text-sm">{title}</h3>
+        <p className="text-[11px] text-muted-foreground mt-0.5">{description}</p>
+      </div>
+    </div>
+    {children}
+  </div>
+);
+
+const SettingsInput = ({ label, type = "text", value, onChange, placeholder, mono = false }: {
+  label: string; type?: string; value: string; onChange: (v: string) => void; placeholder: string; mono?: boolean;
+}) => (
+  <div>
+    <label className="block text-[11px] font-semibold mb-1">{label}</label>
+    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`w-full px-3 py-2 rounded-lg border border-input bg-muted text-sm focus:border-primary focus:bg-card outline-none transition ${mono ? "font-mono" : ""}`} />
+  </div>
+);
+
+const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+
+  const update = (key: string, value: string) => setSettings((prev) => ({ ...prev, [key]: value }));
+
+  const saveSetting = async (key: string, value: string) => {
+    const { data: existing } = await supabase.from("store_settings").select("id").eq("key", key).maybeSingle();
+    if (existing) {
+      await supabase.from("store_settings").update({ value }).eq("key", key);
+    } else {
+      await supabase.from("store_settings").insert({ key, value });
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const keys = ["yoco_public_key", "yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct"];
+    await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
+    toast({ title: "Settings saved", description: "All configuration updated successfully." });
+    setSaving(false);
+  };
+
+  const markupPct = parseInt(settings.axiz_markup_pct || "26");
+
+  return (
+    <div className="max-w-2xl space-y-5">
+      <SettingsSection icon={<Key className="h-4 w-4" />} title="Yoco Payment Gateway" description="Accept card payments via Yoco.">
+        <div className="space-y-3">
+          <SettingsInput label="Public Key" value={settings.yoco_public_key || ""} onChange={(v) => update("yoco_public_key", v)} placeholder="pk_live_..." mono />
+          <SettingsInput label="Secret Key" type="password" value={settings.yoco_secret_key || ""} onChange={(v) => update("yoco_secret_key", v)} placeholder="sk_live_..." mono />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection icon={<Bot className="h-4 w-4" />} title="OpenAI — AI Assistant" description="Powers the customer service chatbot. Leave blank to use built-in AI.">
+        <SettingsInput label="API Key" type="password" value={settings.openai_api_key || ""} onChange={(v) => update("openai_api_key", v)} placeholder="sk-..." mono />
+      </SettingsSection>
+
+      <SettingsSection icon={<Link2 className="h-4 w-4" />} title="Make Pro — Automation" description="Trigger webhooks for order and workflow automation.">
+        <SettingsInput label="Webhook URL" value={settings.make_webhook_url || ""} onChange={(v) => update("make_webhook_url", v)} placeholder="https://hook.eu1.make.com/..." mono />
+      </SettingsSection>
+
+      <SettingsSection icon={<Package className="h-4 w-4" />} title="Axiz Distributor" description="Connect to Axiz SA for automatic product syncing with markup.">
+        <div className="space-y-3">
+          <SettingsInput label="API Key" type="password" value={settings.axiz_api_key || ""} onChange={(v) => update("axiz_api_key", v)} placeholder="Your Axiz API key..." mono />
+          <div>
+            <label className="block text-[11px] font-semibold mb-1">Markup Percentage</label>
+            <div className="flex items-center gap-3">
+              <input type="range" min="0" max="100" value={markupPct} onChange={(e) => update("axiz_markup_pct", e.target.value)} className="flex-1 accent-primary" />
+              <span className="font-display font-extrabold text-xl gradient-brand-text min-w-[50px] text-right">{markupPct}%</span>
+            </div>
+            <div className="bg-muted border border-border rounded-lg p-3 mt-2 text-xs">
+              <div className="flex justify-between mb-1">
+                <span className="text-muted-foreground">Cost price</span><span>R1,000.00</span>
+              </div>
+              <div className="flex justify-between mb-1">
+                <span className="text-muted-foreground">Markup ({markupPct}%)</span>
+                <span className="text-emerald-600">+R{(1000 * markupPct / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-display font-bold text-sm border-t border-border mt-2 pt-2">
+                <span>Selling price</span><span>R{(1000 * (1 + markupPct / 100)).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection icon={<Bell className="h-4 w-4" />} title="Notifications" description="Email notifications for new orders.">
+        <SettingsInput label="Notification Email" value={settings.notification_email || ""} onChange={(v) => update("notification_email", v)} placeholder="admin@example.com" />
+      </SettingsSection>
+
+      <button onClick={handleSave} disabled={saving} className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
+        <Save className="h-4 w-4" /> {saving ? "Saving..." : "Save All Settings"}
+      </button>
+    </div>
+  );
+};
+
+export default SettingsModule;

@@ -37,8 +37,8 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
     return matchSearch && matchStatus;
   });
 
-  const updateOrderStatus = async (id: string, field: string, value: string) => {
-    await supabase.from("orders").update({ [field]: value }).eq("id", id);
+  const updateOrderStatus = async (id: string, field: "order_status" | "payment_status" | "status", value: string) => {
+    await supabase.from("orders").update({ [field]: value } as any).eq("id", id);
     onReload();
     toast({ title: "Order updated" });
   };

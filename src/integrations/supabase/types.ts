@@ -14,6 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json
+          session_id: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          session_id: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          session_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      automation_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          response: Json | null
+          source: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          response?: Json | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          response?: Json | null
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      brands: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -48,6 +144,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
       }
       order_items: {
         Row: {
@@ -152,6 +278,7 @@ export type Database = {
         Row: {
           axiz_product_id: string | null
           brand: string | null
+          brand_id: string | null
           category: string | null
           category_id: string | null
           cost_price: number | null
@@ -175,6 +302,7 @@ export type Database = {
         Insert: {
           axiz_product_id?: string | null
           brand?: string | null
+          brand_id?: string | null
           category?: string | null
           category_id?: string | null
           cost_price?: number | null
@@ -198,6 +326,7 @@ export type Database = {
         Update: {
           axiz_product_id?: string | null
           brand?: string | null
+          brand_id?: string | null
           category?: string | null
           category_id?: string | null
           cost_price?: number | null
@@ -253,6 +382,42 @@ export type Database = {
           id?: string
           name?: string | null
           phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      returns: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          order_id: string
+          reason: string
+          refund_amount: number | null
+          status: Database["public"]["Enums"]["return_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          reason?: string
+          refund_amount?: number | null
+          status?: Database["public"]["Enums"]["return_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          reason?: string
+          refund_amount?: number | null
+          status?: Database["public"]["Enums"]["return_status"]
           updated_at?: string
           user_id?: string
         }
@@ -322,6 +487,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sync_logs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_details: string | null
+          id: string
+          items_failed: number | null
+          items_synced: number | null
+          source: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_details?: string | null
+          id?: string
+          items_failed?: number | null
+          items_synced?: number | null
+          source?: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_details?: string | null
+          id?: string
+          items_failed?: number | null
+          items_synced?: number | null
+          source?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       ticket_messages: {
         Row: {
@@ -393,6 +594,12 @@ export type Database = {
       app_role: "customer" | "admin"
       order_status: "pending" | "paid" | "shipped" | "delivered" | "returned"
       payment_status: "unpaid" | "paid" | "refunded" | "partially_refunded"
+      return_status:
+        | "requested"
+        | "approved"
+        | "received"
+        | "refunded"
+        | "rejected"
       stock_status: "in_stock" | "low_stock" | "out_of_stock"
       ticket_status: "open" | "pending" | "resolved"
       ticket_type: "return" | "refund" | "inquiry"
@@ -526,6 +733,13 @@ export const Constants = {
       app_role: ["customer", "admin"],
       order_status: ["pending", "paid", "shipped", "delivered", "returned"],
       payment_status: ["unpaid", "paid", "refunded", "partially_refunded"],
+      return_status: [
+        "requested",
+        "approved",
+        "received",
+        "refunded",
+        "rejected",
+      ],
       stock_status: ["in_stock", "low_stock", "out_of_stock"],
       ticket_status: ["open", "pending", "resolved"],
       ticket_type: ["return", "refund", "inquiry"],

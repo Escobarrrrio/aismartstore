@@ -1,14 +1,15 @@
-import { Link } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search, User } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { ShoppingCart, Menu, X, Search, User, ChevronDown } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/logo.png";
 
 const StoreHeader = () => {
   const { totalItems } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -16,48 +17,69 @@ const StoreHeader = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  const isActive = (path: string) => location.pathname === path;
+
+  // Hide header on admin pages
+  if (location.pathname === "/admin") return null;
+
   return (
-    <header className="sticky top-0 z-50 bg-background/97 backdrop-blur-xl border-b border-border">
-      <div className="container mx-auto flex items-center gap-4 h-16 px-4 lg:px-6">
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-background/95 backdrop-blur-xl shadow-sm border-b border-border' : 'bg-background border-b border-transparent'}`}>
+      <div className="container mx-auto flex items-center h-16 px-4 lg:px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <img src={logo} alt="AI Smart Store" className="h-10 w-10 object-contain" />
-          <span className="font-display font-extrabold text-lg gradient-brand-text whitespace-nowrap">
+        <Link to="/" className="flex items-center gap-2.5 flex-shrink-0 mr-8">
+          <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center text-white font-display font-extrabold text-sm">S</div>
+          <span className="font-display font-extrabold text-lg tracking-tight hidden sm:block">
             Smart Store
           </span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1 ml-4">
-          <Link to="/" className="font-display font-medium text-sm text-muted-foreground px-3 py-1.5 rounded-full hover:bg-muted hover:text-foreground transition-all">
-            Home
-          </Link>
-          <Link to="/products" className="font-display font-medium text-sm text-muted-foreground px-3 py-1.5 rounded-full hover:bg-muted hover:text-foreground transition-all">
-            Products
-          </Link>
+        <nav className="hidden md:flex items-center gap-1">
+          {[
+            { to: "/", label: "Home" },
+            { to: "/products", label: "Products" },
+          ].map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive(link.to)
+                  ? 'text-primary bg-primary/[0.06]'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
-        {/* Actions */}
+        {/* Right actions */}
         <div className="flex items-center gap-2 ml-auto">
           {/* Search */}
-          <div className="hidden sm:flex items-center gap-2 bg-muted border border-border rounded-full px-3 py-1.5">
+          <div className="hidden sm:flex items-center gap-2 bg-muted rounded-xl px-3.5 py-2 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search products..."
-              className="bg-transparent border-none outline-none text-sm w-28 lg:w-36 text-foreground placeholder:text-muted-foreground font-sans"
+              className="bg-transparent border-none outline-none text-sm w-32 lg:w-44 text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
           {/* Cart */}
           <Link
             to="/cart"
-            className="relative gradient-brand text-primary-foreground rounded-full px-3 py-1.5 font-display font-semibold text-sm flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+            className="relative flex items-center gap-2 h-10 px-4 rounded-xl bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
           >
             <ShoppingCart className="h-4 w-4" />
             <span className="hidden sm:inline">Cart</span>
             {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 h-[18px] w-[18px] rounded-full bg-[#d94fd5] text-white text-[10px] font-bold flex items-center justify-center border-2 border-background shadow-md">
+              <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full gradient-brand text-white text-[10px] font-bold flex items-center justify-center shadow-md">
                 {totalItems}
               </span>
             )}
@@ -67,19 +89,17 @@ const StoreHeader = () => {
           {session ? (
             <Link
               to="/admin"
-              className="flex items-center gap-2 bg-muted border border-border rounded-full px-2 py-1 hover:bg-border transition-colors"
+              className="flex items-center gap-2 h-10 px-3 rounded-xl border border-border hover:bg-muted transition-colors"
             >
-              <div className="w-7 h-7 rounded-full gradient-brand flex items-center justify-center text-white text-xs font-bold font-display">
+              <div className="w-7 h-7 rounded-lg gradient-brand flex items-center justify-center text-white text-xs font-bold font-display">
                 {session.user?.email?.[0]?.toUpperCase() || "A"}
               </div>
-              <span className="text-sm font-display font-semibold pr-1 hidden sm:inline">
-                Admin
-              </span>
+              <span className="text-sm font-medium hidden sm:inline">Admin</span>
             </Link>
           ) : (
             <Link
               to="/auth"
-              className="border border-border rounded-full px-3 py-1.5 font-display font-semibold text-sm flex items-center gap-1.5 hover:border-secondary hover:bg-muted transition-all"
+              className="flex items-center gap-2 h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors"
             >
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Login / Register</span>
@@ -87,7 +107,7 @@ const StoreHeader = () => {
           )}
 
           {/* Mobile hamburger */}
-          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-1.5">
+          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors">
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -95,23 +115,25 @@ const StoreHeader = () => {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
-            <Link to="/" onClick={() => setMenuOpen(false)} className="py-2.5 font-display font-semibold text-sm border-b border-border flex items-center gap-3">
-              Home
-            </Link>
-            <Link to="/products" onClick={() => setMenuOpen(false)} className="py-2.5 font-display font-semibold text-sm border-b border-border flex items-center gap-3">
-              Products
-            </Link>
-            {session ? (
-              <Link to="/admin" onClick={() => setMenuOpen(false)} className="py-2.5 font-display font-semibold text-sm flex items-center gap-3">
-                Admin Panel
+        <div className="md:hidden border-t border-border bg-background animate-fade-in">
+          <nav className="container mx-auto px-4 py-3 flex flex-col gap-1">
+            {[
+              { to: "/", label: "Home" },
+              { to: "/products", label: "Products" },
+              { to: "/cart", label: "Cart" },
+              session ? { to: "/admin", label: "Admin Panel" } : { to: "/auth", label: "Login / Register" },
+            ].map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setMenuOpen(false)}
+                className={`py-3 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(link.to) ? 'text-primary bg-primary/[0.06]' : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                {link.label}
               </Link>
-            ) : (
-              <Link to="/auth" onClick={() => setMenuOpen(false)} className="py-2.5 font-display font-semibold text-sm flex items-center gap-3">
-                Login / Register
-              </Link>
-            )}
+            ))}
           </nav>
         </div>
       )}

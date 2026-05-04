@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Bot, Link2, Package, Bell, Save } from "lucide-react";
+import { Key, Bot, Link2, Package, Bell, Save, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SettingsModuleProps {
@@ -9,12 +9,12 @@ interface SettingsModuleProps {
 }
 
 const SettingsSection = ({ icon, title, description, children }: { icon: React.ReactNode; title: string; description: string; children: React.ReactNode }) => (
-  <div className="bg-card border border-border rounded-xl p-5">
-    <div className="flex items-start gap-3 mb-4 pb-3 border-b border-border">
-      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">{icon}</div>
+  <div className="card-flat p-6">
+    <div className="flex items-start gap-3 mb-5 pb-4 border-b border-border">
+      <div className="w-10 h-10 rounded-xl bg-primary/[0.06] flex items-center justify-center text-primary shrink-0">{icon}</div>
       <div>
         <h3 className="font-display font-bold text-sm">{title}</h3>
-        <p className="text-[11px] text-muted-foreground mt-0.5">{description}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
     </div>
     {children}
@@ -25,14 +25,21 @@ const SettingsInput = ({ label, type = "text", value, onChange, placeholder, mon
   label: string; type?: string; value: string; onChange: (v: string) => void; placeholder: string; mono?: boolean;
 }) => (
   <div>
-    <label className="block text-[11px] font-semibold mb-1">{label}</label>
-    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`w-full px-3 py-2 rounded-lg border border-input bg-muted text-sm focus:border-primary focus:bg-card outline-none transition ${mono ? "font-mono" : ""}`} />
+    <label className="block text-xs font-semibold mb-1.5">{label}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`input-premium ${mono ? "font-mono text-xs" : ""}`}
+    />
   </div>
 );
 
 const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const update = (key: string, value: string) => setSettings((prev) => ({ ...prev, [key]: value }));
 
@@ -51,6 +58,8 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   const markupPct = parseInt(settings.axiz_markup_pct || "26");
@@ -73,23 +82,23 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
       </SettingsSection>
 
       <SettingsSection icon={<Package className="h-4 w-4" />} title="Axiz Distributor" description="Connect to Axiz SA for automatic product syncing with markup.">
-        <div className="space-y-3">
+        <div className="space-y-4">
           <SettingsInput label="API Key" type="password" value={settings.axiz_api_key || ""} onChange={(v) => update("axiz_api_key", v)} placeholder="Your Axiz API key..." mono />
           <div>
-            <label className="block text-[11px] font-semibold mb-1">Markup Percentage</label>
-            <div className="flex items-center gap-3">
-              <input type="range" min="0" max="100" value={markupPct} onChange={(e) => update("axiz_markup_pct", e.target.value)} className="flex-1 accent-primary" />
-              <span className="font-display font-extrabold text-xl gradient-brand-text min-w-[50px] text-right">{markupPct}%</span>
+            <label className="block text-xs font-semibold mb-2">Markup Percentage</label>
+            <div className="flex items-center gap-4">
+              <input type="range" min="0" max="100" value={markupPct} onChange={(e) => update("axiz_markup_pct", e.target.value)} className="flex-1 accent-[hsl(var(--primary))]" />
+              <span className="font-display font-extrabold text-2xl gradient-brand-text min-w-[55px] text-right">{markupPct}%</span>
             </div>
-            <div className="bg-muted border border-border rounded-lg p-3 mt-2 text-xs">
-              <div className="flex justify-between mb-1">
-                <span className="text-muted-foreground">Cost price</span><span>R1,000.00</span>
+            <div className="bg-muted rounded-xl p-4 mt-3 text-sm space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Cost price</span><span className="font-medium">R1,000.00</span>
               </div>
-              <div className="flex justify-between mb-1">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Markup ({markupPct}%)</span>
-                <span className="text-emerald-600">+R{(1000 * markupPct / 100).toFixed(2)}</span>
+                <span className="text-[hsl(160,84%,39%)] font-medium">+R{(1000 * markupPct / 100).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between font-display font-bold text-sm border-t border-border mt-2 pt-2">
+              <div className="flex justify-between font-display font-bold border-t border-border pt-2 mt-2">
                 <span>Selling price</span><span>R{(1000 * (1 + markupPct / 100)).toFixed(2)}</span>
               </div>
             </div>
@@ -101,8 +110,12 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
         <SettingsInput label="Notification Email" value={settings.notification_email || ""} onChange={(v) => update("notification_email", v)} placeholder="admin@example.com" />
       </SettingsSection>
 
-      <button onClick={handleSave} disabled={saving} className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
-        <Save className="h-4 w-4" /> {saving ? "Saving..." : "Save All Settings"}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="w-full btn-primary py-3.5 text-sm disabled:opacity-50 shadow-elevated"
+      >
+        {saved ? <><CheckCircle className="h-4 w-4" /> Saved!</> : <><Save className="h-4 w-4" /> {saving ? "Saving..." : "Save All Settings"}</>}
       </button>
     </div>
   );

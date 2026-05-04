@@ -1,91 +1,111 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Truck, Shield, Headphones, Zap } from "lucide-react";
+import { ArrowRight, Sparkles, Shield, Truck, Headphones, Zap, Star, ChevronRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
     <>
-      <section className="container mx-auto px-4 py-12 md:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Left */}
-          <div className="animate-fade-in">
-            <div className="inline-flex items-center gap-2 bg-muted border border-border rounded-full px-3 py-1 text-xs font-medium text-muted-foreground mb-5">
-              <span className="w-1.5 h-1.5 rounded-full gradient-brand shadow-sm" />
-              AI-Powered Tech Store
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        {/* Subtle background accent */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-secondary/[0.03]" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-primary/[0.04] to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+
+        <div className="container mx-auto px-4 pt-12 pb-16 md:pt-20 md:pb-24 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left */}
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 bg-primary/[0.06] rounded-full px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+                <Sparkles className="h-3.5 w-3.5" />
+                South Africa's Premium AI & Tech Store
+              </div>
+
+              <h1 className="font-display font-extrabold text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.08] tracking-tight mb-5">
+                Enterprise-Grade{" "}
+                <span className="gradient-brand-text">Technology</span>
+                <br />
+                Delivered to You
+              </h1>
+
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-8 max-w-md">
+                From AI hardware to networking solutions — curated, competitively priced, and backed by expert support for South African businesses.
+              </p>
+
+              <div className="flex gap-3 flex-wrap mb-10">
+                <Link to="/products" className="btn-primary px-7 py-3.5 text-sm font-semibold shadow-elevated">
+                  Shop Products <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link to="/products" className="btn-secondary px-7 py-3.5 text-sm font-semibold">
+                  Browse Categories
+                </Link>
+              </div>
+
+              {/* Trust row */}
+              <div className="flex items-center gap-5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <span>Secure Payments</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Truck className="h-4 w-4 text-primary" />
+                  <span>SA-Wide Delivery</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Star className="h-4 w-4 text-primary" />
+                  <span>Trusted Supplier</span>
+                </div>
+              </div>
             </div>
 
-            <h1 className="font-display font-extrabold text-4xl md:text-5xl lg:text-[3.2rem] leading-[1.1] mb-4">
-              Next-Gen{" "}
-              <span className="gradient-brand-text">Tech & AI</span>
-              {" "}Products
-            </h1>
-
-            <p className="text-muted-foreground text-base leading-relaxed mb-7 max-w-lg">
-              Discover premium tech products at smart prices. From AI tools to hardware — curated for South Africa.
-            </p>
-
-            <div className="flex gap-3 flex-wrap">
-              <Link
-                to="/products"
-                className="btn-primary px-6 py-3 text-sm shadow-elevated"
-              >
-                Shop Now <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/products"
-                className="btn-outline px-6 py-3 text-sm"
-              >
-                <Sparkles className="h-4 w-4" /> Browse Categories
-              </Link>
+            {/* Right — category cards */}
+            <div className="hidden lg:grid grid-cols-2 gap-4">
+              {[
+                { label: "AI & Machine Learning", desc: "GPUs, TPUs, AI accelerators", icon: "🤖", price: "From R2,499" },
+                { label: "Networking", desc: "Routers, switches, access points", icon: "🌐", price: "From R1,299" },
+                { label: "Computing", desc: "Servers, workstations, storage", icon: "💻", price: "From R4,999" },
+                { label: "Software & Licenses", desc: "Enterprise and cloud licenses", icon: "📦", price: "From R499" },
+              ].map((card, i) => (
+                <Link
+                  key={i}
+                  to="/products"
+                  className={`card-premium p-5 group cursor-pointer ${i === 1 ? 'mt-6' : i === 2 ? '-mt-4' : ''}`}
+                >
+                  <div className="text-3xl mb-3">{card.icon}</div>
+                  <h3 className="font-display font-bold text-sm mb-1 group-hover:text-primary transition-colors">{card.label}</h3>
+                  <p className="text-xs text-muted-foreground mb-2">{card.desc}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-primary">{card.price}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Right — floating cards */}
-          <div className="hidden md:grid grid-cols-2 gap-3">
+      {/* Trust bar */}
+      <section className="border-y border-border bg-muted/50">
+        <div className="container mx-auto px-4 py-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { label: "AI Hardware", price: "From R2,499", delay: "0s" },
-              { label: "Smart Devices", price: "From R899", delay: "-1s" },
-              { label: "Networking", price: "From R1,299", delay: "-2s" },
-              { label: "Software", price: "From R499", delay: "-3s" },
-            ].map((card, i) => (
-              <div
-                key={i}
-                className={`bg-muted border border-border rounded-xl overflow-hidden animate-float ${i === 1 ? 'mt-5' : i === 2 ? '-mt-3' : i === 3 ? 'mt-2' : ''}`}
-                style={{ animationDelay: card.delay }}
-              >
-                <div className="h-28 bg-gradient-to-br from-muted to-accent" />
-                <div className="p-3">
-                  <p className="text-xs font-display font-semibold">{card.label}</p>
-                  <span className="text-xs text-secondary font-bold">{card.price}</span>
+              { icon: Truck, title: "Free Shipping", desc: "On orders over R500" },
+              { icon: Shield, title: "Secure Checkout", desc: "Yoco payment gateway" },
+              { icon: Headphones, title: "AI Support", desc: "24/7 intelligent assistance" },
+              { icon: Zap, title: "Fast Delivery", desc: "2-5 business days SA-wide" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/[0.06] flex items-center justify-center text-primary flex-shrink-0">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-display font-bold text-sm">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
-
-      {/* Stats bar */}
-      <div className="bg-muted border-y border-border">
-        <div className="container mx-auto px-4 py-4 flex flex-wrap justify-center gap-6 md:gap-10">
-          {[
-            { icon: Truck, value: "Free Shipping", label: "Orders over R500" },
-            { icon: Shield, value: "Secure Pay", label: "Yoco Payments" },
-            { icon: Headphones, value: "AI Support", label: "24/7 Chatbot" },
-            { icon: Zap, value: "Fast Delivery", label: "2-5 Business Days" },
-          ].map((stat, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary flex-shrink-0">
-                <stat.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <strong className="font-display font-extrabold text-sm gradient-brand-text block leading-tight">
-                  {stat.value}
-                </strong>
-                <span className="text-xs text-muted-foreground">{stat.label}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </>
   );
 };

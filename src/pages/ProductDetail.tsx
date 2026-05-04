@@ -1,104 +1,210 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useProducts } from "@/contexts/ProductContext";
 import { useCart } from "@/contexts/CartContext";
-import { ArrowLeft, ShoppingCart, Check } from "lucide-react";
+import {
+  ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw,
+  Star, ChevronRight, Package, MessageCircle, Minus, Plus
+} from "lucide-react";
 import { useState } from "react";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getProduct } = useProducts();
+  const { products, getProduct } = useProducts();
   const { addToCart } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   const product = getProduct(id || "");
+
+  // Related products
+  const related = product
+    ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
+    : [];
 
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
-        <p className="text-muted-foreground text-lg">Product not found.</p>
-        <button onClick={() => navigate("/")} className="mt-4 text-primary underline">
-          Go back home
+        <Package className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+        <h1 className="font-display font-bold text-2xl mb-2">Product Not Found</h1>
+        <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
+        <button onClick={() => navigate("/products")} className="btn-primary px-6 py-3 text-sm">
+          <ArrowLeft className="h-4 w-4" /> Back to Products
         </button>
       </div>
     );
   }
 
   const handleAddToCart = () => {
-    addToCart(product);
+    addToCart(product, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
+    <div className="min-h-screen">
+      {/* Breadcrumb */}
+      <div className="bg-muted/50 border-b border-border">
+        <div className="container mx-auto px-4 py-3">
+          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <Link to="/products" className="hover:text-foreground transition-colors">Products</Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span className="text-foreground font-medium truncate max-w-[200px]">{product.name}</span>
+          </nav>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* Images */}
-        <div className="space-y-4">
-          <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border/50">
-            {product.images[selectedImage] ? (
-              <img
-                src={product.images[selectedImage]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                No Image
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+          {/* Images */}
+          <div className="space-y-4">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-muted border border-border">
+              {product.images[selectedImage] ? (
+                <img
+                  src={product.images[selectedImage]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                  <Package className="h-20 w-20" />
+                </div>
+              )}
+            </div>
+            {product.images.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {product.images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`w-20 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
+                      i === selectedImage ? "border-primary shadow-md" : "border-border hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
-          {product.images.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {product.images.map((img, i) => (
+
+          {/* Details */}
+          <div className="flex flex-col">
+            {product.category && (
+              <Link to="/products" className="text-xs font-semibold text-primary uppercase tracking-wider mb-2 hover:underline">
+                {product.category}
+              </Link>
+            )}
+            <h1 className="text-2xl md:text-3xl font-display font-extrabold tracking-tight mb-4">
+              {product.name}
+            </h1>
+
+            <div className="flex items-baseline gap-3 mb-6">
+              <span className="text-3xl font-display font-extrabold">
+                R{product.price.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+              </span>
+              <span className={`text-sm font-semibold ${product.inStock ? 'text-[hsl(160,84%,39%)]' : 'text-destructive'}`}>
+                {product.inStock ? "✓ In Stock" : "✕ Out of Stock"}
+              </span>
+            </div>
+
+            <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
+
+            {/* Quantity + Add to Cart */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <div className="flex items-center border border-border rounded-xl overflow-hidden">
                 <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`w-20 h-20 rounded-md overflow-hidden border-2 flex-shrink-0 transition-colors ${
-                    i === selectedImage ? "border-primary" : "border-border/50"
-                  }`}
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-4 py-3 hover:bg-muted transition-colors"
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <Minus className="h-4 w-4" />
                 </button>
+                <span className="px-5 py-3 text-sm font-semibold min-w-[60px] text-center border-x border-border">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-4 py-3 hover:bg-muted transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <button
+                onClick={handleAddToCart}
+                disabled={!product.inStock}
+                className="flex-1 btn-primary px-8 py-3.5 text-sm font-semibold shadow-elevated disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+              >
+                {added ? (
+                  <><Check className="h-5 w-5" /> Added to Cart!</>
+                ) : (
+                  <><ShoppingCart className="h-5 w-5" /> Add to Cart</>
+                )}
+              </button>
+            </div>
+
+            {/* Reassurance */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { icon: Truck, label: "Free delivery over R500" },
+                { icon: Shield, label: "Secure checkout" },
+                { icon: RotateCcw, label: "Easy returns" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/50 border border-border/50">
+                  <item.icon className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-xs font-medium">{item.label}</span>
+                </div>
               ))}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Details */}
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            {product.category}
-          </span>
-          <h1 className="text-3xl md:text-4xl font-display font-bold mb-4">{product.name}</h1>
-          <p className="text-2xl font-bold gradient-brand-text mb-6">
-            R{product.price.toFixed(2)}
-          </p>
-          <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
-
-          <button
-            onClick={handleAddToCart}
-            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full gradient-brand text-primary-foreground font-semibold hover:opacity-90 transition-all shadow-elevated w-full md:w-auto"
-          >
-            {added ? (
-              <>
-                <Check className="h-5 w-5" /> Added!
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="h-5 w-5" /> Add to Cart
-              </>
-            )}
-          </button>
+        {/* Specifications placeholder */}
+        <div className="mt-16 border-t border-border pt-12">
+          <h2 className="font-display font-bold text-xl mb-6">Specifications</h2>
+          <div className="card-flat p-6">
+            <p className="text-sm text-muted-foreground">
+              Detailed specifications will be available once product data is synced from the supplier.
+            </p>
+          </div>
         </div>
+
+        {/* Related products */}
+        {related.length > 0 && (
+          <div className="mt-16 border-t border-border pt-12">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-display font-bold text-xl">Related Products</h2>
+              <Link to="/products" className="text-sm text-primary font-semibold hover:underline flex items-center gap-1">
+                View All <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {related.map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/product/${p.id}`}
+                  className="card-premium overflow-hidden group"
+                >
+                  <div className="aspect-[4/3] bg-muted overflow-hidden">
+                    {p.images[0] ? (
+                      <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                        <Package className="h-8 w-8" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-display font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">{p.name}</h3>
+                    <p className="text-sm font-display font-extrabold mt-1">R{p.price.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

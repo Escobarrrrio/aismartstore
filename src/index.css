@@ -6,78 +6,85 @@
 
 @layer base {
   :root {
-    --background: 240 20% 99%;
-    --foreground: 240 30% 11%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 30% 11%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 30% 11%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 189 85% 62%;
+    --primary: 222 89% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 45% 63%;
+    --secondary: 262 48% 54%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 245 15% 95%;
-    --muted-foreground: 245 15% 45%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 189 80% 92%;
-    --accent-foreground: 189 85% 30%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 245 20% 93%;
-    --input: 245 20% 93%;
-    --ring: 189 85% 62%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 222 89% 56%;
 
     --radius: 0.75rem;
 
-    --cyan: #4dd9f0;
-    --violet: #9b6fd4;
-    --magenta: #d94fd5;
-    --gradient-brand: linear-gradient(135deg, #4dd9f0 0%, #9b6fd4 50%, #d94fd5 100%);
-    --gradient-brand-text: linear-gradient(90deg, #4dd9f0, #9b6fd4, #d94fd5);
-    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.8), hsl(0 0% 100% / 0.4));
-    --shadow-glass: 0 8px 32px rgba(155, 111, 212, 0.08);
-    --shadow-elevated: 0 12px 40px rgba(155, 111, 212, 0.25);
-    --shadow-card: 0 4px 24px rgba(155, 111, 212, 0.12);
+    --cyan: #06b6d4;
+    --violet: #7c3aed;
+    --magenta: #d946ef;
+    --gradient-brand: linear-gradient(135deg, #06b6d4 0%, #7c3aed 50%, #d946ef 100%);
+    --gradient-brand-text: linear-gradient(90deg, #06b6d4, #7c3aed, #d946ef);
+    --gradient-subtle: linear-gradient(135deg, hsl(220 14% 96%) 0%, hsl(222 89% 56% / 0.03) 100%);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.08);
+    --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.1);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+    --shadow-elevated: 0 8px 30px rgba(124, 58, 237, 0.12);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-primary: 222 89% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 16%;
+    --sidebar-accent-foreground: 220 14% 96%;
+    --sidebar-border: 222 47% 16%;
+    --sidebar-ring: 222 89% 56%;
   }
 
   .dark {
-    --background: 240 25% 6%;
-    --foreground: 240 20% 95%;
-    --card: 240 25% 9%;
-    --card-foreground: 240 20% 95%;
-    --popover: 240 25% 9%;
-    --popover-foreground: 240 20% 95%;
-    --primary: 189 85% 62%;
+    --background: 222 47% 6%;
+    --foreground: 220 14% 96%;
+    --card: 222 47% 9%;
+    --card-foreground: 220 14% 96%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 220 14% 96%;
+    --primary: 222 89% 56%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 270 45% 63%;
+    --secondary: 262 48% 54%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 240 20% 14%;
-    --muted-foreground: 240 10% 55%;
-    --accent: 189 80% 15%;
-    --accent-foreground: 189 85% 80%;
+    --muted: 222 47% 14%;
+    --muted-foreground: 220 9% 55%;
+    --accent: 222 47% 14%;
+    --accent-foreground: 220 14% 96%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 20% 16%;
-    --input: 240 20% 16%;
-    --ring: 189 85% 62%;
+    --border: 222 47% 16%;
+    --input: 222 47% 16%;
+    --ring: 222 89% 56%;
   }
 }
 
@@ -89,14 +96,17 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
+  /* Brand gradients */
   .gradient-brand {
     background: var(--gradient-brand);
   }
@@ -108,36 +118,117 @@
     background-clip: text;
   }
 
-  .glass-card {
-    background: var(--gradient-glass);
-    backdrop-filter: blur(20px);
-    box-shadow: var(--shadow-glass);
-    border: 1px solid hsl(0 0% 100% / 0.3);
+  .gradient-subtle {
+    background: var(--gradient-subtle);
   }
 
-  .shadow-elevated {
-    box-shadow: var(--shadow-elevated);
-  }
+  /* Shadows */
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-elevated { box-shadow: var(--shadow-elevated); }
 
-  .shadow-card {
-    box-shadow: var(--shadow-card);
-  }
-
+  /* Premium buttons */
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-full font-semibold transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-300;
     background: var(--gradient-brand);
     color: white;
   }
   .btn-primary:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: var(--shadow-elevated);
   }
-
-  .btn-outline {
-    @apply inline-flex items-center gap-2 rounded-full font-semibold border-2 border-border bg-transparent transition-all duration-200;
+  .btn-primary:active {
+    transform: translateY(0);
   }
-  .btn-outline:hover {
-    border-color: var(--violet);
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold border border-border bg-background transition-all duration-300;
+    color: hsl(var(--foreground));
+  }
+  .btn-secondary:hover {
+    border-color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.04);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200;
+    color: hsl(var(--muted-foreground));
+  }
+  .btn-ghost:hover {
     background: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
+
+  /* Premium card styles */
+  .card-premium {
+    @apply bg-card rounded-2xl border border-border;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-premium:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .card-flat {
+    @apply bg-card rounded-xl border border-border;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Premium input styles */
+  .input-premium {
+    @apply w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground text-sm transition-all duration-200;
+  }
+  .input-premium:focus {
+    @apply outline-none ring-2 ring-ring/20 border-primary;
+  }
+  .input-premium::placeholder {
+    @apply text-muted-foreground;
+  }
+
+  /* Badge styles */
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: hsl(160 84% 39% / 0.1);
+    color: hsl(160 84% 39%);
+  }
+  .badge-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: hsl(38 92% 50% / 0.1);
+    color: hsl(38 92% 50%);
+  }
+  .badge-danger {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: hsl(0 72% 51% / 0.1);
+    color: hsl(0 72% 51%);
+  }
+  .badge-info {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: hsl(222 89% 56% / 0.1);
+    color: hsl(222 89% 56%);
+  }
+  .badge-neutral {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground;
+  }
+
+  /* Table premium */
+  .table-premium thead th {
+    @apply text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-muted/50;
+  }
+  .table-premium tbody td {
+    @apply px-4 py-3.5 text-sm;
+  }
+  .table-premium tbody tr {
+    @apply border-b border-border/50 last:border-none transition-colors;
+  }
+  .table-premium tbody tr:hover {
+    @apply bg-muted/30;
+  }
+
+  /* Section spacing */
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+  .section-padding-sm {
+    @apply py-10 md:py-16;
   }
 }

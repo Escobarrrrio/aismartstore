@@ -1,9 +1,13 @@
 import {
   LayoutDashboard, Package, ShoppingCart, Users, HeadphonesIcon,
-  Settings, FileSpreadsheet, LogOut, Menu
+  Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
+  RotateCcw, Activity, Bell, Zap
 } from "lucide-react";
 
-export type AdminTab = "dashboard" | "products" | "import" | "orders" | "customers" | "support" | "settings";
+export type AdminTab =
+  | "dashboard" | "products" | "import" | "orders" | "customers"
+  | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
+  | "settings";
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
@@ -19,9 +23,13 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "products", label: "Products", icon: <Package className="h-4 w-4" />, section: "Catalogue" },
   { id: "import", label: "Bulk Import", icon: <FileSpreadsheet className="h-4 w-4" /> },
   { id: "orders", label: "Orders", icon: <ShoppingCart className="h-4 w-4" />, section: "Sales" },
+  { id: "returns", label: "Returns", icon: <RotateCcw className="h-4 w-4" /> },
   { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
-  { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" /> },
-  { id: "settings", label: "Settings", icon: <Settings className="h-4 w-4" />, section: "System" },
+  { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" />, section: "Operations" },
+  { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },
+  { id: "sync-logs", label: "Sync Logs", icon: <RefreshCw className="h-4 w-4" />, section: "System" },
+  { id: "automations", label: "Automations", icon: <Zap className="h-4 w-4" /> },
+  { id: "settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
 ];
 
 const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, email, onSignOut }: AdminSidebarProps) => {
@@ -30,15 +38,15 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, em
   return (
     <>
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-foreground/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
-      <aside className={`fixed top-0 left-0 bottom-0 w-[240px] bg-foreground z-50 flex flex-col transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:h-screen`}>
+      <aside className={`fixed top-0 left-0 bottom-0 w-[260px] bg-sidebar z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:h-screen`}>
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-5 py-5 border-b border-white/[0.06]">
-          <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center text-white font-bold text-xs shrink-0">S</div>
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
+          <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center text-white font-bold text-xs shrink-0">S</div>
           <div className="min-w-0">
-            <p className="font-display font-extrabold text-[13px] text-white truncate">Control Centre</p>
-            <p className="text-[10px] text-white/30 truncate">{email}</p>
+            <p className="font-display font-extrabold text-sm text-sidebar-foreground truncate">Control Centre</p>
+            <p className="text-[10px] text-sidebar-foreground/40 truncate">{email}</p>
           </div>
         </div>
 
@@ -50,19 +58,19 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, em
             return (
               <div key={tab.id}>
                 {showSection && (
-                  <p className="px-5 pt-4 pb-1.5 text-[10px] font-display font-bold text-white/20 uppercase tracking-widest">
+                  <p className="px-5 pt-5 pb-2 text-[10px] font-display font-bold text-sidebar-foreground/25 uppercase tracking-widest">
                     {tab.section}
                   </p>
                 )}
                 <button
                   onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-5 py-2 text-[13px] font-display font-medium transition-all duration-150 ${
+                  className={`w-full flex items-center gap-3 px-5 py-2.5 text-[13px] font-medium transition-all duration-200 ${
                     activeTab === tab.id
-                      ? "bg-white/[0.08] text-white border-l-2 border-l-primary"
-                      : "text-white/35 border-l-2 border-l-transparent hover:bg-white/[0.04] hover:text-white/70"
+                      ? "bg-sidebar-accent text-sidebar-foreground border-l-2 border-l-sidebar-primary"
+                      : "text-sidebar-foreground/40 border-l-2 border-l-transparent hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/70"
                   }`}
                 >
-                  <span className={activeTab === tab.id ? "text-primary" : "text-white/25"}>{tab.icon}</span>
+                  <span className={activeTab === tab.id ? "text-sidebar-primary" : "text-sidebar-foreground/25"}>{tab.icon}</span>
                   {tab.label}
                 </button>
               </div>
@@ -71,8 +79,8 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, em
         </nav>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-white/[0.06]">
-          <button onClick={onSignOut} className="flex items-center gap-2 text-white/30 text-[13px] hover:text-white/70 transition-colors font-display">
+        <div className="px-5 py-4 border-t border-sidebar-border">
+          <button onClick={onSignOut} className="flex items-center gap-2.5 text-sidebar-foreground/30 text-[13px] hover:text-sidebar-foreground/70 transition-colors font-medium">
             <LogOut className="h-4 w-4" /> Sign Out
           </button>
         </div>

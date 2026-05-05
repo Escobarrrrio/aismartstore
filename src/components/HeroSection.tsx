@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Shield, Truck, Headphones, Zap, Star, ChevronRight } from "lucide-react";
+import { ArrowRight, Sparkles, Shield, Truck, Headphones, Zap, Star, ChevronRight, Bot, Globe, Monitor, Package } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -59,10 +59,10 @@ const HeroSection = () => {
             {/* Right — category cards */}
             <div className="hidden lg:grid grid-cols-2 gap-4">
               {[
-                { label: "AI & Machine Learning", desc: "GPUs, TPUs, AI accelerators", icon: "🤖", price: "From R2,499" },
-                { label: "Networking", desc: "Routers, switches, access points", icon: "🌐", price: "From R1,299" },
-                { label: "Computing", desc: "Servers, workstations, storage", icon: "💻", price: "From R4,999" },
-                { label: "Software & Licenses", desc: "Enterprise and cloud licenses", icon: "📦", price: "From R499" },
+                { label: "AI & Machine Learning", desc: "GPUs, TPUs, AI accelerators", Icon: Bot, price: "From R2,499" },
+                { label: "Networking", desc: "Routers, switches, access points", Icon: Globe, price: "From R1,299" },
+                { label: "Computing", desc: "Servers, workstations, storage", Icon: Monitor, price: "From R4,999" },
+                { label: "Software & Licenses", desc: "Enterprise and cloud licenses", Icon: Package, price: "From R499" },
               ].map((card, i) => (
                 <Link
                   key={i}

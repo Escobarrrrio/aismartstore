@@ -1,13 +1,16 @@
 import {
   LayoutDashboard, Package, ShoppingCart, Users, HeadphonesIcon,
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
-  RotateCcw, Activity, Bell, Zap
+  RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
+  HardDrive, Wrench, Search
 } from "lucide-react";
 
 export type AdminTab =
   | "dashboard" | "products" | "import" | "orders" | "customers"
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
-  | "settings";
+  | "settings" | "system-health" | "security" | "cost-usage"
+  | "integrations" | "backups" | "product-ops" | "order-ops"
+  | "support-ops" | "notifications-mgmt";
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
@@ -16,23 +19,33 @@ interface AdminSidebarProps {
   setSidebarOpen: (open: boolean) => void;
   email: string;
   onSignOut: () => void;
+  onOpenCommand: () => void;
 }
 
 const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" />, section: "Overview" },
+  { id: "system-health", label: "System Health", icon: <Activity className="h-4 w-4" /> },
   { id: "products", label: "Products", icon: <Package className="h-4 w-4" />, section: "Catalogue" },
   { id: "import", label: "Bulk Import", icon: <FileSpreadsheet className="h-4 w-4" /> },
+  { id: "product-ops", label: "Product Ops", icon: <Wrench className="h-4 w-4" /> },
   { id: "orders", label: "Orders", icon: <ShoppingCart className="h-4 w-4" />, section: "Sales" },
+  { id: "order-ops", label: "Order Ops", icon: <ShoppingCart className="h-4 w-4" /> },
   { id: "returns", label: "Returns", icon: <RotateCcw className="h-4 w-4" /> },
   { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
   { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" />, section: "Operations" },
+  { id: "support-ops", label: "Support Ops", icon: <HeadphonesIcon className="h-4 w-4" /> },
   { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },
-  { id: "sync-logs", label: "Sync Logs", icon: <RefreshCw className="h-4 w-4" />, section: "System" },
+  { id: "notifications-mgmt", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
+  { id: "security", label: "Security", icon: <Shield className="h-4 w-4" />, section: "System" },
+  { id: "integrations", label: "Integrations", icon: <Link2 className="h-4 w-4" /> },
+  { id: "cost-usage", label: "Cost & Usage", icon: <DollarSign className="h-4 w-4" /> },
+  { id: "backups", label: "Backups", icon: <HardDrive className="h-4 w-4" /> },
+  { id: "sync-logs", label: "Sync Logs", icon: <RefreshCw className="h-4 w-4" /> },
   { id: "automations", label: "Automations", icon: <Zap className="h-4 w-4" /> },
   { id: "settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
 ];
 
-const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, email, onSignOut }: AdminSidebarProps) => {
+const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, email, onSignOut, onOpenCommand }: AdminSidebarProps) => {
   let lastSection = "";
 
   return (
@@ -49,6 +62,16 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, em
             <p className="text-[10px] text-sidebar-foreground/40 truncate">{email}</p>
           </div>
         </div>
+
+        {/* Command palette trigger */}
+        <button
+          onClick={onOpenCommand}
+          className="mx-4 mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-sidebar-border text-sidebar-foreground/30 text-xs hover:bg-sidebar-accent/50 transition-colors"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span className="flex-1 text-left">Search commands...</span>
+          <kbd className="text-[9px] border border-sidebar-border rounded px-1 py-0.5">Ctrl+K</kbd>
+        </button>
 
         {/* Nav */}
         <nav className="flex-1 py-3 overflow-y-auto">

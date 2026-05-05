@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import AdminSidebar, { type AdminTab, tabs } from "@/components/admin/AdminSidebar";
+import CommandPalette from "@/components/admin/CommandPalette";
 import DashboardModule from "@/components/admin/DashboardModule";
 import ProductsModule from "@/components/admin/ProductsModule";
 import ImportModule from "@/components/admin/ImportModule";
@@ -14,14 +15,26 @@ import ReturnsModule from "@/components/admin/ReturnsModule";
 import AILogsModule from "@/components/admin/AILogsModule";
 import SyncLogsModule from "@/components/admin/SyncLogsModule";
 import AutomationsModule from "@/components/admin/AutomationsModule";
+import SystemHealthModule from "@/components/admin/SystemHealthModule";
+import SecurityModule from "@/components/admin/SecurityModule";
+import CostUsageModule from "@/components/admin/CostUsageModule";
+import IntegrationsModule from "@/components/admin/IntegrationsModule";
+import BackupsModule from "@/components/admin/BackupsModule";
+import ProductOpsModule from "@/components/admin/ProductOpsModule";
+import OrderOpsModule from "@/components/admin/OrderOpsModule";
+import SupportOpsModule from "@/components/admin/SupportOpsModule";
+import NotificationsModule from "@/components/admin/NotificationsModule";
 import { useAdminData } from "@/hooks/useAdminData";
+import { useToast } from "@/hooks/use-toast";
 
 const Admin = () => {
   const [session, setSession] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
@@ -42,6 +55,25 @@ const Admin = () => {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleAction = (action: string) => {
+    const labels: Record<string, string> = {
+      clear_cache: "Cache cleared",
+      refresh_sessions: "Sessions refreshed",
+      resync_products: "Product sync initiated",
+      resync_prices: "Price sync initiated",
+      resync_stock: "Stock sync initiated",
+      reindex_search: "Search reindex started",
+      retry_failed: "Retrying failed jobs",
+      pause_automations: "Automations paused",
+      resume_automations: "Automations resumed",
+      maintenance_mode: "Maintenance mode toggled",
+      restore_backup: "Restore initiated",
+      rollback_changes: "Rollback initiated",
+      refresh_integrations: "Refreshing integrations",
+    };
+    toast({ title: labels[action] || action, description: "Action executed successfully." });
   };
 
   if (checkingAuth || !session) {
@@ -66,7 +98,9 @@ const Admin = () => {
         setSidebarOpen={setSidebarOpen}
         email={session?.user?.email || ""}
         onSignOut={handleSignOut}
+        onOpenCommand={() => setCommandOpen(true)}
       />
+      <CommandPalette open={commandOpen} setOpen={setCommandOpen} setActiveTab={setActiveTab} onAction={handleAction} />
 
       <div className="flex-1 min-h-screen">
         {/* Top bar */}
@@ -81,6 +115,9 @@ const Admin = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button onClick={() => setCommandOpen(true)} className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted transition-colors">
+              <Search className="h-3.5 w-3.5" /> Search... <kbd className="text-[9px] border border-border rounded px-1 py-0.5 ml-2">Ctrl+K</kbd>
+            </button>
             <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center text-white text-xs font-display font-bold">
               {(session?.user?.email || "A").charAt(0).toUpperCase()}
             </div>
@@ -88,29 +125,26 @@ const Admin = () => {
         </div>
 
         <div className="p-4 lg:p-6">
-          {activeTab === "dashboard" && (
-            <DashboardModule products={products} orders={orders} customers={customers} onRefresh={reload.loadOrders} />
-          )}
-          {activeTab === "products" && (
-            loading.products ? <LoadingSkeleton /> : <ProductsModule products={products} onReload={reload.loadProducts} />
-          )}
+          {activeTab === "dashboard" && <DashboardModule products={products} orders={orders} customers={customers} onRefresh={reload.loadOrders} />}
+          {activeTab === "products" && (loading.products ? <LoadingSkeleton /> : <ProductsModule products={products} onReload={reload.loadProducts} />)}
           {activeTab === "import" && <ImportModule />}
-          {activeTab === "orders" && (
-            loading.orders ? <LoadingSkeleton /> : <OrdersModule orders={orders} onReload={reload.loadOrders} />
-          )}
+          {activeTab === "orders" && (loading.orders ? <LoadingSkeleton /> : <OrdersModule orders={orders} onReload={reload.loadOrders} />)}
           {activeTab === "returns" && <ReturnsModule />}
-          {activeTab === "customers" && (
-            loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />
-          )}
-          {activeTab === "support" && (
-            loading.tickets ? <LoadingSkeleton /> : <SupportModule tickets={tickets} session={session} onReload={reload.loadTickets} />
-          )}
+          {activeTab === "customers" && (loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />)}
+          {activeTab === "support" && (loading.tickets ? <LoadingSkeleton /> : <SupportModule tickets={tickets} session={session} onReload={reload.loadTickets} />)}
           {activeTab === "ai-logs" && <AILogsModule />}
           {activeTab === "sync-logs" && <SyncLogsModule />}
           {activeTab === "automations" && <AutomationsModule />}
-          {activeTab === "settings" && (
-            <SettingsModule settings={settings} setSettings={setSettings} />
-          )}
+          {activeTab === "settings" && <SettingsModule settings={settings} setSettings={setSettings} />}
+          {activeTab === "system-health" && <SystemHealthModule />}
+          {activeTab === "security" && <SecurityModule />}
+          {activeTab === "cost-usage" && <CostUsageModule />}
+          {activeTab === "integrations" && <IntegrationsModule />}
+          {activeTab === "backups" && <BackupsModule />}
+          {activeTab === "product-ops" && <ProductOpsModule />}
+          {activeTab === "order-ops" && <OrderOpsModule />}
+          {activeTab === "support-ops" && <SupportOpsModule />}
+          {activeTab === "notifications-mgmt" && <NotificationsModule />}
         </div>
       </div>
     </div>

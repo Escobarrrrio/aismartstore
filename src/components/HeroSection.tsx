@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Shield, Truck, Headphones, Zap, Star, ChevronRight } from "lucide-react";
+import { ArrowRight, Sparkles, Shield, Truck, Headphones, Zap, Star, ChevronRight, Bot, Globe, Monitor, Package } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -59,17 +59,17 @@ const HeroSection = () => {
             {/* Right — category cards */}
             <div className="hidden lg:grid grid-cols-2 gap-4">
               {[
-                { label: "AI & Machine Learning", desc: "GPUs, TPUs, AI accelerators", icon: "🤖", price: "From R2,499" },
-                { label: "Networking", desc: "Routers, switches, access points", icon: "🌐", price: "From R1,299" },
-                { label: "Computing", desc: "Servers, workstations, storage", icon: "💻", price: "From R4,999" },
-                { label: "Software & Licenses", desc: "Enterprise and cloud licenses", icon: "📦", price: "From R499" },
+                { label: "AI & Machine Learning", desc: "GPUs, TPUs, AI accelerators", Icon: Bot, price: "From R2,499" },
+                { label: "Networking", desc: "Routers, switches, access points", Icon: Globe, price: "From R1,299" },
+                { label: "Computing", desc: "Servers, workstations, storage", Icon: Monitor, price: "From R4,999" },
+                { label: "Software & Licenses", desc: "Enterprise and cloud licenses", Icon: Package, price: "From R499" },
               ].map((card, i) => (
                 <Link
                   key={i}
                   to="/products"
                   className={`card-premium p-5 group cursor-pointer ${i === 1 ? 'mt-6' : i === 2 ? '-mt-4' : ''}`}
                 >
-                  <div className="text-3xl mb-3">{card.icon}</div>
+                  <div className="w-10 h-10 rounded-xl bg-primary/[0.06] text-primary flex items-center justify-center mb-3"><card.Icon className="h-5 w-5" /></div>
                   <h3 className="font-display font-bold text-sm mb-1 group-hover:text-primary transition-colors">{card.label}</h3>
                   <p className="text-xs text-muted-foreground mb-2">{card.desc}</p>
                   <div className="flex items-center justify-between">

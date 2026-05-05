@@ -1,7 +1,7 @@
 import { useProducts } from "@/contexts/ProductContext";
 import ProductCard from "@/components/ProductCard";
 import HeroSection from "@/components/HeroSection";
-import { Package, ArrowRight, Cpu, Globe, Server, Code, MessageCircle, ChevronRight } from "lucide-react";
+import { Package, ArrowRight, Cpu, Globe, Server, Code, MessageCircle, Shield, Headphones, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -120,21 +120,23 @@ const Index = () => {
               {
                 title: "Authorised Distributor",
                 desc: "Direct partnerships with top-tier technology brands ensure genuine products and competitive pricing.",
-                icon: "🏢",
+                Icon: Shield,
               },
               {
                 title: "AI-Powered Support",
                 desc: "Our intelligent chatbot helps you find the right product, check compatibility, and get instant answers.",
-                icon: "🤖",
+                Icon: Headphones,
               },
               {
                 title: "Business-Ready",
                 desc: "Bulk ordering, invoice support, and dedicated account management for enterprise customers.",
-                icon: "📊",
+                Icon: BarChart3,
               },
             ].map((benefit, i) => (
               <div key={i} className="card-flat p-8 text-center">
-                <div className="text-4xl mb-4">{benefit.icon}</div>
+                <div className="w-14 h-14 rounded-2xl bg-primary/[0.06] text-primary flex items-center justify-center mx-auto mb-4">
+                  <benefit.Icon className="h-7 w-7" />
+                </div>
                 <h3 className="font-display font-bold text-lg mb-2">{benefit.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{benefit.desc}</p>
               </div>
@@ -161,7 +163,7 @@ const Index = () => {
                   Our AI assistant can help you compare products, check specifications, find compatibility info, and answer your tech questions — instantly.
                 </p>
                 <p className="text-white/50 text-xs">
-                  Click the chat icon in the bottom right to get started →
+                  Click the chat icon in the bottom right to get started
                 </p>
               </div>
               <div className="hidden md:flex justify-center">

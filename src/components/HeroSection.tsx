@@ -69,7 +69,7 @@ const HeroSection = () => {
                   to="/products"
                   className={`card-premium p-5 group cursor-pointer ${i === 1 ? 'mt-6' : i === 2 ? '-mt-4' : ''}`}
                 >
-                  <div className="text-3xl mb-3">{card.icon}</div>
+                  <div className="w-10 h-10 rounded-xl bg-primary/[0.06] text-primary flex items-center justify-center mb-3"><card.Icon className="h-5 w-5" /></div>
                   <h3 className="font-display font-bold text-sm mb-1 group-hover:text-primary transition-colors">{card.label}</h3>
                   <p className="text-xs text-muted-foreground mb-2">{card.desc}</p>
                   <div className="flex items-center justify-between">

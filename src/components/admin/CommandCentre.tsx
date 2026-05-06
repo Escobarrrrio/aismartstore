@@ -493,8 +493,8 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
                 { name: "Storage", status: "ok" as const },
                 { name: "Edge Functions", status: "ok" as const },
                 { name: "Yoco API", status: secretStatus(settings.yoco_secret_key) as "ok" | "warn" | "error" },
-                { name: "Axiz API", status: secretStatus(settings.axiz_api_key) },
-                { name: "OpenAI", status: secretStatus(settings.openai_api_key) },
+                { name: "Axiz API", status: secretStatus(settings.axiz_api_key) as "ok" | "warn" | "error" },
+                { name: "OpenAI", status: secretStatus(settings.openai_api_key) as "ok" | "warn" | "error" },
               ].map((svc, i) => (
                 <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
                   <span className="text-sm font-medium">{svc.name}</span>

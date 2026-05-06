@@ -15,6 +15,7 @@ import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import ChatWidget from "@/components/ChatWidget";
 

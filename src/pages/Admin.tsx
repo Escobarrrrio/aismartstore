@@ -11,6 +11,7 @@ import OrdersModule from "@/components/admin/OrdersModule";
 import CustomersModule from "@/components/admin/CustomersModule";
 import SupportModule from "@/components/admin/SupportModule";
 import SettingsModule from "@/components/admin/SettingsModule";
+import CommandCentre from "@/components/admin/CommandCentre";
 import ReturnsModule from "@/components/admin/ReturnsModule";
 import AILogsModule from "@/components/admin/AILogsModule";
 import SyncLogsModule from "@/components/admin/SyncLogsModule";

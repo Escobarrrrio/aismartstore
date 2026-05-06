@@ -136,7 +136,7 @@ const Admin = () => {
           {activeTab === "ai-logs" && <AILogsModule />}
           {activeTab === "sync-logs" && <SyncLogsModule />}
           {activeTab === "automations" && <AutomationsModule />}
-          {activeTab === "settings" && <SettingsModule settings={settings} setSettings={setSettings} />}
+          {activeTab === "settings" && <CommandCentre settings={settings} setSettings={setSettings} />}
           {activeTab === "system-health" && <SystemHealthModule />}
           {activeTab === "security" && <SecurityModule />}
           {activeTab === "cost-usage" && <CostUsageModule />}

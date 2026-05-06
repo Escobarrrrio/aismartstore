@@ -482,7 +482,7 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard label="Uptime" value="99.9%" status="ok" />
             <MetricCard label="Error Rate" value="0%" status="ok" />
-            <MetricCard label="Last Sync" value="N/A" status="off" />
+            <MetricCard label="Last Sync" value="N/A" status="warn" />
             <MetricCard label="Queue Depth" value="0" status="ok" />
           </div>
           <SectionCard title="Service Status" icon={<Server className="h-4 w-4" />}>
@@ -492,7 +492,7 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
                 { name: "Authentication", status: "ok" as const },
                 { name: "Storage", status: "ok" as const },
                 { name: "Edge Functions", status: "ok" as const },
-                { name: "Yoco API", status: secretStatus(settings.yoco_secret_key) },
+                { name: "Yoco API", status: secretStatus(settings.yoco_secret_key) as "ok" | "warn" | "error" },
                 { name: "Axiz API", status: secretStatus(settings.axiz_api_key) },
                 { name: "OpenAI", status: secretStatus(settings.openai_api_key) },
               ].map((svc, i) => (

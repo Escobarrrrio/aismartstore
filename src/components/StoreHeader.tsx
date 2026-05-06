@@ -87,15 +87,24 @@ const StoreHeader = () => {
 
           {/* Auth */}
           {session ? (
-            <Link
-              to="/admin"
-              className="flex items-center gap-2 h-10 px-3 rounded-xl border border-border hover:bg-muted transition-colors"
-            >
-              <div className="w-7 h-7 rounded-lg gradient-brand flex items-center justify-center text-white text-xs font-bold font-display">
-                {session.user?.email?.[0]?.toUpperCase() || "A"}
-              </div>
-              <span className="text-sm font-medium hidden sm:inline">Admin</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/account"
+                className="flex items-center gap-2 h-10 px-3 rounded-xl border border-border hover:bg-muted transition-colors"
+              >
+                <User className="h-4 w-4" />
+                <span className="text-sm font-medium hidden sm:inline">My Account</span>
+              </Link>
+              <Link
+                to="/admin"
+                className="flex items-center gap-2 h-10 px-3 rounded-xl gradient-brand text-white hover:opacity-90 transition-opacity"
+              >
+                <div className="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center text-white text-xs font-bold font-display">
+                  {session.user?.email?.[0]?.toUpperCase() || "A"}
+                </div>
+                <span className="text-sm font-medium hidden sm:inline">Admin</span>
+              </Link>
+            </div>
           ) : (
             <Link
               to="/auth"
@@ -117,11 +126,16 @@ const StoreHeader = () => {
       {menuOpen && (
         <div className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-1">
-            {[
-              { to: "/", label: "Home" },
-              { to: "/products", label: "Products" },
-              { to: "/cart", label: "Cart" },
-              session ? { to: "/admin", label: "Admin Panel" } : { to: "/auth", label: "Login / Register" },
+              {[
+                { to: "/", label: "Home" },
+                { to: "/products", label: "Products" },
+                { to: "/cart", label: "Cart" },
+                ...(session ? [
+                  { to: "/account", label: "My Account" },
+                  { to: "/admin", label: "Admin Panel" },
+                ] : [
+                  { to: "/auth", label: "Login / Register" },
+                ]),
             ].map((link) => (
               <Link
                 key={link.to}

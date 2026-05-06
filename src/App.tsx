@@ -15,6 +15,7 @@ import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import ChatWidget from "@/components/ChatWidget";
 
@@ -38,6 +39,7 @@ const App = () => (
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/account" element={<Account />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="*" element={<NotFound />} />

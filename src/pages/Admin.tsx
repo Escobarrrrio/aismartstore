@@ -11,6 +11,7 @@ import OrdersModule from "@/components/admin/OrdersModule";
 import CustomersModule from "@/components/admin/CustomersModule";
 import SupportModule from "@/components/admin/SupportModule";
 import SettingsModule from "@/components/admin/SettingsModule";
+import CommandCentre from "@/components/admin/CommandCentre";
 import ReturnsModule from "@/components/admin/ReturnsModule";
 import AILogsModule from "@/components/admin/AILogsModule";
 import SyncLogsModule from "@/components/admin/SyncLogsModule";
@@ -135,7 +136,7 @@ const Admin = () => {
           {activeTab === "ai-logs" && <AILogsModule />}
           {activeTab === "sync-logs" && <SyncLogsModule />}
           {activeTab === "automations" && <AutomationsModule />}
-          {activeTab === "settings" && <SettingsModule settings={settings} setSettings={setSettings} />}
+          {activeTab === "settings" && <CommandCentre settings={settings} setSettings={setSettings} />}
           {activeTab === "system-health" && <SystemHealthModule />}
           {activeTab === "security" && <SecurityModule />}
           {activeTab === "cost-usage" && <CostUsageModule />}

@@ -126,11 +126,16 @@ const StoreHeader = () => {
       {menuOpen && (
         <div className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-1">
-            {[
-              { to: "/", label: "Home" },
-              { to: "/products", label: "Products" },
-              { to: "/cart", label: "Cart" },
-              session ? { to: "/admin", label: "Admin Panel" } : { to: "/auth", label: "Login / Register" },
+              {[
+                { to: "/", label: "Home" },
+                { to: "/products", label: "Products" },
+                { to: "/cart", label: "Cart" },
+                ...(session ? [
+                  { to: "/account", label: "My Account" },
+                  { to: "/admin", label: "Admin Panel" },
+                ] : [
+                  { to: "/auth", label: "Login / Register" },
+                ]),
             ].map((link) => (
               <Link
                 key={link.to}

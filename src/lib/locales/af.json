@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "home": "Tuis",
+    "products": "Produkte",
+    "cart": "Mandjie",
+    "account": "My Rekening",
+    "admin": "Admin",
+    "login": "Teken in / Registreer",
+    "signOut": "Teken uit",
+    "search": "Soek produkte..."
+  },
+  "home": {
+    "heroBadge": "Suid-Afrika se Premium KI- en Tegnologie-winkel",
+    "heroTitle1": "Onderneming-graad",
+    "heroTitle2": "Tegnologie",
+    "heroTitle3": "By jou afgelewer",
+    "heroSubtitle": "Van KI-hardeware tot netwerkoplossings — saamgestel, mededingend geprys, en ondersteun deur kundige diens vir Suid-Afrikaanse besighede.",
+    "shopNow": "Koop Produkte",
+    "browseCategories": "Blaai Kategorieë",
+    "categoriesTitle": "Koop volgens Kategorie",
+    "categoriesSubtitle": "Vind presies wat jy nodig het oor ons saamgestelde tegnologie-kategorieë",
+    "featuredTitle": "Uitgestalde Produkte",
+    "featuredSubtitle": "Handgekies teen mededingende pryse",
+    "viewAll": "Bekyk Alles",
+    "noProducts": "Nog geen produkte nie",
+    "noProductsHint": "Produkte sal hier verskyn sodra hulle bygevoeg word"
+  },
+  "product": {
+    "inStock": "In Voorraad",
+    "outOfStock": "Uitverkoop",
+    "add": "Voeg by",
+    "added": "Bygevoeg!",
+    "addToCart": "Voeg by Mandjie"
+  },
+  "cart": {
+    "title": "Jou Mandjie",
+    "empty": "Jou mandjie is leeg",
+    "checkout": "Betaal",
+    "total": "Totaal",
+    "subtotal": "Subtotaal"
+  },
+  "account": {
+    "welcome": "Welkom terug",
+    "orders": "Bestellings",
+    "returns": "Terugkeer en Hulp",
+    "profile": "Profiel",
+    "viewingAsCustomer": "Besig om as kliënt te kyk",
+    "returnToAdmin": "Keer terug na admin"
+  },
+  "common": {
+    "save": "Stoor",
+    "cancel": "Kanselleer",
+    "loading": "Laai tans...",
+    "language": "Taal",
+    "currency": "Geldeenheid"
+  }
+}

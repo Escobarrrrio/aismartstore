@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { ProductProvider } from "@/contexts/ProductContext";
+import { LocaleProvider } from "@/contexts/LocaleContext";
 import StoreHeader from "@/components/StoreHeader";
 import StoreFooter from "@/components/StoreFooter";
 import Index from "./pages/Index";
@@ -24,6 +25,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <LocaleProvider>
       <ProductProvider>
         <CartProvider>
           <Toaster />
@@ -51,6 +53,7 @@ const App = () => (
           </BrowserRouter>
         </CartProvider>
       </ProductProvider>
+      </LocaleProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

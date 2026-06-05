@@ -5,7 +5,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are the AI Smart Store assistant — a trained sales and support agent for a South African tech & AI products store (store.aijobchommie.co.za). Currency is ZAR (R).
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  af: "Afrikaans",
+  xh: "isiXhosa",
+  zu: "isiZulu",
+  st: "Sesotho",
+};
+
+const buildSystemPrompt = (lang: string) => {
+  const langName = LANGUAGE_NAMES[lang] || "English";
+  return `You are the AI Smart Store assistant — a trained sales and support agent for a South African tech & AI products store (store.aijobchommie.co.za). Currency is ZAR (R).
+
+CRITICAL LANGUAGE RULE: Respond ONLY in ${langName}. If the customer writes in a different language, still reply in ${langName} unless they explicitly ask you to switch. If you cannot phrase something naturally in ${langName}, fall back to English for that phrase only.
 
 Your core jobs:
 - Product discovery: help customers find laptops, GPUs, AI hardware, networking gear, software.
@@ -22,8 +34,8 @@ Rules:
 - Be professional, brief, accurate.
 - Ask follow-up questions when needed.
 - NEVER guess on stock, warranty, refunds, supplier promises, or technical edge cases.
-- If unsure, say "Let me connect you with our team for this" and collect their contact details.
-- Always respond in the customer's language (English or Afrikaans).`;
+- If unsure, say "Let me connect you with our team for this" (translated) and collect their contact details.`;
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -31,7 +43,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, language } = await req.json();
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages array required" }), {
         status: 400,
@@ -91,7 +103,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT + productContext },
+          { role: "system", content: buildSystemPrompt(language || "en") + productContext },
           ...messages,
         ],
         stream: true,

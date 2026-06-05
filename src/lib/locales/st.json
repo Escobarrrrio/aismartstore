@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "home": "Lehae",
+    "products": "Dihlahiswa",
+    "cart": "Setjhelete",
+    "account": "Akhaonto ya ka",
+    "admin": "Molaodi",
+    "login": "Kena / Ngodisa",
+    "signOut": "Tswa",
+    "search": "Batla dihlahiswa..."
+  },
+  "home": {
+    "heroBadge": "Lebenkele la Premium la AI le Theknoloji Afrika Borwa",
+    "heroTitle1": "Boemo ba Khoebo",
+    "heroTitle2": "Theknoloji",
+    "heroTitle3": "E Tlisitsoeng ho Uena",
+    "heroSubtitle": "Ho tloha ho hardware ea AI ho ea ho ditharollo tsa marang-rang — e khethiloeng, e nang le litheko tse phehisanang, e tshehetswang ke litsebi.",
+    "shopNow": "Reka Dihlahiswa",
+    "browseCategories": "Sheba Mekhahlelo",
+    "categoriesTitle": "Reka ka Mokhahlelo",
+    "categoriesSubtitle": "Fumana seo o se hlokang mekhahlelong ea rona ea theknoloji",
+    "featuredTitle": "Dihlahiswa Tse Khethiloeng",
+    "featuredSubtitle": "Theknoloji e khethiloeng ka letsoho ka litheko tse phehisanang",
+    "viewAll": "Sheba Tsohle",
+    "noProducts": "Ha ho na dihlahiswa hajwale",
+    "noProductsHint": "Dihlahiswa di tla hlaha mona ha di kentswe"
+  },
+  "product": {
+    "inStock": "E teng",
+    "outOfStock": "E felletse",
+    "add": "Kenya",
+    "added": "E kentsoe!",
+    "addToCart": "Kenya Setjheleteng"
+  },
+  "cart": {
+    "title": "Setjhelete sa Hao",
+    "empty": "Setjhelete sa hao ha se na letho",
+    "checkout": "Lefa",
+    "total": "Kakaretso",
+    "subtotal": "Subtotal"
+  },
+  "account": {
+    "welcome": "O amohelehile hape",
+    "orders": "Ditaelo",
+    "returns": "Ho Khutlisa le Thuso",
+    "profile": "Profaele",
+    "viewingAsCustomer": "O sheba jwalo ka moreki",
+    "returnToAdmin": "Khutlela ho molaodi"
+  },
+  "common": {
+    "save": "Boloka",
+    "cancel": "Hlakola",
+    "loading": "E ntse e laela...",
+    "language": "Puo",
+    "currency": "Tjhelete"
+  }
+}

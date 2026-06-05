@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "home": "Ikhaya",
+    "products": "Iimveliso",
+    "cart": "Inqwelo",
+    "account": "Iakhawunti yam",
+    "admin": "Umlawuli",
+    "login": "Ngena / Bhalisa",
+    "signOut": "Phuma",
+    "search": "Khangela iimveliso..."
+  },
+  "home": {
+    "heroBadge": "Ivenkile yePremium ye-AI neTeknoloji yaseMzantsi Afrika",
+    "heroTitle1": "Umgangatho-Shishini",
+    "heroTitle2": "Iteknoloji",
+    "heroTitle3": "Iziswa kuwe",
+    "heroSubtitle": "Ukusuka kwi-hardware ye-AI ukuya kwizisombululo zenethiwekhi — ekhethiweyo, enexabiso elikhuphisanayo, kwaye ixhaswa luncedo lobungcali.",
+    "shopNow": "Thenga Iimveliso",
+    "browseCategories": "Khangela Iindidi",
+    "categoriesTitle": "Thenga ngeKategori",
+    "categoriesSubtitle": "Fumana into oyifunayo kwiindidi zethu zetekhnoloji",
+    "featuredTitle": "Iimveliso eziGqamileyo",
+    "featuredSubtitle": "Itekhnoloji ekhethwe ngesandla ngamaxabiso akhuphisanayo",
+    "viewAll": "Jonga Zonke",
+    "noProducts": "Akukho mveliso okwangoku",
+    "noProductsHint": "Iimveliso ziya kuvela apha xa zongezelelwe"
+  },
+  "product": {
+    "inStock": "Iyafumaneka",
+    "outOfStock": "Aphelile",
+    "add": "Yongeza",
+    "added": "Yongeziwe!",
+    "addToCart": "Yongeza kwiNqwelo"
+  },
+  "cart": {
+    "title": "Inqwelo Yakho",
+    "empty": "Inqwelo yakho ayinanto",
+    "checkout": "Hlawula",
+    "total": "Iyonke",
+    "subtotal": "Subtotali"
+  },
+  "account": {
+    "welcome": "Wamkelekile kwakhona",
+    "orders": "Imiyalelo",
+    "returns": "Ukubuyiswa noNcedo",
+    "profile": "Iprofayile",
+    "viewingAsCustomer": "Ujonga njengomthengi",
+    "returnToAdmin": "Buyela kumlawuli"
+  },
+  "common": {
+    "save": "Gcina",
+    "cancel": "Rhoxisa",
+    "loading": "Iyalayisha...",
+    "language": "Ulwimi",
+    "currency": "Imali"
+  }
+}

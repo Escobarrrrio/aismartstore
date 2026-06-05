@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "home": "Ikhaya",
+    "products": "Imikhiqizo",
+    "cart": "Inqola",
+    "account": "I-akhawunti yami",
+    "admin": "Umlawuli",
+    "login": "Ngena / Bhalisa",
+    "signOut": "Phuma",
+    "search": "Sesha imikhiqizo..."
+  },
+  "home": {
+    "heroBadge": "Isitolo Sezobuchwepheshe Se-AI Esisezingeni Eliphezulu",
+    "heroTitle1": "Izinga Lebhizinisi",
+    "heroTitle2": "Ubuchwepheshe",
+    "heroTitle3": "Bulethwa Kuwe",
+    "heroSubtitle": "Kusuka kwi-hardware ye-AI kuya kuzixazululo zenethiwekhi — okukhethiwe, okunamanani aqhudelanayo, futhi kusekelwa abalingani bobuchwepheshe.",
+    "shopNow": "Thenga Imikhiqizo",
+    "browseCategories": "Bheka Izigaba",
+    "categoriesTitle": "Thenga Ngesigaba",
+    "categoriesSubtitle": "Thola lokho okudingayo ezigabeni zethu zobuchwepheshe",
+    "featuredTitle": "Imikhiqizo Egqamile",
+    "featuredSubtitle": "Ubuchwepheshe obukhethiwe ngamanani aqhudelanayo",
+    "viewAll": "Buka Konke",
+    "noProducts": "Ayikho imikhiqizo okwamanje",
+    "noProductsHint": "Imikhiqizo izovela lapha uma sekungezwe"
+  },
+  "product": {
+    "inStock": "Iyatholakala",
+    "outOfStock": "Iphelile",
+    "add": "Engeza",
+    "added": "Kungezwe!",
+    "addToCart": "Engeza Enqoleni"
+  },
+  "cart": {
+    "title": "Inqola Yakho",
+    "empty": "Inqola yakho ayinalutho",
+    "checkout": "Khokha",
+    "total": "Isamba",
+    "subtotal": "Isamba esincane"
+  },
+  "account": {
+    "welcome": "Sawubona futhi",
+    "orders": "Ama-oda",
+    "returns": "Okubuyiswayo Nosizo",
+    "profile": "Iphrofayela",
+    "viewingAsCustomer": "Ubuka njengekhasimende",
+    "returnToAdmin": "Buyela kumlawuli"
+  },
+  "common": {
+    "save": "Londoloza",
+    "cancel": "Khansela",
+    "loading": "Iyalayisha...",
+    "language": "Ulimi",
+    "currency": "Imali"
+  }
+}

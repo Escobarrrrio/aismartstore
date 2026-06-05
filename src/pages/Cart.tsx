@@ -1,9 +1,12 @@
 import { useCart } from "@/contexts/CartContext";
+import { formatMoney } from "@/lib/currency";
+import { useLocale } from "@/contexts/LocaleContext";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Shield, Truck } from "lucide-react";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const { currency } = useLocale();
 
   if (items.length === 0) {
     return (
@@ -41,7 +44,7 @@ const Cart = () => {
                   {product.name}
                 </Link>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  R{product.price.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                  {formatMoney(product.price, currency)}
                 </p>
                 <div className="flex items-center gap-1 mt-2">
                   <button
@@ -68,7 +71,7 @@ const Cart = () => {
                   <Trash2 className="h-4 w-4" />
                 </button>
                 <span className="font-display font-bold text-sm">
-                  R{(product.price * quantity).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                  {formatMoney(product.price * quantity, currency)}
                 </span>
               </div>
             </div>
@@ -81,7 +84,7 @@ const Cart = () => {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium">R{totalPrice.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
+              <span className="font-medium">{formatMoney(totalPrice, currency)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Shipping</span>
@@ -91,7 +94,7 @@ const Cart = () => {
           <div className="border-t border-border pt-4">
             <div className="flex justify-between font-display font-extrabold text-xl">
               <span>Total</span>
-              <span>R{totalPrice.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
+              <span>{formatMoney(totalPrice, currency)}</span>
             </div>
           </div>
           <Link to="/checkout" className="btn-primary w-full py-3.5 text-sm shadow-elevated">

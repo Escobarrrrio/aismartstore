@@ -91,7 +91,7 @@ const Admin = () => {
   const currentTab = tabs.find((t) => t.id === activeTab);
 
   return (
-    <div className="flex min-h-screen bg-muted/50">
+    <div className="flex min-h-screen bg-muted/50 w-full max-w-full overflow-x-hidden">
       <AdminSidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -103,7 +103,7 @@ const Admin = () => {
       />
       <CommandPalette open={commandOpen} setOpen={setCommandOpen} setActiveTab={setActiveTab} onAction={handleAction} />
 
-      <div className="flex-1 min-h-screen">
+      <div className="flex-1 min-w-0 min-h-screen overflow-x-hidden">
         {/* Top bar */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border px-4 lg:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -115,11 +115,18 @@ const Admin = () => {
               <h1 className="font-display font-extrabold text-lg tracking-tight">{currentTab?.label}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setCommandOpen(true)} className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted transition-colors">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => setCommandOpen(true)} className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted transition-colors whitespace-nowrap">
               <Search className="h-3.5 w-3.5" /> Search... <kbd className="text-[9px] border border-border rounded px-1 py-0.5 ml-2">Ctrl+K</kbd>
             </button>
-            <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center text-white text-xs font-display font-bold">
+            <button
+              onClick={() => { localStorage.setItem("ai-smart-store.impersonate", session?.user?.email || "admin"); navigate("/account?as=customer"); }}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg gradient-brand text-white text-xs font-semibold hover:opacity-90 transition-opacity whitespace-nowrap"
+              title="View the store as a customer while staying signed in as admin"
+            >
+              View as customer
+            </button>
+            <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center text-white text-xs font-display font-bold flex-shrink-0">
               {(session?.user?.email || "A").charAt(0).toUpperCase()}
             </div>
           </div>

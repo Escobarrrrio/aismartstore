@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "cart": "Cart",
+    "account": "My Account",
+    "admin": "Admin",
+    "login": "Login / Register",
+    "signOut": "Sign Out",
+    "search": "Search products..."
+  },
+  "home": {
+    "heroBadge": "South Africa's Premium AI & Tech Store",
+    "heroTitle1": "Enterprise-Grade",
+    "heroTitle2": "Technology",
+    "heroTitle3": "Delivered to You",
+    "heroSubtitle": "From AI hardware to networking solutions — curated, competitively priced, and backed by expert support for South African businesses.",
+    "shopNow": "Shop Products",
+    "browseCategories": "Browse Categories",
+    "categoriesTitle": "Shop by Category",
+    "categoriesSubtitle": "Find exactly what you need across our curated technology categories",
+    "featuredTitle": "Featured Products",
+    "featuredSubtitle": "Hand-picked tech at competitive prices",
+    "viewAll": "View All",
+    "noProducts": "No products yet",
+    "noProductsHint": "Products will appear here once added from the Admin panel"
+  },
+  "product": {
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "add": "Add",
+    "added": "Added!",
+    "addToCart": "Add to Cart"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "checkout": "Checkout",
+    "total": "Total",
+    "subtotal": "Subtotal"
+  },
+  "account": {
+    "welcome": "Welcome back",
+    "orders": "Orders",
+    "returns": "Returns & Support",
+    "profile": "Profile",
+    "viewingAsCustomer": "Viewing as customer",
+    "returnToAdmin": "Return to admin"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "language": "Language",
+    "currency": "Currency"
+  }
+}

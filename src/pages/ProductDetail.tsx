@@ -14,6 +14,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { products, getProduct } = useProducts();
   const { addToCart } = useCart();
+  const { currency } = useLocale();
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);

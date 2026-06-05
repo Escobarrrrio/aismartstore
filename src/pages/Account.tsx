@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, ShoppingCart, RotateCcw, User, MapPin, Bell,
   Heart, Settings, LogOut, Menu, Package, Clock, ChevronRight,
   Mail, Phone, Shield, Download, MessageSquare, Truck, Star,
-  Eye, CreditCard, FileText, ArrowRight, Bot, Search, X
+  Eye, CreditCard, FileText, ArrowRight, Bot, Search, X, ShieldCheck
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/contexts/LocaleContext";
+import { formatMoney } from "@/lib/currency";
+import { useCart } from "@/contexts/CartContext";
 
 type AccountTab = "overview" | "orders" | "returns" | "profile" | "addresses" | "notifications" | "wishlist" | "settings";
 
@@ -31,6 +35,70 @@ const Account = () => {
   const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { currency } = useLocale();
+  const { addToCart } = useCart();
+  const [searchParams] = useSearchParams();
+  const isImpersonating = searchParams.get("as") === "customer" && !!localStorage.getItem("ai-smart-store.impersonate");
+
+  const exitImpersonation = () => {
+    localStorage.removeItem("ai-smart-store.impersonate");
+    navigate("/admin");
+  };
+
+  const requestReturn = async (orderId: string) => {
+    if (!session) return;
+    const { error } = await supabase.from("returns").insert({
+      user_id: session.user.id,
+      order_id: orderId,
+      status: "open",
+      reason: "Customer-initiated return request",
+    } as any);
+    if (error) {
+      toast({ title: "Could not start return", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Return request submitted", description: "Our team will be in touch shortly." });
+    }
+  };
+
+  const createTicket = async (subject: string, body: string) => {
+    if (!session) return;
+    const { error } = await supabase.from("support_tickets").insert({
+      user_id: session.user.id,
+      subject,
+      status: "open",
+      type: "inquiry",
+    } as any);
+    if (error) {
+      toast({ title: "Could not open ticket", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Support ticket opened", description: "You'll receive a reply by email." });
+    }
+  };
+
+  const reorder = async (order: any) => {
+    const items = order.order_items || [];
+    if (!items.length) {
+      toast({ title: "Nothing to reorder", description: "This order has no items." });
+      return;
+    }
+    for (const it of items) {
+      if (it.products) {
+        addToCart({
+          id: it.product_id,
+          name: it.products.name,
+          description: "",
+          price: Number(it.price ?? 0),
+          category: "",
+          images: it.products.images || [],
+          inStock: true,
+          createdAt: new Date().toISOString(),
+        } as any, it.quantity || 1);
+      }
+    }
+    toast({ title: "Items added to cart", description: `${items.length} item(s) restored from the order.` });
+    navigate("/cart");
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, sess) => {

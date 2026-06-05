@@ -149,9 +149,23 @@ const Account = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="container mx-auto px-4 py-6 lg:py-10">
-        <div className="flex gap-6">
+    <div className="min-h-screen bg-muted/30 w-full max-w-full overflow-x-hidden">
+      {isImpersonating && (
+        <div className="w-full bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-b border-primary/20">
+          <div className="container mx-auto px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="font-semibold">{t("account.viewingAsCustomer")}</span>
+              <span className="text-muted-foreground hidden sm:inline">— admin tools paused for this view</span>
+            </div>
+            <button onClick={exitImpersonation} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity whitespace-nowrap">
+              {t("account.returnToAdmin")}
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="container mx-auto px-4 py-6 lg:py-10 max-w-full">
+        <div className="flex gap-6 min-w-0">
           {/* Sidebar */}
           {sidebarOpen && <div className="fixed inset-0 bg-foreground/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
           <aside className={`fixed top-0 left-0 bottom-0 w-[260px] bg-card border-r border-border z-50 flex flex-col lg:sticky lg:top-20 lg:h-fit lg:rounded-2xl lg:border lg:w-[240px] lg:shrink-0 transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:relative`}>

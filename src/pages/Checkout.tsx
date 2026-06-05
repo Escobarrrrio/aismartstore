@@ -1,4 +1,6 @@
 import { useCart } from "@/contexts/CartContext";
+import { formatMoney } from "@/lib/currency";
+import { useLocale } from "@/contexts/LocaleContext";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, XCircle, Shield, Lock } from "lucide-react";

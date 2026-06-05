@@ -1,4 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { formatMoney } from "@/lib/currency";
+import { useLocale } from "@/contexts/LocaleContext";
 import { useProducts } from "@/contexts/ProductContext";
 import { useCart } from "@/contexts/CartContext";
 import {

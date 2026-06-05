@@ -1,4 +1,6 @@
 import { useCart } from "@/contexts/CartContext";
+import { formatMoney } from "@/lib/currency";
+import { useLocale } from "@/contexts/LocaleContext";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Shield, Truck } from "lucide-react";
 

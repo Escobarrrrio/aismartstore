@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
+  const { currency } = useLocale();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -147,7 +148,7 @@ const Checkout = () => {
             className="w-full btn-primary py-3.5 text-sm shadow-elevated disabled:opacity-50 mt-4"
           >
             <Lock className="h-4 w-4" />
-            {processing ? "Processing..." : `Pay R${totalPrice.toLocaleString("en-ZA", { minimumFractionDigits: 2 })} with Yoco`}
+            {processing ? "Processing..." : `Pay ${formatMoney(totalPrice, currency)} with Yoco`}
           </button>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
@@ -161,14 +162,14 @@ const Checkout = () => {
             {items.map(({ product, quantity }) => (
               <div key={product.id} className="flex justify-between text-sm py-1">
                 <span className="text-muted-foreground">{product.name} × {quantity}</span>
-                <span className="font-medium">R{(product.price * quantity).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
+                <span className="font-medium">{formatMoney(product.price * quantity, currency)}</span>
               </div>
             ))}
           </div>
           <div className="border-t border-border mt-4 pt-4">
             <div className="flex justify-between font-display font-extrabold text-xl">
               <span>Total</span>
-              <span>R{totalPrice.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
+              <span>{formatMoney(totalPrice, currency)}</span>
             </div>
           </div>
         </div>

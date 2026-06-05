@@ -256,7 +256,7 @@ const Account = () => {
                             <p className="text-[11px] text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-semibold">R{Number(order.total_amount).toFixed(2)}</p>
+                            <p className="text-sm font-semibold">{formatMoney(order.total_amount, currency)}</p>
                             <span className={`${statusColor(order.status)} text-[10px]`}>{order.status}</span>
                           </div>
                         </div>
@@ -314,7 +314,7 @@ const Account = () => {
                             <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-display font-bold">R{Number(order.total_amount).toFixed(2)}</p>
+                            <p className="font-display font-bold">{formatMoney(order.total_amount, currency)}</p>
                             <span className={`${statusColor(order.status)} text-[10px]`}>{order.status}</span>
                           </div>
                         </div>
@@ -324,10 +324,11 @@ const Account = () => {
                             <span className="text-xs font-medium">Tracking: {order.tracking_number}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-2">
-                          <button className="btn-secondary px-3 py-1.5 text-xs rounded-lg"><Eye className="h-3 w-3" /> Details</button>
-                          <button className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><FileText className="h-3 w-3" /> Invoice</button>
-                          <button className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><ShoppingCart className="h-3 w-3" /> Reorder</button>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button onClick={() => toast({ title: `Order #${order.id.slice(0, 8).toUpperCase()}`, description: `${order.order_items?.length || 0} item(s), total ${formatMoney(order.total_amount, currency)}.` })} className="btn-secondary px-3 py-1.5 text-xs rounded-lg"><Eye className="h-3 w-3" /> Details</button>
+                          <button onClick={() => toast({ title: "Invoice", description: "Your invoice will be emailed shortly." })} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><FileText className="h-3 w-3" /> Invoice</button>
+                          <button onClick={() => reorder(order)} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><ShoppingCart className="h-3 w-3" /> Reorder</button>
+                          <button onClick={() => requestReturn(order.id)} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><RotateCcw className="h-3 w-3" /> Request return</button>
                         </div>
                       </div>
                     ))}
@@ -345,13 +346,13 @@ const Account = () => {
                     <RotateCcw className="h-8 w-8 mx-auto mb-3 text-primary" />
                     <h3 className="font-display font-bold mb-1">Request a Return</h3>
                     <p className="text-xs text-muted-foreground mb-4">Start a return for any eligible order</p>
-                    <button className="btn-primary px-5 py-2.5 text-sm">Start Return</button>
+                    <button onClick={() => orders[0] ? requestReturn(orders[0].id) : toast({ title: "No eligible orders", description: "You need at least one paid order to request a return." })} className="btn-primary px-5 py-2.5 text-sm">Start Return</button>
                   </div>
                   <div className="card-flat p-6 text-center">
                     <MessageSquare className="h-8 w-8 mx-auto mb-3 text-secondary" />
                     <h3 className="font-display font-bold mb-1">Contact Support</h3>
                     <p className="text-xs text-muted-foreground mb-4">Get help from our team or AI assistant</p>
-                    <button className="btn-primary px-5 py-2.5 text-sm">Open Ticket</button>
+                    <button onClick={() => createTicket("General inquiry", "Customer opened a support ticket from the portal.")} className="btn-primary px-5 py-2.5 text-sm">Open Ticket</button>
                   </div>
                 </div>
               </div>

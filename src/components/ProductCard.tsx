@@ -3,6 +3,9 @@ import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingCart, Heart, Eye } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/contexts/LocaleContext";
+import { formatMoney } from "@/lib/currency";
 
 interface ProductCardProps {
   product: Product;
@@ -11,6 +14,8 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const { t } = useTranslation();
+  const { currency } = useLocale();
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
@@ -59,9 +64,9 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
 
         {/* Stock badge */}
         {product.inStock ? (
-          <span className="absolute top-3 left-3 badge-success text-[10px]">In Stock</span>
+          <span className="absolute top-3 left-3 badge-success text-[10px]">{t("product.inStock")}</span>
         ) : (
-          <span className="absolute top-3 left-3 badge-danger text-[10px]">Out of Stock</span>
+          <span className="absolute top-3 left-3 badge-danger text-[10px]">{t("product.outOfStock")}</span>
         )}
       </Link>
 
@@ -79,21 +84,21 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
         <p className="text-xs text-muted-foreground line-clamp-2 flex-1 leading-relaxed mb-3">
           {product.description}
         </p>
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <span className="font-display font-extrabold text-lg">
-            R{product.price.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+          <span className="font-display font-extrabold text-base sm:text-lg truncate">
+            {formatMoney(product.price, currency)}
           </span>
           <button
             onClick={handleAddToCart}
             disabled={!product.inStock}
-            className={`h-10 px-4 rounded-full text-sm font-semibold flex items-center gap-2 transition-all duration-300 ${
+            className={`h-10 px-3 sm:px-4 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all duration-300 flex-shrink-0 ${
               addedToCart
                 ? 'bg-[hsl(160,84%,39%)] text-white'
                 : 'gradient-brand text-white hover:shadow-elevated hover:-translate-y-0.5'
             } disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none`}
           >
             <ShoppingCart className="h-4 w-4" />
-            {addedToCart ? 'Added!' : 'Add'}
+            <span>{addedToCart ? t("product.added") : t("product.add")}</span>
           </button>
         </div>
       </div>

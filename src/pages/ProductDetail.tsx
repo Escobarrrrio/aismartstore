@@ -107,10 +107,10 @@ const ProductDetail = () => {
 
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-3xl font-display font-extrabold">
-                R{product.price.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                {formatMoney(product.price, currency)}
               </span>
               <span className={`text-sm font-semibold ${product.inStock ? 'text-[hsl(160,84%,39%)]' : 'text-destructive'}`}>
-                {product.inStock ? "✓ In Stock" : "✕ Out of Stock"}
+                {product.inStock ? "In Stock" : "Out of Stock"}
               </span>
             </div>
 
@@ -201,7 +201,7 @@ const ProductDetail = () => {
                   </div>
                   <div className="p-4">
                     <h3 className="font-display font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">{p.name}</h3>
-                    <p className="text-sm font-display font-extrabold mt-1">R{p.price.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</p>
+                    <p className="text-sm font-display font-extrabold mt-1">{formatMoney(p.price, currency)}</p>
                   </div>
                 </Link>
               ))}

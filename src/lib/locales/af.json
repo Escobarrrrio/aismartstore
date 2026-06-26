@@ -17,13 +17,61 @@
     "heroSubtitle": "Van KI-hardeware tot netwerkoplossings — saamgestel, mededingend geprys, en ondersteun deur kundige diens vir Suid-Afrikaanse besighede.",
     "shopNow": "Koop Produkte",
     "browseCategories": "Blaai Kategorieë",
+    "trustRow": {
+      "secure": "Veilige Betalings",
+      "delivery": "Lewering Landwyd",
+      "trusted": "Vertroude Verskaffer"
+    },
+    "heroCards": {
+      "ai": { "label": "KI en Masjienleer", "desc": "GPU's, TPU's, KI-versnellers" },
+      "networking": { "label": "Netwerke", "desc": "Roeteerders, skakelaars, toegangspunte" },
+      "computing": { "label": "Rekenaars", "desc": "Bedieners, werkstasies, berging" },
+      "software": { "label": "Sagteware en Lisensies", "desc": "Onderneming- en wolk-lisensies" }
+    },
+    "fromPrice": "Vanaf",
+    "featureBar": {
+      "shipping": { "title": "Gratis Aflewering", "desc": "Op bestellings oor R500" },
+      "checkout": { "title": "Veilige Betaling", "desc": "Yoco-betaalpoort" },
+      "support": { "title": "KI-Ondersteuning", "desc": "24/7 intelligente hulp" },
+      "delivery": { "title": "Vinnige Aflewering", "desc": "2–5 werksdae landwyd" }
+    },
     "categoriesTitle": "Koop volgens Kategorie",
     "categoriesSubtitle": "Vind presies wat jy nodig het oor ons saamgestelde tegnologie-kategorieë",
+    "catShort": {
+      "ai": { "label": "KI en Hardeware", "count": "50+ produkte" },
+      "networking": { "label": "Netwerke", "count": "30+ produkte" },
+      "computing": { "label": "Rekenaars", "count": "40+ produkte" },
+      "software": { "label": "Sagteware", "count": "20+ produkte" }
+    },
     "featuredTitle": "Uitgestalde Produkte",
     "featuredSubtitle": "Handgekies teen mededingende pryse",
     "viewAll": "Bekyk Alles",
+    "viewAllProducts": "Bekyk Alle Produkte",
     "noProducts": "Nog geen produkte nie",
-    "noProductsHint": "Produkte sal hier verskyn sodra hulle bygevoeg word"
+    "noProductsHint": "Produkte sal hier verskyn sodra hulle bygevoeg word",
+    "why": {
+      "title": "Hoekom Smart Store kies?",
+      "subtitle": "Gebou vir Suid-Afrikaanse besighede wat betroubare tegnologievennote nodig het",
+      "distributor": {
+        "title": "Goedgekeurde Verspreider",
+        "desc": "Direkte vennootskappe met top-tegnologiehandelsmerke verseker egte produkte en mededingende pryse."
+      },
+      "ai": {
+        "title": "KI-Aangedrewe Ondersteuning",
+        "desc": "Ons intelligente kletsbot help jou om die regte produk te vind, versoenbaarheid na te gaan en vinnige antwoorde te kry."
+      },
+      "business": {
+        "title": "Besigheid-Gereed",
+        "desc": "Grootmaat-bestellings, faktuurondersteuning en toegewyde rekeningbestuur vir ondernemingskliënte."
+      }
+    },
+    "aiCta": {
+      "badge": "KI-Assistent",
+      "title": "Hulp nodig om die regte produk te vind?",
+      "desc": "Ons KI-assistent kan jou help om produkte te vergelyk, spesifikasies na te gaan, versoenbaarheidsinligting te kry en jou tegniese vrae onmiddellik te beantwoord.",
+      "hint": "Klik op die kletsikoon onder regs om te begin"
+    },
+    "brandsLabel": "Vertroude Tegnologie-handelsmerke"
   },
   "product": {
     "inStock": "In Voorraad",

@@ -10,39 +10,87 @@
     "search": "Khangela iimveliso..."
   },
   "home": {
-    "heroBadge": "Ivenkile yePremium ye-AI neTeknoloji yaseMzantsi Afrika",
-    "heroTitle1": "Umgangatho-Shishini",
+    "heroBadge": "Ivenkile ePhambili yeAI neTeknoloji eMzantsi Afrika",
+    "heroTitle1": "Umgangatho weShishini",
     "heroTitle2": "Iteknoloji",
-    "heroTitle3": "Iziswa kuwe",
-    "heroSubtitle": "Ukusuka kwi-hardware ye-AI ukuya kwizisombululo zenethiwekhi — ekhethiweyo, enexabiso elikhuphisanayo, kwaye ixhaswa luncedo lobungcali.",
+    "heroTitle3": "Iziswa Kuwe",
+    "heroSubtitle": "Ukusuka kwiAI hardware ukuya kwizisombululo zothungelwano — zihlanganisiwe, zinamaxabiso akhuphisanayo, kwaye zixhaswe yinkxaso yobungcali kwiishishini zaseMzantsi Afrika.",
     "shopNow": "Thenga Iimveliso",
     "browseCategories": "Khangela Iindidi",
-    "categoriesTitle": "Thenga ngeKategori",
-    "categoriesSubtitle": "Fumana into oyifunayo kwiindidi zethu zetekhnoloji",
-    "featuredTitle": "Iimveliso eziGqamileyo",
-    "featuredSubtitle": "Itekhnoloji ekhethwe ngesandla ngamaxabiso akhuphisanayo",
+    "trustRow": {
+      "secure": "Iintlawulo Ezikhuselekileyo",
+      "delivery": "Ukuhanjiswa kwiMzantsi Afrika wonke",
+      "trusted": "Umboneleli Othenjwayo"
+    },
+    "heroCards": {
+      "ai": { "label": "I-AI noKufunda kweMatshini", "desc": "Ii-GPU, ii-TPU, ii-accelerator zeAI" },
+      "networking": { "label": "Uthungelwano", "desc": "Ii-router, ii-switch, iindawo zokufikelela" },
+      "computing": { "label": "Ikhompyutha", "desc": "Iiseva, iiworkstation, ugcino" },
+      "software": { "label": "Isoftware neeLayisenisi", "desc": "Iilayisenisi zeshishini nezelifu" }
+    },
+    "fromPrice": "Ukusuka kwi",
+    "featureBar": {
+      "shipping": { "title": "Ukuhanjiswa Kwasimahla", "desc": "Kwii-oda ezingaphezu kweR500" },
+      "checkout": { "title": "Intlawulo Ekhuselekileyo", "desc": "Isango lentlawulo Yoco" },
+      "support": { "title": "Inkxaso ye-AI", "desc": "Uncedo lobukrelekrele 24/7" },
+      "delivery": { "title": "Ukuhanjiswa Okukhawulezayo", "desc": "Iintsuku 2–5 zomsebenzi kuMzantsi Afrika" }
+    },
+    "categoriesTitle": "Thenga ngeNdidi",
+    "categoriesSubtitle": "Fumana into oyifunayo ngokuchanekileyo kwiindidi zethu zeteknoloji ezihlanganisiweyo",
+    "catShort": {
+      "ai": { "label": "I-AI neHardware", "count": "50+ iimveliso" },
+      "networking": { "label": "Uthungelwano", "count": "30+ iimveliso" },
+      "computing": { "label": "Ikhompyutha", "count": "40+ iimveliso" },
+      "software": { "label": "Isoftware", "count": "20+ iimveliso" }
+    },
+    "featuredTitle": "Iimveliso Eziphambili",
+    "featuredSubtitle": "Iteknoloji ekhethiweyo ngamaxabiso akhuphisanayo",
     "viewAll": "Jonga Zonke",
+    "viewAllProducts": "Jonga Zonke Iimveliso",
     "noProducts": "Akukho mveliso okwangoku",
-    "noProductsHint": "Iimveliso ziya kuvela apha xa zongezelelwe"
+    "noProductsHint": "Iimveliso ziya kuvela apha xa zongezwe kwiphaneli yoMlawuli",
+    "why": {
+      "title": "Kutheni Ukhethe iSmart Store?",
+      "subtitle": "Yenzelwe amashishini aseMzantsi Afrika afuna amaqabane eteknoloji athembekileyo",
+      "distributor": {
+        "title": "Umsasazi Ogunyazisiweyo",
+        "desc": "Ubudlelwane obungqalileyo nezimpawu zeteknoloji eziphambili buqinisekisa iimveliso zokwenyani namaxabiso akhuphisanayo."
+      },
+      "ai": {
+        "title": "Inkxaso eXhaswa yi-AI",
+        "desc": "I-chatbot yethu ekrelekrele iyakunceda ufumane imveliso efanelekileyo, ujonge ukungqinelana, kwaye ufumane iimpendulo ngokukhawuleza."
+      },
+      "business": {
+        "title": "Ilungele Ishishini",
+        "desc": "Ukuoda ngobuninzi, inkxaso yeinvoyisi, kunye nolawulo lweakhawunti elunikezelweyo kwabathengi beshishini."
+      }
+    },
+    "aiCta": {
+      "badge": "Umncedisi we-AI",
+      "title": "Ufuna uncedo lokufumana imveliso efanelekileyo?",
+      "desc": "Umncedisi wethu we-AI angakunceda uthelekise iimveliso, ujonge iinkcukacha, ufumane ulwazi lokungqinelana, kwaye uphendule imibuzo yakho yeteknoloji — ngokukhawuleza.",
+      "hint": "Cofa kwi-ikhoni yencoko ekwiphaneli yokufikelela ezantsi ekunene ukuze uqalise"
+    },
+    "brandsLabel": "Iimpawu zeTeknoloji Ezithenjwayo"
   },
   "product": {
     "inStock": "Iyafumaneka",
-    "outOfStock": "Aphelile",
+    "outOfStock": "Iphelile",
     "add": "Yongeza",
-    "added": "Yongeziwe!",
-    "addToCart": "Yongeza kwiNqwelo"
+    "added": "Yongezelwe!",
+    "addToCart": "Yongeza enqwelweni"
   },
   "cart": {
     "title": "Inqwelo Yakho",
     "empty": "Inqwelo yakho ayinanto",
     "checkout": "Hlawula",
     "total": "Iyonke",
-    "subtotal": "Subtotali"
+    "subtotal": "Isamba"
   },
   "account": {
     "welcome": "Wamkelekile kwakhona",
-    "orders": "Imiyalelo",
-    "returns": "Ukubuyiswa noNcedo",
+    "orders": "Ii-oda",
+    "returns": "Ukubuyiselwa neNkxaso",
     "profile": "Iprofayile",
     "viewingAsCustomer": "Ujonga njengomthengi",
     "returnToAdmin": "Buyela kumlawuli"

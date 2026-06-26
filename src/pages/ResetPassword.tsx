@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
-import logo from "@/assets/logo.png";
+import Logo from "@/components/Logo";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");

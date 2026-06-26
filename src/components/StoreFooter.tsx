@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Mail, MapPin, Phone, Shield, Truck, CreditCard } from "lucide-react";
+import Logo from "@/components/Logo";
 
 const StoreFooter = () => {
   const location = useLocation();

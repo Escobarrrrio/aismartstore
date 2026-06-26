@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import LanguageCurrencySwitcher from "@/components/LanguageCurrencySwitcher";
-import logoAsset from "@/assets/ai-smart-store-logo.png.asset.json";
+import Logo from "@/components/Logo";
 
 const StoreHeader = () => {
   const { totalItems } = useCart();

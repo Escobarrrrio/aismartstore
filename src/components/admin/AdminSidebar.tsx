@@ -4,6 +4,7 @@ import {
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
   HardDrive, Wrench, Search
 } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export type AdminTab =
   | "dashboard" | "products" | "import" | "orders" | "customers"
@@ -56,7 +57,7 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, em
       <aside className={`fixed top-0 left-0 bottom-0 w-[260px] bg-sidebar z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:h-screen`}>
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
-          <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center text-white font-bold text-xs shrink-0">S</div>
+          <Logo size={32} showWordmark={false} asLink={false} />
           <div className="min-w-0">
             <p className="font-display font-extrabold text-sm text-sidebar-foreground truncate">Control Centre</p>
             <p className="text-[10px] text-sidebar-foreground/40 truncate">{email}</p>

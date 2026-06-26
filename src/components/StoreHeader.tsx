@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import LanguageCurrencySwitcher from "@/components/LanguageCurrencySwitcher";
-import logoAsset from "@/assets/ai-smart-store-logo.png.asset.json";
+import Logo from "@/components/Logo";
 
 const StoreHeader = () => {
   const { totalItems } = useCart();
@@ -35,16 +35,9 @@ const StoreHeader = () => {
     <header className={`sticky top-0 z-50 w-full max-w-full transition-all duration-300 ${scrolled ? 'bg-background/95 backdrop-blur-xl shadow-sm border-b border-border' : 'bg-background border-b border-transparent'}`}>
       <div className="container mx-auto flex items-center h-16 px-4 lg:px-6 max-w-full">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 flex-shrink-0 mr-4 lg:mr-8 min-w-0">
-          <img
-            src={logoAsset.url}
-            alt="AI Smart Store"
-            className="h-9 w-9 object-contain flex-shrink-0"
-          />
-          <span className="font-display font-extrabold text-base sm:text-lg tracking-tight gradient-brand-text whitespace-nowrap">
-            AI Smart Store
-          </span>
-        </Link>
+        <div className="flex-shrink-0 mr-4 lg:mr-8 min-w-0">
+          <Logo size={32} />
+        </div>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1 min-w-0">

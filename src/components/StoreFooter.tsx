@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Mail, MapPin, Phone, Shield, Truck, CreditCard } from "lucide-react";
+import Logo from "@/components/Logo";
 
 const StoreFooter = () => {
   const location = useLocation();
@@ -34,9 +35,8 @@ const StoreFooter = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center text-white font-display font-extrabold text-xs">S</div>
-              <span className="font-display font-extrabold text-sm text-background/90">Smart Store</span>
+            <div className="mb-4">
+              <Logo size={28} invert />
             </div>
             <p className="text-sm leading-relaxed text-background/40 mb-4">
               South Africa's premium destination for AI hardware, networking, and enterprise technology solutions.

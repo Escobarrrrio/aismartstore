@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail } from "lucide-react";
-import logo from "@/assets/logo.png";
+import Logo from "@/components/Logo";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -37,10 +37,15 @@ const Auth = () => {
       if (error) {
         toast({ title: "Login failed", description: error.message, variant: "destructive" });
       } else {
+        toast({ title: "Welcome back", description: "You're now signed in." });
         navigate("/admin");
       }
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth` },
+      });
       if (error) {
         toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
       } else {
@@ -54,9 +59,8 @@ const Auth = () => {
     <div className="min-h-[80vh] flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}>
       <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-elevated p-8">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-7">
-          <img src={logo} alt="AI Smart Store" className="h-12 w-12 object-contain" />
-          <span className="font-display font-extrabold text-xl gradient-brand-text">Smart Store</span>
+        <div className="flex justify-center mb-7">
+          <Logo size={48} asLink={false} />
         </div>
 
         <h2 className="font-display font-extrabold text-2xl text-center mb-1">

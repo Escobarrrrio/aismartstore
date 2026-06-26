@@ -17,13 +17,61 @@
     "heroSubtitle": "From AI hardware to networking solutions — curated, competitively priced, and backed by expert support for South African businesses.",
     "shopNow": "Shop Products",
     "browseCategories": "Browse Categories",
+    "trustRow": {
+      "secure": "Secure Payments",
+      "delivery": "SA-Wide Delivery",
+      "trusted": "Trusted Supplier"
+    },
+    "heroCards": {
+      "ai": { "label": "AI & Machine Learning", "desc": "GPUs, TPUs, AI accelerators" },
+      "networking": { "label": "Networking", "desc": "Routers, switches, access points" },
+      "computing": { "label": "Computing", "desc": "Servers, workstations, storage" },
+      "software": { "label": "Software & Licenses", "desc": "Enterprise and cloud licenses" }
+    },
+    "fromPrice": "From",
+    "featureBar": {
+      "shipping": { "title": "Free Shipping", "desc": "On orders over R500" },
+      "checkout": { "title": "Secure Checkout", "desc": "Yoco payment gateway" },
+      "support": { "title": "AI Support", "desc": "24/7 intelligent assistance" },
+      "delivery": { "title": "Fast Delivery", "desc": "2–5 business days SA-wide" }
+    },
     "categoriesTitle": "Shop by Category",
     "categoriesSubtitle": "Find exactly what you need across our curated technology categories",
+    "catShort": {
+      "ai": { "label": "AI & Hardware", "count": "50+ products" },
+      "networking": { "label": "Networking", "count": "30+ products" },
+      "computing": { "label": "Computing", "count": "40+ products" },
+      "software": { "label": "Software", "count": "20+ products" }
+    },
     "featuredTitle": "Featured Products",
     "featuredSubtitle": "Hand-picked tech at competitive prices",
     "viewAll": "View All",
+    "viewAllProducts": "View All Products",
     "noProducts": "No products yet",
-    "noProductsHint": "Products will appear here once added from the Admin panel"
+    "noProductsHint": "Products will appear here once added from the Admin panel",
+    "why": {
+      "title": "Why Choose Smart Store?",
+      "subtitle": "Built for South African businesses that need reliable technology partners",
+      "distributor": {
+        "title": "Authorised Distributor",
+        "desc": "Direct partnerships with top-tier technology brands ensure genuine products and competitive pricing."
+      },
+      "ai": {
+        "title": "AI-Powered Support",
+        "desc": "Our intelligent chatbot helps you find the right product, check compatibility, and get instant answers."
+      },
+      "business": {
+        "title": "Business-Ready",
+        "desc": "Bulk ordering, invoice support, and dedicated account management for enterprise customers."
+      }
+    },
+    "aiCta": {
+      "badge": "AI Assistant",
+      "title": "Need Help Finding the Right Product?",
+      "desc": "Our AI assistant can help you compare products, check specifications, find compatibility info, and answer your tech questions — instantly.",
+      "hint": "Click the chat icon in the bottom right to get started"
+    },
+    "brandsLabel": "Trusted Technology Brands"
   },
   "product": {
     "inStock": "In Stock",

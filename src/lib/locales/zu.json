@@ -2,47 +2,95 @@
   "nav": {
     "home": "Ikhaya",
     "products": "Imikhiqizo",
-    "cart": "Inqola",
-    "account": "I-akhawunti yami",
+    "cart": "Ikalishi",
+    "account": "I-akhawunti Yami",
     "admin": "Umlawuli",
     "login": "Ngena / Bhalisa",
     "signOut": "Phuma",
     "search": "Sesha imikhiqizo..."
   },
   "home": {
-    "heroBadge": "Isitolo Sezobuchwepheshe Se-AI Esisezingeni Eliphezulu",
+    "heroBadge": "Isitolo Esiphezulu se-AI Nobuchwepheshe eNingizimu Afrika",
     "heroTitle1": "Izinga Lebhizinisi",
     "heroTitle2": "Ubuchwepheshe",
     "heroTitle3": "Bulethwa Kuwe",
-    "heroSubtitle": "Kusuka kwi-hardware ye-AI kuya kuzixazululo zenethiwekhi — okukhethiwe, okunamanani aqhudelanayo, futhi kusekelwa abalingani bobuchwepheshe.",
+    "heroSubtitle": "Kusukela kwi-hardware ye-AI kuya ezixazululweni zenethiwekhi — ezihlanganisiwe, ezinamanani aqhudelanayo, futhi ezisekelwa usekelo lochwepheshe wamabhizinisi aseNingizimu Afrika.",
     "shopNow": "Thenga Imikhiqizo",
     "browseCategories": "Bheka Izigaba",
+    "trustRow": {
+      "secure": "Izinkokhelo Eziphephile",
+      "delivery": "Ukulethwa Kuyo yonke iNingizimu Afrika",
+      "trusted": "Umhlinzeki Othembekile"
+    },
+    "heroCards": {
+      "ai": { "label": "I-AI Nokufunda Komshini", "desc": "Ama-GPU, ama-TPU, ama-accelerator e-AI" },
+      "networking": { "label": "Inethiwekhi", "desc": "Ama-router, ama-switch, izindawo zokufinyelela" },
+      "computing": { "label": "Ikhompyutha", "desc": "Amaseva, ama-workstation, isitoreji" },
+      "software": { "label": "Isofthiwe Namalayisense", "desc": "Amalayisense ebhizinisi nelifu" }
+    },
+    "fromPrice": "Kusukela ku",
+    "featureBar": {
+      "shipping": { "title": "Ukuthumela Kwamahhala", "desc": "Kuma-oda angaphezu kuka-R500" },
+      "checkout": { "title": "Ukukhokha Okuphephile", "desc": "Isango lokukhokha le-Yoco" },
+      "support": { "title": "Usekelo lwe-AI", "desc": "Usizo oluhlakaniphile 24/7" },
+      "delivery": { "title": "Ukulethwa Okusheshayo", "desc": "Izinsuku zomsebenzi ezi-2–5 kuyo yonke iNingizimu Afrika" }
+    },
     "categoriesTitle": "Thenga Ngesigaba",
-    "categoriesSubtitle": "Thola lokho okudingayo ezigabeni zethu zobuchwepheshe",
+    "categoriesSubtitle": "Thola ngqo lokho okudingayo kuzo zonke izigaba zethu zobuchwepheshe ezihlanganisiwe",
+    "catShort": {
+      "ai": { "label": "I-AI Ne-Hardware", "count": "Imikhiqizo engu-50+" },
+      "networking": { "label": "Inethiwekhi", "count": "Imikhiqizo engu-30+" },
+      "computing": { "label": "Ikhompyutha", "count": "Imikhiqizo engu-40+" },
+      "software": { "label": "Isofthiwe", "count": "Imikhiqizo engu-20+" }
+    },
     "featuredTitle": "Imikhiqizo Egqamile",
     "featuredSubtitle": "Ubuchwepheshe obukhethiwe ngamanani aqhudelanayo",
     "viewAll": "Buka Konke",
+    "viewAllProducts": "Buka Yonke Imikhiqizo",
     "noProducts": "Ayikho imikhiqizo okwamanje",
-    "noProductsHint": "Imikhiqizo izovela lapha uma sekungezwe"
+    "noProductsHint": "Imikhiqizo izovela lapha uma isingezwe kuphaneli yoMlawuli",
+    "why": {
+      "title": "Kungani Ukhethe i-Smart Store?",
+      "subtitle": "Yakhelwe amabhizinisi aseNingizimu Afrika adinga ozakwethu bobuchwepheshe abathembekile",
+      "distributor": {
+        "title": "Umsabalalisi Ogunyaziwe",
+        "desc": "Ubudlelwano obuqondile namabhrendi obuchwepheshe aphezulu buqinisekisa imikhiqizo yangempela namanani aqhudelanayo."
+      },
+      "ai": {
+        "title": "Usekelo Olusekelwe yi-AI",
+        "desc": "I-chatbot yethu ehlakaniphile ikusiza uthole umkhiqizo ofanele, uhlole ukuhambisana, futhi uthole izimpendulo ngokushesha."
+      },
+      "business": {
+        "title": "Ilungele Ibhizinisi",
+        "desc": "Ukuoda ngobuningi, usekelo lwe-invoyisi, nokulawulwa kwe-akhawunti okuzinikele kwamakhasimende ebhizinisi."
+      }
+    },
+    "aiCta": {
+      "badge": "Umsizi we-AI",
+      "title": "Udinga usizo lokuthola umkhiqizo ofanele?",
+      "desc": "Umsizi wethu we-AI angakusiza uqhathanise imikhiqizo, uhlole imininingwane, uthole ulwazi lokuhambisana, futhi uphendule imibuzo yakho yobuchwepheshe — ngokushesha.",
+      "hint": "Chofoza isithonjana sengxoxo phansi ngakwesokudla ukuze uqale"
+    },
+    "brandsLabel": "Amabhrendi Obuchwepheshe Athembekile"
   },
   "product": {
     "inStock": "Iyatholakala",
     "outOfStock": "Iphelile",
     "add": "Engeza",
-    "added": "Kungezwe!",
-    "addToCart": "Engeza Enqoleni"
+    "added": "Yengeziwe!",
+    "addToCart": "Engeza ekalishini"
   },
   "cart": {
-    "title": "Inqola Yakho",
-    "empty": "Inqola yakho ayinalutho",
+    "title": "Ikalishi Lakho",
+    "empty": "Ikalishi lakho lingenalutho",
     "checkout": "Khokha",
     "total": "Isamba",
-    "subtotal": "Isamba esincane"
+    "subtotal": "Isamba esisesincane"
   },
   "account": {
     "welcome": "Sawubona futhi",
     "orders": "Ama-oda",
-    "returns": "Okubuyiswayo Nosizo",
+    "returns": "Ukubuyisela Nokwesekwa",
     "profile": "Iphrofayela",
     "viewingAsCustomer": "Ubuka njengekhasimende",
     "returnToAdmin": "Buyela kumlawuli"

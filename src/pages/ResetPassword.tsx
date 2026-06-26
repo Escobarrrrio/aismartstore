@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
-import logo from "@/assets/logo.png";
+import Logo from "@/components/Logo";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -61,9 +61,8 @@ const ResetPassword = () => {
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}>
       <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-elevated p-8">
-        <div className="flex items-center justify-center gap-2 mb-7">
-          <img src={logo} alt="AI Smart Store" className="h-12 w-12 object-contain" />
-          <span className="font-display font-extrabold text-xl gradient-brand-text">Smart Store</span>
+        <div className="flex justify-center mb-7">
+          <Logo size={48} asLink={false} />
         </div>
 
         <h2 className="font-display font-extrabold text-2xl text-center mb-1">Set New Password</h2>

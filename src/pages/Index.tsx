@@ -1,4 +1,5 @@
 import { useProducts } from "@/contexts/ProductContext";
+import { useTranslation } from "react-i18next";
 import ProductCard from "@/components/ProductCard";
 import HeroSection from "@/components/HeroSection";
 import { Package, ArrowRight, Cpu, Globe, Server, Code, MessageCircle, Shield, Headphones, BarChart3 } from "lucide-react";
@@ -6,7 +7,21 @@ import { Link } from "react-router-dom";
 
 const Index = () => {
   const { products, loading } = useProducts();
+  const { t } = useTranslation();
   const featured = products.slice(0, 8);
+
+  const categoryCards = [
+    { key: "ai", icon: Cpu, color: "bg-primary/[0.06] text-primary" },
+    { key: "networking", icon: Globe, color: "bg-secondary/[0.06] text-secondary" },
+    { key: "computing", icon: Server, color: "bg-[hsl(160,84%,39%)]/[0.06] text-[hsl(160,84%,39%)]" },
+    { key: "software", icon: Code, color: "bg-[hsl(38,92%,50%)]/[0.06] text-[hsl(38,92%,50%)]" },
+  ] as const;
+
+  const benefits = [
+    { key: "distributor", Icon: Shield },
+    { key: "ai", Icon: Headphones },
+    { key: "business", Icon: BarChart3 },
+  ] as const;
 
   return (
     <div className="flex flex-col">
@@ -17,30 +32,25 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-3">
-              Shop by Category
+              <span className="shimmer-text">{t("home.categoriesTitle")}</span>
             </h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Find exactly what you need across our curated technology categories
+              {t("home.categoriesSubtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { icon: Cpu, label: "AI & Hardware", count: "50+ products", color: "bg-primary/[0.06] text-primary" },
-              { icon: Globe, label: "Networking", count: "30+ products", color: "bg-secondary/[0.06] text-secondary" },
-              { icon: Server, label: "Computing", count: "40+ products", color: "bg-[hsl(160,84%,39%)]/[0.06] text-[hsl(160,84%,39%)]" },
-              { icon: Code, label: "Software", count: "20+ products", color: "bg-[hsl(38,92%,50%)]/[0.06] text-[hsl(38,92%,50%)]" },
-            ].map((cat, i) => (
+            {categoryCards.map((cat) => (
               <Link
-                key={i}
+                key={cat.key}
                 to="/products"
                 className="card-premium p-6 text-center group"
               >
                 <div className={`w-14 h-14 rounded-2xl ${cat.color} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <cat.icon className="h-7 w-7" />
                 </div>
-                <h3 className="font-display font-bold text-sm mb-1">{cat.label}</h3>
-                <p className="text-xs text-muted-foreground">{cat.count}</p>
+                <h3 className="font-display font-bold text-sm mb-1">{t(`home.catShort.${cat.key}.label`)}</h3>
+                <p className="text-xs text-muted-foreground">{t(`home.catShort.${cat.key}.count`)}</p>
               </Link>
             ))}
           </div>
@@ -53,12 +63,12 @@ const Index = () => {
           <div className="flex items-end justify-between mb-10">
             <div>
               <h2 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">
-                Featured Products
+                {t("home.featuredTitle")}
               </h2>
-              <p className="text-muted-foreground">Hand-picked tech at competitive prices</p>
+              <p className="text-muted-foreground">{t("home.featuredSubtitle")}</p>
             </div>
             <Link to="/products" className="hidden md:flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-              View All <ArrowRight className="h-4 w-4" />
+              {t("home.viewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
@@ -82,9 +92,9 @@ const Index = () => {
           ) : featured.length === 0 ? (
             <div className="text-center py-20 card-flat">
               <Package className="h-14 w-14 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-muted-foreground text-lg font-display font-semibold mb-1">No products yet</p>
+              <p className="text-muted-foreground text-lg font-display font-semibold mb-1">{t("home.noProducts")}</p>
               <p className="text-sm text-muted-foreground">
-                Products will appear here once added from the Admin panel
+                {t("home.noProductsHint")}
               </p>
             </div>
           ) : (
@@ -97,7 +107,7 @@ const Index = () => {
 
           <div className="md:hidden text-center mt-8">
             <Link to="/products" className="btn-secondary px-6 py-3 text-sm">
-              View All Products <ArrowRight className="h-4 w-4" />
+              {t("home.viewAllProducts")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -108,37 +118,21 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-3">
-              Why Choose Smart Store?
+              <span className="shimmer-text">{t("home.why.title")}</span>
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Built for South African businesses that need reliable technology partners
+              {t("home.why.subtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                title: "Authorised Distributor",
-                desc: "Direct partnerships with top-tier technology brands ensure genuine products and competitive pricing.",
-                Icon: Shield,
-              },
-              {
-                title: "AI-Powered Support",
-                desc: "Our intelligent chatbot helps you find the right product, check compatibility, and get instant answers.",
-                Icon: Headphones,
-              },
-              {
-                title: "Business-Ready",
-                desc: "Bulk ordering, invoice support, and dedicated account management for enterprise customers.",
-                Icon: BarChart3,
-              },
-            ].map((benefit, i) => (
-              <div key={i} className="card-flat p-8 text-center">
+            {benefits.map((benefit) => (
+              <div key={benefit.key} className="card-flat p-8 text-center">
                 <div className="w-14 h-14 rounded-2xl bg-primary/[0.06] text-primary flex items-center justify-center mx-auto mb-4">
                   <benefit.Icon className="h-7 w-7" />
                 </div>
-                <h3 className="font-display font-bold text-lg mb-2">{benefit.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{benefit.desc}</p>
+                <h3 className="font-display font-bold text-lg mb-2">{t(`home.why.${benefit.key}.title`)}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t(`home.why.${benefit.key}.desc`)}</p>
               </div>
             ))}
           </div>
@@ -154,16 +148,16 @@ const Index = () => {
               <div>
                 <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5 text-xs font-semibold text-white mb-4">
                   <MessageCircle className="h-3.5 w-3.5" />
-                  AI Assistant
+                  {t("home.aiCta.badge")}
                 </div>
                 <h2 className="text-2xl md:text-3xl font-display font-extrabold text-white mb-3">
-                  Need Help Finding the Right Product?
+                  {t("home.aiCta.title")}
                 </h2>
                 <p className="text-white/70 text-sm leading-relaxed mb-6 max-w-md">
-                  Our AI assistant can help you compare products, check specifications, find compatibility info, and answer your tech questions — instantly.
+                  {t("home.aiCta.desc")}
                 </p>
                 <p className="text-white/50 text-xs">
-                  Click the chat icon in the bottom right to get started
+                  {t("home.aiCta.hint")}
                 </p>
               </div>
               <div className="hidden md:flex justify-center">
@@ -180,7 +174,7 @@ const Index = () => {
       <section className="section-padding-sm border-t border-border">
         <div className="container mx-auto px-4">
           <p className="text-center text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-8">
-            Trusted Technology Brands
+            {t("home.brandsLabel")}
           </p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
             {["Dell", "HP", "Lenovo", "Cisco", "Microsoft", "Intel", "AMD", "NVIDIA"].map((brand) => (

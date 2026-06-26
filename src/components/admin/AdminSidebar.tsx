@@ -4,6 +4,7 @@ import {
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
   HardDrive, Wrench, Search
 } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export type AdminTab =
   | "dashboard" | "products" | "import" | "orders" | "customers"

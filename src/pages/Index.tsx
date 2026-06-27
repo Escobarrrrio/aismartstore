@@ -2,6 +2,7 @@ import { useProducts } from "@/contexts/ProductContext";
 import { useTranslation } from "react-i18next";
 import ProductCard from "@/components/ProductCard";
 import HeroSection from "@/components/HeroSection";
+import SEO from "@/components/SEO";
 import { Package, ArrowRight, Cpu, Globe, Server, Code, MessageCircle, Shield, Headphones, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -25,6 +26,19 @@ const Index = () => {
 
   return (
     <div className="flex flex-col">
+      <SEO
+        title="AI Smart Store"
+        description="South Africa's premium AI & technology store. AI hardware, networking, computing, and enterprise software -- curated, competitively priced, and backed by expert support."
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "AI Smart Store",
+          url: typeof window !== "undefined" ? window.location.origin : "https://aismartstore.lovable.app",
+          logo: typeof window !== "undefined" ? `${window.location.origin}/icon-512.png` : undefined,
+          description: "South Africa's premium AI & technology store.",
+        }}
+      />
       <HeroSection />
 
       {/* Categories Section */}

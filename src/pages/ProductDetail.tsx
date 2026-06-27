@@ -3,6 +3,7 @@ import { formatMoney } from "@/lib/currency";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useProducts } from "@/contexts/ProductContext";
 import { useCart } from "@/contexts/CartContext";
+import SEO from "@/components/SEO";
 import {
   ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw,
   Star, ChevronRight, Package, MessageCircle, Minus, Plus
@@ -31,6 +32,7 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
+        <SEO title={t("productDetail.notFoundTitle")} description={t("productDetail.notFoundDesc")} noindex />
         <Package className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
         <h1 className="font-display font-bold text-2xl mb-2">{t("productDetail.notFoundTitle")}</h1>
         <p className="text-muted-foreground mb-6">{t("productDetail.notFoundDesc")}</p>
@@ -49,6 +51,29 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title={product.name}
+        description={product.description || `${product.name} — available now at AI Smart Store. ${product.inStock ? "In stock" : "Currently out of stock"}, with secure checkout and SA-wide delivery.`}
+        path={`/product/${product.id}`}
+        image={product.images[0]}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          description: product.description,
+          image: product.images,
+          category: product.category || undefined,
+          offers: {
+            "@type": "Offer",
+            priceCurrency: "ZAR",
+            price: product.price,
+            availability: product.inStock
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+            url: `${window.location.origin}/product/${product.id}`,
+          },
+        }}
+      />
       {/* Breadcrumb */}
       <div className="bg-muted/50 border-b border-border">
         <div className="container mx-auto px-4 py-3">

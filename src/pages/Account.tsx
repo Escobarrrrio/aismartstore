@@ -10,6 +10,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
+import SEO from "@/components/SEO";
 import { formatMoney } from "@/lib/currency";
 import { useCart } from "@/contexts/CartContext";
 
@@ -150,6 +151,7 @@ const Account = () => {
 
   return (
     <div className="min-h-screen bg-muted/30 w-full max-w-full overflow-x-hidden">
+      <SEO title="My Account" description="Your AI Smart Store account." noindex />
       {isImpersonating && (
         <div className="w-full bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-b border-primary/20">
           <div className="container mx-auto px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">

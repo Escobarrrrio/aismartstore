@@ -1,5 +1,6 @@
 import { useProducts } from "@/contexts/ProductContext";
 import ProductCard from "@/components/ProductCard";
+import SEO from "@/components/SEO";
 import { Package, Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Product } from "@/contexts/CartContext";
@@ -49,6 +50,11 @@ const Products = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title={t("products.title")}
+        description="Browse AI hardware, networking equipment, computing, and enterprise software at AI Smart Store -- South Africa's premium AI & tech destination."
+        path="/products"
+      />
       {/* Header */}
       <div className="bg-muted/50 border-b border-border">
         <div className="container mx-auto px-4 py-8 md:py-12">

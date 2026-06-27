@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import i18n from "@/lib/i18n";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { ProductProvider } from "@/contexts/ProductContext";
@@ -21,13 +22,15 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 const renderHome = () =>
   render(
-    <MemoryRouter>
-      <LocaleProvider>
-        <ProductProvider>
-          <Index />
-        </ProductProvider>
-      </LocaleProvider>
-    </MemoryRouter>
+    <HelmetProvider>
+      <MemoryRouter>
+        <LocaleProvider>
+          <ProductProvider>
+            <Index />
+          </ProductProvider>
+        </LocaleProvider>
+      </MemoryRouter>
+    </HelmetProvider>
   );
 
 // English strings that previously remained on screen after switching the

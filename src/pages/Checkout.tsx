@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useShippingSettings } from "@/hooks/useShippingSettings";
+import SEO from "@/components/SEO";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -39,6 +40,7 @@ const Checkout = () => {
   if (submitted) {
     return (
       <div className="container mx-auto px-4 py-20 text-center animate-fade-in">
+        <SEO title={t("checkout.orderSuccessTitle")} description="Order confirmed at AI Smart Store." noindex />
         <div className="w-20 h-20 rounded-full bg-[hsl(160,84%,39%)]/10 flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="h-10 w-10 text-[hsl(160,84%,39%)]" />
         </div>
@@ -56,6 +58,7 @@ const Checkout = () => {
   if (paymentFailed) {
     return (
       <div className="container mx-auto px-4 py-20 text-center animate-fade-in">
+        <SEO title={t("checkout.paymentFailedTitle")} description="Payment status at AI Smart Store." noindex />
         <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
           <XCircle className="h-10 w-10 text-destructive" />
         </div>
@@ -115,6 +118,7 @@ const Checkout = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
+      <SEO title={t("checkout.title")} description="Secure checkout at AI Smart Store." noindex />
       <h1 className="text-3xl font-display font-extrabold tracking-tight mb-8">{t("checkout.title")}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">

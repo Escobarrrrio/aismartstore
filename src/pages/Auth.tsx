@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -59,6 +60,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}>
+      <SEO title={isLogin ? t("auth.welcomeBack") : t("auth.createAccount")} description="Sign in to AI Smart Store." noindex />
       <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-elevated p-8">
         {/* Logo */}
         <div className="flex justify-center mb-7">

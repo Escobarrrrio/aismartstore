@@ -4,6 +4,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Shield, Truck } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 import { useShippingSettings } from "@/hooks/useShippingSettings";
 
 const Cart = () => {
@@ -17,6 +18,7 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
+        <SEO title={t("cart.shoppingCart")} description="Your shopping cart at AI Smart Store." noindex />
         <ShoppingBag className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
         <h2 className="text-2xl font-display font-bold mb-2">{t("cart.emptyTitle")}</h2>
         <p className="text-muted-foreground mb-6">{t("cart.emptyHint")}</p>
@@ -29,6 +31,7 @@ const Cart = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
+      <SEO title={t("cart.shoppingCart")} description="Your shopping cart at AI Smart Store." noindex />
       <h1 className="text-3xl font-display font-extrabold tracking-tight mb-8">{t("cart.shoppingCart")}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

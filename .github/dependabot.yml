@@ -1,0 +1,17 @@
+# Automated dependency updates -- opens a PR weekly for outdated packages,
+# which the CI workflow then automatically tests before you ever look at
+# it. You only need to glance at it and click merge (or not) -- the
+# "occasional one-button push" pattern requested.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      radix-ui:
+        patterns:
+          - "@radix-ui/*"
+    commit-message:
+      prefix: "deps"

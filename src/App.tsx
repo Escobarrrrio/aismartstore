@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/contexts/CartContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { LocaleProvider } from "@/contexts/LocaleContext";
@@ -48,34 +49,36 @@ const StorefrontLayout = ({ children }: { children: React.ReactNode }) => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <LocaleProvider>
-        <ProductProvider>
-          <CartProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={<RouteFallback />}>
-                <Routes>
-                  <Route path="/" element={<StorefrontLayout><Index /></StorefrontLayout>} />
-                  <Route path="/products" element={<StorefrontLayout><Products /></StorefrontLayout>} />
-                  <Route path="/product/:id" element={<StorefrontLayout><ProductDetail /></StorefrontLayout>} />
-                  <Route path="/cart" element={<StorefrontLayout><Cart /></StorefrontLayout>} />
-                  <Route path="/checkout" element={<StorefrontLayout><Checkout /></StorefrontLayout>} />
-                  <Route path="/account" element={<StorefrontLayout><Account /></StorefrontLayout>} />
-                  <Route path="/auth" element={<StorefrontLayout><Auth /></StorefrontLayout>} />
-                  <Route path="/reset-password" element={<StorefrontLayout><ResetPassword /></StorefrontLayout>} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </CartProvider>
-        </ProductProvider>
-      </LocaleProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <LocaleProvider>
+          <ProductProvider>
+            <CartProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<RouteFallback />}>
+                  <Routes>
+                    <Route path="/" element={<StorefrontLayout><Index /></StorefrontLayout>} />
+                    <Route path="/products" element={<StorefrontLayout><Products /></StorefrontLayout>} />
+                    <Route path="/product/:id" element={<StorefrontLayout><ProductDetail /></StorefrontLayout>} />
+                    <Route path="/cart" element={<StorefrontLayout><Cart /></StorefrontLayout>} />
+                    <Route path="/checkout" element={<StorefrontLayout><Checkout /></StorefrontLayout>} />
+                    <Route path="/account" element={<StorefrontLayout><Account /></StorefrontLayout>} />
+                    <Route path="/auth" element={<StorefrontLayout><Auth /></StorefrontLayout>} />
+                    <Route path="/reset-password" element={<StorefrontLayout><ResetPassword /></StorefrontLayout>} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </CartProvider>
+          </ProductProvider>
+        </LocaleProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

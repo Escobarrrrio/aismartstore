@@ -1,73 +1,81 @@
-# Welcome to your Lovable project
+<div align="center">
 
-## Project info
+# AI Smart Store
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**South Africa's premium AI & technology e-commerce platform.**
 
-## How can I edit this code?
+[Live Site](https://aismartstore.lovable.app) · [Report an Issue](https://github.com/Escobarrrrio/aismartstore/issues)
 
-There are several ways of editing your application.
+</div>
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## What this is
 
-Changes made via Lovable will be committed automatically to this repo.
+AI Smart Store is the e-commerce platform for **AI Job Chommie Pty Ltd**, built to sell AI hardware,
+networking equipment, computing, and enterprise software to South African businesses — sourced through
+a distribution partnership with **Axiz (Alviva Holdings)**.
 
-**Use your preferred IDE**
+The platform is built for scale from the start: it's designed to carry Axiz's full catalogue
+(thousands of SKUs) once the distribution API integration goes live, with margin tracking,
+multi-language support, and an operations dashboard built in from day one rather than bolted on later.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Backend | Supabase (Postgres, Auth, Edge Functions, Storage) |
+| Payments | Yoco |
+| i18n | react-i18next — English, Afrikaans, isiXhosa, isiZulu, Sesotho |
+| Testing | Vitest, React Testing Library |
+| Hosting / CI | Lovable (build & deploy), GitHub (source of truth) |
 
-Follow these steps:
+## Highlights
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- **Row-level security audited and locked down** — every table enforces the principle of least
+  privilege; customers can only ever see their own data, admin-only data (margins, settings) is
+  isolated at the database level, not just hidden in the UI.
+- **Full internationalization** across every customer-facing page, not just the homepage.
+- **Code-split by route** — the admin control centre (~30 modules) never ships to a customer
+  just browsing the storefront.
+- **Real automated test suite** — component tests, an i18n-completeness regression guard, and
+  auth flow smoke tests, run on every push.
+- **Configurable shipping**, transparent at the cart stage rather than sprung at checkout.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Project structure
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+  pages/          Route-level pages (Home, Products, Cart, Checkout, Admin, ...)
+  components/     Shared UI, including the admin control centre modules
+  contexts/       Cart, Product, and Locale React contexts
+  hooks/          Shared hooks (admin-role check, shipping settings, etc.)
+  lib/            i18n setup, currency formatting, locale JSON files
+  integrations/   Supabase client + generated types
+  test/           Vitest test suite
+supabase/
+  migrations/     Database schema and RLS policy history (applied in order)
+  functions/      Edge functions (Yoco checkout, order notifications, AI chat)
 ```
 
-**Edit a file directly in GitHub**
+## Local development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm install
+npm run dev      # start the dev server
+npm test         # run the test suite
+npm run build    # production build
+```
 
-**Use GitHub Codespaces**
+Requires Node.js + npm — see [nvm](https://github.com/nvm-sh/nvm) if you need to install them.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Working on this project
 
-## What technologies are used for this project?
+This repository is synced bidirectionally with [Lovable](https://lovable.dev/projects/709f70aa-425c-4590-a3c9-ac6ccd24459b).
+Changes pushed here are pulled into Lovable automatically, and changes made in Lovable are committed
+back here. Either workflow is safe to use.
 
-This project is built with:
+## License
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Proprietary — © AI Job Chommie Pty Ltd. All rights reserved.

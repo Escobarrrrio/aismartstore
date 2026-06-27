@@ -148,3 +148,40 @@ implies a fee exists below that threshold and was never being charged).
 - Added a "spend R___ more for free shipping" nudge on Cart when below
   threshold -- turns the cost-disclosure moment into an upsell opportunity
   (a pattern Gymshark and others use successfully) instead of pure friction.
+
+## 2026-06-27 (3) — SEO infrastructure, dynamic sitemap, CI automation
+
+### SEO
+- Added per-route meta tags (title, description, canonical URL, Open
+  Graph, Twitter Card) via react-helmet-async -- previously every route
+  shared the same static tags from index.html, which is invisible to
+  search engines trying to rank individual product pages.
+- Added full `Product` JSON-LD structured data on product pages (price,
+  stock status, images) -- this is what makes individual products
+  eligible for Google rich snippets (price/availability shown directly
+  in search results).
+- Added `Organization` JSON-LD on the homepage.
+- Marked Cart/Checkout/Account/Auth/Reset-Password as noindex -- these
+  have no SEO value and shouldn't compete with real content pages.
+- Deployed a dynamic sitemap (Supabase edge function `sitemap`) that
+  regenerates from live product data on every request, instead of a
+  static file that goes stale the moment products are added or removed.
+  robots.txt now points at it directly.
+
+### Automation
+- Added a GitHub Actions CI workflow: every push/PR automatically runs
+  type-check, the full test suite, and a production build. No human
+  action needed unless something actually breaks.
+- Added Dependabot config for weekly automated dependency-update PRs,
+  which the CI workflow tests automatically before anyone needs to look
+  at them.
+- Rewrote the repository README (was the generic Lovable starter
+  template) to actually describe the project, stack, and structure --
+  relevant since this repo may be shown to Axiz as part of the
+  partnership application.
+
+### Fixed
+- HelmetProvider was missing from test renders after wiring in
+  react-helmet-async, which crashed 2 of the 4 test files. Fixed by
+  wrapping the relevant test renders in HelmetProvider, matching how
+  i18next is already initialized globally for tests.

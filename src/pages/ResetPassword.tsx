@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -50,6 +51,7 @@ const ResetPassword = () => {
   if (!isRecovery) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <SEO title={t("resetPassword.title")} description="Reset your password." noindex />
         <div className="text-center">
           <p className="text-muted-foreground">{t("resetPassword.invalidLink")}</p>
           <button onClick={() => navigate("/auth")} className="mt-4 text-secondary font-semibold hover:underline">
@@ -62,6 +64,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}>
+      <SEO title={t("resetPassword.title")} description="Reset your password." noindex />
       <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-elevated p-8">
         <div className="flex justify-center mb-7">
           <Logo size={48} asLink={false} />

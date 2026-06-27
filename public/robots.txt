@@ -1,8 +1,20 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /auth
+Disallow: /reset-password
 
 User-agent: Bingbot
 Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /auth
+Disallow: /reset-password
 
 User-agent: Twitterbot
 Allow: /
@@ -12,3 +24,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /auth
+Disallow: /reset-password
+
+Sitemap: https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/sitemap

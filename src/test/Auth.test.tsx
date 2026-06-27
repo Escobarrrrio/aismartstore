@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import Auth from "@/pages/Auth";
 
 const signInWithPassword = vi.fn();
@@ -24,9 +25,11 @@ vi.mock("react-router-dom", async () => {
 
 const renderAuth = () =>
   render(
-    <MemoryRouter>
-      <Auth />
-    </MemoryRouter>
+    <HelmetProvider>
+      <MemoryRouter>
+        <Auth />
+      </MemoryRouter>
+    </HelmetProvider>
   );
 
 describe("Auth page", () => {

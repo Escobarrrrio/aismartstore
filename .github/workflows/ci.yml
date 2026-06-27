@@ -1,0 +1,47 @@
+name: CI
+
+# Runs automatically on every push and pull request -- no human action
+# needed unless something actually breaks. This is the "automated unless
+# it needs your say-so" loop: tests/typecheck/build run on their own;
+# the only manual step left is the one-click Publish in Lovable, which is
+# the intentional approval gate before anything goes live to customers.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Type-check, test, and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Run test suite
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: "https://placeholder.supabase.co"
+          VITE_SUPABASE_PUBLISHABLE_KEY: "placeholder"
+          VITE_SUPABASE_PROJECT_ID: "placeholder"
+
+      - name: Report bundle size
+        run: |
+          echo "### Build output" >> "$GITHUB_STEP_SUMMARY"
+          du -h dist/assets/*.js | sort -rh | head -10 >> "$GITHUB_STEP_SUMMARY"

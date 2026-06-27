@@ -12,7 +12,7 @@
     "procurement": "企业采购"
   },
   "home": {
-    "heroBadge": "南非顶级人工智能与科技商店",
+    "heroBadge": "全球顶级人工智能与科技商店",
     "heroTitle1": "企业级",
     "heroTitle2": "科技",
     "heroTitle3": "为您呈现",
@@ -25,25 +25,61 @@
       "trusted": "值得信赖的供应商"
     },
     "heroCards": {
-      "ai": { "label": "人工智能与机器学习", "desc": "GPU、TPU、AI 加速器" },
-      "networking": { "label": "网络", "desc": "路由器、交换机、接入点" },
-      "computing": { "label": "计算", "desc": "服务器、工作站、存储设备" },
-      "software": { "label": "软件与许可证", "desc": "企业及云端许可证" }
+      "ai": {
+        "label": "人工智能与机器学习",
+        "desc": "GPU、TPU、AI 加速器"
+      },
+      "networking": {
+        "label": "网络",
+        "desc": "路由器、交换机、接入点"
+      },
+      "computing": {
+        "label": "计算",
+        "desc": "服务器、工作站、存储设备"
+      },
+      "software": {
+        "label": "软件与许可证",
+        "desc": "企业及云端许可证"
+      }
     },
     "fromPrice": "起价",
     "featureBar": {
-      "shipping": { "title": "免费配送", "desc": "订单满 R500 即可" },
-      "checkout": { "title": "安全结账", "desc": "Yoco 支付网关" },
-      "support": { "title": "AI 客服支持", "desc": "全天候智能协助" },
-      "delivery": { "title": "快速配送", "desc": "全国 2-5 个工作日" }
+      "shipping": {
+        "title": "免费配送",
+        "desc": "订单满 R500 即可"
+      },
+      "checkout": {
+        "title": "安全结账",
+        "desc": "Yoco 支付网关"
+      },
+      "support": {
+        "title": "AI 客服支持",
+        "desc": "全天候智能协助"
+      },
+      "delivery": {
+        "title": "快速配送",
+        "desc": "全国 2-5 个工作日"
+      }
     },
     "categoriesTitle": "按分类选购",
     "categoriesSubtitle": "在我们精选的科技分类中找到您所需的一切",
     "catShort": {
-      "ai": { "label": "人工智能与硬件", "count": "50+ 件产品" },
-      "networking": { "label": "网络", "count": "30+ 件产品" },
-      "computing": { "label": "计算", "count": "40+ 件产品" },
-      "software": { "label": "软件", "count": "20+ 件产品" }
+      "ai": {
+        "label": "人工智能与硬件",
+        "count": "50+ 件产品"
+      },
+      "networking": {
+        "label": "网络",
+        "count": "30+ 件产品"
+      },
+      "computing": {
+        "label": "计算",
+        "count": "40+ 件产品"
+      },
+      "software": {
+        "label": "软件",
+        "count": "20+ 件产品"
+      }
     },
     "featuredTitle": "精选产品",
     "featuredSubtitle": "精心挑选、价格优惠的科技产品",
@@ -54,9 +90,18 @@
     "why": {
       "title": "为什么选择 Smart Store？",
       "subtitle": "专为需要可靠技术合作伙伴的南非企业打造",
-      "distributor": { "title": "授权经销商", "desc": "与顶级科技品牌直接合作，确保产品正品及优惠价格。" },
-      "ai": { "title": "AI 智能支持", "desc": "我们的智能聊天机器人帮助您找到合适的产品、检查兼容性并即时解答问题。" },
-      "business": { "title": "企业级服务", "desc": "为企业客户提供批量订购、发票支持及专属客户经理服务。" }
+      "distributor": {
+        "title": "授权经销商",
+        "desc": "与顶级科技品牌直接合作，确保产品正品及优惠价格。"
+      },
+      "ai": {
+        "title": "AI 智能支持",
+        "desc": "我们的智能聊天机器人帮助您找到合适的产品、检查兼容性并即时解答问题。"
+      },
+      "business": {
+        "title": "企业级服务",
+        "desc": "为企业客户提供批量订购、发票支持及专属客户经理服务。"
+      }
     },
     "aiCta": {
       "badge": "AI 助手",

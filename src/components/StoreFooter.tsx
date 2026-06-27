@@ -40,7 +40,7 @@ const StoreFooter = () => {
               <Logo size={28} invert />
             </div>
             <p className="text-sm leading-relaxed text-background/40 mb-5">
-              South Africa's premium destination for AI hardware, networking, and enterprise technology solutions.
+              The world's premium destination for AI hardware, networking, and enterprise technology solutions.
             </p>
             <NewsletterSignup source="footer" />
           </div>

@@ -12,7 +12,7 @@
     "procurement": "Für Unternehmen"
   },
   "home": {
-    "heroBadge": "Südafrikas Premium-Shop für KI und Technologie",
+    "heroBadge": "Der Weltweit Führende Premium-Shop für KI und Technologie",
     "heroTitle1": "Technologie",
     "heroTitle2": "auf Unternehmensniveau",
     "heroTitle3": "Direkt zu Ihnen",
@@ -25,25 +25,61 @@
       "trusted": "Vertrauenswürdiger Anbieter"
     },
     "heroCards": {
-      "ai": { "label": "KI & Maschinelles Lernen", "desc": "GPUs, TPUs, KI-Beschleuniger" },
-      "networking": { "label": "Netzwerk", "desc": "Router, Switches, Access Points" },
-      "computing": { "label": "Computing", "desc": "Server, Workstations, Speicher" },
-      "software": { "label": "Software & Lizenzen", "desc": "Unternehmens- und Cloud-Lizenzen" }
+      "ai": {
+        "label": "KI & Maschinelles Lernen",
+        "desc": "GPUs, TPUs, KI-Beschleuniger"
+      },
+      "networking": {
+        "label": "Netzwerk",
+        "desc": "Router, Switches, Access Points"
+      },
+      "computing": {
+        "label": "Computing",
+        "desc": "Server, Workstations, Speicher"
+      },
+      "software": {
+        "label": "Software & Lizenzen",
+        "desc": "Unternehmens- und Cloud-Lizenzen"
+      }
     },
     "fromPrice": "Ab",
     "featureBar": {
-      "shipping": { "title": "Kostenloser Versand", "desc": "Bei Bestellungen über R500" },
-      "checkout": { "title": "Sicherer Checkout", "desc": "Yoco-Zahlungsgateway" },
-      "support": { "title": "KI-Support", "desc": "24/7 intelligente Unterstützung" },
-      "delivery": { "title": "Schnelle Lieferung", "desc": "2-5 Werktage landesweit" }
+      "shipping": {
+        "title": "Kostenloser Versand",
+        "desc": "Bei Bestellungen über R500"
+      },
+      "checkout": {
+        "title": "Sicherer Checkout",
+        "desc": "Yoco-Zahlungsgateway"
+      },
+      "support": {
+        "title": "KI-Support",
+        "desc": "24/7 intelligente Unterstützung"
+      },
+      "delivery": {
+        "title": "Schnelle Lieferung",
+        "desc": "2-5 Werktage landesweit"
+      }
     },
     "categoriesTitle": "Nach Kategorie Einkaufen",
     "categoriesSubtitle": "Finden Sie genau das, was Sie brauchen, in unseren sorgfältig ausgewählten Technologiekategorien",
     "catShort": {
-      "ai": { "label": "KI & Hardware", "count": "50+ Produkte" },
-      "networking": { "label": "Netzwerk", "count": "30+ Produkte" },
-      "computing": { "label": "Computing", "count": "40+ Produkte" },
-      "software": { "label": "Software", "count": "20+ Produkte" }
+      "ai": {
+        "label": "KI & Hardware",
+        "count": "50+ Produkte"
+      },
+      "networking": {
+        "label": "Netzwerk",
+        "count": "30+ Produkte"
+      },
+      "computing": {
+        "label": "Computing",
+        "count": "40+ Produkte"
+      },
+      "software": {
+        "label": "Software",
+        "count": "20+ Produkte"
+      }
     },
     "featuredTitle": "Ausgewählte Produkte",
     "featuredSubtitle": "Handverlesene Technik zu wettbewerbsfähigen Preisen",
@@ -54,9 +90,18 @@
     "why": {
       "title": "Warum Smart Store Wählen?",
       "subtitle": "Entwickelt für südafrikanische Unternehmen, die zuverlässige Technologiepartner benötigen",
-      "distributor": { "title": "Autorisierter Distributor", "desc": "Direkte Partnerschaften mit erstklassigen Technologiemarken garantieren echte Produkte und wettbewerbsfähige Preise." },
-      "ai": { "title": "KI-gestützter Support", "desc": "Unser intelligenter Chatbot hilft Ihnen, das richtige Produkt zu finden, die Kompatibilität zu prüfen und sofortige Antworten zu erhalten." },
-      "business": { "title": "Bereit für Unternehmen", "desc": "Großbestellungen, Rechnungssupport und dedizierte Kontoverwaltung für Geschäftskunden." }
+      "distributor": {
+        "title": "Autorisierter Distributor",
+        "desc": "Direkte Partnerschaften mit erstklassigen Technologiemarken garantieren echte Produkte und wettbewerbsfähige Preise."
+      },
+      "ai": {
+        "title": "KI-gestützter Support",
+        "desc": "Unser intelligenter Chatbot hilft Ihnen, das richtige Produkt zu finden, die Kompatibilität zu prüfen und sofortige Antworten zu erhalten."
+      },
+      "business": {
+        "title": "Bereit für Unternehmen",
+        "desc": "Großbestellungen, Rechnungssupport und dedizierte Kontoverwaltung für Geschäftskunden."
+      }
     },
     "aiCta": {
       "badge": "KI-Assistent",

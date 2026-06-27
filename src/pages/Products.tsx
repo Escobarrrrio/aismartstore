@@ -52,7 +52,7 @@ const Products = () => {
     <div className="min-h-screen">
       <SEO
         title={t("products.title")}
-        description="Browse AI hardware, networking equipment, computing, and enterprise software at AI Smart Store -- South Africa's premium AI & tech destination."
+        description="Browse AI hardware, networking equipment, computing, and enterprise software at AI Smart Store -- the world's premium AI & tech destination."
         path="/products"
       />
       {/* Header */}

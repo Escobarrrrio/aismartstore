@@ -12,7 +12,7 @@
     "procurement": "Entreprises"
   },
   "home": {
-    "heroBadge": "Le magasin premium d'IA et de technologie d'Afrique du Sud",
+    "heroBadge": "La Boutique Mondiale Premium d'IA et de Technologie",
     "heroTitle1": "Technologie",
     "heroTitle2": "de Niveau",
     "heroTitle3": "Entreprise, Livrée",
@@ -25,25 +25,61 @@
       "trusted": "Fournisseur de Confiance"
     },
     "heroCards": {
-      "ai": { "label": "IA & Machine Learning", "desc": "GPU, TPU, accélérateurs IA" },
-      "networking": { "label": "Réseau", "desc": "Routeurs, switches, points d'accès" },
-      "computing": { "label": "Informatique", "desc": "Serveurs, postes de travail, stockage" },
-      "software": { "label": "Logiciels & Licences", "desc": "Licences entreprise et cloud" }
+      "ai": {
+        "label": "IA & Machine Learning",
+        "desc": "GPU, TPU, accélérateurs IA"
+      },
+      "networking": {
+        "label": "Réseau",
+        "desc": "Routeurs, switches, points d'accès"
+      },
+      "computing": {
+        "label": "Informatique",
+        "desc": "Serveurs, postes de travail, stockage"
+      },
+      "software": {
+        "label": "Logiciels & Licences",
+        "desc": "Licences entreprise et cloud"
+      }
     },
     "fromPrice": "À partir de",
     "featureBar": {
-      "shipping": { "title": "Livraison Gratuite", "desc": "Pour les commandes de plus de R500" },
-      "checkout": { "title": "Paiement Sécurisé", "desc": "Passerelle de paiement Yoco" },
-      "support": { "title": "Support IA", "desc": "Assistance intelligente 24/7" },
-      "delivery": { "title": "Livraison Rapide", "desc": "2 à 5 jours ouvrables dans tout le pays" }
+      "shipping": {
+        "title": "Livraison Gratuite",
+        "desc": "Pour les commandes de plus de R500"
+      },
+      "checkout": {
+        "title": "Paiement Sécurisé",
+        "desc": "Passerelle de paiement Yoco"
+      },
+      "support": {
+        "title": "Support IA",
+        "desc": "Assistance intelligente 24/7"
+      },
+      "delivery": {
+        "title": "Livraison Rapide",
+        "desc": "2 à 5 jours ouvrables dans tout le pays"
+      }
     },
     "categoriesTitle": "Acheter par Catégorie",
     "categoriesSubtitle": "Trouvez exactement ce dont vous avez besoin parmi nos catégories technologiques sélectionnées",
     "catShort": {
-      "ai": { "label": "IA & Matériel", "count": "50+ produits" },
-      "networking": { "label": "Réseau", "count": "30+ produits" },
-      "computing": { "label": "Informatique", "count": "40+ produits" },
-      "software": { "label": "Logiciels", "count": "20+ produits" }
+      "ai": {
+        "label": "IA & Matériel",
+        "count": "50+ produits"
+      },
+      "networking": {
+        "label": "Réseau",
+        "count": "30+ produits"
+      },
+      "computing": {
+        "label": "Informatique",
+        "count": "40+ produits"
+      },
+      "software": {
+        "label": "Logiciels",
+        "count": "20+ produits"
+      }
     },
     "featuredTitle": "Produits en Vedette",
     "featuredSubtitle": "Technologie sélectionnée à prix compétitifs",
@@ -54,9 +90,18 @@
     "why": {
       "title": "Pourquoi Choisir Smart Store ?",
       "subtitle": "Conçu pour les entreprises sud-africaines qui ont besoin de partenaires technologiques fiables",
-      "distributor": { "title": "Distributeur Agréé", "desc": "Des partenariats directs avec les meilleures marques technologiques garantissent des produits authentiques et des prix compétitifs." },
-      "ai": { "title": "Support Alimenté par l'IA", "desc": "Notre chatbot intelligent vous aide à trouver le bon produit, vérifier la compatibilité et obtenir des réponses instantanées." },
-      "business": { "title": "Prêt pour les Entreprises", "desc": "Commandes en gros, support de facturation et gestion de compte dédiée pour les clients professionnels." }
+      "distributor": {
+        "title": "Distributeur Agréé",
+        "desc": "Des partenariats directs avec les meilleures marques technologiques garantissent des produits authentiques et des prix compétitifs."
+      },
+      "ai": {
+        "title": "Support Alimenté par l'IA",
+        "desc": "Notre chatbot intelligent vous aide à trouver le bon produit, vérifier la compatibilité et obtenir des réponses instantanées."
+      },
+      "business": {
+        "title": "Prêt pour les Entreprises",
+        "desc": "Commandes en gros, support de facturation et gestion de compte dédiée pour les clients professionnels."
+      }
     },
     "aiCta": {
       "badge": "Assistant IA",

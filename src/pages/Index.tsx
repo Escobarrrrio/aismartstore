@@ -28,7 +28,7 @@ const Index = () => {
     <div className="flex flex-col">
       <SEO
         title="AI Smart Store"
-        description="South Africa's premium AI & technology store. AI hardware, networking, computing, and enterprise software -- curated, competitively priced, and backed by expert support."
+        description="The world's premium AI & technology store. AI hardware, networking, computing, and enterprise software -- curated, competitively priced, and backed by expert support."
         path="/"
         jsonLd={{
           "@context": "https://schema.org",
@@ -36,7 +36,7 @@ const Index = () => {
           name: "AI Smart Store",
           url: typeof window !== "undefined" ? window.location.origin : "https://aismartstore.lovable.app",
           logo: typeof window !== "undefined" ? `${window.location.origin}/icon-512.png` : undefined,
-          description: "South Africa's premium AI & technology store.",
+          description: "The world's premium AI & technology store.",
         }}
       />
       <HeroSection />

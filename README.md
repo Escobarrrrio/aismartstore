@@ -2,7 +2,7 @@
 
 # AI Smart Store
 
-**South Africa's premium AI & technology e-commerce platform.**
+**The world's premium AI & technology e-commerce platform.**
 
 ![License](https://img.shields.io/badge/license-Proprietary-blue)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)

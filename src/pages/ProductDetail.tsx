@@ -1,5 +1,4 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { formatMoney } from "@/lib/currency";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useProducts } from "@/contexts/ProductContext";
 import { useCart } from "@/contexts/CartContext";
@@ -16,7 +15,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { products, getProduct } = useProducts();
   const { addToCart } = useCart();
-  const { currency } = useLocale();
+  const { formatPrice } = useLocale();
   const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
@@ -134,7 +133,7 @@ const ProductDetail = () => {
 
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-3xl font-display font-extrabold">
-                {formatMoney(product.price, currency)}
+                {formatPrice(product.price)}
               </span>
               <span className={`text-sm font-semibold ${product.inStock ? 'text-[hsl(160,84%,39%)]' : 'text-destructive'}`}>
                 {product.inStock ? t("productDetail.inStock") : t("productDetail.outOfStock")}
@@ -228,7 +227,7 @@ const ProductDetail = () => {
                   </div>
                   <div className="p-4">
                     <h3 className="font-display font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">{p.name}</h3>
-                    <p className="text-sm font-display font-extrabold mt-1">{formatMoney(p.price, currency)}</p>
+                    <p className="text-sm font-display font-extrabold mt-1">{formatPrice(p.price)}</p>
                   </div>
                 </Link>
               ))}

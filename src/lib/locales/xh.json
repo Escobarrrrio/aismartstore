@@ -169,8 +169,8 @@
     "city": "Isixeko",
     "postalCode": "Ikhowudi Yeposi",
     "processing": "Kuqhutywa...",
-    "payWith": "Hlawula {{amount}} nge-Yoco",
-    "securePayment": "Intlawulo ekhuselekileyo ixhaswa nge-Yoco",
+    "payWith": "Hlawula {{amount}} nge-{{gateway}}",
+    "securePayment": "Intlawulo ekhuselekileyo ixhaswa nge-{{gateway}}",
     "orderReview": "Uphononongo lwe-oda",
     "total": "Iyonke",
     "errorTitle": "Impazamo yokuhlawula"

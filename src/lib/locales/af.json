@@ -169,8 +169,8 @@
     "city": "Stad",
     "postalCode": "Poskode",
     "processing": "Verwerk tans...",
-    "payWith": "Betaal {{amount}} met Yoco",
-    "securePayment": "Veilige betaling aangedryf deur Yoco",
+    "payWith": "Betaal {{amount}} met {{gateway}}",
+    "securePayment": "Veilige betaling aangedryf deur {{gateway}}",
     "orderReview": "Bestelling Hersiening",
     "total": "Totaal",
     "errorTitle": "Uitbetalingsfout"

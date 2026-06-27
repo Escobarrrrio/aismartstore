@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
 import SEO from "@/components/SEO";
-import { formatMoney } from "@/lib/currency";
 import { useCart } from "@/contexts/CartContext";
 
 type AccountTab = "overview" | "orders" | "returns" | "profile" | "addresses" | "notifications" | "wishlist" | "settings";
@@ -37,7 +36,7 @@ const Account = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { currency } = useLocale();
+  const { formatPrice } = useLocale();
   const { addToCart } = useCart();
   const [searchParams] = useSearchParams();
   const isImpersonating = searchParams.get("as") === "customer" && !!localStorage.getItem("ai-smart-store.impersonate");
@@ -258,7 +257,7 @@ const Account = () => {
                             <p className="text-[11px] text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-semibold">{formatMoney(order.total_amount, currency)}</p>
+                            <p className="text-sm font-semibold">{formatPrice(order.total_amount)}</p>
                             <span className={`${statusColor(order.status)} text-[10px]`}>{order.status}</span>
                           </div>
                         </div>
@@ -316,7 +315,7 @@ const Account = () => {
                             <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-display font-bold">{formatMoney(order.total_amount, currency)}</p>
+                            <p className="font-display font-bold">{formatPrice(order.total_amount)}</p>
                             <span className={`${statusColor(order.status)} text-[10px]`}>{order.status}</span>
                           </div>
                         </div>
@@ -327,7 +326,7 @@ const Account = () => {
                           </div>
                         )}
                         <div className="flex items-center gap-2 flex-wrap">
-                          <button onClick={() => toast({ title: `Order #${order.id.slice(0, 8).toUpperCase()}`, description: `${order.order_items?.length || 0} item(s), total ${formatMoney(order.total_amount, currency)}.` })} className="btn-secondary px-3 py-1.5 text-xs rounded-lg"><Eye className="h-3 w-3" /> Details</button>
+                          <button onClick={() => toast({ title: `Order #${order.id.slice(0, 8).toUpperCase()}`, description: `${order.order_items?.length || 0} item(s), total ${formatPrice(order.total_amount)}.` })} className="btn-secondary px-3 py-1.5 text-xs rounded-lg"><Eye className="h-3 w-3" /> Details</button>
                           <button onClick={() => toast({ title: "Invoice", description: "Your invoice will be emailed shortly." })} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><FileText className="h-3 w-3" /> Invoice</button>
                           <button onClick={() => reorder(order)} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><ShoppingCart className="h-3 w-3" /> Reorder</button>
                           <button onClick={() => requestReturn(order.id)} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><RotateCcw className="h-3 w-3" /> Request return</button>

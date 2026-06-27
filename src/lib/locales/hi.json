@@ -169,8 +169,8 @@
     "city": "शहर",
     "postalCode": "पिन कोड",
     "processing": "प्रोसेस हो रहा है...",
-    "payWith": "Yoco से {{amount}} का भुगतान करें",
-    "securePayment": "Yoco द्वारा संचालित सुरक्षित भुगतान",
+    "payWith": "{{gateway}} से {{amount}} का भुगतान करें",
+    "securePayment": "{{gateway}} द्वारा संचालित सुरक्षित भुगतान",
     "orderReview": "ऑर्डर रिव्यू",
     "total": "कुल",
     "errorTitle": "चेकआउट त्रुटि"

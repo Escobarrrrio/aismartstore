@@ -54,7 +54,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold", "resend_api_key"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold", "resend_api_key"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -66,10 +66,18 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   return (
     <div className="max-w-2xl space-y-5">
-      <SettingsSection icon={<Key className="h-4 w-4" />} title="Yoco Payment Gateway" description="Accept card payments via Yoco.">
+      <SettingsSection icon={<Key className="h-4 w-4" />} title="Yoco Payment Gateway" description="Accept card payments via Yoco. Used for ZAR (South African) checkouts.">
         <div className="space-y-3">
           <SettingsInput label="Public Key" value={settings.yoco_public_key || ""} onChange={(v) => update("yoco_public_key", v)} placeholder="pk_live_..." mono />
           <SettingsInput label="Secret Key" type="password" value={settings.yoco_secret_key || ""} onChange={(v) => update("yoco_secret_key", v)} placeholder="sk_live_..." mono />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection icon={<Key className="h-4 w-4" />} title="Stripe — International Payments" description="Used automatically when a customer's selected currency isn't ZAR (USD, EUR, GBP, JPY, AUD, CAD, NZD, CHF, CNY, INR). Get keys at dashboard.stripe.com/apikeys, and set up a webhook at dashboard.stripe.com/webhooks pointed at your stripe-webhook function URL for the checkout.session.completed event.">
+        <div className="space-y-3">
+          <SettingsInput label="Publishable Key" value={settings.stripe_public_key || ""} onChange={(v) => update("stripe_public_key", v)} placeholder="pk_live_..." mono />
+          <SettingsInput label="Secret Key" type="password" value={settings.stripe_secret_key || ""} onChange={(v) => update("stripe_secret_key", v)} placeholder="sk_live_..." mono />
+          <SettingsInput label="Webhook Signing Secret" type="password" value={settings.stripe_webhook_secret || ""} onChange={(v) => update("stripe_webhook_secret", v)} placeholder="whsec_..." mono />
         </div>
       </SettingsSection>
 

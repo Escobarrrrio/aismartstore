@@ -5,7 +5,6 @@ import { ShoppingCart, Heart, Eye } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
-import { formatMoney } from "@/lib/currency";
 
 interface ProductCardProps {
   product: Product;
@@ -15,7 +14,7 @@ interface ProductCardProps {
 const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
   const { addToCart } = useCart();
   const { t } = useTranslation();
-  const { currency } = useLocale();
+  const { formatPrice } = useLocale();
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
@@ -86,7 +85,7 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
         </p>
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
           <span className="font-display font-extrabold text-base sm:text-lg truncate">
-            {formatMoney(product.price, currency)}
+            {formatPrice(product.price)}
           </span>
           <button
             onClick={handleAddToCart}

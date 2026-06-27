@@ -169,8 +169,8 @@
     "city": "Stadt",
     "postalCode": "Postleitzahl",
     "processing": "Verarbeitung...",
-    "payWith": "{{amount}} mit Yoco bezahlen",
-    "securePayment": "Sichere Zahlung unterstützt von Yoco",
+    "payWith": "{{amount}} mit {{gateway}} bezahlen",
+    "securePayment": "Sichere Zahlung unterstützt von {{gateway}}",
     "orderReview": "Bestellübersicht",
     "total": "Gesamt",
     "errorTitle": "Zahlungsfehler"

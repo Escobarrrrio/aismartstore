@@ -1,5 +1,4 @@
 import { useCart } from "@/contexts/CartContext";
-import { formatMoney } from "@/lib/currency";
 import { useLocale } from "@/contexts/LocaleContext";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Shield, Truck } from "lucide-react";
@@ -9,7 +8,7 @@ import { useShippingSettings } from "@/hooks/useShippingSettings";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
-  const { currency } = useLocale();
+  const { formatPrice } = useLocale();
   const { t } = useTranslation();
   const { freeThreshold, getShippingFee } = useShippingSettings();
   const shippingFee = getShippingFee(totalPrice);
@@ -53,7 +52,7 @@ const Cart = () => {
                   {product.name}
                 </Link>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {formatMoney(product.price, currency)}
+                  {formatPrice(product.price)}
                 </p>
                 <div className="flex items-center gap-1 mt-2">
                   <button
@@ -80,7 +79,7 @@ const Cart = () => {
                   <Trash2 className="h-4 w-4" />
                 </button>
                 <span className="font-display font-bold text-sm">
-                  {formatMoney(product.price * quantity, currency)}
+                  {formatPrice(product.price * quantity)}
                 </span>
               </div>
             </div>
@@ -92,25 +91,25 @@ const Cart = () => {
           <h3 className="font-display font-bold text-lg">{t("cart.orderSummary")}</h3>
           {shippingFee > 0 && (
             <div className="bg-primary/[0.06] border border-primary/10 rounded-xl px-3.5 py-2.5 text-xs font-medium text-primary">
-              {t("cart.freeShippingHint", { amount: formatMoney(freeThreshold - totalPrice, currency) })}
+              {t("cart.freeShippingHint", { amount: formatPrice(freeThreshold - totalPrice) })}
             </div>
           )}
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-              <span className="font-medium">{formatMoney(totalPrice, currency)}</span>
+              <span className="font-medium">{formatPrice(totalPrice)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cart.shipping")}</span>
               <span className={shippingFee === 0 ? "text-[hsl(160,84%,39%)] font-semibold" : "font-medium"}>
-                {shippingFee === 0 ? t("cart.free") : formatMoney(shippingFee, currency)}
+                {shippingFee === 0 ? t("cart.free") : formatPrice(shippingFee)}
               </span>
             </div>
           </div>
           <div className="border-t border-border pt-4">
             <div className="flex justify-between font-display font-extrabold text-xl">
               <span>{t("cart.total")}</span>
-              <span>{formatMoney(grandTotal, currency)}</span>
+              <span>{formatPrice(grandTotal)}</span>
             </div>
           </div>
           <Link to="/checkout" className="btn-primary w-full py-3.5 text-sm shadow-elevated">

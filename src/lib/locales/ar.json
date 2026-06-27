@@ -169,8 +169,8 @@
     "city": "المدينة",
     "postalCode": "الرمز البريدي",
     "processing": "جارٍ المعالجة...",
-    "payWith": "الدفع {{amount}} عبر Yoco",
-    "securePayment": "دفع آمن بواسطة Yoco",
+    "payWith": "الدفع {{amount}} عبر {{gateway}}",
+    "securePayment": "دفع آمن بواسطة {{gateway}}",
     "orderReview": "مراجعة الطلب",
     "total": "الإجمالي",
     "errorTitle": "خطأ في الدفع"

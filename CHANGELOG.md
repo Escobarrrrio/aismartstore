@@ -273,3 +273,43 @@ implies a fee exists below that threshold and was never being charged).
 - Removed unused dependencies confirmed by audit: zod, @hookform/resolvers,
   @tailwindcss/typography -- none were imported anywhere in the codebase.
 - Rewrote README with badges and de-branded hosting description.
+
+## 2026-06-27 (7) — Real currency conversion, Stripe for international payments, hreflang SEO
+
+### Critical fix: currency switching was never converting prices
+Switching the currency selector relabeled the same ZAR number with a
+different symbol -- a R999 product showed as literally "$999" in USD
+instead of the real ~$54. This is exactly the kind of thing that reads
+as broken or fraudulent to an international shopper who notices the
+math doesn't work. Added a real `exchange_rates` table (synced daily
+from a live FX source via `sync-exchange-rates`), and centralized all
+price display through a new `formatPrice()` on `useLocale()` that
+actually converts before formatting. Replaced every direct `formatMoney`
+call across ProductCard, ProductDetail, Cart, Checkout, and Account.
+
+### Stripe for international payments
+Yoco (South African, ZAR-only) remains the default for local customers.
+Any other selected currency (USD, EUR, GBP, JPY, AUD, CAD, NZD, CHF,
+CNY, INR) now routes to Stripe -- the checkout brand most likely to
+read as legitimate to customers who've never heard of Yoco. Charges the
+real converted amount in the customer's actual currency, not a ZAR
+figure mislabeled.
+- `create-stripe-checkout`: creates a Stripe Checkout Session
+- `stripe-webhook`: verifies Stripe's signature before marking an order
+  paid -- unlike trusting a bare redirect URL (which anyone could reach
+  by typing it), this only confirms payment when Stripe itself,
+  cryptographically signed, says so.
+- Checkout UI now shows the actual gateway name ("Pay $54 with Stripe" /
+  "Secure payment powered by Stripe") so customers see a brand they
+  recognize before paying.
+
+### International SEO
+Added real hreflang alternates for all 13 languages. Important
+distinction: this site's language switching is localStorage-based,
+which Googlebot can't trigger -- declaring hreflang tags that all
+point at the identical URL would be technically incorrect (Google's
+spec requires each alternate to resolve to a URL that actually serves
+that language) and likely ignored. Instead, each language gets a real,
+distinct, crawlable URL via `?lang=xx` (now wired into the i18next
+language detector), so what Google indexes genuinely renders in the
+declared language.

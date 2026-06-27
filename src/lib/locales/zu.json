@@ -169,8 +169,8 @@
     "city": "Idolobha",
     "postalCode": "Ikhodi Yeposi",
     "processing": "Iyacutshungulwa...",
-    "payWith": "Khokha {{amount}} nge-Yoco",
-    "securePayment": "Inkokhelo evikelekile isekelwa yi-Yoco",
+    "payWith": "Khokha {{amount}} nge-{{gateway}}",
+    "securePayment": "Inkokhelo evikelekile isekelwa yi-{{gateway}}",
     "orderReview": "Ukubuyekeza I-oda",
     "total": "Isamba",
     "errorTitle": "Iphutha lokukhokha"

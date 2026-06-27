@@ -1,13 +1,16 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { CurrencyCode } from "@/lib/currency";
+import { CurrencyCode, formatMoney } from "@/lib/currency";
 import { ensureLanguageLoaded } from "@/lib/i18n";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 interface LocaleContextType {
   currency: CurrencyCode;
   setCurrency: (c: CurrencyCode) => void;
   language: string;
   setLanguage: (l: string) => void;
+  /** Converts a ZAR-stored amount to the active currency AND formats it -- use this everywhere a price is shown. */
+  formatPrice: (zarAmount: number | string | null | undefined) => string;
 }
 
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
@@ -16,6 +19,7 @@ const CURRENCY_KEY = "ai-smart-store.currency";
 
 export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   const { i18n } = useTranslation();
+  const { convert } = useExchangeRates();
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     const stored = (typeof window !== "undefined" && localStorage.getItem(CURRENCY_KEY)) as CurrencyCode | null;
     return stored || "ZAR";
@@ -24,6 +28,12 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   const setCurrency = (c: CurrencyCode) => {
     setCurrencyState(c);
     localStorage.setItem(CURRENCY_KEY, c);
+  };
+
+  const formatPrice = (zarAmount: number | string | null | undefined) => {
+    const num = typeof zarAmount === "string" ? parseFloat(zarAmount) : (zarAmount ?? 0);
+    if (Number.isNaN(num)) return "—";
+    return formatMoney(convert(num, currency), currency);
   };
 
   const setLanguage = (l: string) => {
@@ -35,7 +45,7 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   }, [i18n.language]);
 
   return (
-    <LocaleContext.Provider value={{ currency, setCurrency, language: i18n.language, setLanguage }}>
+    <LocaleContext.Provider value={{ currency, setCurrency, language: i18n.language, setLanguage, formatPrice }}>
       {children}
     </LocaleContext.Provider>
   );

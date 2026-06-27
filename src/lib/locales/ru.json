@@ -169,8 +169,8 @@
     "city": "Город",
     "postalCode": "Почтовый Индекс",
     "processing": "Обработка...",
-    "payWith": "Оплатить {{amount}} через Yoco",
-    "securePayment": "Безопасная оплата через Yoco",
+    "payWith": "Оплатить {{amount}} через {{gateway}}",
+    "securePayment": "Безопасная оплата через {{gateway}}",
     "orderReview": "Обзор Заказа",
     "total": "Итого",
     "errorTitle": "Ошибка оформления заказа"

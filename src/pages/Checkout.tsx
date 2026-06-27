@@ -1,6 +1,6 @@
 import { useCart } from "@/contexts/CartContext";
-import { formatMoney } from "@/lib/currency";
 import { useLocale } from "@/contexts/LocaleContext";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, XCircle, Shield, Lock } from "lucide-react";
@@ -12,7 +12,8 @@ import SEO from "@/components/SEO";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
-  const { currency } = useLocale();
+  const { currency, formatPrice } = useLocale();
+  const { convert } = useExchangeRates();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -94,17 +95,35 @@ const Checkout = () => {
       await supabase.from("order_items").insert(orderItems);
 
       const baseUrl = window.location.origin;
-      const { data: checkoutData, error: fnError } = await supabase.functions.invoke("create-yoco-checkout", {
-        body: {
-          orderId: order.id, amount: grandTotal, currency: "ZAR",
-          successUrl: `${baseUrl}/checkout?status=success`,
-          failureUrl: `${baseUrl}/checkout?status=failed`,
-          cancelUrl: `${baseUrl}/cart`,
-        },
-      });
+      const isInternational = currency !== "ZAR";
+      const chargeAmount = isInternational ? convert(grandTotal, currency) : grandTotal;
 
-      if (fnError || !checkoutData?.redirectUrl) throw new Error(fnError?.message || "Payment gateway error.");
-      await supabase.functions.invoke("notify-order", { body: { orderId: order.id } });
+      const { data: checkoutData, error: fnError } = await supabase.functions.invoke(
+        isInternational ? "create-stripe-checkout" : "create-yoco-checkout",
+        {
+          body: isInternational
+            ? {
+                orderId: order.id, amount: chargeAmount, currency,
+                lineItemName: `AI Smart Store Order #${order.id.slice(0, 8)}`,
+                successUrl: `${baseUrl}/checkout?status=success`,
+                cancelUrl: `${baseUrl}/cart`,
+              }
+            : {
+                orderId: order.id, amount: chargeAmount, currency: "ZAR",
+                successUrl: `${baseUrl}/checkout?status=success`,
+                failureUrl: `${baseUrl}/checkout?status=failed`,
+                cancelUrl: `${baseUrl}/cart`,
+              },
+        }
+      );
+
+      if (fnError || !checkoutData?.redirectUrl) throw new Error(fnError?.message || checkoutData?.error || "Payment gateway error.");
+      if (!isInternational) {
+        // Yoco confirms via redirect status; Stripe confirms via the
+        // signature-verified webhook instead (see stripe-webhook),
+        // so this notification fires from there for Stripe orders.
+        await supabase.functions.invoke("notify-order", { body: { orderId: order.id } });
+      }
       window.location.href = checkoutData.redirectUrl;
     } catch (err: any) {
       toast({ title: t("checkout.errorTitle"), description: err.message, variant: "destructive" });
@@ -158,11 +177,11 @@ const Checkout = () => {
             className="w-full btn-primary py-3.5 text-sm shadow-elevated disabled:opacity-50 mt-4"
           >
             <Lock className="h-4 w-4" />
-            {processing ? t("checkout.processing") : t("checkout.payWith", { amount: formatMoney(grandTotal, currency) })}
+            {processing ? t("checkout.processing") : t("checkout.payWith", { amount: formatPrice(grandTotal), gateway: currency === "ZAR" ? "Yoco" : "Stripe" })}
           </button>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
-            {t("checkout.securePayment")}
+            {t("checkout.securePayment", { gateway: currency === "ZAR" ? "Yoco" : "Stripe" })}
           </div>
         </form>
 
@@ -172,24 +191,24 @@ const Checkout = () => {
             {items.map(({ product, quantity }) => (
               <div key={product.id} className="flex justify-between text-sm py-1">
                 <span className="text-muted-foreground">{product.name} × {quantity}</span>
-                <span className="font-medium">{formatMoney(product.price * quantity, currency)}</span>
+                <span className="font-medium">{formatPrice(product.price * quantity)}</span>
               </div>
             ))}
           </div>
           <div className="border-t border-border mt-4 pt-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-              <span className="font-medium">{formatMoney(totalPrice, currency)}</span>
+              <span className="font-medium">{formatPrice(totalPrice)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("cart.shipping")}</span>
               <span className={shippingFee === 0 ? "text-[hsl(160,84%,39%)] font-semibold" : "font-medium"}>
-                {shippingFee === 0 ? t("cart.free") : formatMoney(shippingFee, currency)}
+                {shippingFee === 0 ? t("cart.free") : formatPrice(shippingFee)}
               </span>
             </div>
             <div className="flex justify-between font-display font-extrabold text-xl pt-2 border-t border-border">
               <span>{t("checkout.total")}</span>
-              <span>{formatMoney(grandTotal, currency)}</span>
+              <span>{formatPrice(grandTotal)}</span>
             </div>
           </div>
         </div>

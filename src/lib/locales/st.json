@@ -169,8 +169,8 @@
     "city": "Toropo",
     "postalCode": "Khoutu ya Poso",
     "processing": "E ntse e sebetsoa...",
-    "payWith": "Lefa {{amount}} ka Yoco",
-    "securePayment": "Tefo e sireletsehileng e tšehetsoa ke Yoco",
+    "payWith": "Lefa {{amount}} ka {{gateway}}",
+    "securePayment": "Tefo e sireletsehileng e tšehetsoa ke {{gateway}}",
     "orderReview": "Tlhahlobo ya Taelo",
     "total": "Kakaretso",
     "errorTitle": "Phoso ya tefo"

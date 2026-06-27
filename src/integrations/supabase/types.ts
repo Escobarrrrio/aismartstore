@@ -178,6 +178,24 @@ export type Database = {
           },
         ]
       }
+      exchange_rates: {
+        Row: {
+          currency_code: string
+          rate_to_zar: number
+          updated_at: string
+        }
+        Insert: {
+          currency_code: string
+          rate_to_zar: number
+          updated_at?: string
+        }
+        Update: {
+          currency_code?: string
+          rate_to_zar?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_campaigns: {
         Row: {
           body_html: string

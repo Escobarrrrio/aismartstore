@@ -24,18 +24,50 @@ const Checkout = () => {
   const [submitted, setSubmitted] = useState(false);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [capturingPaypal, setCapturingPaypal] = useState(searchParams.get("status") === "paypal_return");
   const [form, setForm] = useState({
     name: "", email: "", phone: "", address: "", city: "", postalCode: "",
   });
 
   useEffect(() => {
     const status = searchParams.get("status");
-    if (status === "success") { clearCart(); setSubmitted(true); }
-    else if (status === "failed") { setPaymentFailed(true); }
+    const paypalToken = searchParams.get("token"); // PayPal appends this to the return_url automatically
+    const pendingOrderId = searchParams.get("orderId");
+
+    if (status === "success") {
+      clearCart();
+      setSubmitted(true);
+    } else if (status === "failed") {
+      setPaymentFailed(true);
+    } else if (status === "paypal_return" && paypalToken && pendingOrderId) {
+      // Customer approved on PayPal's page -- now actually capture the
+      // payment. Landing on this URL alone does NOT mean money moved yet.
+      supabase.functions
+        .invoke("capture-paypal-order", { body: { paypalOrderId: paypalToken, orderId: pendingOrderId } })
+        .then(({ data, error }) => {
+          setCapturingPaypal(false);
+          if (error || data?.status !== "completed") {
+            setPaymentFailed(true);
+          } else {
+            clearCart();
+            setSubmitted(true);
+          }
+        });
+    }
   }, [searchParams]);
 
-  if (items.length === 0 && !submitted && !paymentFailed) {
+  if (items.length === 0 && !submitted && !paymentFailed && !capturingPaypal) {
     if (!searchParams.get("status")) { navigate("/cart"); return null; }
+  }
+
+  if (capturingPaypal) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <SEO title={t("checkout.processing")} description="Confirming your payment." noindex />
+        <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-muted-foreground font-display font-semibold">{t("checkout.processing")}</p>
+      </div>
+    );
   }
 
   if (submitted) {
@@ -99,13 +131,13 @@ const Checkout = () => {
       const chargeAmount = isInternational ? convert(grandTotal, currency) : grandTotal;
 
       const { data: checkoutData, error: fnError } = await supabase.functions.invoke(
-        isInternational ? "create-stripe-checkout" : "create-yoco-checkout",
+        isInternational ? "create-paypal-order" : "create-yoco-checkout",
         {
           body: isInternational
             ? {
                 orderId: order.id, amount: chargeAmount, currency,
-                lineItemName: `AI Smart Store Order #${order.id.slice(0, 8)}`,
-                successUrl: `${baseUrl}/checkout?status=success`,
+                description: `AI Smart Store Order #${order.id.slice(0, 8)}`,
+                successUrl: `${baseUrl}/checkout?status=paypal_return&orderId=${order.id}`,
                 cancelUrl: `${baseUrl}/cart`,
               }
             : {
@@ -119,9 +151,9 @@ const Checkout = () => {
 
       if (fnError || !checkoutData?.redirectUrl) throw new Error(fnError?.message || checkoutData?.error || "Payment gateway error.");
       if (!isInternational) {
-        // Yoco confirms via redirect status; Stripe confirms via the
-        // signature-verified webhook instead (see stripe-webhook),
-        // so this notification fires from there for Stripe orders.
+        // Yoco confirms via redirect status. PayPal confirms via the
+        // capture step on return instead (see the paypal_return handler
+        // above), which is where notify-order fires for PayPal orders.
         await supabase.functions.invoke("notify-order", { body: { orderId: order.id } });
       }
       window.location.href = checkoutData.redirectUrl;
@@ -177,11 +209,11 @@ const Checkout = () => {
             className="w-full btn-primary py-3.5 text-sm shadow-elevated disabled:opacity-50 mt-4"
           >
             <Lock className="h-4 w-4" />
-            {processing ? t("checkout.processing") : t("checkout.payWith", { amount: formatPrice(grandTotal), gateway: currency === "ZAR" ? "Yoco" : "Stripe" })}
+            {processing ? t("checkout.processing") : t("checkout.payWith", { amount: formatPrice(grandTotal), gateway: currency === "ZAR" ? "Yoco" : "PayPal" })}
           </button>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
-            {t("checkout.securePayment", { gateway: currency === "ZAR" ? "Yoco" : "Stripe" })}
+            {t("checkout.securePayment", { gateway: currency === "ZAR" ? "Yoco" : "PayPal" })}
           </div>
         </form>
 

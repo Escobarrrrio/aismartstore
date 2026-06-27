@@ -313,3 +313,35 @@ that language) and likely ignored. Instead, each language gets a real,
 distinct, crawlable URL via `?lang=xx` (now wired into the i18next
 language detector), so what Google indexes genuinely renders in the
 declared language.
+
+## 2026-06-27 (8) — Switched international payments from Stripe to PayPal (Stripe doesn't support SA merchants), Wise scoped correctly
+
+### Correction: Stripe does not support South African merchant accounts
+Confirmed directly (the country dropdown on Stripe's own signup page
+doesn't list South Africa). Built the integration, then had to pivot --
+documenting this so it's not repeated. Stripe code stays in the repo as
+a dormant "Standby" option in Settings, in case of future incorporation
+in a Stripe-supported country, but it is not the active path.
+
+### PayPal is now the live international payment gateway
+PayPal directly supports South African merchant accounts (confirmed via
+their own SA business page). Built properly:
+- `create-paypal-order`: creates a PayPal Orders v2 checkout session
+- `capture-paypal-order`: actually finalizes the charge when the
+  customer returns from PayPal's approval page -- landing on the return
+  URL only means the customer approved, not that money moved, so this
+  step is required, not optional, for a payment flow that's actually
+  secure rather than just trusting a redirect.
+- Checkout UI updated to show "Pay $54 with PayPal" / "Secure payment
+  powered by PayPal" so customers see a brand they recognize.
+
+### Wise: scoped to what it's actually for
+Wise's own documentation states directly that Wise is not a payment
+gateway. It's a multi-currency business account, good for holding/
+converting money after it's received (lower FX fees than a traditional
+bank) and for bank-transfer-based B2B invoicing -- not for embedded,
+instant cart checkout. Added a "Wise — Treasury & B2B Invoices" settings
+section scoped to those two genuine use cases (treasury management, and
+bank-transfer details for large procurement/government buyers, where
+wire transfer is normal) rather than misusing it as a storefront
+checkout replacement.

@@ -54,7 +54,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold", "resend_api_key"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold", "resend_api_key"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -73,7 +73,18 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
         </div>
       </SettingsSection>
 
-      <SettingsSection icon={<Key className="h-4 w-4" />} title="Stripe — International Payments" description="Used automatically when a customer's selected currency isn't ZAR (USD, EUR, GBP, JPY, AUD, CAD, NZD, CHF, CNY, INR). Get keys at dashboard.stripe.com/apikeys, and set up a webhook at dashboard.stripe.com/webhooks pointed at your stripe-webhook function URL for the checkout.session.completed event.">
+      <SettingsSection icon={<Key className="h-4 w-4" />} title="PayPal — International Payments (Active)" description="Used automatically when a customer's selected currency isn't ZAR. PayPal directly supports South African merchant accounts, unlike Stripe. Get keys at developer.paypal.com/dashboard/applications, under your app's API credentials.">
+        <div className="space-y-3">
+          <SettingsInput label="Client ID" value={settings.paypal_client_id || ""} onChange={(v) => update("paypal_client_id", v)} placeholder="A..." mono />
+          <SettingsInput label="Client Secret" type="password" value={settings.paypal_client_secret || ""} onChange={(v) => update("paypal_client_secret", v)} placeholder="E..." mono />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection icon={<Key className="h-4 w-4" />} title="Wise — Treasury & B2B Invoices" description="Not a checkout gateway -- Wise doesn't support that (their own words). Used for: (1) holding/converting international payments at low FX fees after PayPal/Yoco receive them, and (2) bank-transfer payment details shown to large procurement/government buyers on the For Business page, where wire transfer is normal.">
+        <SettingsInput label="Account Details / Payment Link (shown to procurement buyers)" value={settings.wise_account_details || ""} onChange={(v) => update("wise_account_details", v)} placeholder="e.g. your Wise multi-currency payment link or account reference" />
+      </SettingsSection>
+
+      <SettingsSection icon={<Key className="h-4 w-4" />} title="Stripe — Standby (not currently usable)" description="Kept here in case you ever incorporate in a Stripe-supported country (UK, US, etc.) -- Stripe does not support South African merchant accounts directly, so this is dormant until/unless that changes.">
         <div className="space-y-3">
           <SettingsInput label="Publishable Key" value={settings.stripe_public_key || ""} onChange={(v) => update("stripe_public_key", v)} placeholder="pk_live_..." mono />
           <SettingsInput label="Secret Key" type="password" value={settings.stripe_secret_key || ""} onChange={(v) => update("stripe_secret_key", v)} placeholder="sk_live_..." mono />

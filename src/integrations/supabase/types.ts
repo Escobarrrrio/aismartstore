@@ -178,6 +178,78 @@ export type Database = {
           },
         ]
       }
+      newsletter_campaigns: {
+        Row: {
+          body_html: string
+          category_filter: string | null
+          created_at: string
+          id: string
+          preview_text: string | null
+          recipient_count: number | null
+          sent_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          body_html: string
+          category_filter?: string | null
+          created_at?: string
+          id?: string
+          preview_text?: string | null
+          recipient_count?: number | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          body_html?: string
+          category_filter?: string | null
+          created_at?: string
+          id?: string
+          preview_text?: string | null
+          recipient_count?: number | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          email: string
+          id: string
+          interested_categories: string[] | null
+          name: string | null
+          source: string
+          subscribed_at: string
+          unsubscribe_token: string
+          unsubscribed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          interested_categories?: string[] | null
+          name?: string | null
+          source?: string
+          subscribed_at?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          interested_categories?: string[] | null
+          name?: string | null
+          source?: string
+          subscribed_at?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string

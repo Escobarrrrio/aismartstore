@@ -1,11 +1,5 @@
 name: CI
 
-# Runs automatically on every push and pull request -- no human action
-# needed unless something actually breaks. This is the "automated unless
-# it needs your say-so" loop: tests/typecheck/build run on their own;
-# the only manual step left is the one-click Publish in Lovable, which is
-# the intentional approval gate before anything goes live to customers.
-
 on:
   push:
     branches: [main]

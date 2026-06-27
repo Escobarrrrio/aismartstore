@@ -23,25 +23,61 @@
       "trusted": "Trusted Supplier"
     },
     "heroCards": {
-      "ai": { "label": "AI & Machine Learning", "desc": "GPUs, TPUs, AI accelerators" },
-      "networking": { "label": "Networking", "desc": "Routers, switches, access points" },
-      "computing": { "label": "Computing", "desc": "Servers, workstations, storage" },
-      "software": { "label": "Software & Licenses", "desc": "Enterprise and cloud licenses" }
+      "ai": {
+        "label": "AI & Machine Learning",
+        "desc": "GPUs, TPUs, AI accelerators"
+      },
+      "networking": {
+        "label": "Networking",
+        "desc": "Routers, switches, access points"
+      },
+      "computing": {
+        "label": "Computing",
+        "desc": "Servers, workstations, storage"
+      },
+      "software": {
+        "label": "Software & Licenses",
+        "desc": "Enterprise and cloud licenses"
+      }
     },
     "fromPrice": "From",
     "featureBar": {
-      "shipping": { "title": "Free Shipping", "desc": "On orders over R500" },
-      "checkout": { "title": "Secure Checkout", "desc": "Yoco payment gateway" },
-      "support": { "title": "AI Support", "desc": "24/7 intelligent assistance" },
-      "delivery": { "title": "Fast Delivery", "desc": "2–5 business days SA-wide" }
+      "shipping": {
+        "title": "Free Shipping",
+        "desc": "On orders over R500"
+      },
+      "checkout": {
+        "title": "Secure Checkout",
+        "desc": "Yoco payment gateway"
+      },
+      "support": {
+        "title": "AI Support",
+        "desc": "24/7 intelligent assistance"
+      },
+      "delivery": {
+        "title": "Fast Delivery",
+        "desc": "2–5 business days SA-wide"
+      }
     },
     "categoriesTitle": "Shop by Category",
     "categoriesSubtitle": "Find exactly what you need across our curated technology categories",
     "catShort": {
-      "ai": { "label": "AI & Hardware", "count": "50+ products" },
-      "networking": { "label": "Networking", "count": "30+ products" },
-      "computing": { "label": "Computing", "count": "40+ products" },
-      "software": { "label": "Software", "count": "20+ products" }
+      "ai": {
+        "label": "AI & Hardware",
+        "count": "50+ products"
+      },
+      "networking": {
+        "label": "Networking",
+        "count": "30+ products"
+      },
+      "computing": {
+        "label": "Computing",
+        "count": "40+ products"
+      },
+      "software": {
+        "label": "Software",
+        "count": "20+ products"
+      }
     },
     "featuredTitle": "Featured Products",
     "featuredSubtitle": "Hand-picked tech at competitive prices",
@@ -78,14 +114,25 @@
     "outOfStock": "Out of Stock",
     "add": "Add",
     "added": "Added!",
-    "addToCart": "Add to Cart"
+    "addToCart": "Add to Cart",
+    "addedToCart": "Added to Cart!"
   },
   "cart": {
     "title": "Your Cart",
     "empty": "Your cart is empty",
     "checkout": "Checkout",
     "total": "Total",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "emptyTitle": "Your cart is empty",
+    "emptyHint": "Start adding some products!",
+    "browseProducts": "Browse Products",
+    "shoppingCart": "Shopping Cart",
+    "orderSummary": "Order Summary",
+    "shipping": "Shipping",
+    "calculatedAtCheckout": "Calculated at checkout",
+    "proceedToCheckout": "Proceed to Checkout",
+    "secure": "Secure",
+    "freeOver": "Free over R500"
   },
   "account": {
     "welcome": "Welcome back",
@@ -101,5 +148,116 @@
     "loading": "Loading...",
     "language": "Language",
     "currency": "Currency"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "orderSuccessTitle": "Order Placed Successfully!",
+    "orderSuccessDesc": "Thank you for your purchase. We'll process and ship your order shortly.",
+    "continueShopping": "Continue Shopping",
+    "paymentFailedTitle": "Payment Failed",
+    "paymentFailedDesc": "Your payment could not be processed. Please try again or use a different method.",
+    "tryAgain": "Try Again",
+    "shippingDetails": "Shipping Details",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "postalCode": "Postal Code",
+    "processing": "Processing...",
+    "payWith": "Pay {{amount}} with Yoco",
+    "securePayment": "Secure payment powered by Yoco",
+    "orderReview": "Order Review",
+    "total": "Total",
+    "errorTitle": "Checkout error"
+  },
+  "auth": {
+    "resetPassword": "Reset Password",
+    "welcomeBack": "Welcome Back",
+    "createAccount": "Create Account",
+    "resetHint": "Enter your email and we'll send you a reset link",
+    "signInHint": "Sign in to access the admin control centre",
+    "signUpHint": "Register to manage your store",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "pleaseWait": "Please wait...",
+    "sendResetLink": "Send Reset Link",
+    "forgotPassword": "Forgot your password?",
+    "backToSignIn": "Back to Sign In",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "signUpAction": "Sign up",
+    "signInAction": "Sign in",
+    "errorTitle": "Error",
+    "checkEmailTitle": "Check your email",
+    "resetEmailSent": "We sent you a password reset link.",
+    "loginFailedTitle": "Login failed",
+    "welcomeBackToast": "Welcome back",
+    "signedInToast": "You're now signed in.",
+    "signUpFailedTitle": "Sign up failed",
+    "confirmEmailSent": "We sent you a confirmation link to verify your account."
+  },
+  "productDetail": {
+    "notFoundTitle": "Product Not Found",
+    "notFoundDesc": "The product you're looking for doesn't exist or has been removed.",
+    "backToProducts": "Back to Products",
+    "home": "Home",
+    "products": "Products",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "addedToCart": "Added to Cart!",
+    "addToCart": "Add to Cart",
+    "freeDelivery": "Free delivery over R500",
+    "secureCheckout": "Secure checkout",
+    "easyReturns": "Easy returns",
+    "specifications": "Specifications",
+    "specPlaceholder": "Detailed specifications will be available once product data is synced from the supplier.",
+    "relatedProducts": "Related Products",
+    "viewAll": "View All"
+  },
+  "notFound": {
+    "message": "Oops! Page not found",
+    "returnHome": "Return to Home"
+  },
+  "resetPassword": {
+    "invalidLink": "Invalid or expired reset link.",
+    "backToSignIn": "Back to Sign In",
+    "title": "Set New Password",
+    "subtitle": "Enter your new password below",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "pleaseWait": "Please wait...",
+    "updatePassword": "Update Password",
+    "mismatchTitle": "Passwords don't match",
+    "errorTitle": "Error",
+    "successTitle": "Password updated",
+    "successDesc": "You can now sign in with your new password."
+  },
+  "products": {
+    "title": "Products",
+    "countSingular": "{{count}} product available",
+    "countPlural": "{{count}} products available",
+    "searchPlaceholder": "Search products...",
+    "filters": "Filters",
+    "sortNewest": "Newest First",
+    "sortPriceAsc": "Price: Low to High",
+    "sortPriceDesc": "Price: High to Low",
+    "sortName": "Name: A-Z",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "stockStatus": "Stock Status",
+    "all": "All",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "clearAllFilters": "Clear All Filters",
+    "noMatch": "No products match your filters",
+    "noneYet": "No products available yet",
+    "tryAdjusting": "Try adjusting your search or filters",
+    "willAppear": "Products will appear here once added",
+    "clearFilters": "Clear Filters",
+    "viewDetails": "View Details",
+    "addToCart": "Add to Cart"
   }
 }

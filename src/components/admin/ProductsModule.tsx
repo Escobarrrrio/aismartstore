@@ -184,14 +184,14 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
                 <th className="w-10 px-4 py-2.5">
                   <input type="checkbox" checked={selected.size === filtered.length && filtered.length > 0} onChange={toggleAll} className="rounded accent-primary" />
                 </th>
-                {["Product", "Brand", "Category", "Price", "Stock", "Status", ""].map((h) => (
+                {["Product", "Brand", "Category", "Price", "Margin", "Stock", "Status", ""].map((h) => (
                   <th key={h} className="text-left px-4 py-2.5 text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">No products found.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-sm text-muted-foreground">No products found.</td></tr>
               ) : (
                 filtered.map((p) => {
                   const badge = stockBadge(p);
@@ -226,6 +226,21 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
                       </td>
                       <td className="px-4 py-2.5 text-sm font-display font-bold">
                         {isEditing ? <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="px-2 py-1 rounded border border-primary bg-card text-sm w-20" /> : `R${Number(p.price).toFixed(2)}`}
+                      </td>
+                      <td className="px-4 py-2.5 text-sm">
+                        {typeof p.margin_percentage === "number" ? (
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-display font-bold border ${
+                            p.margin_percentage >= 25
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : p.margin_percentage >= 10
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-red-50 text-red-700 border-red-200"
+                          }`}>
+                            {p.margin_percentage.toFixed(1)}%
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-2.5 text-sm">
                         {isEditing ? <input type="number" value={editForm.stock_quantity} onChange={(e) => setEditForm({ ...editForm, stock_quantity: e.target.value })} className="px-2 py-1 rounded border border-primary bg-card text-sm w-16" /> : (p.stock_quantity ?? 0)}

@@ -23,25 +23,61 @@
       "trusted": "Mofani ea Tšeptjoang"
     },
     "heroCards": {
-      "ai": { "label": "AI le Ho Ithuta ha Mochini", "desc": "Li-GPU, li-TPU, li-accelerator tsa AI" },
-      "networking": { "label": "Marang-rang", "desc": "Li-router, li-switch, libaka tsa ho kena" },
-      "computing": { "label": "Likhomphutha", "desc": "Li-server, li-workstation, polokelo" },
-      "software": { "label": "Software le Litokelo", "desc": "Litokelo tsa khoebo le tsa leru" }
+      "ai": {
+        "label": "AI le Ho Ithuta ha Mochini",
+        "desc": "Li-GPU, li-TPU, li-accelerator tsa AI"
+      },
+      "networking": {
+        "label": "Marang-rang",
+        "desc": "Li-router, li-switch, libaka tsa ho kena"
+      },
+      "computing": {
+        "label": "Likhomphutha",
+        "desc": "Li-server, li-workstation, polokelo"
+      },
+      "software": {
+        "label": "Software le Litokelo",
+        "desc": "Litokelo tsa khoebo le tsa leru"
+      }
     },
     "fromPrice": "Ho tloha ho",
     "featureBar": {
-      "shipping": { "title": "Phano ea Mahala", "desc": "Litaelong tse fetang R500" },
-      "checkout": { "title": "Tefo e Sireletsehileng", "desc": "Heke ea tefo ea Yoco" },
-      "support": { "title": "Tšehetso ea AI", "desc": "Thuso e bohlale 24/7" },
-      "delivery": { "title": "Phano e Potlakileng", "desc": "Matsatsi a 2–5 a khoebo Afrika Borwa bohle" }
+      "shipping": {
+        "title": "Phano ea Mahala",
+        "desc": "Litaelong tse fetang R500"
+      },
+      "checkout": {
+        "title": "Tefo e Sireletsehileng",
+        "desc": "Heke ea tefo ea Yoco"
+      },
+      "support": {
+        "title": "Tšehetso ea AI",
+        "desc": "Thuso e bohlale 24/7"
+      },
+      "delivery": {
+        "title": "Phano e Potlakileng",
+        "desc": "Matsatsi a 2–5 a khoebo Afrika Borwa bohle"
+      }
     },
     "categoriesTitle": "Reka ka Mokhahlelo",
     "categoriesSubtitle": "Fumana hantle seo u se hlokang ho mekhahlelo ea rona ea theknoloji e khethiloeng",
     "catShort": {
-      "ai": { "label": "AI le Hardware", "count": "Lihlahisoa tse 50+" },
-      "networking": { "label": "Marang-rang", "count": "Lihlahisoa tse 30+" },
-      "computing": { "label": "Likhomphutha", "count": "Lihlahisoa tse 40+" },
-      "software": { "label": "Software", "count": "Lihlahisoa tse 20+" }
+      "ai": {
+        "label": "AI le Hardware",
+        "count": "Lihlahisoa tse 50+"
+      },
+      "networking": {
+        "label": "Marang-rang",
+        "count": "Lihlahisoa tse 30+"
+      },
+      "computing": {
+        "label": "Likhomphutha",
+        "count": "Lihlahisoa tse 40+"
+      },
+      "software": {
+        "label": "Software",
+        "count": "Lihlahisoa tse 20+"
+      }
     },
     "featuredTitle": "Lihlahisoa tse Khethiloeng",
     "featuredSubtitle": "Theknoloji e khethiloeng ka litheko tse phehisanang",
@@ -78,14 +114,25 @@
     "outOfStock": "E Felile",
     "add": "Eketsa",
     "added": "E ekelitsoe!",
-    "addToCart": "Eketsa setlolong"
+    "addToCart": "Eketsa setlolong",
+    "addedToCart": "E ekelitsoe Setlolong!"
   },
   "cart": {
     "title": "Setlolo sa Hau",
     "empty": "Setlolo sa hau ha se na letho",
     "checkout": "Lefa",
     "total": "Kakaretso",
-    "subtotal": "Kakaretso e Nyenyane"
+    "subtotal": "Kakaretso e Nyenyane",
+    "emptyTitle": "Setlolo sa hau ha se na letho",
+    "emptyHint": "Qala ka ho eketsa lihlahisoa!",
+    "browseProducts": "Sheba Lihlahisoa",
+    "shoppingCart": "Setlolo sa Mereko",
+    "orderSummary": "Kakaretso ya Taelo",
+    "shipping": "Phepelo",
+    "calculatedAtCheckout": "E baloa nakong ya tefo",
+    "proceedToCheckout": "Tsoela Pele ho Lefa",
+    "secure": "E Sireletsehile",
+    "freeOver": "Mahala holim'a R500"
   },
   "account": {
     "welcome": "U amohetsoe hape",
@@ -101,5 +148,116 @@
     "loading": "Ea jaroa...",
     "language": "Puo",
     "currency": "Chelete"
+  },
+  "checkout": {
+    "title": "Tefo",
+    "orderSuccessTitle": "Taelo e Beoe ka Katleho!",
+    "orderSuccessDesc": "Re leboha thekiso ya hau. Re tla sebetsana le taelo ya hau le ho e romella kapele.",
+    "continueShopping": "Tsoela Pele ho Reka",
+    "paymentFailedTitle": "Tefo e Hlolehile",
+    "paymentFailedDesc": "Tefo ya hau e ne e ke khone ho sebetsoa. Ka kopo leka hape kapa sebelisa mokhoa o fapaneng.",
+    "tryAgain": "Leka Hape",
+    "shippingDetails": "Lintlha tsa Phepelo",
+    "fullName": "Lebitso le Felletseng",
+    "email": "Imeile",
+    "phone": "Mohala",
+    "address": "Aterese",
+    "city": "Toropo",
+    "postalCode": "Khoutu ya Poso",
+    "processing": "E ntse e sebetsoa...",
+    "payWith": "Lefa {{amount}} ka Yoco",
+    "securePayment": "Tefo e sireletsehileng e tšehetsoa ke Yoco",
+    "orderReview": "Tlhahlobo ya Taelo",
+    "total": "Kakaretso",
+    "errorTitle": "Phoso ya tefo"
+  },
+  "auth": {
+    "resetPassword": "Beha Sephiri Bocha",
+    "welcomeBack": "U Amohetsoe Hape",
+    "createAccount": "Theha Akhaonto",
+    "resetHint": "Kenya imeile ya hau re tla u romella link ya ho beha sephiri bocha",
+    "signInHint": "Kena ho fihlella setsi sa taolo sa molaodi",
+    "signUpHint": "Ngodisa ho laola lebenkele la hau",
+    "signIn": "Kena",
+    "signUp": "Ngodisa",
+    "email": "Imeile",
+    "password": "Sephiri",
+    "pleaseWait": "Ka kopo leta...",
+    "sendResetLink": "Romela Link ya ho Beha Sephiri Bocha",
+    "forgotPassword": "U lebetse sephiri sa hau?",
+    "backToSignIn": "Khutlela ho Kena",
+    "noAccount": "Ha u na akhaonto?",
+    "haveAccount": "U se u na le akhaonto?",
+    "signUpAction": "Ngodisa",
+    "signInAction": "Kena",
+    "errorTitle": "Phoso",
+    "checkEmailTitle": "Sheba imeile ya hau",
+    "resetEmailSent": "Re u romelletse link ya ho beha sephiri bocha.",
+    "loginFailedTitle": "Ho kena ho hlolehile",
+    "welcomeBackToast": "U amohetsoe hape",
+    "signedInToast": "U se u kene.",
+    "signUpFailedTitle": "Ngodiso e hlolehile",
+    "confirmEmailSent": "Re u romelletse link ya ho netefatsa akhaonto ya hau."
+  },
+  "productDetail": {
+    "notFoundTitle": "Sehlahisoa ha se Fumanwe",
+    "notFoundDesc": "Sehlahisoa oo u se batlang ha se eo kapa se tlositsoe.",
+    "backToProducts": "Khutlela ho Lihlahisoa",
+    "home": "Lehae",
+    "products": "Lihlahisoa",
+    "inStock": "E Teng",
+    "outOfStock": "E Felile",
+    "addedToCart": "E ekelitsoe Setlolong!",
+    "addToCart": "Eketsa Setlolong",
+    "freeDelivery": "Phepelo ya mahala holim'a R500",
+    "secureCheckout": "Tefo e sireletsehileng",
+    "easyReturns": "Khutliso e bonolo",
+    "specifications": "Lintlha tsa Tlhaho",
+    "specPlaceholder": "Lintlha tse qaqileng li tla fumaneha ha boitsebiso ba sehlahisoa bo se bo lumellanngwa ho tswa ho mofani.",
+    "relatedProducts": "Lihlahisoa tse Amanang",
+    "viewAll": "Sheba Tsohle"
+  },
+  "notFound": {
+    "message": "Joo! Leqephe ha le fumanwe",
+    "returnHome": "Khutlela Lehae"
+  },
+  "resetPassword": {
+    "invalidLink": "Link ya ho beha sephiri bocha ha e sebetse kapa e felile nako.",
+    "backToSignIn": "Khutlela ho Kena",
+    "title": "Beha Sephiri se Secha",
+    "subtitle": "Kenya sephiri sa hau se secha ka tlase",
+    "newPassword": "Sephiri se Secha",
+    "confirmPassword": "Netefatsa Sephiri",
+    "pleaseWait": "Ka kopo leta...",
+    "updatePassword": "Ntjhafatsa Sephiri",
+    "mismatchTitle": "Diphiri ha li tshwane",
+    "errorTitle": "Phoso",
+    "successTitle": "Sephiri se ntjhafatsoe",
+    "successDesc": "Jwale u ka kena ka sephiri sa hau se secha."
+  },
+  "products": {
+    "title": "Lihlahisoa",
+    "countSingular": "{{count}} sehlahisoa se teng",
+    "countPlural": "{{count}} lihlahisoa li teng",
+    "searchPlaceholder": "Batla lihlahisoa...",
+    "filters": "Disefe",
+    "sortNewest": "Tse Ncha Pele",
+    "sortPriceAsc": "Theko: e Tlase ho ya Holimo",
+    "sortPriceDesc": "Theko: e Holimo ho ya Tlase",
+    "sortName": "Lebitso: A-Z",
+    "category": "Sehlopha",
+    "allCategories": "Mekgahlelo Yohle",
+    "stockStatus": "Boemo ba Stoko",
+    "all": "Tsohle",
+    "inStock": "E Teng",
+    "outOfStock": "E Felile",
+    "clearAllFilters": "Hlakola Disefe Tsohle",
+    "noMatch": "Ha ho lihlahisoa tse tsamaisanang le disefe tsa hau",
+    "noneYet": "Ha ho lihlahisoa tse teng ho fihlela joale",
+    "tryAdjusting": "Leka ho fetola tlhahlobo kapa disefe tsa hau",
+    "willAppear": "Lihlahisoa li tla hlaha mona ha li se li ekeditswe",
+    "clearFilters": "Hlakola Disefe",
+    "viewDetails": "Sheba Lintlha",
+    "addToCart": "Eketsa Setlolong"
   }
 }

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
 import Logo from "@/components/Logo";
+import { useTranslation } from "react-i18next";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -12,6 +13,7 @@ const ResetPassword = () => {
   const [isRecovery, setIsRecovery] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -31,15 +33,15 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
+      toast({ title: t("resetPassword.mismatchTitle"), variant: "destructive" });
       return;
     }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("resetPassword.errorTitle"), description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Password updated", description: "You can now sign in with your new password." });
+      toast({ title: t("resetPassword.successTitle"), description: t("resetPassword.successDesc") });
       navigate("/auth");
     }
     setLoading(false);
@@ -49,9 +51,9 @@ const ResetPassword = () => {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-muted-foreground">Invalid or expired reset link.</p>
+          <p className="text-muted-foreground">{t("resetPassword.invalidLink")}</p>
           <button onClick={() => navigate("/auth")} className="mt-4 text-secondary font-semibold hover:underline">
-            Back to Sign In
+            {t("resetPassword.backToSignIn")}
           </button>
         </div>
       </div>
@@ -65,12 +67,12 @@ const ResetPassword = () => {
           <Logo size={48} asLink={false} />
         </div>
 
-        <h2 className="font-display font-extrabold text-2xl text-center mb-1">Set New Password</h2>
-        <p className="text-muted-foreground text-sm text-center mb-7">Enter your new password below</p>
+        <h2 className="font-display font-extrabold text-2xl text-center mb-1">{t("resetPassword.title")}</h2>
+        <p className="text-muted-foreground text-sm text-center mb-7">{t("resetPassword.subtitle")}</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold mb-1.5">New Password</label>
+            <label className="block text-xs font-semibold mb-1.5">{t("resetPassword.newPassword")}</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input
@@ -85,7 +87,7 @@ const ResetPassword = () => {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5">Confirm Password</label>
+            <label className="block text-xs font-semibold mb-1.5">{t("resetPassword.confirmPassword")}</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input
@@ -104,7 +106,7 @@ const ResetPassword = () => {
             disabled={loading}
             className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
           >
-            {loading ? "Please wait..." : "Update Password"}
+            {loading ? t("resetPassword.pleaseWait") : t("resetPassword.updatePassword")}
           </button>
         </form>
       </div>

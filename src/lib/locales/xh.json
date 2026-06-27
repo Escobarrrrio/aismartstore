@@ -23,25 +23,61 @@
       "trusted": "Umboneleli Othenjwayo"
     },
     "heroCards": {
-      "ai": { "label": "I-AI noKufunda kweMatshini", "desc": "Ii-GPU, ii-TPU, ii-accelerator zeAI" },
-      "networking": { "label": "Uthungelwano", "desc": "Ii-router, ii-switch, iindawo zokufikelela" },
-      "computing": { "label": "Ikhompyutha", "desc": "Iiseva, iiworkstation, ugcino" },
-      "software": { "label": "Isoftware neeLayisenisi", "desc": "Iilayisenisi zeshishini nezelifu" }
+      "ai": {
+        "label": "I-AI noKufunda kweMatshini",
+        "desc": "Ii-GPU, ii-TPU, ii-accelerator zeAI"
+      },
+      "networking": {
+        "label": "Uthungelwano",
+        "desc": "Ii-router, ii-switch, iindawo zokufikelela"
+      },
+      "computing": {
+        "label": "Ikhompyutha",
+        "desc": "Iiseva, iiworkstation, ugcino"
+      },
+      "software": {
+        "label": "Isoftware neeLayisenisi",
+        "desc": "Iilayisenisi zeshishini nezelifu"
+      }
     },
     "fromPrice": "Ukusuka kwi",
     "featureBar": {
-      "shipping": { "title": "Ukuhanjiswa Kwasimahla", "desc": "Kwii-oda ezingaphezu kweR500" },
-      "checkout": { "title": "Intlawulo Ekhuselekileyo", "desc": "Isango lentlawulo Yoco" },
-      "support": { "title": "Inkxaso ye-AI", "desc": "Uncedo lobukrelekrele 24/7" },
-      "delivery": { "title": "Ukuhanjiswa Okukhawulezayo", "desc": "Iintsuku 2–5 zomsebenzi kuMzantsi Afrika" }
+      "shipping": {
+        "title": "Ukuhanjiswa Kwasimahla",
+        "desc": "Kwii-oda ezingaphezu kweR500"
+      },
+      "checkout": {
+        "title": "Intlawulo Ekhuselekileyo",
+        "desc": "Isango lentlawulo Yoco"
+      },
+      "support": {
+        "title": "Inkxaso ye-AI",
+        "desc": "Uncedo lobukrelekrele 24/7"
+      },
+      "delivery": {
+        "title": "Ukuhanjiswa Okukhawulezayo",
+        "desc": "Iintsuku 2–5 zomsebenzi kuMzantsi Afrika"
+      }
     },
     "categoriesTitle": "Thenga ngeNdidi",
     "categoriesSubtitle": "Fumana into oyifunayo ngokuchanekileyo kwiindidi zethu zeteknoloji ezihlanganisiweyo",
     "catShort": {
-      "ai": { "label": "I-AI neHardware", "count": "50+ iimveliso" },
-      "networking": { "label": "Uthungelwano", "count": "30+ iimveliso" },
-      "computing": { "label": "Ikhompyutha", "count": "40+ iimveliso" },
-      "software": { "label": "Isoftware", "count": "20+ iimveliso" }
+      "ai": {
+        "label": "I-AI neHardware",
+        "count": "50+ iimveliso"
+      },
+      "networking": {
+        "label": "Uthungelwano",
+        "count": "30+ iimveliso"
+      },
+      "computing": {
+        "label": "Ikhompyutha",
+        "count": "40+ iimveliso"
+      },
+      "software": {
+        "label": "Isoftware",
+        "count": "20+ iimveliso"
+      }
     },
     "featuredTitle": "Iimveliso Eziphambili",
     "featuredSubtitle": "Iteknoloji ekhethiweyo ngamaxabiso akhuphisanayo",
@@ -78,14 +114,25 @@
     "outOfStock": "Iphelile",
     "add": "Yongeza",
     "added": "Yongezelwe!",
-    "addToCart": "Yongeza enqwelweni"
+    "addToCart": "Yongeza enqwelweni",
+    "addedToCart": "Yongezelwe Enqwelweni!"
   },
   "cart": {
     "title": "Inqwelo Yakho",
     "empty": "Inqwelo yakho ayinanto",
     "checkout": "Hlawula",
     "total": "Iyonke",
-    "subtotal": "Isamba"
+    "subtotal": "Isamba",
+    "emptyTitle": "Inqwelo yakho ayinanto",
+    "emptyHint": "Qalisa ngokongeza iimveliso!",
+    "browseProducts": "Khangela Iimveliso",
+    "shoppingCart": "Inqwelo Yothengo",
+    "orderSummary": "Isishwankathelo se-oda",
+    "shipping": "Ukuthunyelwa",
+    "calculatedAtCheckout": "Kubalwa ekuhlawuleni",
+    "proceedToCheckout": "Qhubeka Uye Kuhlawula",
+    "secure": "Kukhuselekile",
+    "freeOver": "Simahla ngaphezu kweR500"
   },
   "account": {
     "welcome": "Wamkelekile kwakhona",
@@ -101,5 +148,116 @@
     "loading": "Iyalayisha...",
     "language": "Ulwimi",
     "currency": "Imali"
+  },
+  "checkout": {
+    "title": "Ukuhlawula",
+    "orderSuccessTitle": "I-oda Lifakwe Ngempumelelo!",
+    "orderSuccessDesc": "Enkosi ngokuthenga kwakho. Siza kucwangcisa kwaye sithumele i-oda lakho kungekudala.",
+    "continueShopping": "Qhubeka Uthenga",
+    "paymentFailedTitle": "Intlawulo Ayiphumeleli",
+    "paymentFailedDesc": "Intlawulo yakho ayikwazi kuqhutywa. Nceda uzame kwakhona okanye usebenzise indlela eyahlukileyo.",
+    "tryAgain": "Zama Kwakhona",
+    "shippingDetails": "Iinkcukacha Zokuthunyelwa",
+    "fullName": "Igama Elipheleleyo",
+    "email": "I-imeyile",
+    "phone": "Ifowuni",
+    "address": "Idilesi",
+    "city": "Isixeko",
+    "postalCode": "Ikhowudi Yeposi",
+    "processing": "Kuqhutywa...",
+    "payWith": "Hlawula {{amount}} nge-Yoco",
+    "securePayment": "Intlawulo ekhuselekileyo ixhaswa nge-Yoco",
+    "orderReview": "Uphononongo lwe-oda",
+    "total": "Iyonke",
+    "errorTitle": "Impazamo yokuhlawula"
+  },
+  "auth": {
+    "resetPassword": "Misa Kwakhona Iphasiwedi",
+    "welcomeBack": "Wamkelekile Kwakhona",
+    "createAccount": "Yenza Iakhawunti",
+    "resetHint": "Faka i-imeyile yakho size sikuthumele ikhonkco lokumisa kwakhona",
+    "signInHint": "Ngena ukuze ufikelele kwiziko lolawulo loMlawuli",
+    "signUpHint": "Bhalisa ukuze ulawule ivenkile yakho",
+    "signIn": "Ngena",
+    "signUp": "Bhalisa",
+    "email": "I-imeyile",
+    "password": "Iphasiwedi",
+    "pleaseWait": "Nceda ulinde...",
+    "sendResetLink": "Thumela Ikhonkco Lokumisa Kwakhona",
+    "forgotPassword": "Ulibele iphasiwedi yakho?",
+    "backToSignIn": "Buyela Kungena",
+    "noAccount": "Awunayo iakhawunti?",
+    "haveAccount": "Sele unayo iakhawunti?",
+    "signUpAction": "Bhalisa",
+    "signInAction": "Ngena",
+    "errorTitle": "Impazamo",
+    "checkEmailTitle": "Khangela i-imeyile yakho",
+    "resetEmailSent": "Sikuthumele ikhonkco lokumisa kwakhona iphasiwedi.",
+    "loginFailedTitle": "Ukungena akuphumeleli",
+    "welcomeBackToast": "Wamkelekile kwakhona",
+    "signedInToast": "Ungene ngoku.",
+    "signUpFailedTitle": "Ubhaliso aluphumeleli",
+    "confirmEmailSent": "Sikuthumele ikhonkco lokuqinisekisa ukuze uqinisekise iakhawunti yakho."
+  },
+  "productDetail": {
+    "notFoundTitle": "Imveliso Ayifumaneki",
+    "notFoundDesc": "Imveliso oyikhangelayo ayikho okanye isuswe.",
+    "backToProducts": "Buyela Kwiimveliso",
+    "home": "Ikhaya",
+    "products": "Iimveliso",
+    "inStock": "Iyafumaneka",
+    "outOfStock": "Iphelile",
+    "addedToCart": "Yongezelwe Enqwelweni!",
+    "addToCart": "Yongeza Enqwelweni",
+    "freeDelivery": "Ukuthunyelwa simahla ngaphezu kweR500",
+    "secureCheckout": "Ukuhlawula okukhuselekileyo",
+    "easyReturns": "Ukubuyisela okulula",
+    "specifications": "Iinkcukacha",
+    "specPlaceholder": "Iinkcukacha ezithe vetshe ziya kufumaneka xa idatha yemveliso isalathiswe ivela kumboneleli.",
+    "relatedProducts": "Iimveliso Ezinxulumeneyo",
+    "viewAll": "Jonga Zonke"
+  },
+  "notFound": {
+    "message": "Yhini! Iphepha alifumaneki",
+    "returnHome": "Buyela Ekhaya"
+  },
+  "resetPassword": {
+    "invalidLink": "Ikhonkco lokumisa kwakhona alisebenzi okanye liphelelwe lixesha.",
+    "backToSignIn": "Buyela Kungena",
+    "title": "Misela Iphasiwedi Entsha",
+    "subtitle": "Faka iphasiwedi yakho entsha apha ngezantsi",
+    "newPassword": "Iphasiwedi Entsha",
+    "confirmPassword": "Qinisekisa Iphasiwedi",
+    "pleaseWait": "Nceda ulinde...",
+    "updatePassword": "Hlaziya Iphasiwedi",
+    "mismatchTitle": "Iiphasiwedi azifani",
+    "errorTitle": "Impazamo",
+    "successTitle": "Iphasiwedi ihlaziyiwe",
+    "successDesc": "Ungangena ngoku ngephasiwedi yakho entsha."
+  },
+  "products": {
+    "title": "Iimveliso",
+    "countSingular": "{{count}} imveliso ikhona",
+    "countPlural": "{{count}} iimveliso zikhona",
+    "searchPlaceholder": "Khangela iimveliso...",
+    "filters": "Izihluzi",
+    "sortNewest": "Ezintsha Kuqala",
+    "sortPriceAsc": "Ixabiso: Ukususela Ezantsi Ukuya Phezulu",
+    "sortPriceDesc": "Ixabiso: Ukususela Phezulu Ukuya Ezantsi",
+    "sortName": "Igama: A-Z",
+    "category": "Udidi",
+    "allCategories": "Zonke Iindidi",
+    "stockStatus": "Imo Yovimba",
+    "all": "Zonke",
+    "inStock": "Iyafumaneka",
+    "outOfStock": "Iphelile",
+    "clearAllFilters": "Susa Zonke Izihluzi",
+    "noMatch": "Akukho mveliso ihambelana nezihluzi zakho",
+    "noneYet": "Akukho mveliso ikhoyo okwangoku",
+    "tryAdjusting": "Zama ulungise ukukhangela okanye izihluzi zakho",
+    "willAppear": "Iimveliso ziya kuvela apha xa zongezwe",
+    "clearFilters": "Susa Izihluzi",
+    "viewDetails": "Jonga Iinkcukacha",
+    "addToCart": "Yongeza Enqwelweni"
   }
 }

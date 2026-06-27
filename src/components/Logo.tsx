@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import logoIcon from "@/assets/logo.png";
 
 interface LogoProps {
   /** Pixel size of the icon. The wordmark scales relative to this. */
@@ -14,8 +15,13 @@ interface LogoProps {
 
 /**
  * Canonical AI Smart Store logo.
- * Renders an inline SVG so it stays crisp at every size and respects the
- * brand gradient (cyan → violet → magenta) without depending on a bitmap.
+ *
+ * Uses the actual brand icon asset (src/assets/logo.png -- the glossy
+ * gradient "Ni" checkmark mark, uploaded 2026-06-05) rather than a
+ * hand-drawn approximation. This is the single source of truth for the
+ * logo: header, auth page, footer, and admin sidebar all render through
+ * this component so they can never drift out of sync with each other
+ * or with the real brand asset again.
  */
 const Logo = ({
   size = 36,
@@ -25,7 +31,7 @@ const Logo = ({
   className = "",
 }: LogoProps) => {
   const wordmarkSize = Math.round(size * 0.5); // px font-size relative to icon
-  const gap = Math.max(6, Math.round(size * 0.22));
+  const gap = Math.max(4, Math.round(size * 0.12));
 
   const inner = (
     <span
@@ -33,30 +39,15 @@ const Logo = ({
       style={{ gap: `${gap}px` }}
       aria-label="AI Smart Store"
     >
-      <svg
+      <img
+        src={logoIcon}
+        alt=""
         width={size}
         height={size}
-        viewBox="0 0 48 48"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="flex-shrink-0"
+        className="flex-shrink-0 object-contain"
+        style={{ width: `${size}px`, height: `${size}px` }}
         aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="aismartstore-logo-grad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#06b6d4" />
-            <stop offset="55%" stopColor="#7c3aed" />
-            <stop offset="100%" stopColor="#ec4899" />
-          </linearGradient>
-        </defs>
-        {/* Rounded square background tile */}
-        <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#aismartstore-logo-grad)" />
-        {/* Angular "N"-shape mark in white */}
-        <path
-          d="M14 35V13h4.6l10.8 14.2V13H34v22h-4.6L18.6 20.8V35H14Z"
-          fill="#ffffff"
-        />
-      </svg>
+      />
 
       {showWordmark && (
         <span

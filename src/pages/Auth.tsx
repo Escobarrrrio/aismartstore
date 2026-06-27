@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
+import { useTranslation } from "react-i18next";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,9 +25,9 @@ const Auth = () => {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+        toast({ title: t("auth.errorTitle"), description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Check your email", description: "We sent you a password reset link." });
+        toast({ title: t("auth.checkEmailTitle"), description: t("auth.resetEmailSent") });
         setIsForgot(false);
       }
       setLoading(false);
@@ -35,9 +37,9 @@ const Auth = () => {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        toast({ title: "Login failed", description: error.message, variant: "destructive" });
+        toast({ title: t("auth.loginFailedTitle"), description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Welcome back", description: "You're now signed in." });
+        toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
         navigate("/admin");
       }
     } else {
@@ -47,9 +49,9 @@ const Auth = () => {
         options: { emailRedirectTo: `${window.location.origin}/auth` },
       });
       if (error) {
-        toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+        toast({ title: t("auth.signUpFailedTitle"), description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Check your email", description: "We sent you a confirmation link to verify your account." });
+        toast({ title: t("auth.checkEmailTitle"), description: t("auth.confirmEmailSent") });
       }
     }
     setLoading(false);
@@ -64,14 +66,14 @@ const Auth = () => {
         </div>
 
         <h2 className="font-display font-extrabold text-2xl text-center mb-1">
-          {isForgot ? "Reset Password" : isLogin ? "Welcome Back" : "Create Account"}
+          {isForgot ? t("auth.resetPassword") : isLogin ? t("auth.welcomeBack") : t("auth.createAccount")}
         </h2>
         <p className="text-muted-foreground text-sm text-center mb-7">
           {isForgot
-            ? "Enter your email and we'll send you a reset link"
+            ? t("auth.resetHint")
             : isLogin
-            ? "Sign in to access the admin control centre"
-            : "Register to manage your store"}
+            ? t("auth.signInHint")
+            : t("auth.signUpHint")}
         </p>
 
         {/* Tabs - hide when forgot */}
@@ -81,20 +83,20 @@ const Auth = () => {
               onClick={() => setIsLogin(true)}
               className={`flex-1 py-2 rounded-md font-display font-semibold text-sm transition-all ${isLogin ? "bg-card text-foreground shadow-card" : "text-muted-foreground"}`}
             >
-              Sign In
+              {t("auth.signIn")}
             </button>
             <button
               onClick={() => setIsLogin(false)}
               className={`flex-1 py-2 rounded-md font-display font-semibold text-sm transition-all ${!isLogin ? "bg-card text-foreground shadow-card" : "text-muted-foreground"}`}
             >
-              Sign Up
+              {t("auth.signUp")}
             </button>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold mb-1.5">Email</label>
+            <label className="block text-xs font-semibold mb-1.5">{t("auth.email")}</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input
@@ -109,7 +111,7 @@ const Auth = () => {
           </div>
           {!isForgot && (
             <div>
-              <label className="block text-xs font-semibold mb-1.5">Password</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("auth.password")}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
@@ -129,7 +131,7 @@ const Auth = () => {
             disabled={loading}
             className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
           >
-            {loading ? "Please wait..." : isForgot ? "Send Reset Link" : isLogin ? "Sign In" : "Create Account"}
+            {loading ? t("auth.pleaseWait") : isForgot ? t("auth.sendResetLink") : isLogin ? t("auth.signIn") : t("auth.createAccount")}
           </button>
         </form>
 
@@ -137,7 +139,7 @@ const Auth = () => {
         {isLogin && !isForgot && (
           <p className="text-center text-xs text-muted-foreground mt-3">
             <button onClick={() => setIsForgot(true)} className="text-secondary font-semibold hover:underline">
-              Forgot your password?
+              {t("auth.forgotPassword")}
             </button>
           </p>
         )}
@@ -145,14 +147,14 @@ const Auth = () => {
         {isForgot ? (
           <p className="text-center text-xs text-muted-foreground mt-5">
             <button onClick={() => setIsForgot(false)} className="text-secondary font-semibold hover:underline">
-              Back to Sign In
+              {t("auth.backToSignIn")}
             </button>
           </p>
         ) : (
           <p className="text-center text-xs text-muted-foreground mt-5">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+            {isLogin ? t("auth.noAccount") : t("auth.haveAccount")}{" "}
             <button onClick={() => setIsLogin(!isLogin)} className="text-secondary font-semibold hover:underline">
-              {isLogin ? "Sign up" : "Sign in"}
+              {isLogin ? t("auth.signUpAction") : t("auth.signInAction")}
             </button>
           </p>
         )}

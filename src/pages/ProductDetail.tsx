@@ -8,6 +8,7 @@ import {
   Star, ChevronRight, Package, MessageCircle, Minus, Plus
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -15,6 +16,7 @@ const ProductDetail = () => {
   const { products, getProduct } = useProducts();
   const { addToCart } = useCart();
   const { currency } = useLocale();
+  const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -30,10 +32,10 @@ const ProductDetail = () => {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <Package className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-        <h1 className="font-display font-bold text-2xl mb-2">Product Not Found</h1>
-        <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
+        <h1 className="font-display font-bold text-2xl mb-2">{t("productDetail.notFoundTitle")}</h1>
+        <p className="text-muted-foreground mb-6">{t("productDetail.notFoundDesc")}</p>
         <button onClick={() => navigate("/products")} className="btn-primary px-6 py-3 text-sm">
-          <ArrowLeft className="h-4 w-4" /> Back to Products
+          <ArrowLeft className="h-4 w-4" /> {t("productDetail.backToProducts")}
         </button>
       </div>
     );
@@ -51,9 +53,9 @@ const ProductDetail = () => {
       <div className="bg-muted/50 border-b border-border">
         <div className="container mx-auto px-4 py-3">
           <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+            <Link to="/" className="hover:text-foreground transition-colors">{t("productDetail.home")}</Link>
             <ChevronRight className="h-3.5 w-3.5" />
-            <Link to="/products" className="hover:text-foreground transition-colors">Products</Link>
+            <Link to="/products" className="hover:text-foreground transition-colors">{t("productDetail.products")}</Link>
             <ChevronRight className="h-3.5 w-3.5" />
             <span className="text-foreground font-medium truncate max-w-[200px]">{product.name}</span>
           </nav>
@@ -110,7 +112,7 @@ const ProductDetail = () => {
                 {formatMoney(product.price, currency)}
               </span>
               <span className={`text-sm font-semibold ${product.inStock ? 'text-[hsl(160,84%,39%)]' : 'text-destructive'}`}>
-                {product.inStock ? "In Stock" : "Out of Stock"}
+                {product.inStock ? t("productDetail.inStock") : t("productDetail.outOfStock")}
               </span>
             </div>
 
@@ -141,9 +143,9 @@ const ProductDetail = () => {
                 className="flex-1 btn-primary px-8 py-3.5 text-sm font-semibold shadow-elevated disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
               >
                 {added ? (
-                  <><Check className="h-5 w-5" /> Added to Cart!</>
+                  <><Check className="h-5 w-5" /> {t("productDetail.addedToCart")}</>
                 ) : (
-                  <><ShoppingCart className="h-5 w-5" /> Add to Cart</>
+                  <><ShoppingCart className="h-5 w-5" /> {t("productDetail.addToCart")}</>
                 )}
               </button>
             </div>
@@ -151,9 +153,9 @@ const ProductDetail = () => {
             {/* Reassurance */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { icon: Truck, label: "Free delivery over R500" },
-                { icon: Shield, label: "Secure checkout" },
-                { icon: RotateCcw, label: "Easy returns" },
+                { icon: Truck, label: t("productDetail.freeDelivery") },
+                { icon: Shield, label: t("productDetail.secureCheckout") },
+                { icon: RotateCcw, label: t("productDetail.easyReturns") },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/50 border border-border/50">
                   <item.icon className="h-4 w-4 text-primary flex-shrink-0" />
@@ -166,10 +168,10 @@ const ProductDetail = () => {
 
         {/* Specifications placeholder */}
         <div className="mt-16 border-t border-border pt-12">
-          <h2 className="font-display font-bold text-xl mb-6">Specifications</h2>
+          <h2 className="font-display font-bold text-xl mb-6">{t("productDetail.specifications")}</h2>
           <div className="card-flat p-6">
             <p className="text-sm text-muted-foreground">
-              Detailed specifications will be available once product data is synced from the supplier.
+              {t("productDetail.specPlaceholder")}
             </p>
           </div>
         </div>
@@ -178,9 +180,9 @@ const ProductDetail = () => {
         {related.length > 0 && (
           <div className="mt-16 border-t border-border pt-12">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="font-display font-bold text-xl">Related Products</h2>
+              <h2 className="font-display font-bold text-xl">{t("productDetail.relatedProducts")}</h2>
               <Link to="/products" className="text-sm text-primary font-semibold hover:underline flex items-center gap-1">
-                View All <ChevronRight className="h-4 w-4" />
+                {t("productDetail.viewAll")} <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

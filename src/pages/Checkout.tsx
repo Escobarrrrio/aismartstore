@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, XCircle, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -13,6 +14,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [submitted, setSubmitted] = useState(false);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -36,12 +38,12 @@ const Checkout = () => {
         <div className="w-20 h-20 rounded-full bg-[hsl(160,84%,39%)]/10 flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="h-10 w-10 text-[hsl(160,84%,39%)]" />
         </div>
-        <h1 className="text-3xl font-display font-extrabold mb-3">Order Placed Successfully!</h1>
+        <h1 className="text-3xl font-display font-extrabold mb-3">{t("checkout.orderSuccessTitle")}</h1>
         <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-          Thank you for your purchase. We'll process and ship your order shortly.
+          {t("checkout.orderSuccessDesc")}
         </p>
         <button onClick={() => navigate("/")} className="btn-primary px-8 py-3.5 text-sm shadow-elevated">
-          Continue Shopping
+          {t("checkout.continueShopping")}
         </button>
       </div>
     );
@@ -53,12 +55,12 @@ const Checkout = () => {
         <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
           <XCircle className="h-10 w-10 text-destructive" />
         </div>
-        <h1 className="text-3xl font-display font-extrabold mb-3">Payment Failed</h1>
+        <h1 className="text-3xl font-display font-extrabold mb-3">{t("checkout.paymentFailedTitle")}</h1>
         <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-          Your payment could not be processed. Please try again or use a different method.
+          {t("checkout.paymentFailedDesc")}
         </p>
         <button onClick={() => { setPaymentFailed(false); navigate("/checkout"); }} className="btn-primary px-8 py-3.5 text-sm shadow-elevated">
-          Try Again
+          {t("checkout.tryAgain")}
         </button>
       </div>
     );
@@ -98,7 +100,7 @@ const Checkout = () => {
       await supabase.functions.invoke("notify-order", { body: { orderId: order.id } });
       window.location.href = checkoutData.redirectUrl;
     } catch (err: any) {
-      toast({ title: "Checkout error", description: err.message, variant: "destructive" });
+      toast({ title: t("checkout.errorTitle"), description: err.message, variant: "destructive" });
       setProcessing(false);
     }
   };
@@ -109,36 +111,36 @@ const Checkout = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
-      <h1 className="text-3xl font-display font-extrabold tracking-tight mb-8">Checkout</h1>
+      <h1 className="text-3xl font-display font-extrabold tracking-tight mb-8">{t("checkout.title")}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <h2 className="font-display font-bold text-lg">Shipping Details</h2>
+          <h2 className="font-display font-bold text-lg">{t("checkout.shippingDetails")}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1.5">Full Name</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.fullName")}</label>
               <input name="name" value={form.name} onChange={handleChange} required className="input-premium" />
             </div>
             <div>
-              <label className="block text-xs font-semibold mb-1.5">Email</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.email")}</label>
               <input name="email" type="email" value={form.email} onChange={handleChange} required className="input-premium" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5">Phone</label>
+            <label className="block text-xs font-semibold mb-1.5">{t("checkout.phone")}</label>
             <input name="phone" value={form.phone} onChange={handleChange} required className="input-premium" />
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5">Address</label>
+            <label className="block text-xs font-semibold mb-1.5">{t("checkout.address")}</label>
             <textarea name="address" value={form.address} onChange={handleChange} required rows={2} className="input-premium resize-none" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1.5">City</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.city")}</label>
               <input name="city" value={form.city} onChange={handleChange} required className="input-premium" />
             </div>
             <div>
-              <label className="block text-xs font-semibold mb-1.5">Postal Code</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.postalCode")}</label>
               <input name="postalCode" value={form.postalCode} onChange={handleChange} required className="input-premium" />
             </div>
           </div>
@@ -148,16 +150,16 @@ const Checkout = () => {
             className="w-full btn-primary py-3.5 text-sm shadow-elevated disabled:opacity-50 mt-4"
           >
             <Lock className="h-4 w-4" />
-            {processing ? "Processing..." : `Pay ${formatMoney(totalPrice, currency)} with Yoco`}
+            {processing ? t("checkout.processing") : t("checkout.payWith", { amount: formatMoney(totalPrice, currency) })}
           </button>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
-            Secure payment powered by Yoco
+            {t("checkout.securePayment")}
           </div>
         </form>
 
         <div className="card-flat p-6 h-fit">
-          <h2 className="font-display font-bold text-lg mb-4">Order Review</h2>
+          <h2 className="font-display font-bold text-lg mb-4">{t("checkout.orderReview")}</h2>
           <div className="space-y-3">
             {items.map(({ product, quantity }) => (
               <div key={product.id} className="flex justify-between text-sm py-1">
@@ -168,7 +170,7 @@ const Checkout = () => {
           </div>
           <div className="border-t border-border mt-4 pt-4">
             <div className="flex justify-between font-display font-extrabold text-xl">
-              <span>Total</span>
+              <span>{t("checkout.total")}</span>
               <span>{formatMoney(totalPrice, currency)}</span>
             </div>
           </div>

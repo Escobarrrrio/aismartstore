@@ -3,10 +3,12 @@ import ProductCard from "@/components/ProductCard";
 import { Package, Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Product } from "@/contexts/CartContext";
+import { useTranslation } from "react-i18next";
 
 type SortOption = "newest" | "price-asc" | "price-desc" | "name";
 
 const Products = () => {
+  const { t } = useTranslation();
   const { products, loading } = useProducts();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -50,9 +52,9 @@ const Products = () => {
       {/* Header */}
       <div className="bg-muted/50 border-b border-border">
         <div className="container mx-auto px-4 py-8 md:py-12">
-          <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">Products</h1>
+          <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">{t("products.title")}</h1>
           <p className="text-muted-foreground">
-            {filtered.length} {filtered.length === 1 ? "product" : "products"} available
+            {filtered.length === 1 ? t("products.countSingular", { count: filtered.length }) : t("products.countPlural", { count: filtered.length })}
           </p>
         </div>
       </div>
@@ -66,7 +68,7 @@ const Products = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search products..."
+              placeholder={t("products.searchPlaceholder")}
               className="input-premium pl-10"
             />
             {search && (
@@ -81,7 +83,7 @@ const Products = () => {
               className={`btn-secondary px-4 py-3 text-sm ${showFilters ? 'border-primary bg-primary/[0.04]' : ''}`}
             >
               <SlidersHorizontal className="h-4 w-4" />
-              Filters
+              {t("products.filters")}
               {activeFilters > 0 && (
                 <span className="ml-1 w-5 h-5 rounded-full gradient-brand text-white text-xs flex items-center justify-center">{activeFilters}</span>
               )}
@@ -92,10 +94,10 @@ const Products = () => {
                 onChange={(e) => setSort(e.target.value as SortOption)}
                 className="input-premium pr-10 appearance-none cursor-pointer min-w-[160px]"
               >
-                <option value="newest">Newest First</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="name">Name: A-Z</option>
+                <option value="newest">{t("products.sortNewest")}</option>
+                <option value="price-asc">{t("products.sortPriceAsc")}</option>
+                <option value="price-desc">{t("products.sortPriceDesc")}</option>
+                <option value="name">{t("products.sortName")}</option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             </div>
@@ -107,28 +109,28 @@ const Products = () => {
           <div className="card-flat p-5 mb-6 animate-fade-in">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Category</label>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("products.category")}</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="input-premium"
                 >
-                  <option value="">All Categories</option>
+                  <option value="">{t("products.allCategories")}</option>
                   {categories.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Stock Status</label>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("products.stockStatus")}</label>
                 <select
                   value={stockFilter}
                   onChange={(e) => setStockFilter(e.target.value as any)}
                   className="input-premium"
                 >
-                  <option value="all">All</option>
-                  <option value="in_stock">In Stock</option>
-                  <option value="out_of_stock">Out of Stock</option>
+                  <option value="all">{t("products.all")}</option>
+                  <option value="in_stock">{t("products.inStock")}</option>
+                  <option value="out_of_stock">{t("products.outOfStock")}</option>
                 </select>
               </div>
               <div className="flex items-end">
@@ -136,7 +138,7 @@ const Products = () => {
                   onClick={() => { setCategory(""); setStockFilter("all"); setSearch(""); }}
                   className="btn-ghost px-4 py-3 text-sm w-full"
                 >
-                  Clear All Filters
+                  {t("products.clearAllFilters")}
                 </button>
               </div>
             </div>
@@ -161,17 +163,17 @@ const Products = () => {
           <div className="text-center py-20 card-flat">
             <Package className="h-14 w-14 text-muted-foreground/30 mx-auto mb-4" />
             <p className="text-muted-foreground font-display font-semibold text-lg mb-1">
-              {search || category ? "No products match your filters" : "No products available yet"}
+              {search || category ? t("products.noMatch") : t("products.noneYet")}
             </p>
             <p className="text-sm text-muted-foreground mb-4">
-              {search || category ? "Try adjusting your search or filters" : "Products will appear here once added"}
+              {search || category ? t("products.tryAdjusting") : t("products.willAppear")}
             </p>
             {(search || category) && (
               <button
                 onClick={() => { setSearch(""); setCategory(""); setStockFilter("all"); }}
                 className="btn-secondary px-5 py-2.5 text-sm"
               >
-                Clear Filters
+                {t("products.clearFilters")}
               </button>
             )}
           </div>
@@ -206,13 +208,13 @@ const Products = () => {
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{quickView.description}</p>
             <div className="flex gap-3">
               <a href={`/product/${quickView.id}`} className="btn-secondary px-5 py-2.5 text-sm flex-1 text-center">
-                View Details
+                {t("products.viewDetails")}
               </a>
               <button
                 onClick={() => { setQuickView(null); }}
                 className="btn-primary px-5 py-2.5 text-sm flex-1"
               >
-                Add to Cart
+                {t("products.addToCart")}
               </button>
             </div>
           </div>

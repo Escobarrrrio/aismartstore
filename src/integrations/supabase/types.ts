@@ -582,6 +582,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_product_admin_view: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          cost_price: number
+          selling_price: number
+          margin_percentage: number
+          axiz_product_id: string | null
+          last_synced_at: string | null
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

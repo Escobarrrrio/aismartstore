@@ -3,19 +3,21 @@ import { formatMoney } from "@/lib/currency";
 import { useLocale } from "@/contexts/LocaleContext";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Shield, Truck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const { currency } = useLocale();
+  const { t } = useTranslation();
 
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <ShoppingBag className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-        <h2 className="text-2xl font-display font-bold mb-2">Your cart is empty</h2>
-        <p className="text-muted-foreground mb-6">Start adding some products!</p>
+        <h2 className="text-2xl font-display font-bold mb-2">{t("cart.emptyTitle")}</h2>
+        <p className="text-muted-foreground mb-6">{t("cart.emptyHint")}</p>
         <Link to="/products" className="btn-primary px-7 py-3.5 text-sm shadow-elevated">
-          Browse Products <ArrowRight className="h-4 w-4" />
+          {t("cart.browseProducts")} <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     );
@@ -23,7 +25,7 @@ const Cart = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
-      <h1 className="text-3xl font-display font-extrabold tracking-tight mb-8">Shopping Cart</h1>
+      <h1 className="text-3xl font-display font-extrabold tracking-tight mb-8">{t("cart.shoppingCart")}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-3">
@@ -80,29 +82,29 @@ const Cart = () => {
 
         {/* Summary */}
         <div className="card-flat p-6 h-fit sticky top-24 space-y-4">
-          <h3 className="font-display font-bold text-lg">Order Summary</h3>
+          <h3 className="font-display font-bold text-lg">{t("cart.orderSummary")}</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-muted-foreground">{t("cart.subtotal")}</span>
               <span className="font-medium">{formatMoney(totalPrice, currency)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Shipping</span>
-              <span className="text-muted-foreground text-xs">Calculated at checkout</span>
+              <span className="text-muted-foreground">{t("cart.shipping")}</span>
+              <span className="text-muted-foreground text-xs">{t("cart.calculatedAtCheckout")}</span>
             </div>
           </div>
           <div className="border-t border-border pt-4">
             <div className="flex justify-between font-display font-extrabold text-xl">
-              <span>Total</span>
+              <span>{t("cart.total")}</span>
               <span>{formatMoney(totalPrice, currency)}</span>
             </div>
           </div>
           <Link to="/checkout" className="btn-primary w-full py-3.5 text-sm shadow-elevated">
-            Proceed to Checkout
+            {t("cart.proceedToCheckout")}
           </Link>
           <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><Shield className="h-3.5 w-3.5" /> Secure</span>
-            <span className="flex items-center gap-1"><Truck className="h-3.5 w-3.5" /> Free over R500</span>
+            <span className="flex items-center gap-1"><Shield className="h-3.5 w-3.5" /> {t("cart.secure")}</span>
+            <span className="flex items-center gap-1"><Truck className="h-3.5 w-3.5" /> {t("cart.freeOver")}</span>
           </div>
         </div>
       </div>

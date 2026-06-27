@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Menu, Search } from "lucide-react";
+import { Menu, Search, Shield } from "lucide-react";
 import AdminSidebar, { type AdminTab, tabs } from "@/components/admin/AdminSidebar";
 import CommandPalette from "@/components/admin/CommandPalette";
 import DashboardModule from "@/components/admin/DashboardModule";
@@ -26,6 +26,7 @@ import OrderOpsModule from "@/components/admin/OrderOpsModule";
 import SupportOpsModule from "@/components/admin/SupportOpsModule";
 import NotificationsModule from "@/components/admin/NotificationsModule";
 import { useAdminData } from "@/hooks/useAdminData";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useToast } from "@/hooks/use-toast";
 
 const Admin = () => {
@@ -52,6 +53,7 @@ const Admin = () => {
   }, [navigate]);
 
   const { products, orders, customers, tickets, settings, loading, setSettings, reload } = useAdminData(session);
+  const isAdmin = useIsAdmin(session);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -77,12 +79,34 @@ const Admin = () => {
     toast({ title: labels[action] || action, description: "Action executed successfully." });
   };
 
-  if (checkingAuth || !session) {
+  if (checkingAuth || !session || isAdmin === null) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-sm text-muted-foreground font-display font-medium">Loading Control Centre...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAdmin === false) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-muted">
+        <div className="text-center max-w-sm px-6">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+            <Shield className="h-6 w-6 text-destructive" />
+          </div>
+          <h2 className="font-display font-bold text-lg mb-2">Admin access required</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Your account is signed in, but doesn't have admin permissions for the Control Centre.
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
+          >
+            Back to store
+          </button>
         </div>
       </div>
     );

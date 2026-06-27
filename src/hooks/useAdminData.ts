@@ -37,7 +37,21 @@ export function useAdminData(session: any) {
       .from("products")
       .select("*")
       .order("created_at", { ascending: false });
-    setProducts(data || []);
+
+    // Cost/margin columns are intentionally not selectable on the base
+    // table for the 'authenticated' role (see security_lockdown migration
+    // -- it's a column-level grant, applies regardless of admin status).
+    // Admins fetch them through this RPC instead, which checks the admin
+    // role server-side before returning anything.
+    const { data: adminView } = await supabase.rpc("get_product_admin_view");
+    const marginById = new Map((adminView || []).map((row: any) => [row.id, row]));
+
+    const merged = (data || []).map((p: any) => ({
+      ...p,
+      ...(marginById.get(p.id) || {}),
+    }));
+
+    setProducts(merged);
     setLoading((p) => ({ ...p, products: false }));
   }, []);
 

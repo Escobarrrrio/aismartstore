@@ -23,25 +23,61 @@
       "trusted": "Vertroude Verskaffer"
     },
     "heroCards": {
-      "ai": { "label": "KI en Masjienleer", "desc": "GPU's, TPU's, KI-versnellers" },
-      "networking": { "label": "Netwerke", "desc": "Roeteerders, skakelaars, toegangspunte" },
-      "computing": { "label": "Rekenaars", "desc": "Bedieners, werkstasies, berging" },
-      "software": { "label": "Sagteware en Lisensies", "desc": "Onderneming- en wolk-lisensies" }
+      "ai": {
+        "label": "KI en Masjienleer",
+        "desc": "GPU's, TPU's, KI-versnellers"
+      },
+      "networking": {
+        "label": "Netwerke",
+        "desc": "Roeteerders, skakelaars, toegangspunte"
+      },
+      "computing": {
+        "label": "Rekenaars",
+        "desc": "Bedieners, werkstasies, berging"
+      },
+      "software": {
+        "label": "Sagteware en Lisensies",
+        "desc": "Onderneming- en wolk-lisensies"
+      }
     },
     "fromPrice": "Vanaf",
     "featureBar": {
-      "shipping": { "title": "Gratis Aflewering", "desc": "Op bestellings oor R500" },
-      "checkout": { "title": "Veilige Betaling", "desc": "Yoco-betaalpoort" },
-      "support": { "title": "KI-Ondersteuning", "desc": "24/7 intelligente hulp" },
-      "delivery": { "title": "Vinnige Aflewering", "desc": "2–5 werksdae landwyd" }
+      "shipping": {
+        "title": "Gratis Aflewering",
+        "desc": "Op bestellings oor R500"
+      },
+      "checkout": {
+        "title": "Veilige Betaling",
+        "desc": "Yoco-betaalpoort"
+      },
+      "support": {
+        "title": "KI-Ondersteuning",
+        "desc": "24/7 intelligente hulp"
+      },
+      "delivery": {
+        "title": "Vinnige Aflewering",
+        "desc": "2–5 werksdae landwyd"
+      }
     },
     "categoriesTitle": "Koop volgens Kategorie",
     "categoriesSubtitle": "Vind presies wat jy nodig het oor ons saamgestelde tegnologie-kategorieë",
     "catShort": {
-      "ai": { "label": "KI en Hardeware", "count": "50+ produkte" },
-      "networking": { "label": "Netwerke", "count": "30+ produkte" },
-      "computing": { "label": "Rekenaars", "count": "40+ produkte" },
-      "software": { "label": "Sagteware", "count": "20+ produkte" }
+      "ai": {
+        "label": "KI en Hardeware",
+        "count": "50+ produkte"
+      },
+      "networking": {
+        "label": "Netwerke",
+        "count": "30+ produkte"
+      },
+      "computing": {
+        "label": "Rekenaars",
+        "count": "40+ produkte"
+      },
+      "software": {
+        "label": "Sagteware",
+        "count": "20+ produkte"
+      }
     },
     "featuredTitle": "Uitgestalde Produkte",
     "featuredSubtitle": "Handgekies teen mededingende pryse",
@@ -78,14 +114,25 @@
     "outOfStock": "Uitverkoop",
     "add": "Voeg by",
     "added": "Bygevoeg!",
-    "addToCart": "Voeg by Mandjie"
+    "addToCart": "Voeg by Mandjie",
+    "addedToCart": "Bygevoeg by Mandjie!"
   },
   "cart": {
     "title": "Jou Mandjie",
     "empty": "Jou mandjie is leeg",
     "checkout": "Betaal",
     "total": "Totaal",
-    "subtotal": "Subtotaal"
+    "subtotal": "Subtotaal",
+    "emptyTitle": "Jou mandjie is leeg",
+    "emptyHint": "Begin deur produkte by te voeg!",
+    "browseProducts": "Blaai deur Produkte",
+    "shoppingCart": "Inkopiemandjie",
+    "orderSummary": "Bestellingsopsomming",
+    "shipping": "Aflewering",
+    "calculatedAtCheckout": "Bereken by uitbetaling",
+    "proceedToCheckout": "Gaan na Uitbetaling",
+    "secure": "Veilig",
+    "freeOver": "Gratis oor R500"
   },
   "account": {
     "welcome": "Welkom terug",
@@ -101,5 +148,116 @@
     "loading": "Laai tans...",
     "language": "Taal",
     "currency": "Geldeenheid"
+  },
+  "checkout": {
+    "title": "Uitbetaling",
+    "orderSuccessTitle": "Bestelling Suksesvol Geplaas!",
+    "orderSuccessDesc": "Dankie vir jou aankoop. Ons sal jou bestelling binnekort verwerk en aflewer.",
+    "continueShopping": "Koop Verder",
+    "paymentFailedTitle": "Betaling Mislukt",
+    "paymentFailedDesc": "Jou betaling kon nie verwerk word nie. Probeer asseblief weer of gebruik 'n ander metode.",
+    "tryAgain": "Probeer Weer",
+    "shippingDetails": "Afleweringsbesonderhede",
+    "fullName": "Volle Naam",
+    "email": "E-pos",
+    "phone": "Foon",
+    "address": "Adres",
+    "city": "Stad",
+    "postalCode": "Poskode",
+    "processing": "Verwerk tans...",
+    "payWith": "Betaal {{amount}} met Yoco",
+    "securePayment": "Veilige betaling aangedryf deur Yoco",
+    "orderReview": "Bestelling Hersiening",
+    "total": "Totaal",
+    "errorTitle": "Uitbetalingsfout"
+  },
+  "auth": {
+    "resetPassword": "Herstel Wagwoord",
+    "welcomeBack": "Welkom Terug",
+    "createAccount": "Skep Rekening",
+    "resetHint": "Voer jou e-pos in en ons stuur vir jou 'n herstelskakel",
+    "signInHint": "Teken in om toegang tot die admin-beheersentrum te kry",
+    "signUpHint": "Registreer om jou winkel te bestuur",
+    "signIn": "Teken In",
+    "signUp": "Registreer",
+    "email": "E-pos",
+    "password": "Wagwoord",
+    "pleaseWait": "Wag asseblief...",
+    "sendResetLink": "Stuur Herstelskakel",
+    "forgotPassword": "Wagwoord vergeet?",
+    "backToSignIn": "Terug na Teken In",
+    "noAccount": "Het jy nie 'n rekening nie?",
+    "haveAccount": "Het jy reeds 'n rekening?",
+    "signUpAction": "Registreer",
+    "signInAction": "Teken in",
+    "errorTitle": "Fout",
+    "checkEmailTitle": "Gaan jou e-pos na",
+    "resetEmailSent": "Ons het 'n wagwoord-herstelskakel aan jou gestuur.",
+    "loginFailedTitle": "Inteken mislukt",
+    "welcomeBackToast": "Welkom terug",
+    "signedInToast": "Jy is nou ingeteken.",
+    "signUpFailedTitle": "Registrasie mislukt",
+    "confirmEmailSent": "Ons het 'n bevestigingskakel gestuur om jou rekening te verifieer."
+  },
+  "productDetail": {
+    "notFoundTitle": "Produk Nie Gevind Nie",
+    "notFoundDesc": "Die produk waarna jy soek bestaan nie meer nie of is verwyder.",
+    "backToProducts": "Terug na Produkte",
+    "home": "Tuis",
+    "products": "Produkte",
+    "inStock": "In Voorraad",
+    "outOfStock": "Uitverkoop",
+    "addedToCart": "Bygevoeg by Mandjie!",
+    "addToCart": "Voeg by Mandjie",
+    "freeDelivery": "Gratis aflewering oor R500",
+    "secureCheckout": "Veilige uitbetaling",
+    "easyReturns": "Maklike terugstuur",
+    "specifications": "Spesifikasies",
+    "specPlaceholder": "Detailspesifikasies sal beskikbaar wees sodra produkdata vanaf die verskaffer gesinchroniseer is.",
+    "relatedProducts": "Verwante Produkte",
+    "viewAll": "Bekyk Alles"
+  },
+  "notFound": {
+    "message": "Oeps! Bladsy nie gevind nie",
+    "returnHome": "Terug na Tuisblad"
+  },
+  "resetPassword": {
+    "invalidLink": "Ongeldige of verstreke herstelskakel.",
+    "backToSignIn": "Terug na Teken In",
+    "title": "Stel Nuwe Wagwoord",
+    "subtitle": "Voer jou nuwe wagwoord hieronder in",
+    "newPassword": "Nuwe Wagwoord",
+    "confirmPassword": "Bevestig Wagwoord",
+    "pleaseWait": "Wag asseblief...",
+    "updatePassword": "Opdateer Wagwoord",
+    "mismatchTitle": "Wagwoorde stem nie ooreen nie",
+    "errorTitle": "Fout",
+    "successTitle": "Wagwoord opgedateer",
+    "successDesc": "Jy kan nou met jou nuwe wagwoord inteken."
+  },
+  "products": {
+    "title": "Produkte",
+    "countSingular": "{{count}} produk beskikbaar",
+    "countPlural": "{{count}} produkte beskikbaar",
+    "searchPlaceholder": "Soek produkte...",
+    "filters": "Filters",
+    "sortNewest": "Nuutste Eerste",
+    "sortPriceAsc": "Prys: Laag tot Hoog",
+    "sortPriceDesc": "Prys: Hoog tot Laag",
+    "sortName": "Naam: A-Z",
+    "category": "Kategorie",
+    "allCategories": "Alle Kategorieë",
+    "stockStatus": "Voorraadstatus",
+    "all": "Alle",
+    "inStock": "In Voorraad",
+    "outOfStock": "Uitverkoop",
+    "clearAllFilters": "Verwyder Alle Filters",
+    "noMatch": "Geen produkte pas by jou filters nie",
+    "noneYet": "Nog geen produkte beskikbaar nie",
+    "tryAdjusting": "Probeer jou soektog of filters aanpas",
+    "willAppear": "Produkte sal hier verskyn sodra hulle bygevoeg word",
+    "clearFilters": "Verwyder Filters",
+    "viewDetails": "Bekyk Besonderhede",
+    "addToCart": "Voeg by Mandjie"
   }
 }

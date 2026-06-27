@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_pulse_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          published_at: string | null
+          source: string
+          summary: string | null
+          title: string
+          url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          source: string
+          summary?: string | null
+          title: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          source?: string
+          summary?: string | null
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
       automation_events: {
         Row: {
           created_at: string
@@ -407,6 +440,51 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      quote_requests: {
+        Row: {
+          admin_notes: string | null
+          contact_name: string
+          created_at: string
+          email: string
+          entity_type: string
+          estimated_value: number | null
+          id: string
+          organisation_name: string
+          phone: string | null
+          requirements: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          contact_name: string
+          created_at?: string
+          email: string
+          entity_type?: string
+          estimated_value?: number | null
+          id?: string
+          organisation_name: string
+          phone?: string | null
+          requirements: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string
+          entity_type?: string
+          estimated_value?: number | null
+          id?: string
+          organisation_name?: string
+          phone?: string | null
+          requirements?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

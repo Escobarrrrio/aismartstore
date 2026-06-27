@@ -7,7 +7,9 @@
     "admin": "Admin",
     "login": "Login / Register",
     "signOut": "Sign Out",
-    "search": "Search products..."
+    "search": "Search products...",
+    "aiPulse": "AI Pulse",
+    "procurement": "For Business"
   },
   "home": {
     "heroBadge": "South Africa's Premium AI & Tech Store",

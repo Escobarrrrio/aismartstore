@@ -44,6 +44,8 @@ const StoreHeader = () => {
           {[
             { to: "/", label: t("nav.home") },
             { to: "/products", label: t("nav.products") },
+            { to: "/ai-pulse", label: t("nav.aiPulse") },
+            { to: "/procurement", label: t("nav.procurement") },
           ].map((link) => (
             <Link
               key={link.to}
@@ -120,6 +122,8 @@ const StoreHeader = () => {
             {[
               { to: "/", label: t("nav.home") },
               { to: "/products", label: t("nav.products") },
+              { to: "/ai-pulse", label: t("nav.aiPulse") },
+              { to: "/procurement", label: t("nav.procurement") },
               { to: "/cart", label: t("nav.cart") },
               ...(session ? [
                 { to: "/account", label: t("nav.account") },

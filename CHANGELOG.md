@@ -185,3 +185,28 @@ implies a fee exists below that threshold and was never being charged).
   react-helmet-async, which crashed 2 of the 4 test files. Fixed by
   wrapping the relevant test renders in HelmetProvider, matching how
   i18next is already initialized globally for tests.
+
+## 2026-06-27 (4) — Government/enterprise procurement page, AI Pulse content hub
+
+### Procurement readiness ("credibility seen from the jump")
+- New `/procurement` page ("For Business") showcasing B-BBEE Level 1,
+  CIPC registration, CSD verification, and banking confirmation up front
+  -- the actual credentials a government or enterprise procurement
+  officer is screening for, not generic trust badges.
+- New "Request a Quote" flow (`quote_requests` table) for government,
+  private enterprise, and contractor buyers who need a formal written
+  quote rather than forcing a tender through a consumer checkout flow.
+  Public can submit, only admin can view/manage -- mirrors the orders
+  privacy pattern from the security lockdown.
+
+### AI Pulse -- real content, not fabricated
+- New `/ai-pulse` page: real AI research papers (arXiv cs.AI) and real
+  news discussions (Hacker News, keyword-filtered) -- deliberately NOT
+  LLM-generated "news," since asking a model to invent the latest
+  headlines risks publishing hallucinated dates and facts as if real.
+- `sync-ai-pulse` edge function pulls both sources and upserts by URL
+  (safe to re-run, no duplicates).
+- Scheduled via pg_cron + pg_net every 6 hours -- fully automated, no
+  manual refresh ever needed.
+- Both new pages added to header/mobile nav, fully translated across
+  all 5 locales.

@@ -4,11 +4,15 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Shield, Truck } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useShippingSettings } from "@/hooks/useShippingSettings";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const { currency } = useLocale();
   const { t } = useTranslation();
+  const { freeThreshold, getShippingFee } = useShippingSettings();
+  const shippingFee = getShippingFee(totalPrice);
+  const grandTotal = totalPrice + shippingFee;
 
   if (items.length === 0) {
     return (
@@ -83,6 +87,11 @@ const Cart = () => {
         {/* Summary */}
         <div className="card-flat p-6 h-fit sticky top-24 space-y-4">
           <h3 className="font-display font-bold text-lg">{t("cart.orderSummary")}</h3>
+          {shippingFee > 0 && (
+            <div className="bg-primary/[0.06] border border-primary/10 rounded-xl px-3.5 py-2.5 text-xs font-medium text-primary">
+              {t("cart.freeShippingHint", { amount: formatMoney(freeThreshold - totalPrice, currency) })}
+            </div>
+          )}
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cart.subtotal")}</span>
@@ -90,13 +99,15 @@ const Cart = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cart.shipping")}</span>
-              <span className="text-muted-foreground text-xs">{t("cart.calculatedAtCheckout")}</span>
+              <span className={shippingFee === 0 ? "text-[hsl(160,84%,39%)] font-semibold" : "font-medium"}>
+                {shippingFee === 0 ? t("cart.free") : formatMoney(shippingFee, currency)}
+              </span>
             </div>
           </div>
           <div className="border-t border-border pt-4">
             <div className="flex justify-between font-display font-extrabold text-xl">
               <span>{t("cart.total")}</span>
-              <span>{formatMoney(totalPrice, currency)}</span>
+              <span>{formatMoney(grandTotal, currency)}</span>
             </div>
           </div>
           <Link to="/checkout" className="btn-primary w-full py-3.5 text-sm shadow-elevated">

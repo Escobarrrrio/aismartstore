@@ -132,7 +132,9 @@
     "calculatedAtCheckout": "Bereken by uitbetaling",
     "proceedToCheckout": "Gaan na Uitbetaling",
     "secure": "Veilig",
-    "freeOver": "Gratis oor R500"
+    "freeOver": "Gratis oor R500",
+    "free": "Gratis",
+    "freeShippingHint": "Voeg nog {{amount}} by vir gratis aflewering"
   },
   "account": {
     "welcome": "Welkom terug",

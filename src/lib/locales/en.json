@@ -132,7 +132,9 @@
     "calculatedAtCheckout": "Calculated at checkout",
     "proceedToCheckout": "Proceed to Checkout",
     "secure": "Secure",
-    "freeOver": "Free over R500"
+    "freeOver": "Free over R500",
+    "free": "Free",
+    "freeShippingHint": "Add {{amount}} more for free shipping"
   },
   "account": {
     "welcome": "Welcome back",

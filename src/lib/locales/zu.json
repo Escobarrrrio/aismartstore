@@ -132,7 +132,9 @@
     "calculatedAtCheckout": "Kubalwa lapho ukhokhayo",
     "proceedToCheckout": "Qhubeka Uyokukhokha",
     "secure": "Kuvikelekile",
-    "freeOver": "Mahhala ngenhla kwaR500"
+    "freeOver": "Mahhala ngenhla kwaR500",
+    "free": "Mahhala",
+    "freeShippingHint": "Engeza {{amount}} okwengeziwe ukuthola ukuthunyelwa mahhala"
   },
   "account": {
     "welcome": "Sawubona futhi",

@@ -127,3 +127,24 @@
   tests, the i18n completeness regression test above, and Auth form smoke
   tests (renders, submits real credentials to Supabase, handles auth
   errors gracefully, forgot-password flow). 15 tests, all passing.
+
+## 2026-06-27 (2) — Real shipping cost (was the #1 documented cause of cart abandonment)
+
+Baymard Institute's research (50-study meta-analysis) puts hidden/unexpected
+costs as the single biggest cause of checkout abandonment (48% of
+abandonments). The Cart page was showing "Calculated at checkout" for
+shipping -- and Checkout never actually added a shipping charge at all,
+despite the homepage advertising "Free Shipping on orders over R500" (which
+implies a fee exists below that threshold and was never being charged).
+
+- Added `shipping_flat_rate` / `free_shipping_threshold` to `store_settings`,
+  with a new admin-only "Shipping" section in Settings to change them --
+  this is a business decision, not something to hardcode.
+- Added a public-readable RLS policy scoped to only those two keys (everything
+  else in store_settings, like the Yoco secret key, stays admin-only).
+- Cart and Checkout now show the real computed shipping cost (or "Free")
+  instead of deferring it, and Checkout actually charges it as part of the
+  order total and the Yoco payment amount.
+- Added a "spend R___ more for free shipping" nudge on Cart when below
+  threshold -- turns the cost-disclosure moment into an upsell opportunity
+  (a pattern Gymshark and others use successfully) instead of pure friction.

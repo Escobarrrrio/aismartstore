@@ -132,7 +132,9 @@
     "calculatedAtCheckout": "Kubalwa ekuhlawuleni",
     "proceedToCheckout": "Qhubeka Uye Kuhlawula",
     "secure": "Kukhuselekile",
-    "freeOver": "Simahla ngaphezu kweR500"
+    "freeOver": "Simahla ngaphezu kweR500",
+    "free": "Simahla",
+    "freeShippingHint": "Yongeza {{amount}} ngakumbi ukufumana ukuthunyelwa simahla"
   },
   "account": {
     "welcome": "Wamkelekile kwakhona",

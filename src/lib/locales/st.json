@@ -132,7 +132,9 @@
     "calculatedAtCheckout": "E baloa nakong ya tefo",
     "proceedToCheckout": "Tsoela Pele ho Lefa",
     "secure": "E Sireletsehile",
-    "freeOver": "Mahala holim'a R500"
+    "freeOver": "Mahala holim'a R500",
+    "free": "Mahala",
+    "freeShippingHint": "Eketsa {{amount}} ho fumana phepelo ya mahala"
   },
   "account": {
     "welcome": "U amohetsoe hape",

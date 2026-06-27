@@ -7,6 +7,7 @@ import { CheckCircle, XCircle, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useShippingSettings } from "@/hooks/useShippingSettings";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -15,6 +16,9 @@ const Checkout = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { getShippingFee } = useShippingSettings();
+  const shippingFee = getShippingFee(totalPrice);
+  const grandTotal = totalPrice + shippingFee;
   const [submitted, setSubmitted] = useState(false);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -75,7 +79,7 @@ const Checkout = () => {
         .insert({
           customer_name: form.name, customer_email: form.email, customer_phone: form.phone,
           address: form.address, city: form.city, postal_code: form.postalCode,
-          total_amount: totalPrice, status: "pending",
+          total_amount: grandTotal, status: "pending",
         })
         .select().single();
 
@@ -89,7 +93,7 @@ const Checkout = () => {
       const baseUrl = window.location.origin;
       const { data: checkoutData, error: fnError } = await supabase.functions.invoke("create-yoco-checkout", {
         body: {
-          orderId: order.id, amount: totalPrice, currency: "ZAR",
+          orderId: order.id, amount: grandTotal, currency: "ZAR",
           successUrl: `${baseUrl}/checkout?status=success`,
           failureUrl: `${baseUrl}/checkout?status=failed`,
           cancelUrl: `${baseUrl}/cart`,
@@ -150,7 +154,7 @@ const Checkout = () => {
             className="w-full btn-primary py-3.5 text-sm shadow-elevated disabled:opacity-50 mt-4"
           >
             <Lock className="h-4 w-4" />
-            {processing ? t("checkout.processing") : t("checkout.payWith", { amount: formatMoney(totalPrice, currency) })}
+            {processing ? t("checkout.processing") : t("checkout.payWith", { amount: formatMoney(grandTotal, currency) })}
           </button>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
@@ -168,10 +172,20 @@ const Checkout = () => {
               </div>
             ))}
           </div>
-          <div className="border-t border-border mt-4 pt-4">
-            <div className="flex justify-between font-display font-extrabold text-xl">
+          <div className="border-t border-border mt-4 pt-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{t("cart.subtotal")}</span>
+              <span className="font-medium">{formatMoney(totalPrice, currency)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{t("cart.shipping")}</span>
+              <span className={shippingFee === 0 ? "text-[hsl(160,84%,39%)] font-semibold" : "font-medium"}>
+                {shippingFee === 0 ? t("cart.free") : formatMoney(shippingFee, currency)}
+              </span>
+            </div>
+            <div className="flex justify-between font-display font-extrabold text-xl pt-2 border-t border-border">
               <span>{t("checkout.total")}</span>
-              <span>{formatMoney(totalPrice, currency)}</span>
+              <span>{formatMoney(grandTotal, currency)}</span>
             </div>
           </div>
         </div>

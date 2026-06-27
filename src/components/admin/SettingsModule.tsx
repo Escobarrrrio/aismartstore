@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Bot, Link2, Package, Bell, Save, CheckCircle } from "lucide-react";
+import { Key, Bot, Link2, Package, Bell, Save, CheckCircle, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SettingsModuleProps {
@@ -54,7 +54,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -79,6 +79,13 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
       <SettingsSection icon={<Link2 className="h-4 w-4" />} title="Make Pro — Automation" description="Trigger webhooks for order and workflow automation.">
         <SettingsInput label="Webhook URL" value={settings.make_webhook_url || ""} onChange={(v) => update("make_webhook_url", v)} placeholder="https://hook.eu1.make.com/..." mono />
+      </SettingsSection>
+
+      <SettingsSection icon={<Truck className="h-4 w-4" />} title="Shipping" description="Shown to every shopper on Cart and Checkout, and charged as part of the order total. This is the only place to change it -- editing it here updates the live site immediately.">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SettingsInput label="Flat Rate (R)" type="number" value={settings.shipping_flat_rate || ""} onChange={(v) => update("shipping_flat_rate", v)} placeholder="75" />
+          <SettingsInput label="Free Shipping Threshold (R)" type="number" value={settings.free_shipping_threshold || ""} onChange={(v) => update("free_shipping_threshold", v)} placeholder="500" />
+        </div>
       </SettingsSection>
 
       <SettingsSection icon={<Package className="h-4 w-4" />} title="Axiz Distributor" description="Connect to Axiz SA for automatic product syncing with markup.">

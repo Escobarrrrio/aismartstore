@@ -18,17 +18,20 @@ export function useShippingSettings() {
 
   useEffect(() => {
     let cancelled = false;
-    supabase
-      .from("store_settings")
-      .select("key, value")
-      .in("key", ["shipping_flat_rate", "free_shipping_threshold"])
-      .then(({ data }) => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("store_settings")
+          .select("key, value")
+          .in("key", ["shipping_flat_rate", "free_shipping_threshold"]);
         if (cancelled || !data) return;
         const map = Object.fromEntries(data.map((r) => [r.key, r.value]));
         if (map.shipping_flat_rate) setFlatRate(Number(map.shipping_flat_rate));
         if (map.free_shipping_threshold) setFreeThreshold(Number(map.free_shipping_threshold));
-      })
-      .finally(() => { if (!cancelled) setLoaded(true); });
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
     return () => { cancelled = true; };
   }, []);
 

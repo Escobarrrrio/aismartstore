@@ -274,14 +274,47 @@ export type Database = {
         }
         Relationships: []
       }
-      products: {
+      product_costs: {
         Row: {
           axiz_product_id: string | null
+          cost_price: number | null
+          margin_percentage: number | null
+          product_id: string
+          selling_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          axiz_product_id?: string | null
+          cost_price?: number | null
+          margin_percentage?: number | null
+          product_id: string
+          selling_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          axiz_product_id?: string | null
+          cost_price?: number | null
+          margin_percentage?: number | null
+          product_id?: string
+          selling_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_costs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
           brand: string | null
           brand_id: string | null
           category: string | null
           category_id: string | null
-          cost_price: number | null
           created_at: string
           description: string | null
           id: string
@@ -289,10 +322,8 @@ export type Database = {
           in_stock: boolean
           is_active: boolean | null
           last_synced_at: string | null
-          margin_percentage: number | null
           name: string
           price: number
-          selling_price: number | null
           slug: string | null
           specifications: Json | null
           stock_quantity: number | null
@@ -300,12 +331,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          axiz_product_id?: string | null
           brand?: string | null
           brand_id?: string | null
           category?: string | null
           category_id?: string | null
-          cost_price?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -313,10 +342,8 @@ export type Database = {
           in_stock?: boolean
           is_active?: boolean | null
           last_synced_at?: string | null
-          margin_percentage?: number | null
           name: string
           price?: number
-          selling_price?: number | null
           slug?: string | null
           specifications?: Json | null
           stock_quantity?: number | null
@@ -324,12 +351,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          axiz_product_id?: string | null
           brand?: string | null
           brand_id?: string | null
           category?: string | null
           category_id?: string | null
-          cost_price?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -337,10 +362,8 @@ export type Database = {
           in_stock?: boolean
           is_active?: boolean | null
           last_synced_at?: string | null
-          margin_percentage?: number | null
           name?: string
           price?: number
-          selling_price?: number | null
           slug?: string | null
           specifications?: Json | null
           stock_quantity?: number | null
@@ -583,13 +606,13 @@ export type Database = {
     }
     Functions: {
       get_product_admin_view: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          id: string
+          axiz_product_id: string
           cost_price: number
-          selling_price: number
+          id: string
           margin_percentage: number
-          axiz_product_id: string | null
+          selling_price: number
         }[]
       }
       has_role: {

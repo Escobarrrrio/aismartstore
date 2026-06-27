@@ -1,4 +1,5 @@
 import { TrendingUp, ShoppingCart, Package, AlertTriangle, RefreshCw, DollarSign, Users, ArrowUpRight } from "lucide-react";
+import TreasuryWidget from "@/components/admin/TreasuryWidget";
 
 interface DashboardModuleProps {
   products: any[];
@@ -64,6 +65,8 @@ const DashboardModule = ({ products, orders, customers = [], onRefresh }: Dashbo
           color="bg-[hsl(38,92%,50%)]/10 text-[hsl(38,92%,50%)]"
         />
       </div>
+
+      <TreasuryWidget />
 
       {/* Low stock alerts */}
       {(lowStock > 0 || outOfStock > 0) && (

@@ -2,3 +2,6 @@ project_id = "xwiqubcilptxzvdigsmp"
 
 [functions.sitemap]
 verify_jwt = false
+
+[functions.sync-ai-pulse]
+verify_jwt = false

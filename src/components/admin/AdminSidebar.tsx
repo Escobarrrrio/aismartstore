@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Users, HeadphonesIcon,
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
-  HardDrive, Wrench, Search
+  HardDrive, Wrench, Search, Mail
 } from "lucide-react";
 import Logo from "@/components/Logo";
 
@@ -11,7 +11,7 @@ export type AdminTab =
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
   | "settings" | "system-health" | "security" | "cost-usage"
   | "integrations" | "backups" | "product-ops" | "order-ops"
-  | "support-ops" | "notifications-mgmt";
+  | "support-ops" | "notifications-mgmt" | "newsletter" | "quotes";
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
@@ -33,6 +33,8 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "order-ops", label: "Order Ops", icon: <ShoppingCart className="h-4 w-4" /> },
   { id: "returns", label: "Returns", icon: <RotateCcw className="h-4 w-4" /> },
   { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
+  { id: "newsletter", label: "Newsletter", icon: <Mail className="h-4 w-4" /> },
+  { id: "quotes", label: "Quote Requests", icon: <FileSpreadsheet className="h-4 w-4" /> },
   { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" />, section: "Operations" },
   { id: "support-ops", label: "Support Ops", icon: <HeadphonesIcon className="h-4 w-4" /> },
   { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },

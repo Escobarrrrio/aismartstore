@@ -54,7 +54,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold", "resend_api_key"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -75,6 +75,10 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
       <SettingsSection icon={<Bot className="h-4 w-4" />} title="OpenAI — AI Assistant" description="Powers the customer service chatbot. Leave blank to use built-in AI.">
         <SettingsInput label="API Key" type="password" value={settings.openai_api_key || ""} onChange={(v) => update("openai_api_key", v)} placeholder="sk-..." mono />
+      </SettingsSection>
+
+      <SettingsSection icon={<Bot className="h-4 w-4" />} title="Resend — Email & Newsletters" description="Powers the welcome email and newsletter campaigns. Get a free API key at resend.com.">
+        <SettingsInput label="API Key" type="password" value={settings.resend_api_key || ""} onChange={(v) => update("resend_api_key", v)} placeholder="re_..." mono />
       </SettingsSection>
 
       <SettingsSection icon={<Link2 className="h-4 w-4" />} title="Make Pro — Automation" description="Trigger webhooks for order and workflow automation.">

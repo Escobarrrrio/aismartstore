@@ -18,6 +18,8 @@ import SyncLogsModule from "@/components/admin/SyncLogsModule";
 import AutomationsModule from "@/components/admin/AutomationsModule";
 import SystemHealthModule from "@/components/admin/SystemHealthModule";
 import SecurityModule from "@/components/admin/SecurityModule";
+import NewsletterModule from "@/components/admin/NewsletterModule";
+import QuotesModule from "@/components/admin/QuotesModule";
 import CostUsageModule from "@/components/admin/CostUsageModule";
 import IntegrationsModule from "@/components/admin/IntegrationsModule";
 import BackupsModule from "@/components/admin/BackupsModule";
@@ -163,6 +165,8 @@ const Admin = () => {
           {activeTab === "orders" && (loading.orders ? <LoadingSkeleton /> : <OrdersModule orders={orders} onReload={reload.loadOrders} />)}
           {activeTab === "returns" && <ReturnsModule />}
           {activeTab === "customers" && (loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />)}
+          {activeTab === "newsletter" && <NewsletterModule />}
+          {activeTab === "quotes" && <QuotesModule />}
           {activeTab === "support" && (loading.tickets ? <LoadingSkeleton /> : <SupportModule tickets={tickets} session={session} onReload={reload.loadTickets} />)}
           {activeTab === "ai-logs" && <AILogsModule />}
           {activeTab === "sync-logs" && <SyncLogsModule />}

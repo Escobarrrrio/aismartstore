@@ -1,0 +1,12 @@
+name = "aismartstore-uptime-monitor"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+
+# Runs every 10 minutes -- checks the live site, records health to KV,
+# and exposes a /status endpoint you (or anyone) can check anytime.
+[triggers]
+crons = ["*/10 * * * *"]
+
+[[kv_namespaces]]
+binding = "HEALTH_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

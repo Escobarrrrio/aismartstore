@@ -210,3 +210,40 @@ implies a fee exists below that threshold and was never being charged).
   manual refresh ever needed.
 - Both new pages added to header/mobile nav, fully translated across
   all 5 locales.
+
+## 2026-06-27 (5) — Newsletter system, Cloudflare monitor, Axiz sync scaffold, redundancy cleanup
+
+### Newsletter & lifecycle email
+- `newsletter_subscribers` + `newsletter_campaigns` tables, public can
+  subscribe, admin-only to manage/send.
+- Welcome email (send-welcome-email): sent once, immediately on signup.
+  Structure is deliberate, not arbitrary -- see in-code comments for the
+  reasoning (curiosity-gap subject line, reciprocity-first framing,
+  single CTA, honest personalization by category, no fabricated
+  urgency/scarcity).
+- Bulk campaign sending (send-newsletter-campaign): admin-composed,
+  optionally targeted by interested category so subscribers get content
+  relevant to them rather than one blast to everyone.
+- One-click unsubscribe, no login required, isolated to a service-role
+  edge function so it can only ever set unsubscribed_at -- not a general
+  write path.
+- New admin "Newsletter" tab: subscriber count, campaign composer,
+  send history.
+- Footer newsletter signup widget. Subscriber count is only ever shown
+  once it's a genuinely credible number (≥50) -- a low count displayed
+  publicly tends to undermine trust rather than build it.
+
+### Other
+- New admin "Quote Requests" tab for the /procurement page submissions.
+- Cloudflare Worker (uptime + security-header monitor) written and
+  added to the repo at `cloudflare-worker/` -- ready to deploy via
+  Wrangler (Claude's Cloudflare access is read-only, can't deploy
+  directly; see cloudflare-worker/README.md for the one-time setup).
+- Axiz catalog sync scaffold (`axiz-sync` edge function) -- the upsert
+  logic, markup application, and sync_logs audit trail are fully real;
+  only fetchAxizCatalog() is a placeholder, since Axiz's actual API
+  contract isn't documented anywhere available yet. Checks for a
+  configured API key and exits cleanly (logged) until one exists.
+- Removed unused dependencies found in a dependency audit: zod,
+  @hookform/resolvers, @tailwindcss/typography -- none were imported
+  anywhere in the codebase.

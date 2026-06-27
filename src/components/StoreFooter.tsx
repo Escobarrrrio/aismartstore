@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Mail, MapPin, Phone, Shield, Truck, CreditCard } from "lucide-react";
 import Logo from "@/components/Logo";
+import NewsletterSignup from "@/components/NewsletterSignup";
 
 const StoreFooter = () => {
   const location = useLocation();
@@ -38,9 +39,10 @@ const StoreFooter = () => {
             <div className="mb-4">
               <Logo size={28} invert />
             </div>
-            <p className="text-sm leading-relaxed text-background/40 mb-4">
+            <p className="text-sm leading-relaxed text-background/40 mb-5">
               South Africa's premium destination for AI hardware, networking, and enterprise technology solutions.
             </p>
+            <NewsletterSignup source="footer" />
           </div>
 
           {/* Shop */}

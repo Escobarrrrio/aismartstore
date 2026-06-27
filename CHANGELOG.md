@@ -247,3 +247,29 @@ implies a fee exists below that threshold and was never being charged).
 - Removed unused dependencies found in a dependency audit: zod,
   @hookform/resolvers, @tailwindcss/typography -- none were imported
   anywhere in the codebase.
+
+## 2026-06-27 (6) — 8 international languages, repo cleanup, de-branding
+
+### Internationalization
+- Added French, Spanish, Portuguese, German, Mandarin Chinese, Arabic,
+  Hindi, and Russian -- 13 languages total. All 199 keys translated,
+  zero gaps (validated programmatically against the English reference).
+- Arabic triggers automatic RTL document direction -- handled centrally
+  so the layout doesn't silently break for RTL readers.
+- The 5 South African languages stay bundled in the main JS (small,
+  primary market); the 8 international languages lazy-load via dynamic
+  import only when selected, so an English-speaking visitor never
+  downloads Arabic/Mandarin/Hindi JSON they won't read. Confirmed via
+  build output: each language is its own ~4-8KB chunk, and the main
+  bundle size is unchanged from before adding them.
+
+### Repository cleanup
+- Removed three coexisting lockfiles down to one: deleted bun.lock and
+  bun.lockb, standardized on npm/package-lock.json as the single source
+  of truth for dependency resolution.
+- Removed lovable-tagger (Lovable's dev-only component-tagging plugin).
+  Note: this disables Lovable's click-to-select visual editing in their
+  own editor -- chat-based prompting is unaffected.
+- Removed unused dependencies confirmed by audit: zod, @hookform/resolvers,
+  @tailwindcss/typography -- none were imported anywhere in the codebase.
+- Rewrote README with badges and de-branded hosting description.

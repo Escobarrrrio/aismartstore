@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { CurrencyCode } from "@/lib/currency";
+import { ensureLanguageLoaded } from "@/lib/i18n";
 
 interface LocaleContextType {
   currency: CurrencyCode;
@@ -26,7 +27,7 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setLanguage = (l: string) => {
-    void i18n.changeLanguage(l);
+    ensureLanguageLoaded(l).then(() => i18n.changeLanguage(l));
   };
 
   useEffect(() => {

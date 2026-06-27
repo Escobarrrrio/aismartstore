@@ -37,7 +37,7 @@ const LanguageCurrencySwitcher = () => {
         <div className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
           <div className="p-3 border-b border-border">
             <p className="text-[10px] font-display font-bold uppercase tracking-wider text-muted-foreground mb-2">Language</p>
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 max-h-64 overflow-y-auto pr-1">
               {SUPPORTED_LANGUAGES.map((l) => (
                 <button
                   key={l.code}

@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.sync-ai-pulse]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-newsletter-campaign]
+verify_jwt = false
+
+[functions.unsubscribe]
+verify_jwt = false

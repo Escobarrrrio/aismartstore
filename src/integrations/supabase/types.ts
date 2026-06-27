@@ -586,12 +586,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           id: string
-          name: string
           cost_price: number
           selling_price: number
           margin_percentage: number
           axiz_product_id: string | null
-          last_synced_at: string | null
         }[]
       }
       has_role: {

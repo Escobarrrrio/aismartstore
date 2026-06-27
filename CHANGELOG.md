@@ -75,3 +75,55 @@
   keys, but that surfaces as untranslated text and should be avoided.
 - The `<Logo />` component accepts `size`, `showWordmark`, `asLink`, and
   `invert` — prefer it over re-rendering the SVG inline anywhere new.
+
+## 2026-06-27 — Security lockdown, real logo, full-site i18n, tests, performance
+
+### Security (critical)
+- Fixed 8 critical RLS holes surfaced by the Supabase advisor: any signed-up
+  customer could previously read/edit other customers' orders and profiles,
+  create/update/delete products and categories, and read/write store settings
+  (Yoco keys). All now correctly gated to the `admin` role.
+- Cost price, selling price, margin %, and Axiz product IDs are no longer
+  readable by the `anon`/`authenticated` Postgres roles at the column level
+  (RLS is row-level only and couldn't have stopped this). Admin access now
+  goes through a dedicated `get_product_admin_view()` function that checks
+  the admin role server-side.
+- Removed PUBLIC execute access from SECURITY DEFINER functions
+  (`handle_new_user`, `has_role`) that didn't need it.
+- Excluded internal tables/columns from the auto-generated GraphQL schema.
+- `Admin.tsx` now actually checks the `admin` role (`useIsAdmin`) instead of
+  only checking "is logged in" -- previously any new signup could open the
+  full control centre, even though the database itself would correctly
+  refuse their queries.
+
+### Brand
+- Replaced the fabricated SVG logo mark with the real uploaded brand asset
+  (`src/assets/logo.png`), which had been sitting unused in the repo since
+  June 5th. One `<Logo />` component is now the single source of truth for
+  header, auth, footer, and admin sidebar.
+- Replaced Lovable's default placeholder favicon and the generic Lovable
+  template Open Graph image with real branded versions generated from the
+  actual logo.
+
+### Internationalization
+- Extended full i18n coverage from the homepage to every customer-facing
+  page: Products, Cart, Checkout, Auth, Product Detail, Reset Password, and
+  404. All 5 locales (en/af/xh/zu/st) have complete, non-placeholder
+  translations with zero missing keys.
+- Added a regression test (`i18n-completeness.test.tsx`) that fails if any
+  known English landmark string reappears after switching languages.
+
+### Performance
+- Route-level code splitting via `React.lazy`. The Admin panel (~524KB,
+  dozens of modules) no longer ships in the bundle every shopper downloads
+  just to browse the store. Main customer-facing bundle dropped from
+  ~1.2MB to ~612KB.
+- Fixed a layout bug where the storefront header/footer wrapped the Admin
+  panel, which renders its own sidebar layout -- this produced duplicate
+  navigation chrome.
+
+### Tests
+- Added a real Vitest + React Testing Library suite: Logo render/props
+  tests, the i18n completeness regression test above, and Auth form smoke
+  tests (renders, submits real credentials to Supabase, handles auth
+  errors gracefully, forgot-password flow). 15 tests, all passing.

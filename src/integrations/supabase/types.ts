@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      addresses: {
+        Row: {
+          city: string
+          country: string
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string
+          line1: string
+          line2: string | null
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          recipient_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          line1: string
+          line2?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          recipient_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          line1?: string
+          line2?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          recipient_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_conversations: {
         Row: {
           created_at: string
@@ -268,6 +319,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          delivery_alerts: boolean
+          order_updates: boolean
+          promotional_emails: boolean
+          sms_notifications: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          delivery_alerts?: boolean
+          order_updates?: boolean
+          promotional_emails?: boolean
+          sms_notifications?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          delivery_alerts?: boolean
+          order_updates?: boolean
+          promotional_emails?: boolean
+          sms_notifications?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -505,31 +583,73 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          admin_notes: string | null
+          avatar_url: string | null
+          city: string | null
+          company_name: string | null
+          country: string
           created_at: string
+          customer_type: string
           email: string | null
           id: string
+          last_login_at: string | null
+          marketing_opt_in: boolean
           name: string | null
           phone: string | null
+          postal_code: string | null
+          preferred_language: string
+          province: string | null
           updated_at: string
           user_id: string
+          vat_number: string | null
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          admin_notes?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string
           created_at?: string
+          customer_type?: string
           email?: string | null
           id?: string
+          last_login_at?: string | null
+          marketing_opt_in?: boolean
           name?: string | null
           phone?: string | null
+          postal_code?: string | null
+          preferred_language?: string
+          province?: string | null
           updated_at?: string
           user_id: string
+          vat_number?: string | null
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          admin_notes?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string
           created_at?: string
+          customer_type?: string
           email?: string | null
           id?: string
+          last_login_at?: string | null
+          marketing_opt_in?: boolean
           name?: string | null
           phone?: string | null
+          postal_code?: string | null
+          preferred_language?: string
+          province?: string | null
           updated_at?: string
           user_id?: string
+          vat_number?: string | null
         }
         Relationships: []
       }
@@ -767,6 +887,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wishlist_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

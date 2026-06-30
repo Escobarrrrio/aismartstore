@@ -177,6 +177,12 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                             />
                             <div className="p-1.5 rounded-md bg-primary/10 text-primary"><Truck className="h-3.5 w-3.5" /></div>
                           </div>
+                          <button
+                            onClick={() => resendNotification(order.id)}
+                            className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md border border-input bg-card text-[11px] font-display font-semibold hover:bg-muted transition-colors"
+                          >
+                            <Mail className="h-3 w-3" /> Resend confirmation email
+                          </button>
                         </div>
                       </div>
 

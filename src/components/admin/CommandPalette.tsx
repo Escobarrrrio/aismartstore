@@ -47,9 +47,6 @@ const CommandPalette = ({ open, setOpen, setActiveTab, onAction }: CommandPalett
           <CommandItem onSelect={() => navigate("cost-usage")}><DollarSign className="mr-2 h-4 w-4" />Cost & Usage</CommandItem>
           <CommandItem onSelect={() => navigate("integrations")}><Link2 className="mr-2 h-4 w-4" />Integrations</CommandItem>
           <CommandItem onSelect={() => navigate("backups")}><HardDrive className="mr-2 h-4 w-4" />Backups</CommandItem>
-          <CommandItem onSelect={() => navigate("product-ops")}><Wrench className="mr-2 h-4 w-4" />Product Ops</CommandItem>
-          <CommandItem onSelect={() => navigate("order-ops")}><ShoppingCart className="mr-2 h-4 w-4" />Order Ops</CommandItem>
-          <CommandItem onSelect={() => navigate("support-ops")}><HeadphonesIcon className="mr-2 h-4 w-4" />Support Ops</CommandItem>
           <CommandItem onSelect={() => navigate("notifications-mgmt")}><Bell className="mr-2 h-4 w-4" />Notifications</CommandItem>
           <CommandItem onSelect={() => navigate("settings")}><Settings className="mr-2 h-4 w-4" />Settings</CommandItem>
         </CommandGroup>

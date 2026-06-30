@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased — Catalogue overhaul, order emails, admin de-duplication
+
+**Catalogue**
+- Purged every Huawei SKU (off-brand for an AI / SA-government reseller). Removed dependent `product_costs` rows in the same migration so no orphan FK references remain.
+- Seeded a curated 24-product catalogue across six approved categories: AI Compute, Edge AI Cameras, Secure Storage & Identity, Networking, Conferencing, Productivity. Every product has a real product photo, ZAR price, brand, stock count, slug, and JSON specifications.
+- Categories table backfilled idempotently (`ON CONFLICT (slug) DO NOTHING`) so re-running the seed is safe.
+
+**Order email (`notify-order` Edge Function)**
+- Replaced the log-only stub with a real transactional sender that delivers two emails per order — owner notification (to `store_settings.notification_email`) and customer confirmation (to the order's `customer_email`).
+- HTML templates with line items, ZAR currency formatting, addresses, and tracking-ready status block.
+- Degrades gracefully: if `RESEND_API_KEY` is not yet provisioned, the function logs the intent and returns 200 so checkout is never blocked.
+- Added "Resend confirmation email" action on each order row in the admin Orders panel.
+
+**Admin — redundancies removed**
+- Deleted `ProductOpsModule`, `OrderOpsModule`, `SupportOpsModule` (duplicated features already present in `ProductsModule` / `OrdersModule` / `SupportModule`).
+- Removed the matching `product-ops` / `order-ops` / `support-ops` tab IDs from `AdminTab`, the sidebar, the command palette, and `Admin.tsx`.
+- Promoted the most useful OrderOps feature into `OrdersModule`: four KPI cards (Total, Pending, Shipped, Revenue from paid orders) above the order list.
+
+**Tests**
+- Added `src/test/catalog.test.ts` — contract guard ensuring no banned brand (Huawei) re-enters the catalogue, categories stay in the approved set, and every row has a positive ZAR price + image URL.
+
+**Axiz status**
+- Axiz API credentials and product feed spec are still pending from the distributor. The integration scaffolding (sync function + admin settings + 26% markup slider) is in place and will activate as soon as the keys are added under Admin → Settings.
+
+
+
 ## 2026-06-27 — Security lockdown, real logo, full i18n, tests
 
 **Security (Supabase advisor: 8 critical, 7 warning — all addressed)**

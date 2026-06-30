@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, RefreshCw, Truck, Eye, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
 
 interface OrdersModuleProps {
   orders: any[];
@@ -48,8 +49,41 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
     toast({ title: "Tracking number saved" });
   };
 
+  const resendNotification = async (id: string) => {
+    const { error } = await supabase.functions.invoke("notify-order", { body: { orderId: id } });
+    if (error) toast({ title: "Failed to resend", description: error.message, variant: "destructive" });
+    else toast({ title: "Confirmation re-sent" });
+  };
+
+  const kpis = useMemo(() => {
+    const total = orders.length;
+    const pending = orders.filter((o) => (o.order_status || o.status) === "pending").length;
+    const shipped = orders.filter((o) => (o.order_status || o.status) === "shipped").length;
+    const revenue = orders
+      .filter((o) => (o.payment_status || "") === "paid")
+      .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+    return { total, pending, shipped, revenue };
+  }, [orders]);
+
+  const kpiCard = (label: string, value: string | number, Icon: any, accent: string) => (
+    <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+      <div className={`p-2 rounded-lg ${accent}`}><Icon className="h-4 w-4" /></div>
+      <div>
+        <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider">{label}</p>
+        <p className="text-lg font-display font-extrabold">{value}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {kpiCard("Total", kpis.total, ShoppingCart, "bg-primary/10 text-primary")}
+        {kpiCard("Pending", kpis.pending, Clock, "bg-amber-100 text-amber-700")}
+        {kpiCard("Shipped", kpis.shipped, CheckCircle2, "bg-blue-100 text-blue-700")}
+        {kpiCard("Revenue (paid)", `R${kpis.revenue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`, DollarSign, "bg-emerald-100 text-emerald-700")}
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -63,6 +97,7 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
         </button>
       </div>
+
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="divide-y divide-border/50">
@@ -142,6 +177,12 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                             />
                             <div className="p-1.5 rounded-md bg-primary/10 text-primary"><Truck className="h-3.5 w-3.5" /></div>
                           </div>
+                          <button
+                            onClick={() => resendNotification(order.id)}
+                            className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md border border-input bg-card text-[11px] font-display font-semibold hover:bg-muted transition-colors"
+                          >
+                            <Mail className="h-3 w-3" /> Resend confirmation email
+                          </button>
                         </div>
                       </div>
 

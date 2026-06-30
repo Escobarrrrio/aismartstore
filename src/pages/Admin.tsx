@@ -23,9 +23,6 @@ import QuotesModule from "@/components/admin/QuotesModule";
 import CostUsageModule from "@/components/admin/CostUsageModule";
 import IntegrationsModule from "@/components/admin/IntegrationsModule";
 import BackupsModule from "@/components/admin/BackupsModule";
-import ProductOpsModule from "@/components/admin/ProductOpsModule";
-import OrderOpsModule from "@/components/admin/OrderOpsModule";
-import SupportOpsModule from "@/components/admin/SupportOpsModule";
 import NotificationsModule from "@/components/admin/NotificationsModule";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -177,9 +174,6 @@ const Admin = () => {
           {activeTab === "cost-usage" && <CostUsageModule />}
           {activeTab === "integrations" && <IntegrationsModule />}
           {activeTab === "backups" && <BackupsModule />}
-          {activeTab === "product-ops" && <ProductOpsModule />}
-          {activeTab === "order-ops" && <OrderOpsModule />}
-          {activeTab === "support-ops" && <SupportOpsModule />}
           {activeTab === "notifications-mgmt" && <NotificationsModule />}
         </div>
       </div>

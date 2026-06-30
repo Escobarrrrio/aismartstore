@@ -10,8 +10,8 @@ export type AdminTab =
   | "dashboard" | "products" | "import" | "orders" | "customers"
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
   | "settings" | "system-health" | "security" | "cost-usage"
-  | "integrations" | "backups" | "product-ops" | "order-ops"
-  | "support-ops" | "notifications-mgmt" | "newsletter" | "quotes";
+  | "integrations" | "backups"
+  | "notifications-mgmt" | "newsletter" | "quotes";
 
 interface AdminSidebarProps {
   activeTab: AdminTab;

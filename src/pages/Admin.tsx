@@ -174,9 +174,6 @@ const Admin = () => {
           {activeTab === "cost-usage" && <CostUsageModule />}
           {activeTab === "integrations" && <IntegrationsModule />}
           {activeTab === "backups" && <BackupsModule />}
-          {activeTab === "product-ops" && <ProductOpsModule />}
-          {activeTab === "order-ops" && <OrderOpsModule />}
-          {activeTab === "support-ops" && <SupportOpsModule />}
           {activeTab === "notifications-mgmt" && <NotificationsModule />}
         </div>
       </div>

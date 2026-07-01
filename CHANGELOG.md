@@ -1,6 +1,24 @@
 # Changelog
 
-## Unreleased — Catalogue overhaul, order emails, admin de-duplication
+## Unreleased — POPIA/PAIA compliance, order actions, image repair, docs
+
+**Compliance**
+- New public `/compliance` page disclosing POPIA & PAIA posture, data-subject rights, and Information Officer contact.
+- Footer now surfaces "Privacy (POPIA)", "PAIA Manual", and a "POPIA & PAIA compliant" badge linking to the page.
+- New `docs/POPIA-PAIA.md` operational reference (lawful basis, retention, security safeguards, DSR SLA).
+- New `src/test/compliance.test.ts` — fails the build if the compliance surface is accidentally removed.
+
+**Orders admin**
+- Added quick-action buttons in expanded order row: **Mark paid**, **Mark shipped**, **Cancel order** (with confirm).
+- Added `cancelled` to the status dropdown + coloured badge.
+
+**Catalogue**
+- Repaired 8 broken Unsplash product image URLs (Raspberry Pi 5, OAK-D Pro, IronKey, ArmorLock, MikroTik CCR2004, and three scanners). All 24 product images now resolve HTTP 200.
+
+**Axiz integration**
+- Added `docs/AXIZ-INTEGRATION.md` documenting the scaffold, the single function that needs replacement once credentials arrive, and the recommended `pg_cron` schedule.
+
+## Previous — Catalogue overhaul, order emails, admin de-duplication
 
 **Catalogue**
 - Purged every Huawei SKU (off-brand for an AI / SA-government reseller). Removed dependent `product_costs` rows in the same migration so no orphan FK references remain.

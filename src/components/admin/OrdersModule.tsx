@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign } from "lucide-react";
+import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -9,7 +9,7 @@ interface OrdersModuleProps {
   onReload: () => void;
 }
 
-const statusOptions = ["pending", "paid", "shipped", "delivered", "returned"];
+const statusOptions = ["pending", "paid", "shipped", "delivered", "returned", "cancelled"];
 const paymentOptions = ["unpaid", "paid", "refunded", "partially_refunded"];
 
 const statusBadge = (status: string) => {
@@ -19,6 +19,7 @@ const statusBadge = (status: string) => {
     shipped: "bg-blue-50 text-blue-700 border-blue-200",
     delivered: "bg-teal-50 text-teal-700 border-teal-200",
     returned: "bg-red-50 text-red-700 border-red-200",
+    cancelled: "bg-slate-100 text-slate-600 border-slate-200",
     unpaid: "bg-gray-50 text-gray-600 border-gray-200",
     refunded: "bg-purple-50 text-purple-700 border-purple-200",
     partially_refunded: "bg-orange-50 text-orange-700 border-orange-200",
@@ -184,6 +185,32 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                             <Mail className="h-3 w-3" /> Resend confirmation email
                           </button>
                         </div>
+                      </div>
+
+                      {/* Quick actions */}
+                      <div className="flex flex-wrap gap-2 pt-2 pb-1">
+                        <button
+                          onClick={() => updateOrderStatus(order.id, "payment_status", "paid")}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-display font-semibold hover:bg-emerald-100 transition-colors"
+                        >
+                          <CheckCircle2 className="h-3 w-3" /> Mark paid
+                        </button>
+                        <button
+                          onClick={() => updateOrderStatus(order.id, "order_status", "shipped")}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-display font-semibold hover:bg-blue-100 transition-colors"
+                        >
+                          <Truck className="h-3 w-3" /> Mark shipped
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm("Cancel this order? The customer will need to be refunded manually via Yoco/PayPal.")) {
+                              updateOrderStatus(order.id, "order_status", "cancelled");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-red-50 text-red-700 border border-red-200 text-[11px] font-display font-semibold hover:bg-red-100 transition-colors"
+                        >
+                          <XCircle className="h-3 w-3" /> Cancel order
+                        </button>
                       </div>
 
                       {/* Items */}

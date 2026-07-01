@@ -61,9 +61,9 @@ const StoreFooter = () => {
             <h5 className="font-display font-bold text-sm text-background/90 mb-4">Support</h5>
             <nav className="flex flex-col gap-2">
               <Link to="/auth" className="text-sm hover:text-background/80 transition-colors">Login / Register</Link>
+              <Link to="/compliance" className="text-sm hover:text-background/80 transition-colors">Privacy (POPIA)</Link>
+              <Link to="/compliance" className="text-sm hover:text-background/80 transition-colors">PAIA Manual</Link>
               <span className="text-sm">Shipping & Returns</span>
-              <span className="text-sm">Terms & Conditions</span>
-              <span className="text-sm">Privacy Policy</span>
             </nav>
           </div>
 
@@ -83,12 +83,15 @@ const StoreFooter = () => {
           </div>
         </div>
 
-        <div className="border-t border-background/[0.06] pt-6 flex items-center justify-between flex-wrap gap-3">
+        <div className="border-t border-background/[0.06] pt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           <p className="text-xs text-background/25">
             © {new Date().getFullYear()} AI Smart Store. All rights reserved.
           </p>
-          <p className="text-xs text-background/25">
-            store.aijobchommie.co.za
+          <p className="text-xs text-background/40 inline-flex items-center gap-1.5">
+            <Shield className="h-3 w-3" />
+            <Link to="/compliance" className="hover:text-background/70 transition-colors">POPIA &amp; PAIA compliant</Link>
+            <span className="text-background/20">·</span>
+            <span>store.aijobchommie.co.za</span>
           </p>
         </div>
       </div>

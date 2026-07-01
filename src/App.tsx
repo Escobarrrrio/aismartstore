@@ -27,6 +27,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Account = lazy(() => import("./pages/Account"));
 const Procurement = lazy(() => import("./pages/Procurement"));
 const AiPulse = lazy(() => import("./pages/AiPulse"));
+const Compliance = lazy(() => import("./pages/Compliance"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ const App = () => (
                     <Route path="/reset-password" element={<StorefrontLayout><ResetPassword /></StorefrontLayout>} />
                     <Route path="/procurement" element={<StorefrontLayout><Procurement /></StorefrontLayout>} />
                     <Route path="/ai-pulse" element={<StorefrontLayout><AiPulse /></StorefrontLayout>} />
+                    <Route path="/compliance" element={<StorefrontLayout><Compliance /></StorefrontLayout>} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
                   </Routes>

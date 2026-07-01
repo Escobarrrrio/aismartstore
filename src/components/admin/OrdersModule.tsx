@@ -9,7 +9,7 @@ interface OrdersModuleProps {
   onReload: () => void;
 }
 
-const statusOptions = ["pending", "paid", "shipped", "delivered", "returned"];
+const statusOptions = ["pending", "paid", "shipped", "delivered", "returned", "cancelled"];
 const paymentOptions = ["unpaid", "paid", "refunded", "partially_refunded"];
 
 const statusBadge = (status: string) => {

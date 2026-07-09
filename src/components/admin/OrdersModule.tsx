@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle } from "lucide-react";
+import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -32,6 +32,18 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [auditByOrder, setAuditByOrder] = useState<Record<string, any[]>>({});
+
+  useEffect(() => {
+    if (!expandedId || auditByOrder[expandedId]) return;
+    supabase
+      .from("order_audit_log" as any)
+      .select("*")
+      .eq("order_id", expandedId)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => setAuditByOrder((m) => ({ ...m, [expandedId]: (data as any[]) || [] })));
+  }, [expandedId]);
 
   const filtered = orders.filter((o) => {
     const matchSearch = !search || o.customer_name?.toLowerCase().includes(search.toLowerCase()) || o.customer_email?.toLowerCase().includes(search.toLowerCase()) || o.id.includes(search);
@@ -225,6 +237,34 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                           ))}
                         </div>
                       )}
+
+                      {/* Audit trail */}
+                      <div className="border-t border-border/30 pt-3 mt-3">
+                        <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                          <History className="h-3 w-3" /> Audit trail
+                        </p>
+                        {!auditByOrder[order.id] ? (
+                          <p className="text-[11px] text-muted-foreground">Loading…</p>
+                        ) : auditByOrder[order.id].length === 0 ? (
+                          <p className="text-[11px] text-muted-foreground">No entries yet.</p>
+                        ) : (
+                          <div className="space-y-1">
+                            {auditByOrder[order.id].map((e) => (
+                              <div key={e.id} className="flex items-center justify-between text-[11px] py-0.5">
+                                <span className="text-muted-foreground">
+                                  <span className="font-mono">{new Date(e.created_at).toLocaleString("en-ZA", { dateStyle: "short", timeStyle: "short" })}</span>
+                                  {" · "}
+                                  <span className="font-semibold text-foreground">{e.event_type}</span>
+                                  {e.from_value || e.to_value ? (
+                                    <> · {e.from_value ?? "∅"} → {e.to_value ?? "∅"}</>
+                                  ) : null}
+                                </span>
+                                <span className="text-muted-foreground">{e.actor_email || (e.actor_id ? "admin" : "system")}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

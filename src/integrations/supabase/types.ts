@@ -376,6 +376,50 @@ export type Database = {
         }
         Relationships: []
       }
+      order_audit_log: {
+        Row: {
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          from_value: string | null
+          id: string
+          metadata: Json | null
+          order_id: string
+          to_value: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          from_value?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id: string
+          to_value?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          from_value?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string
+          to_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_audit_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
+import Index from "./pages/Index";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/contexts/CartContext";
 import { ProductProvider } from "@/contexts/ProductContext";
@@ -16,7 +17,6 @@ import ChatWidget from "@/components/ChatWidget";
 // modules (products, orders, customers, support, sync logs, automations,
 // security, etc.) that a regular shopper never needs. Lazy-loading keeps
 // those out of the bundle everyone downloads just to browse the store.
-const Index = lazy(() => import("./pages/Index"));
 const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Cart = lazy(() => import("./pages/Cart"));

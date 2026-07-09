@@ -525,6 +525,7 @@ export type Database = {
           last_synced_at: string | null
           name: string
           price: number
+          sku: string | null
           slug: string | null
           specifications: Json | null
           stock_quantity: number | null
@@ -545,6 +546,7 @@ export type Database = {
           last_synced_at?: string | null
           name: string
           price?: number
+          sku?: string | null
           slug?: string | null
           specifications?: Json | null
           stock_quantity?: number | null
@@ -565,6 +567,7 @@ export type Database = {
           last_synced_at?: string | null
           name?: string
           price?: number
+          sku?: string | null
           slug?: string | null
           specifications?: Json | null
           stock_quantity?: number | null

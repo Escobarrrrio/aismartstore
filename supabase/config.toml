@@ -23,3 +23,7 @@ verify_jwt = false
 
 [functions.sync-exchange-rates]
 verify_jwt = false
+
+[functions.yoco-webhook]
+verify_jwt = false
+

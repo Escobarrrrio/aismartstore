@@ -23,10 +23,12 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [resolved, setResolved] = useState(false);
+  const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     let cancelled = false;
     setResolved(false);
+    setFailedImages({});
     getProduct(id || "").then((p) => {
       if (!cancelled) {
         setProduct(p);

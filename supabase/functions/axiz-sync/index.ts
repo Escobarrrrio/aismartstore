@@ -93,6 +93,10 @@ Deno.serve(async (req) => {
       .in("key", ["axiz_markup_pct", "axiz_markets", "axiz_brand_filter", "axiz_sync_cursor"]);
     const settings = Object.fromEntries((settingsRows || []).map((r) => [r.key, r.value]));
 
+    // Load blocked placeholder image URLs so we never publish products that use them.
+    const { data: blockRows } = await supabase.from("image_blocklist").select("url");
+    const blockedImages = new Set<string>((blockRows ?? []).map((r: any) => r.url));
+
     const markupPct = Number(settings.axiz_markup_pct || "17");
     const markets = (settings.axiz_markets || "14").split(",").map((m) => Number(m.trim())).filter((n) => !isNaN(n));
     const brandFilter = (settings.axiz_brand_filter || "").split(",").filter(Boolean).map((b) => Number(b.trim()));
@@ -105,7 +109,10 @@ Deno.serve(async (req) => {
         if (typeof v !== "string") continue;
         const s = v.trim();
         if (!s) continue;
-        out.add(s.startsWith("http://") ? "https://" + s.slice(7) : s);
+        const url = s.startsWith("http://") ? "https://" + s.slice(7) : s;
+        if (blockedImages.has(url)) continue;
+        if (/\/axd-live\/[^/]+\.(jpg|png)$/i.test(url)) continue; // brand-logo placeholders
+        out.add(url);
       }
       return [...out];
     };

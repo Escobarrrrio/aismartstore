@@ -334,6 +334,24 @@ export type Database = {
         }
         Relationships: []
       }
+      image_blocklist: {
+        Row: {
+          created_at: string
+          reason: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          reason?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          reason?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       newsletter_campaigns: {
         Row: {
           body_html: string
@@ -1110,6 +1128,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      deactivate_blocked_products_batch: {
+        Args: { batch_size?: number }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

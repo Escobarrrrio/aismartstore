@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History } from "lucide-react";
+import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -33,6 +33,10 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
   const [statusFilter, setStatusFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [auditByOrder, setAuditByOrder] = useState<Record<string, any[]>>({});
+  const [auditEventFilter, setAuditEventFilter] = useState("");
+  const [exportingAudit, setExportingAudit] = useState(false);
+
+  const AUDIT_EVENT_TYPES = ["order_created", "status_changed", "payment_status_changed", "tracking_updated"];
 
   useEffect(() => {
     if (!expandedId || auditByOrder[expandedId]) return;
@@ -66,6 +70,34 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
     const { error } = await supabase.functions.invoke("notify-order", { body: { orderId: id } });
     if (error) toast({ title: "Failed to resend", description: error.message, variant: "destructive" });
     else toast({ title: "Confirmation re-sent" });
+  };
+
+  const exportAuditCsv = async () => {
+    setExportingAudit(true);
+    try {
+      const { data, error } = await supabase
+        .from("order_audit_log" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5000);
+      if (error) throw error;
+      const rows = (data as any[]) || [];
+      const headers = ["created_at", "order_id", "event_type", "from_value", "to_value", "actor_id"];
+      const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const csv = [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `order-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `Exported ${rows.length} audit entries` });
+    } catch (e: any) {
+      toast({ title: "Export failed", description: e.message, variant: "destructive" });
+    } finally {
+      setExportingAudit(false);
+    }
   };
 
   const kpis = useMemo(() => {
@@ -108,6 +140,9 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
         </select>
         <button onClick={onReload} className="px-3 py-2 rounded-lg border border-input bg-card text-sm font-display font-semibold flex items-center gap-1.5 hover:bg-muted transition-colors">
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
+        </button>
+        <button onClick={exportAuditCsv} disabled={exportingAudit} className="px-3 py-2 rounded-lg border border-input bg-card text-sm font-display font-semibold flex items-center gap-1.5 hover:bg-muted transition-colors disabled:opacity-50">
+          <Download className="h-3.5 w-3.5" /> {exportingAudit ? "Exporting…" : "Export audit CSV"}
         </button>
       </div>
 
@@ -240,30 +275,42 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
 
                       {/* Audit trail */}
                       <div className="border-t border-border/30 pt-3 mt-3">
-                        <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                          <History className="h-3 w-3" /> Audit trail
-                        </p>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <History className="h-3 w-3" /> Audit trail
+                          </p>
+                          <select
+                            value={auditEventFilter}
+                            onChange={(e) => setAuditEventFilter(e.target.value)}
+                            className="px-2 py-0.5 rounded-md border border-input bg-card text-[10px]"
+                          >
+                            <option value="">All events</option>
+                            {AUDIT_EVENT_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+                          </select>
+                        </div>
                         {!auditByOrder[order.id] ? (
                           <p className="text-[11px] text-muted-foreground">Loading…</p>
-                        ) : auditByOrder[order.id].length === 0 ? (
-                          <p className="text-[11px] text-muted-foreground">No entries yet.</p>
-                        ) : (
-                          <div className="space-y-1">
-                            {auditByOrder[order.id].map((e) => (
-                              <div key={e.id} className="flex items-center justify-between text-[11px] py-0.5">
-                                <span className="text-muted-foreground">
-                                  <span className="font-mono">{new Date(e.created_at).toLocaleString("en-ZA", { dateStyle: "short", timeStyle: "short" })}</span>
-                                  {" · "}
-                                  <span className="font-semibold text-foreground">{e.event_type}</span>
-                                  {e.from_value || e.to_value ? (
-                                    <> · {e.from_value ?? "∅"} → {e.to_value ?? "∅"}</>
-                                  ) : null}
-                                </span>
-                                <span className="text-muted-foreground">{e.actor_email || (e.actor_id ? "admin" : "system")}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        ) : (() => {
+                          const filtered = auditByOrder[order.id].filter((e) => !auditEventFilter || e.event_type === auditEventFilter);
+                          if (filtered.length === 0) return <p className="text-[11px] text-muted-foreground">No entries match.</p>;
+                          return (
+                            <div className="space-y-1">
+                              {filtered.map((e) => (
+                                <div key={e.id} className="flex items-center justify-between text-[11px] py-0.5">
+                                  <span className="text-muted-foreground">
+                                    <span className="font-mono">{new Date(e.created_at).toLocaleString("en-ZA", { dateStyle: "short", timeStyle: "short" })}</span>
+                                    {" · "}
+                                    <span className="font-semibold text-foreground">{e.event_type}</span>
+                                    {e.from_value || e.to_value ? (
+                                      <> · {e.from_value ?? "∅"} → {e.to_value ?? "∅"}</>
+                                    ) : null}
+                                  </span>
+                                  <span className="text-muted-foreground">{e.actor_email || (e.actor_id ? "admin" : "system")}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}

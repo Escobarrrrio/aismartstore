@@ -24,7 +24,11 @@ const Checkout = () => {
   const [submitted, setSubmitted] = useState(false);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
   const [capturingPaypal, setCapturingPaypal] = useState(searchParams.get("status") === "paypal_return");
+  const failedOrderId = searchParams.get("orderId");
   const [form, setForm] = useState({
     name: "", email: "", phone: "", address: "", city: "", postalCode: "",
   });
@@ -88,7 +92,32 @@ const Checkout = () => {
     );
   }
 
+  const retryPayment = async () => {
+    if (!failedOrderId || retryCount >= MAX_RETRIES) return;
+    setRetrying(true);
+    try {
+      const baseUrl = window.location.origin;
+      const { data, error } = await supabase.functions.invoke("create-yoco-checkout", {
+        body: {
+          orderId: failedOrderId,
+          amount: grandTotal,
+          currency: "ZAR",
+          successUrl: `${baseUrl}/checkout?status=success`,
+          failureUrl: `${baseUrl}/checkout?status=failed&orderId=${failedOrderId}`,
+          cancelUrl: `${baseUrl}/cart`,
+        },
+      });
+      if (error || !data?.redirectUrl) throw new Error(error?.message || data?.error || "Retry failed");
+      setRetryCount((c) => c + 1);
+      window.location.href = data.redirectUrl;
+    } catch (err: any) {
+      toast({ title: "Retry failed", description: err.message, variant: "destructive" });
+      setRetrying(false);
+    }
+  };
+
   if (paymentFailed) {
+    const canRetry = failedOrderId && retryCount < MAX_RETRIES;
     return (
       <div className="container mx-auto px-4 py-20 text-center animate-fade-in">
         <SEO title={t("checkout.paymentFailedTitle")} description="Payment status at AI Smart Store." noindex />
@@ -96,12 +125,27 @@ const Checkout = () => {
           <XCircle className="h-10 w-10 text-destructive" />
         </div>
         <h1 className="text-3xl font-display font-extrabold mb-3">{t("checkout.paymentFailedTitle")}</h1>
-        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
           {t("checkout.paymentFailedDesc")}
         </p>
-        <button onClick={() => { setPaymentFailed(false); navigate("/checkout"); }} className="btn-primary px-8 py-3.5 text-sm shadow-elevated">
-          {t("checkout.tryAgain")}
-        </button>
+        {retryCount > 0 && (
+          <p className="text-xs text-muted-foreground mb-4">Attempt {retryCount + 1} of {MAX_RETRIES + 1}</p>
+        )}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {canRetry && (
+            <button onClick={retryPayment} disabled={retrying} className="btn-primary px-8 py-3.5 text-sm shadow-elevated disabled:opacity-50">
+              {retrying ? t("checkout.processing") : "Retry payment now"}
+            </button>
+          )}
+          <button onClick={() => { setPaymentFailed(false); navigate("/checkout"); }} className="px-8 py-3.5 text-sm rounded-full border border-border font-display font-semibold hover:bg-muted transition-colors">
+            {t("checkout.tryAgain")}
+          </button>
+        </div>
+        {!canRetry && failedOrderId && (
+          <p className="text-xs text-muted-foreground mt-6 max-w-md mx-auto">
+            Maximum retries reached. Please contact support with reference #{failedOrderId.slice(0, 8)}.
+          </p>
+        )}
       </div>
     );
   }
@@ -143,7 +187,7 @@ const Checkout = () => {
             : {
                 orderId: order.id, amount: chargeAmount, currency: "ZAR",
                 successUrl: `${baseUrl}/checkout?status=success`,
-                failureUrl: `${baseUrl}/checkout?status=failed`,
+                failureUrl: `${baseUrl}/checkout?status=failed&orderId=${order.id}`,
                 cancelUrl: `${baseUrl}/cart`,
               },
         }

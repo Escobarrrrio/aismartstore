@@ -46,8 +46,9 @@ Deno.serve(async (req) => {
 
   let query = supabase
     .from("newsletter_subscribers")
-    .select("email")
+    .select("email, unsubscribe_token")
     .is("unsubscribed_at", null);
+
 
   if (campaign.category_filter) {
     query = query.contains("interested_categories", [campaign.category_filter]);
@@ -67,7 +68,8 @@ Deno.serve(async (req) => {
     const batch = recipients.slice(i, i + batchSize);
     await Promise.all(
       batch.map(async (r) => {
-        const unsubscribeUrl = `https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?email=${encodeURIComponent(r.email)}`;
+        const unsubscribeUrl = `https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?token=${encodeURIComponent(r.unsubscribe_token)}`;
+
         const html = `${campaign.body_html}
           <p style="color:#aaa;font-size:11px;margin-top:32px;font-family:sans-serif;">
             AI Smart Store, a division of AI Job Chommie (Pty) Ltd.

@@ -27,7 +27,8 @@ Deno.serve(async (req) => {
   // SECURITY: only send if this address just subscribed via the site.
   const { data: subscriber } = await supabase
     .from("newsletter_subscribers")
-    .select("email, interested_categories, subscribed_at, unsubscribed_at")
+    .select("email, interested_categories, subscribed_at, unsubscribed_at, unsubscribe_token")
+
     .eq("email", email)
     .maybeSingle();
 
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
       </a>
       <p style="color:#aaa;font-size:11px;margin-top:32px;">
         AI Smart Store, a division of AI Job Chommie (Pty) Ltd.
-        <a href="https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?email=${encodeURIComponent(email)}" style="color:#aaa;">Unsubscribe</a>
+        <a href="https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribe_token)}" style="color:#aaa;">Unsubscribe</a>
       </p>
     </div>`;
 

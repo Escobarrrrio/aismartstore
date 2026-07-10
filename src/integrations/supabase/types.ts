@@ -724,11 +724,34 @@ export type Database = {
           },
         ]
       }
+      profile_admin_notes: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address_line1: string | null
           address_line2: string | null
-          admin_notes: string | null
           avatar_url: string | null
           city: string | null
           company_name: string | null
@@ -751,7 +774,6 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
-          admin_notes?: string | null
           avatar_url?: string | null
           city?: string | null
           company_name?: string | null
@@ -774,7 +796,6 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
-          admin_notes?: string | null
           avatar_url?: string | null
           city?: string | null
           company_name?: string | null

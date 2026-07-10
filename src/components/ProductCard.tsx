@@ -97,13 +97,20 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
           </span>
         )}
         <Link to={`/product/${product.id}`}>
-          <h3 className="font-display font-bold text-sm leading-snug line-clamp-2 hover:text-primary transition-colors mb-1.5">
+          <h3 className="font-display font-bold text-sm leading-snug line-clamp-2 hover:text-primary transition-colors mb-1">
             {product.name}
           </h3>
         </Link>
-        <p className="text-xs text-muted-foreground line-clamp-2 flex-1 leading-relaxed mb-3">
-          {product.description}
-        </p>
+        {metaLine && (
+          <p className="text-xs text-muted-foreground mb-2 truncate">{metaLine}</p>
+        )}
+        {showDescription ? (
+          <p className="text-xs text-muted-foreground line-clamp-2 flex-1 leading-relaxed mb-3">
+            {product.description}
+          </p>
+        ) : (
+          <div className="flex-1" />
+        )}
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
           <span className="font-display font-extrabold text-base sm:text-lg truncate">
             {formatPrice(product.price)}

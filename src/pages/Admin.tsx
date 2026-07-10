@@ -161,6 +161,7 @@ const Admin = () => {
           {activeTab === "dashboard" && <DashboardModule products={products} orders={orders} customers={customers} onRefresh={reload.loadOrders} />}
           {activeTab === "products" && (loading.products ? <LoadingSkeleton /> : <ProductsModule products={products} onReload={reload.loadProducts} />)}
           {activeTab === "import" && <ImportModule />}
+          {activeTab === "catalog-health" && <CatalogHealthModule />}
           {activeTab === "orders" && (loading.orders ? <LoadingSkeleton /> : <OrdersModule orders={orders} onReload={reload.loadOrders} />)}
           {activeTab === "returns" && <ReturnsModule />}
           {activeTab === "customers" && (loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />)}

@@ -27,17 +27,30 @@ const Index = () => {
   return (
     <div className="flex flex-col">
       <SEO
-        title="AI Smart Store"
-        description="The world's premium AI & technology store. AI hardware, networking, computing, and enterprise software -- curated, competitively priced, and backed by expert support."
+        title="AI Smart Store — AI hardware, networking & enterprise software in South Africa"
+        description="Shop curated AI hardware, networking gear, computing devices, and enterprise software in South Africa. Distributor-backed pricing in ZAR with SA-wide delivery."
         path="/"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "AI Smart Store",
-          url: typeof window !== "undefined" ? window.location.origin : "https://aismartstore.lovable.app",
-          logo: typeof window !== "undefined" ? `${window.location.origin}/icon-512.png` : undefined,
-          description: "The world's premium AI & technology store.",
-        }}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "AI Smart Store",
+            url: typeof window !== "undefined" ? window.location.origin : "https://aismartstore.co.za",
+            logo: typeof window !== "undefined" ? `${window.location.origin}/icon-512.png` : "https://aismartstore.co.za/icon-512.png",
+            description: "South Africa's premium AI & technology store.",
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "AI Smart Store",
+            url: typeof window !== "undefined" ? window.location.origin : "https://aismartstore.co.za",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: `${typeof window !== "undefined" ? window.location.origin : "https://aismartstore.co.za"}/products?q={search_term_string}`,
+              "query-input": "required name=search_term_string",
+            },
+          },
+        ]}
       />
       <HeroSection />
 

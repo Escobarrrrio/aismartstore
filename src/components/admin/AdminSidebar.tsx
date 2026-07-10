@@ -27,6 +27,7 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" />, section: "Overview" },
   { id: "system-health", label: "System Health", icon: <Activity className="h-4 w-4" /> },
   { id: "products", label: "Products", icon: <Package className="h-4 w-4" />, section: "Catalogue" },
+  { id: "catalog-health", label: "Catalog Health", icon: <Activity className="h-4 w-4" /> },
   { id: "import", label: "Bulk Import", icon: <FileSpreadsheet className="h-4 w-4" /> },
   { id: "orders", label: "Orders", icon: <ShoppingCart className="h-4 w-4" />, section: "Sales" },
   { id: "returns", label: "Returns", icon: <RotateCcw className="h-4 w-4" /> },

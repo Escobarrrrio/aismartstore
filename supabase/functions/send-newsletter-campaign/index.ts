@@ -1,14 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-// Sends an admin-composed campaign to subscribers, optionally filtered
-// by interested category (the personalization layer requested: people
-// get the newsletter content relevant to "their wants in their next
-// buy" rather than one generic blast to everyone).
-//
-// Batches sends in groups of 50 to stay well within Resend's rate
-// limits rather than firing hundreds of requests in a tight loop.
+import { getAuthContext } from "../_shared/auth-guard.ts";
 
 Deno.serve(async (req) => {
+  const auth = await getAuthContext(req);
+  if (!auth.userId || !auth.isAdmin) {
+    return new Response(JSON.stringify({ error: "Admin role required" }), {
+      status: 403, headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -26,6 +26,11 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ status: "error", message: "Campaign not found" }), { status: 404 });
   }
 
+  // Refuse to re-send a campaign that has already been sent.
+  if (campaign.status === "sent" || campaign.status === "sending") {
+    return new Response(JSON.stringify({ status: "error", message: `Campaign already ${campaign.status}` }), { status: 409 });
+  }
+
   const { data: settingsRows } = await supabase
     .from("store_settings")
     .select("key, value")
@@ -41,8 +46,9 @@ Deno.serve(async (req) => {
 
   let query = supabase
     .from("newsletter_subscribers")
-    .select("email")
+    .select("email, unsubscribe_token")
     .is("unsubscribed_at", null);
+
 
   if (campaign.category_filter) {
     query = query.contains("interested_categories", [campaign.category_filter]);
@@ -62,7 +68,8 @@ Deno.serve(async (req) => {
     const batch = recipients.slice(i, i + batchSize);
     await Promise.all(
       batch.map(async (r) => {
-        const unsubscribeUrl = `https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?email=${encodeURIComponent(r.email)}`;
+        const unsubscribeUrl = `https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?token=${encodeURIComponent(r.unsubscribe_token)}`;
+
         const html = `${campaign.body_html}
           <p style="color:#aaa;font-size:11px;margin-top:32px;font-family:sans-serif;">
             AI Smart Store, a division of AI Job Chommie (Pty) Ltd.

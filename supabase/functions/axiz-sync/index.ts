@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAuthContext } from "../_shared/auth-guard.ts";
+
 
 // =====================================================================
 // Axiz catalog sync -- v3 INCREMENTAL
@@ -47,7 +49,20 @@ async function getAxizToken(clientId: string, clientSecret: string, scope: strin
   return data.access_token as string;
 }
 
-Deno.serve(async (_req) => {
+Deno.serve(async (req) => {
+  // SECURITY: only admins or the internal cron caller may trigger the sync.
+  const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";
+  const providedSecret = req.headers.get("x-internal-secret") ?? "";
+  const isInternal = internalSecret.length > 0 && providedSecret === internalSecret;
+  if (!isInternal) {
+    const auth = await getAuthContext(req);
+    if (!auth.userId || !auth.isAdmin) {
+      return new Response(JSON.stringify({ error: "Admin role required" }), {
+        status: 403, headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -187,16 +202,6 @@ Deno.serve(async (_req) => {
           }
         }
       }
-
-      pagesDone++;
-
-      if (pageItems.length < PAGE_SIZE) {
-        mIdx++; pIdx = 0;
-        if (mIdx >= markets.length) { catalogComplete = true; break; }
-      } else {
-        pIdx++;
-      }
-    }
 
       pagesDone++;
 

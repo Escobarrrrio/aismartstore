@@ -70,6 +70,23 @@ Deno.serve(async (req) => {
 
     const updates: Record<string, unknown> = {};
     if (event === "payment.succeeded") {
+      // SECURITY: verify Yoco actually charged the full order total before marking paid.
+      const { data: order } = await supabase
+        .from("orders").select("total_amount").eq("id", orderId).maybeSingle();
+      const expectedCents = order ? Math.round(Number(order.total_amount) * 100) : null;
+      const paidCents = Number(payload?.payload?.amount ?? 0);
+      if (expectedCents === null || Math.abs(paidCents - expectedCents) > 1) {
+        console.error("[yoco-webhook] amount mismatch", { orderId, expectedCents, paidCents });
+        await supabase.from("order_audit_log").insert({
+          order_id: orderId,
+          event_type: "yoco.amount_mismatch",
+          actor_email: "yoco-webhook",
+          metadata: { expectedCents, paidCents, payload_id: payload?.id },
+        });
+        return new Response(JSON.stringify({ error: "amount_mismatch" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       updates.payment_status = "paid";
       updates.status = "paid";
     } else if (event === "payment.failed") {
@@ -80,7 +97,6 @@ Deno.serve(async (req) => {
 
     if (Object.keys(updates).length) {
       await supabase.from("orders").update(updates).eq("id", orderId);
-      // Also drop an audit trail entry from the webhook context.
       await supabase.from("order_audit_log").insert({
         order_id: orderId,
         event_type: `yoco.${event}`,
@@ -88,7 +104,10 @@ Deno.serve(async (req) => {
         metadata: { payload_id: payload?.id, amount: payload?.payload?.amount },
       });
       if (updates.payment_status === "paid") {
-        await supabase.functions.invoke("notify-order", { body: { orderId } });
+        await supabase.functions.invoke("notify-order", {
+          body: { orderId },
+          headers: { "x-internal-secret": Deno.env.get("INTERNAL_CRON_SECRET") ?? "" },
+        });
       }
     }
 

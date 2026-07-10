@@ -14,18 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _broken_image_products: {
-        Row: {
-          id: string
-        }
-        Insert: {
-          id: string
-        }
-        Update: {
-          id?: string
-        }
-        Relationships: []
-      }
       addresses: {
         Row: {
           city: string

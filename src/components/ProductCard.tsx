@@ -37,7 +37,7 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
   return (
     <div className="group card-premium overflow-hidden flex flex-col">
       <Link to={`/product/${product.id}`} className="block relative bg-muted aspect-[4/3] overflow-hidden">
-        {product.images[0] ? (
+        {hasImage ? (
           <img
             src={product.images[0]}
             alt={product.name}
@@ -47,11 +47,11 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
             loading="lazy"
             decoding="async"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
+            onError={() => setImgFailed(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground/40">
-            <ShoppingCart className="h-10 w-10" />
+          <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/40">
+            <Package className="h-10 w-10" />
           </div>
         )}
 

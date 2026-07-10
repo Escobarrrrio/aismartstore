@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Heart, Eye } from "lucide-react";
+import { ShoppingCart, Heart, Eye, Package } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -17,6 +17,14 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
   const { formatPrice } = useLocale();
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
+  const hasImage = !!product.images[0] && !imgFailed;
+  const showDescription =
+    !!product.description &&
+    product.description.trim().toLowerCase() !== product.name.trim().toLowerCase();
+  const metaLine = [product.sku ? `SKU: ${product.sku}` : null, product.brand || null]
+    .filter(Boolean)
+    .join(" · ");
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,7 +37,7 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
   return (
     <div className="group card-premium overflow-hidden flex flex-col">
       <Link to={`/product/${product.id}`} className="block relative bg-muted aspect-[4/3] overflow-hidden">
-        {product.images[0] ? (
+        {hasImage ? (
           <img
             src={product.images[0]}
             alt={product.name}
@@ -39,11 +47,11 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
             loading="lazy"
             decoding="async"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
+            onError={() => setImgFailed(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground/40">
-            <ShoppingCart className="h-10 w-10" />
+          <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/40">
+            <Package className="h-10 w-10" />
           </div>
         )}
 
@@ -89,13 +97,20 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
           </span>
         )}
         <Link to={`/product/${product.id}`}>
-          <h3 className="font-display font-bold text-sm leading-snug line-clamp-2 hover:text-primary transition-colors mb-1.5">
+          <h3 className="font-display font-bold text-sm leading-snug line-clamp-2 hover:text-primary transition-colors mb-1">
             {product.name}
           </h3>
         </Link>
-        <p className="text-xs text-muted-foreground line-clamp-2 flex-1 leading-relaxed mb-3">
-          {product.description}
-        </p>
+        {metaLine && (
+          <p className="text-xs text-muted-foreground mb-2 truncate">{metaLine}</p>
+        )}
+        {showDescription ? (
+          <p className="text-xs text-muted-foreground line-clamp-2 flex-1 leading-relaxed mb-3">
+            {product.description}
+          </p>
+        ) : (
+          <div className="flex-1" />
+        )}
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
           <span className="font-display font-extrabold text-base sm:text-lg truncate">
             {formatPrice(product.price)}

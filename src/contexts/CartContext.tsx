@@ -11,6 +11,7 @@ export interface Product {
   createdAt: string;
   brand?: string;
   sku?: string;
+  stockQuantity?: number;
   isAiProduct?: boolean;
 }
 

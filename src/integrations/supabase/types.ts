@@ -1175,60 +1175,35 @@ export type Database = {
           read_ct: number
         }[]
       }
-      search_products:
-        | {
-            Args: {
-              filter_ai_only?: boolean
-              filter_brand?: string
-              filter_category?: string
-              filter_in_stock_only?: boolean
-              max_price?: number
-              min_price?: number
-              page_number?: number
-              page_size?: number
-              search_query?: string
-              sort_by?: string
-            }
-            Returns: {
-              brand: string
-              category: string
-              description: string
-              id: string
-              images: string[]
-              in_stock: boolean
-              is_ai_product: boolean
-              name: string
-              price: number
-              sku: string
-              slug: string
-              stock_quantity: number
-              total_count: number
-            }[]
-          }
-        | {
-            Args: {
-              ai_only?: boolean
-              category_filter?: string
-              page_num?: number
-              page_size?: number
-              search_term?: string
-              sort_by?: string
-              stock_filter?: string
-            }
-            Returns: {
-              brand: string
-              category: string
-              description: string
-              id: string
-              images: string[]
-              in_stock: boolean
-              is_ai_product: boolean
-              name: string
-              price: number
-              sku: string
-              total_count: number
-            }[]
-          }
+      search_products: {
+        Args: {
+          filter_ai_only?: boolean
+          filter_brand?: string
+          filter_category?: string
+          filter_in_stock_only?: boolean
+          max_price?: number
+          min_price?: number
+          page_number?: number
+          page_size?: number
+          search_query?: string
+          sort_by?: string
+        }
+        Returns: {
+          brand: string
+          category: string
+          description: string
+          id: string
+          images: string[]
+          in_stock: boolean
+          is_ai_product: boolean
+          name: string
+          price: number
+          sku: string
+          slug: string
+          stock_quantity: number
+          total_count: number
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

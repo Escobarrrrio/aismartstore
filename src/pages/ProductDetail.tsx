@@ -23,10 +23,12 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [resolved, setResolved] = useState(false);
+  const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     let cancelled = false;
     setResolved(false);
+    setFailedImages({});
     getProduct(id || "").then((p) => {
       if (!cancelled) {
         setProduct(p);
@@ -115,17 +117,23 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Images */}
           <div className="space-y-4">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-muted border border-border">
-              {product.images[selectedImage] ? (
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border border-border">
+              {product.images[selectedImage] && !failedImages[selectedImage] ? (
                 <img
                   src={product.images[selectedImage]}
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  onError={() => setFailedImages((f) => ({ ...f, [selectedImage]: true }))}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/30">
                   <Package className="h-20 w-20" />
                 </div>
+              )}
+              {product.isAiProduct && (
+                <span className="absolute top-3 left-3 gradient-brand text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md tracking-wide">
+                  AI
+                </span>
               )}
             </div>
             {product.images.length > 1 && (
@@ -138,7 +146,18 @@ const ProductDetail = () => {
                       i === selectedImage ? "border-primary shadow-md" : "border-border hover:border-muted-foreground/30"
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    {img && !failedImages[i] ? (
+                      <img
+                        src={img}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={() => setFailedImages((f) => ({ ...f, [i]: true }))}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/30">
+                        <Package className="h-6 w-6" />
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -152,20 +171,38 @@ const ProductDetail = () => {
                 {product.category}
               </Link>
             )}
-            <h1 className="text-2xl md:text-3xl font-display font-extrabold tracking-tight mb-4">
+            <h1 className="text-2xl md:text-3xl font-display font-extrabold tracking-tight mb-3">
               {product.name}
             </h1>
+
+            {(product.brand || product.sku) && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mb-4">
+                {product.brand && (
+                  <span><span className="font-semibold text-foreground">Brand:</span> {product.brand}</span>
+                )}
+                {product.sku && (
+                  <span><span className="font-semibold text-foreground">Product code:</span> {product.sku}</span>
+                )}
+              </div>
+            )}
 
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-3xl font-display font-extrabold">
                 {formatPrice(product.price)}
               </span>
               <span className={`text-sm font-semibold ${product.inStock ? 'text-[hsl(160,84%,39%)]' : 'text-destructive'}`}>
-                {product.inStock ? t("productDetail.inStock") : t("productDetail.outOfStock")}
+                {product.inStock
+                  ? (typeof product.stockQuantity === "number"
+                      ? `${t("productDetail.inStock")} (${product.stockQuantity} available)`
+                      : t("productDetail.inStock"))
+                  : t("productDetail.outOfStock")}
               </span>
             </div>
 
-            <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
+            {product.description &&
+              product.description.trim().toLowerCase() !== product.name.trim().toLowerCase() && (
+              <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
+            )}
 
             {/* Quantity + Add to Cart */}
             <div className="flex flex-col sm:flex-row gap-3 mb-8">

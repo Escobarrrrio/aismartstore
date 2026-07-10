@@ -27,6 +27,7 @@ type ProductRow = {
   sku?: string | null;
   images: string[] | null;
   in_stock: boolean;
+  stock_quantity?: number | null;
   is_ai_product?: boolean | null;
   created_at?: string;
 };
@@ -41,6 +42,7 @@ const mapRow = (p: ProductRow): Product => ({
   sku: p.sku || undefined,
   images: p.images || [],
   inStock: p.in_stock,
+  stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
   isAiProduct: !!p.is_ai_product,
   createdAt: p.created_at || new Date().toISOString(),
 });
@@ -129,7 +131,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     if (cached) return cached;
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, description, price, category, brand, sku, images, in_stock, is_ai_product, created_at")
+      .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
       .eq("id", id)
       .maybeSingle();
     if (error || !data) return undefined;

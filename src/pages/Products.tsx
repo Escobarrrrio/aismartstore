@@ -38,6 +38,7 @@ const toProduct = (r: Row): Product => ({
   sku: r.sku || undefined,
   images: r.images || [],
   inStock: r.in_stock,
+  stockQuantity: typeof r.stock_quantity === "number" ? r.stock_quantity : undefined,
   isAiProduct: !!r.is_ai_product,
   createdAt: new Date().toISOString(),
 });

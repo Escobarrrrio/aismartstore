@@ -13,6 +13,7 @@ const StoreHeader = () => {
   const { totalItems } = useCart();
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();

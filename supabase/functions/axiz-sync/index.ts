@@ -135,31 +135,68 @@ Deno.serve(async (_req) => {
           const ai = isAiRelated(searchable);
           if (ai) aiFlagged++;
           const cost = Number(item.price ?? 0);
+          const sellingPrice = Math.round(cost * (1 + markupPct / 100) * 100) / 100;
+          const imgs = normalizeImages(item.imageGallery);
+          const publishable = cost > 0 && imgs.length > 0;
           return {
             sku: String(item.productCode),
             slug: slugify(name, String(item.productCode)),
             name,
             description: item.productDescription,
-            price: cost * (1 + markupPct / 100),
+            price: sellingPrice,
             category: item.productCategory,
             brand: item.brand?.brandName,
             stock_quantity: Number(item.onHand ?? 0),
             stock_status: Number(item.onHand ?? 0) > 0 ? "in_stock" : "out_of_stock",
             in_stock: Number(item.onHand ?? 0) > 0,
-            images: item.imageGallery ? [item.imageGallery].flat() : [],
-            is_active: true,
+            images: imgs,
+            is_active: publishable,
             is_ai_product: ai,
             last_synced_at: now,
+            _cost: cost,
+            _axiz_id: String(item.productCode),
           };
         });
 
         // Write THIS page immediately -- progress persists even if killed.
         for (const batch of chunk(rows, UPSERT_BATCH_SIZE)) {
-          const { error } = await supabase.from("products").upsert(batch, { onConflict: "sku" });
-          if (error) { totalFailed += batch.length; notes.push(`upsert: ${error.message}`); }
-          else totalSynced += batch.length;
+          const productRows = batch.map(({ _cost, _axiz_id, ...r }) => r);
+          const { data: upserted, error } = await supabase
+            .from("products")
+            .upsert(productRows, { onConflict: "sku" })
+            .select("id, sku, price");
+          if (error) { totalFailed += batch.length; notes.push(`upsert: ${error.message}`); continue; }
+          totalSynced += batch.length;
+
+          // Write cost/margin rows keyed by product id
+          const bySku = new Map(batch.map((b) => [b.sku, b]));
+          const costRows = (upserted ?? []).map((p: any) => {
+            const src = bySku.get(p.sku)!;
+            return {
+              product_id: p.id,
+              cost_price: src._cost,
+              selling_price: src.price,
+              margin_percentage: markupPct,
+              axiz_product_id: src._axiz_id,
+              updated_at: now,
+            };
+          });
+          if (costRows.length) {
+            const { error: cErr } = await supabase.from("product_costs").upsert(costRows, { onConflict: "product_id" });
+            if (cErr) notes.push(`product_costs: ${cErr.message}`);
+          }
         }
       }
+
+      pagesDone++;
+
+      if (pageItems.length < PAGE_SIZE) {
+        mIdx++; pIdx = 0;
+        if (mIdx >= markets.length) { catalogComplete = true; break; }
+      } else {
+        pIdx++;
+      }
+    }
 
       pagesDone++;
 

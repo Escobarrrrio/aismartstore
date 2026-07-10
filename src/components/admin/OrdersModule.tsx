@@ -275,30 +275,42 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
 
                       {/* Audit trail */}
                       <div className="border-t border-border/30 pt-3 mt-3">
-                        <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                          <History className="h-3 w-3" /> Audit trail
-                        </p>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <History className="h-3 w-3" /> Audit trail
+                          </p>
+                          <select
+                            value={auditEventFilter}
+                            onChange={(e) => setAuditEventFilter(e.target.value)}
+                            className="px-2 py-0.5 rounded-md border border-input bg-card text-[10px]"
+                          >
+                            <option value="">All events</option>
+                            {AUDIT_EVENT_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+                          </select>
+                        </div>
                         {!auditByOrder[order.id] ? (
                           <p className="text-[11px] text-muted-foreground">Loading…</p>
-                        ) : auditByOrder[order.id].length === 0 ? (
-                          <p className="text-[11px] text-muted-foreground">No entries yet.</p>
-                        ) : (
-                          <div className="space-y-1">
-                            {auditByOrder[order.id].map((e) => (
-                              <div key={e.id} className="flex items-center justify-between text-[11px] py-0.5">
-                                <span className="text-muted-foreground">
-                                  <span className="font-mono">{new Date(e.created_at).toLocaleString("en-ZA", { dateStyle: "short", timeStyle: "short" })}</span>
-                                  {" · "}
-                                  <span className="font-semibold text-foreground">{e.event_type}</span>
-                                  {e.from_value || e.to_value ? (
-                                    <> · {e.from_value ?? "∅"} → {e.to_value ?? "∅"}</>
-                                  ) : null}
-                                </span>
-                                <span className="text-muted-foreground">{e.actor_email || (e.actor_id ? "admin" : "system")}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        ) : (() => {
+                          const filtered = auditByOrder[order.id].filter((e) => !auditEventFilter || e.event_type === auditEventFilter);
+                          if (filtered.length === 0) return <p className="text-[11px] text-muted-foreground">No entries match.</p>;
+                          return (
+                            <div className="space-y-1">
+                              {filtered.map((e) => (
+                                <div key={e.id} className="flex items-center justify-between text-[11px] py-0.5">
+                                  <span className="text-muted-foreground">
+                                    <span className="font-mono">{new Date(e.created_at).toLocaleString("en-ZA", { dateStyle: "short", timeStyle: "short" })}</span>
+                                    {" · "}
+                                    <span className="font-semibold text-foreground">{e.event_type}</span>
+                                    {e.from_value || e.to_value ? (
+                                      <> · {e.from_value ?? "∅"} → {e.to_value ?? "∅"}</>
+                                    ) : null}
+                                  </span>
+                                  <span className="text-muted-foreground">{e.actor_email || (e.actor_id ? "admin" : "system")}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}

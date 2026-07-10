@@ -131,7 +131,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     if (cached) return cached;
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, description, price, category, brand, sku, images, in_stock, is_ai_product, created_at")
+      .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
       .eq("id", id)
       .maybeSingle();
     if (error || !data) return undefined;

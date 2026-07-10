@@ -1,32 +1,25 @@
 project_id = "xwiqubcilptxzvdigsmp"
 
-[functions.sitemap]
-verify_jwt = false
-
-[functions.sync-ai-pulse]
-verify_jwt = false
-
-[functions.send-welcome-email]
-verify_jwt = false
-
-[functions.send-newsletter-campaign]
-verify_jwt = false
-
-[functions.unsubscribe]
-verify_jwt = false
-
-[functions.create-stripe-checkout]
-verify_jwt = false
-
-[functions.stripe-webhook]
-verify_jwt = false
-
-[functions.sync-exchange-rates]
-verify_jwt = false
-
-[functions.yoco-webhook]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
-
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.create-stripe-checkout]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.send-newsletter-campaign]
+    verify_jwt = false
+  [functions.send-welcome-email]
+    verify_jwt = false
+  [functions.sitemap]
+    verify_jwt = false
+  [functions.stripe-webhook]
+    verify_jwt = false
+  [functions.sync-ai-pulse]
+    verify_jwt = false
+  [functions.sync-exchange-rates]
+    verify_jwt = false
+  [functions.unsubscribe]
+    verify_jwt = false
+  [functions.yoco-webhook]
+    verify_jwt = false

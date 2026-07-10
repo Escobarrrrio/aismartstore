@@ -56,8 +56,24 @@ Deno.serve(async (req) => {
     const session = event.data.object;
     const orderId = session.client_reference_id;
     if (orderId) {
+      // SECURITY: verify Stripe charged the full order total before marking paid.
+      const { data: order } = await supabase
+        .from("orders").select("total_amount").eq("id", orderId).maybeSingle();
+      const currency = String(session.currency ?? "").toUpperCase();
+      const zeroDecimal = currency === "JPY";
+      const expectedUnits = order
+        ? (zeroDecimal ? Math.round(Number(order.total_amount)) : Math.round(Number(order.total_amount) * 100))
+        : null;
+      const paidUnits = Number(session.amount_total ?? 0);
+      if (expectedUnits === null || Math.abs(paidUnits - expectedUnits) > 1) {
+        console.error("[stripe-webhook] amount mismatch", { orderId, expectedUnits, paidUnits });
+        return new Response(JSON.stringify({ error: "amount_mismatch" }), { status: 400 });
+      }
       await supabase.from("orders").update({ status: "paid" }).eq("id", orderId);
-      await supabase.functions.invoke("notify-order", { body: { orderId } });
+      await supabase.functions.invoke("notify-order", {
+        body: { orderId },
+        headers: { "x-internal-secret": Deno.env.get("INTERNAL_CRON_SECRET") ?? "" },
+      });
     }
   }
 

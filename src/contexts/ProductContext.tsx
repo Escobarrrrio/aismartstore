@@ -27,6 +27,7 @@ type ProductRow = {
   sku?: string | null;
   images: string[] | null;
   in_stock: boolean;
+  stock_quantity?: number | null;
   is_ai_product?: boolean | null;
   created_at?: string;
 };
@@ -41,6 +42,7 @@ const mapRow = (p: ProductRow): Product => ({
   sku: p.sku || undefined,
   images: p.images || [],
   inStock: p.in_stock,
+  stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
   isAiProduct: !!p.is_ai_product,
   createdAt: p.created_at || new Date().toISOString(),
 });

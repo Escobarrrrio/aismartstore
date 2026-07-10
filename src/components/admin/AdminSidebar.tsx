@@ -11,7 +11,7 @@ export type AdminTab =
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
   | "settings" | "system-health" | "security" | "cost-usage"
   | "integrations" | "backups"
-  | "notifications-mgmt" | "newsletter" | "quotes";
+  | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews";
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
@@ -36,6 +36,7 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" />, section: "Operations" },
   { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },
   { id: "notifications-mgmt", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
+  { id: "email-previews", label: "Email Previews", icon: <Mail className="h-4 w-4" /> },
   { id: "security", label: "Security", icon: <Shield className="h-4 w-4" />, section: "System" },
   { id: "integrations", label: "Integrations", icon: <Link2 className="h-4 w-4" /> },
   { id: "cost-usage", label: "Cost & Usage", icon: <DollarSign className="h-4 w-4" /> },

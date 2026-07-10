@@ -24,6 +24,7 @@ import CostUsageModule from "@/components/admin/CostUsageModule";
 import IntegrationsModule from "@/components/admin/IntegrationsModule";
 import BackupsModule from "@/components/admin/BackupsModule";
 import NotificationsModule from "@/components/admin/NotificationsModule";
+import EmailPreviewsModule from "@/components/admin/EmailPreviewsModule";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useToast } from "@/hooks/use-toast";
@@ -175,6 +176,7 @@ const Admin = () => {
           {activeTab === "integrations" && <IntegrationsModule />}
           {activeTab === "backups" && <BackupsModule />}
           {activeTab === "notifications-mgmt" && <NotificationsModule />}
+          {activeTab === "email-previews" && <EmailPreviewsModule />}
         </div>
       </div>
     </div>

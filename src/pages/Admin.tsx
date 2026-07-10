@@ -25,6 +25,7 @@ import IntegrationsModule from "@/components/admin/IntegrationsModule";
 import BackupsModule from "@/components/admin/BackupsModule";
 import NotificationsModule from "@/components/admin/NotificationsModule";
 import EmailPreviewsModule from "@/components/admin/EmailPreviewsModule";
+import CatalogHealthModule from "@/components/admin/CatalogHealthModule";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useToast } from "@/hooks/use-toast";

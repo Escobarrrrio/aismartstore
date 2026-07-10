@@ -33,10 +33,13 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
           <img
             src={product.images[0]}
             alt={product.name}
+            width={800}
+            height={600}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
             decoding="async"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground/40">

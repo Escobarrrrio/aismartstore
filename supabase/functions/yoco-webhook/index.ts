@@ -6,11 +6,19 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
+const MAX_SKEW_SECONDS = 300; // 5 minute replay window
+
 async function verifyYocoSignature(rawBody: string, headers: Headers, secret: string) {
   const id = headers.get("webhook-id");
   const timestamp = headers.get("webhook-timestamp");
   const sigHeader = headers.get("webhook-signature");
-  if (!id || !timestamp || !sigHeader) return false;
+  if (!id || !timestamp || !sigHeader) return { ok: false, reason: "missing_headers" };
+
+  const tsNum = Number(timestamp);
+  if (!Number.isFinite(tsNum) || Math.abs(Date.now() / 1000 - tsNum) > MAX_SKEW_SECONDS) {
+    return { ok: false, reason: "timestamp_out_of_range" };
+  }
+
   const signedContent = `${id}.${timestamp}.${rawBody}`;
   const secretBytes = Uint8Array.from(atob(secret.replace(/^whsec_/, "")), (c) => c.charCodeAt(0));
   const key = await crypto.subtle.importKey(
@@ -18,7 +26,8 @@ async function verifyYocoSignature(rawBody: string, headers: Headers, secret: st
   );
   const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedContent));
   const expected = btoa(String.fromCharCode(...new Uint8Array(mac)));
-  return sigHeader.split(" ").some((part) => part.split(",")[1] === expected);
+  const ok = sigHeader.split(" ").some((part) => part.split(",")[1] === expected);
+  return { ok, reason: ok ? "ok" : "signature_mismatch" };
 }
 
 Deno.serve(async (req) => {
@@ -27,14 +36,19 @@ Deno.serve(async (req) => {
   try {
     const rawBody = await req.text();
     const secret = Deno.env.get("YOCO_WEBHOOK_SECRET");
-    if (secret) {
-      const valid = await verifyYocoSignature(rawBody, req.headers, secret);
-      if (!valid) {
-        console.warn("[yoco-webhook] invalid signature");
-        return new Response(JSON.stringify({ error: "Invalid signature" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    // Fail closed: without a configured secret, we can't authenticate the sender.
+    if (!secret) {
+      console.error("[yoco-webhook] YOCO_WEBHOOK_SECRET not configured -- rejecting");
+      return new Response(JSON.stringify({ error: "Webhook not configured" }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const verdict = await verifyYocoSignature(rawBody, req.headers, secret);
+    if (!verdict.ok) {
+      console.warn("[yoco-webhook] rejected:", verdict.reason);
+      return new Response(JSON.stringify({ error: "Invalid signature", reason: verdict.reason }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const payload = JSON.parse(rawBody);

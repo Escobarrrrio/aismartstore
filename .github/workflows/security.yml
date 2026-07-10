@@ -1,0 +1,23 @@
+name: Security Gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # every Monday 06:00 UTC
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Dependency audit (high+ severity fails the build)
+        run: bun audit --prod --severity high || (echo "::error::High-severity vulnerabilities detected" && exit 1)
+      - name: Test suite
+        run: bunx vitest run
+      - name: Lint
+        run: bunx eslint . --max-warnings=0 || true

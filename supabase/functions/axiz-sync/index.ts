@@ -78,9 +78,22 @@ Deno.serve(async (_req) => {
       .in("key", ["axiz_markup_pct", "axiz_markets", "axiz_brand_filter", "axiz_sync_cursor"]);
     const settings = Object.fromEntries((settingsRows || []).map((r) => [r.key, r.value]));
 
-    const markupPct = Number(settings.axiz_markup_pct || "26");
+    const markupPct = Number(settings.axiz_markup_pct || "17");
     const markets = (settings.axiz_markets || "14").split(",").map((m) => Number(m.trim())).filter((n) => !isNaN(n));
     const brandFilter = (settings.axiz_brand_filter || "").split(",").filter(Boolean).map((b) => Number(b.trim()));
+
+    // Normalize image URLs (http -> https, drop empties/dupes)
+    const normalizeImages = (raw: unknown): string[] => {
+      const arr = Array.isArray(raw) ? raw : raw ? [raw] : [];
+      const out = new Set<string>();
+      for (const v of arr) {
+        if (typeof v !== "string") continue;
+        const s = v.trim();
+        if (!s) continue;
+        out.add(s.startsWith("http://") ? "https://" + s.slice(7) : s);
+      }
+      return [...out];
+    };
 
     // Cursor format: "marketIndex:pageIndex"
     const cursorRaw = settings.axiz_sync_cursor || "0:0";

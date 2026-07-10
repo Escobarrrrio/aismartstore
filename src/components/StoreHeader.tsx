@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import LanguageCurrencySwitcher from "@/components/LanguageCurrencySwitcher";
 import Logo from "@/components/Logo";
+import HeaderSearch from "@/components/HeaderSearch";
+
 
 const StoreHeader = () => {
   const { totalItems } = useCart();

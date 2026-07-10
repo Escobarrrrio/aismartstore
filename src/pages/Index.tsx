@@ -180,10 +180,10 @@ const Index = () => {
                 <h2 className="text-2xl md:text-3xl font-display font-extrabold text-white mb-3">
                   {t("home.aiCta.title")}
                 </h2>
-                <p className="text-white/70 text-sm leading-relaxed mb-6 max-w-md">
+                <p className="text-white/90 text-sm leading-relaxed mb-6 max-w-md">
                   {t("home.aiCta.desc")}
                 </p>
-                <p className="text-white/50 text-xs">
+                <p className="text-white/80 text-xs">
                   {t("home.aiCta.hint")}
                 </p>
               </div>
@@ -207,7 +207,7 @@ const Index = () => {
             {["Dell", "HP", "Lenovo", "Cisco", "Microsoft", "Intel", "AMD", "NVIDIA"].map((brand) => (
               <span
                 key={brand}
-                className="font-display font-bold text-lg text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors cursor-default"
+                className="font-display font-bold text-lg text-muted-foreground/70 hover:text-foreground transition-colors cursor-default"
               >
                 {brand}
               </span>

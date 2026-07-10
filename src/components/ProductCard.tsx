@@ -17,6 +17,14 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
   const { formatPrice } = useLocale();
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
+  const hasImage = !!product.images[0] && !imgFailed;
+  const showDescription =
+    !!product.description &&
+    product.description.trim().toLowerCase() !== product.name.trim().toLowerCase();
+  const metaLine = [product.sku ? `SKU: ${product.sku}` : null, product.brand || null]
+    .filter(Boolean)
+    .join(" · ");
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();

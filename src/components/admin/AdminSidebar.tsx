@@ -10,7 +10,7 @@ export type AdminTab =
   | "dashboard" | "products" | "import" | "orders" | "customers"
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
   | "settings" | "system-health" | "security" | "cost-usage"
-  | "integrations" | "backups"
+  | "integrations" | "backups" | "catalog-health"
   | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews";
 
 interface AdminSidebarProps {

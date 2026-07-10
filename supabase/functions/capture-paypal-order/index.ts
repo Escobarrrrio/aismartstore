@@ -1,11 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
-
-// Captures (finalizes) a PayPal order after the customer approves it on
-// PayPal's hosted page. This is the actual point money moves -- unlike
-// a bare redirect-based "success" page, this calls PayPal directly to
-// confirm and only marks the order paid if PayPal itself confirms the
-// capture succeeded.
+import { getAuthContext, unauthorized, forbidden } from "../_shared/auth-guard.ts";
 
 const PAYPAL_API_BASE = "https://api-m.paypal.com";
 
@@ -24,16 +19,16 @@ async function getAccessToken(clientId: string, clientSecret: string): Promise<s
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const auth = await getAuthContext(req);
+    if (!auth.userId) return unauthorized(corsHeaders);
+
     const { paypalOrderId, orderId } = await req.json();
-    if (!paypalOrderId) {
-      return new Response(JSON.stringify({ error: "paypalOrderId is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!paypalOrderId || !orderId) {
+      return new Response(JSON.stringify({ error: "paypalOrderId and orderId are required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -42,9 +37,17 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const { data: order } = await supabase
+      .from("orders").select("id, user_id, total_amount").eq("id", orderId).maybeSingle();
+    if (!order) {
+      return new Response(JSON.stringify({ error: "Order not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (order.user_id !== auth.userId && !auth.isAdmin) return forbidden(corsHeaders);
+
     const { data: settingsRows } = await supabase
-      .from("store_settings")
-      .select("key, value")
+      .from("store_settings").select("key, value")
       .in("key", ["paypal_client_id", "paypal_client_secret"]);
     const settings = Object.fromEntries((settingsRows || []).map((r) => [r.key, r.value]));
 
@@ -52,33 +55,40 @@ Deno.serve(async (req) => {
 
     const captureRes = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders/${paypalOrderId}/capture`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
     });
 
     const capture = await captureRes.json();
 
     if (!captureRes.ok || capture.status !== "COMPLETED") {
-      return new Response(JSON.stringify({ status: "failed", detail: capture }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ status: "failed" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (orderId) {
-      await supabase.from("orders").update({ status: "paid" }).eq("id", orderId);
-      await supabase.functions.invoke("notify-order", { body: { orderId } });
+    // SECURITY: verify the captured amount matches the order's authoritative total.
+    const capturedUnit = capture?.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
+    const capturedValue = Number(capturedUnit?.value ?? 0);
+    const expected = Number(order.total_amount);
+    if (!capturedValue || Math.abs(capturedValue - expected) > 0.01) {
+      console.error("[capture-paypal-order] amount mismatch", { expected, capturedValue });
+      return new Response(JSON.stringify({ status: "amount_mismatch" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
+    await supabase.from("orders").update({ status: "paid" }).eq("id", orderId);
+    await supabase.functions.invoke("notify-order", {
+      body: { orderId },
+      headers: { "x-internal-secret": Deno.env.get("INTERNAL_CRON_SECRET") ?? "" },
+    });
 
     return new Response(JSON.stringify({ status: "completed" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

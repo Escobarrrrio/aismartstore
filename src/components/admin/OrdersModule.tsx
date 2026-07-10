@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History } from "lucide-react";
+import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -33,6 +33,10 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
   const [statusFilter, setStatusFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [auditByOrder, setAuditByOrder] = useState<Record<string, any[]>>({});
+  const [auditEventFilter, setAuditEventFilter] = useState("");
+  const [exportingAudit, setExportingAudit] = useState(false);
+
+  const AUDIT_EVENT_TYPES = ["order_created", "status_changed", "payment_status_changed", "tracking_updated"];
 
   useEffect(() => {
     if (!expandedId || auditByOrder[expandedId]) return;
@@ -66,6 +70,34 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
     const { error } = await supabase.functions.invoke("notify-order", { body: { orderId: id } });
     if (error) toast({ title: "Failed to resend", description: error.message, variant: "destructive" });
     else toast({ title: "Confirmation re-sent" });
+  };
+
+  const exportAuditCsv = async () => {
+    setExportingAudit(true);
+    try {
+      const { data, error } = await supabase
+        .from("order_audit_log" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5000);
+      if (error) throw error;
+      const rows = (data as any[]) || [];
+      const headers = ["created_at", "order_id", "event_type", "from_value", "to_value", "actor_id"];
+      const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const csv = [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `order-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `Exported ${rows.length} audit entries` });
+    } catch (e: any) {
+      toast({ title: "Export failed", description: e.message, variant: "destructive" });
+    } finally {
+      setExportingAudit(false);
+    }
   };
 
   const kpis = useMemo(() => {
@@ -108,6 +140,9 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
         </select>
         <button onClick={onReload} className="px-3 py-2 rounded-lg border border-input bg-card text-sm font-display font-semibold flex items-center gap-1.5 hover:bg-muted transition-colors">
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
+        </button>
+        <button onClick={exportAuditCsv} disabled={exportingAudit} className="px-3 py-2 rounded-lg border border-input bg-card text-sm font-display font-semibold flex items-center gap-1.5 hover:bg-muted transition-colors disabled:opacity-50">
+          <Download className="h-3.5 w-3.5" /> {exportingAudit ? "Exporting…" : "Export audit CSV"}
         </button>
       </div>
 

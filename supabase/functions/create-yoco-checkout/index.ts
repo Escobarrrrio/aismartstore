@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     const yocoResponse = await fetch("https://payments.yoco.com/api/checkouts", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${setting.value}`,
+        "Authorization": `Bearer ${yocoSecretKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

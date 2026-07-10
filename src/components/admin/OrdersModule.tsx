@@ -75,11 +75,19 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
   const exportAuditCsv = async () => {
     setExportingAudit(true);
     try {
-      const { data, error } = await supabase
+      // Scope the export to the currently filtered orders so admins can pull
+      // audit trails for the subset they're looking at, not the full 5k dump.
+      const scopedOrderIds = filtered.map((o) => o.id);
+      let query = supabase
         .from("order_audit_log" as any)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(5000);
+      if (scopedOrderIds.length > 0 && scopedOrderIds.length < orders.length) {
+        query = query.in("order_id", scopedOrderIds);
+      }
+      if (auditEventFilter) query = query.eq("event_type", auditEventFilter);
+      const { data, error } = await query;
       if (error) throw error;
       const rows = (data as any[]) || [];
       const headers = ["created_at", "order_id", "event_type", "from_value", "to_value", "actor_id"];
@@ -89,7 +97,8 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `order-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+      const scope = scopedOrderIds.length && scopedOrderIds.length < orders.length ? "-filtered" : "";
+      a.download = `order-audit${scope}-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast({ title: `Exported ${rows.length} audit entries` });

@@ -20,14 +20,18 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get Yoco secret key from store_settings
-    const { data: setting } = await supabase
-      .from("store_settings")
-      .select("value")
-      .eq("key", "yoco_secret_key")
-      .maybeSingle();
+    // Prefer secure env var; fall back to store_settings for backward compatibility
+    let yocoSecretKey = Deno.env.get("YOCO_SECRET_KEY") ?? "";
+    if (!yocoSecretKey) {
+      const { data: setting } = await supabase
+        .from("store_settings")
+        .select("value")
+        .eq("key", "yoco_secret_key")
+        .maybeSingle();
+      yocoSecretKey = (setting?.value as string) ?? "";
+    }
 
-    if (!setting?.value) {
+    if (!yocoSecretKey) {
       return new Response(JSON.stringify({ error: "Yoco secret key not configured" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

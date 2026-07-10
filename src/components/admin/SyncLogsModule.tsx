@@ -1,10 +1,15 @@
-import { RefreshCw, Search, CheckCircle, XCircle, Clock } from "lucide-react";
-import { useState, useEffect } from "react";
+import { RefreshCw, CheckCircle, XCircle, Clock, ImageOff, Download } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const SyncLogsModule = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [progress, setProgress] = useState<string>("");
+  const stopRef = useRef(false);
 
   const loadLogs = async () => {
     setLoading(true);
@@ -19,21 +24,106 @@ const SyncLogsModule = () => {
 
   useEffect(() => { loadLogs(); }, []);
 
+  // Loop an edge function until it reports done, refreshing logs after each pass.
+  const runToCompletion = async (
+    fn: "axiz-sync" | "validate-product-images",
+    doneCheck: (r: any) => boolean,
+    label: string,
+    reset = false,
+  ) => {
+    stopRef.current = false;
+    let totalChecked = 0;
+    let totalDeactivated = 0;
+    for (let i = 1; i <= 60; i++) {
+      if (stopRef.current) { setProgress(`${label}: stopped`); break; }
+      setProgress(`${label}: batch ${i}…`);
+      const { data, error } = await supabase.functions.invoke(fn, {
+        body: reset && i === 1 ? { reset: true } : {},
+      });
+      if (error) { toast.error(`${label} failed: ${error.message}`); break; }
+      totalChecked += Number(data?.checked ?? data?.synced ?? 0);
+      totalDeactivated += Number(data?.deactivated ?? 0);
+      await loadLogs();
+      if (doneCheck(data)) {
+        toast.success(
+          fn === "validate-product-images"
+            ? `Image validation complete — checked ${totalChecked}, deactivated ${totalDeactivated}`
+            : `Axiz sync complete`,
+        );
+        setProgress("");
+        return true;
+      }
+    }
+    setProgress("");
+    return false;
+  };
+
+  const handleRunSync = async () => {
+    setSyncing(true);
+    await runToCompletion("axiz-sync", (r) => r?.catalogComplete === true, "Axiz sync");
+    setSyncing(false);
+  };
+
+  const handleValidateImages = async (autoAfterSync = false) => {
+    setValidating(true);
+    await runToCompletion(
+      "validate-product-images",
+      (r) => r?.done === true,
+      "Image validation",
+      true,
+    );
+    setValidating(false);
+    if (!autoAfterSync) await loadLogs();
+  };
+
+  const handleSyncThenValidate = async () => {
+    setSyncing(true);
+    const ok = await runToCompletion("axiz-sync", (r) => r?.catalogComplete === true, "Axiz sync");
+    setSyncing(false);
+    if (ok) await handleValidateImages(true);
+  };
+
   const statusIcon = (status: string) => {
-    if (status === "completed") return <CheckCircle className="h-4 w-4 text-[hsl(160,84%,39%)]" />;
-    if (status === "failed") return <XCircle className="h-4 w-4 text-destructive" />;
+    if (status === "success" || status === "completed") return <CheckCircle className="h-4 w-4 text-[hsl(160,84%,39%)]" />;
+    if (status === "error" || status === "failed") return <XCircle className="h-4 w-4 text-destructive" />;
     return <Clock className="h-4 w-4 text-[hsl(38,92%,50%)]" />;
   };
+
+  const busy = syncing || validating;
 
   if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Product synchronization history</p>
-        <button onClick={loadLogs} className="btn-secondary px-4 py-2 text-xs">
-          <RefreshCw className="h-3.5 w-3.5" /> Refresh
-        </button>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">Product synchronization &amp; image health</p>
+          {progress && <p className="text-xs text-muted-foreground mt-1">{progress}</p>}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={handleRunSync} disabled={busy}
+            className="btn-secondary px-3 py-2 text-xs disabled:opacity-50">
+            <Download className={`h-3.5 w-3.5 ${syncing ? "animate-pulse" : ""}`} />
+            {syncing ? "Syncing…" : "Run Axiz sync"}
+          </button>
+          <button onClick={() => handleValidateImages(false)} disabled={busy}
+            className="btn-secondary px-3 py-2 text-xs disabled:opacity-50">
+            <ImageOff className={`h-3.5 w-3.5 ${validating ? "animate-pulse" : ""}`} />
+            {validating ? "Validating…" : "Validate images"}
+          </button>
+          <button onClick={handleSyncThenValidate} disabled={busy}
+            className="btn-primary px-3 py-2 text-xs disabled:opacity-50">
+            Sync + auto-validate
+          </button>
+          {busy && (
+            <button onClick={() => { stopRef.current = true; }} className="btn-secondary px-3 py-2 text-xs">
+              Stop
+            </button>
+          )}
+          <button onClick={loadLogs} className="btn-secondary px-3 py-2 text-xs">
+            <RefreshCw className="h-3.5 w-3.5" /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="card-flat overflow-hidden">

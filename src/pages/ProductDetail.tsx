@@ -2,12 +2,13 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useProducts } from "@/contexts/ProductContext";
 import { useCart } from "@/contexts/CartContext";
+import type { Product } from "@/contexts/CartContext";
 import SEO from "@/components/SEO";
 import {
   ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw,
   Star, ChevronRight, Package, MessageCircle, Minus, Plus
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const ProductDetail = () => {
@@ -20,13 +21,37 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<Product | undefined>(undefined);
+  const [resolved, setResolved] = useState(false);
 
-  const product = getProduct(id || "");
+  useEffect(() => {
+    let cancelled = false;
+    setResolved(false);
+    getProduct(id || "").then((p) => {
+      if (!cancelled) {
+        setProduct(p);
+        setResolved(true);
+        setSelectedImage(0);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [id, getProduct]);
 
-  // Related products
+  // Related products (from currently loaded page)
   const related = product
     ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
     : [];
+
+  if (!resolved) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <Package className="h-14 w-14 text-muted-foreground/30 mx-auto mb-4 animate-pulse" />
+        <p className="text-muted-foreground">{t("productDetail.home")}…</p>
+      </div>
+    );
+  }
+
+
 
   if (!product) {
     return (

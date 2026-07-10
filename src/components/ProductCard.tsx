@@ -72,7 +72,15 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
         ) : (
           <span className="absolute top-3 left-3 badge-danger text-[10px]">{t("product.outOfStock")}</span>
         )}
+
+        {/* AI badge */}
+        {product.isAiProduct && (
+          <span className="absolute bottom-3 left-3 gradient-brand text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md tracking-wide">
+            AI
+          </span>
+        )}
       </Link>
+
 
       <div className="p-4 flex flex-col flex-1">
         {product.category && (

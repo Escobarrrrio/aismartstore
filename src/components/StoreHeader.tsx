@@ -6,11 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import LanguageCurrencySwitcher from "@/components/LanguageCurrencySwitcher";
 import Logo from "@/components/Logo";
+import HeaderSearch from "@/components/HeaderSearch";
+
 
 const StoreHeader = () => {
   const { totalItems } = useCart();
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -63,15 +66,19 @@ const StoreHeader = () => {
 
         {/* Right actions */}
         <div className="flex items-center gap-1.5 sm:gap-2 ml-auto min-w-0">
-          {/* Search */}
-          <div className="hidden lg:flex items-center gap-2 bg-muted rounded-xl px-3.5 py-2 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
-            <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <input
-              type="text"
-              placeholder={t("nav.search")}
-              className="bg-transparent border-none outline-none text-sm w-32 lg:w-40 text-foreground placeholder:text-muted-foreground min-w-0"
-            />
+          {/* Search - desktop */}
+          <div className="hidden lg:block">
+            <HeaderSearch />
           </div>
+
+          {/* Mobile search toggle */}
+          <button
+            onClick={() => setMobileSearchOpen((v) => !v)}
+            className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Search"
+          >
+            <Search className="h-5 w-5" />
+          </button>
 
           <LanguageCurrencySwitcher />
 
@@ -114,6 +121,14 @@ const StoreHeader = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile expandable search */}
+      {mobileSearchOpen && (
+        <div className="lg:hidden border-t border-border bg-background px-4 py-3 animate-fade-in">
+          <HeaderSearch fullWidth autoFocus onClose={() => setMobileSearchOpen(false)} />
+        </div>
+      )}
+
 
       {/* Mobile menu */}
       {menuOpen && (

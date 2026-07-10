@@ -9,6 +9,9 @@ export interface Product {
   images: string[];
   inStock: boolean;
   createdAt: string;
+  brand?: string;
+  sku?: string;
+  isAiProduct?: boolean;
 }
 
 export interface CartItem {

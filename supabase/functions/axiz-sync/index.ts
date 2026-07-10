@@ -109,7 +109,10 @@ Deno.serve(async (req) => {
         if (typeof v !== "string") continue;
         const s = v.trim();
         if (!s) continue;
-        out.add(s.startsWith("http://") ? "https://" + s.slice(7) : s);
+        const url = s.startsWith("http://") ? "https://" + s.slice(7) : s;
+        if (blockedImages.has(url)) continue;
+        if (/\/axd-live\/[^/]+\.(jpg|png)$/i.test(url)) continue; // brand-logo placeholders
+        out.add(url);
       }
       return [...out];
     };

@@ -3,13 +3,56 @@ import { useTranslation } from "react-i18next";
 import ProductCard from "@/components/ProductCard";
 import HeroSection from "@/components/HeroSection";
 import SEO from "@/components/SEO";
-import { Package, ArrowRight, Cpu, Globe, Server, Code, MessageCircle, Shield, Headphones, BarChart3 } from "lucide-react";
+import { Package, ArrowRight, Cpu, Globe, Server, Code, MessageCircle, Shield, Headphones, BarChart3, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Product } from "@/contexts/CartContext";
 
 const Index = () => {
   const { products, loading } = useProducts();
   const { t } = useTranslation();
   const featured = products.slice(0, 8);
+  const [aiPicks, setAiPicks] = useState<Product[]>([]);
+  const [catalogCount, setCatalogCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
+        .eq("is_active", true)
+        .eq("is_ai_product", true)
+        .not("images", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(12);
+      setAiPicks(
+        ((data as any[]) || [])
+          .filter((p) => Array.isArray(p.images) && p.images[0])
+          .slice(0, 8)
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || "",
+            price: Number(p.price),
+            category: p.category || "",
+            brand: p.brand || undefined,
+            sku: p.sku || undefined,
+            images: p.images || [],
+            inStock: p.in_stock,
+            stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
+            isAiProduct: !!p.is_ai_product,
+            createdAt: p.created_at || new Date().toISOString(),
+          }))
+      );
+
+      const { count } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true);
+      if (typeof count === "number") setCatalogCount(count);
+    })();
+  }, []);
 
   const categoryCards = [
     { key: "ai", icon: Cpu, color: "bg-primary/[0.06] text-primary" },
@@ -53,6 +96,40 @@ const Index = () => {
         ]}
       />
       <HeroSection />
+
+      {/* AI-Ready Picks — showcase products explicitly flagged as AI-relevant */}
+      {aiPicks.length > 0 && (
+        <section className="section-padding">
+          <div className="container mx-auto px-4">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold mb-3">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  AI-Ready
+                </div>
+                <h2 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">
+                  <span className="shimmer-text">Smart picks for AI workloads</span>
+                </h2>
+                <p className="text-muted-foreground max-w-xl">
+                  Hand-picked hardware and accessories from our{" "}
+                  <span className="font-semibold text-foreground">
+                    {catalogCount ? catalogCount.toLocaleString("en-ZA") : "94,000+"}
+                  </span>{" "}
+                  live SKUs — tagged as AI-ready for inference, edge compute, and creator workflows.
+                </p>
+              </div>
+              <Link to="/products?ai=1" className="hidden md:flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                Browse all AI gear <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {aiPicks.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Categories Section */}
       <section className="section-padding">

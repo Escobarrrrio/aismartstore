@@ -63,10 +63,11 @@ const HeaderSearch = ({ className = "", autoFocus, onClose, fullWidth }: Props) 
         looksLikeSku
           ? supabase
               .from("products")
-              .select("id, name, price, images, sku, total_count:id.count()")
+              .select("id, name, price, images, sku")
               .eq("is_active", true)
               .ilike("sku", `%${q}%`)
               .limit(5)
+          : Promise.resolve({ data: [], error: null } as any),
           : Promise.resolve({ data: [], error: null } as any),
       ]);
       setLoading(false);

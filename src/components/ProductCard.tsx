@@ -12,6 +12,8 @@ interface ProductCardProps {
 }
 
 const FREE_SHIPPING_THRESHOLD = 1000;
+const RESIDENTIAL_MAX = 15000;
+const SHIPS_FAST_MIN_STOCK = 5;
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();

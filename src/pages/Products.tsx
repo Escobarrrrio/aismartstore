@@ -211,11 +211,14 @@ const Products = () => {
               <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
               In stock only
             </label>
-            {activeFilters > 0 && (
-              <button onClick={clearFilters} className="btn-ghost w-full px-3 py-2 text-sm">
-                Clear filters ({activeFilters})
-              </button>
-            )}
+            <button
+              onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+              disabled={activeFilters === 0 && !query}
+              className="btn-secondary w-full px-3 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Reset all filters{activeFilters > 0 ? ` (${activeFilters})` : ""}
+            </button>
           </div>
         </aside>
 

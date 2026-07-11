@@ -104,8 +104,16 @@ Deno.serve(async (req) => {
     ]);
 
     const settingsMap = Object.fromEntries((settings ?? []).map((r: any) => [r.key, r.value]));
-    const thresholds = { ...DEFAULTS, ...(settingsMap.stock_sanity_thresholds ?? {}) };
-    const baseline: Baseline | null = settingsMap.stock_sanity_baseline ?? null;
+    const parseJson = (v: unknown) => {
+      if (v && typeof v === "object") return v as Record<string, unknown>;
+      if (typeof v === "string" && v.trim().startsWith("{")) {
+        try { return JSON.parse(v); } catch { return {}; }
+      }
+      return {};
+    };
+    const thresholds = { ...DEFAULTS, ...parseJson(settingsMap.stock_sanity_thresholds) };
+    const baseline: Baseline | null = (parseJson(settingsMap.stock_sanity_baseline) as any) ?? null;
+    const baselineValid = baseline && typeof (baseline as any).out_of_stock === "number";
     const recipient: string | null =
       typeof settingsMap.notification_email === "string"
         ? settingsMap.notification_email

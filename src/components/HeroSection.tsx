@@ -67,31 +67,12 @@ const HeroSection = () => {
               </div>
             </div>
 
-            {/* Right — category cards */}
-            <div className="hidden lg:grid grid-cols-2 gap-4">
-              {heroCards.map((card, i) => (
-                <Link
-                  key={card.key}
-                  to="/products"
-                  className={`card-premium p-5 group cursor-pointer ${i === 1 ? 'mt-6' : i === 2 ? '-mt-4' : ''}`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/[0.06] text-primary flex items-center justify-center mb-3">
-                    <card.Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-display font-bold text-sm mb-1 group-hover:text-primary transition-colors">
-                    {t(`home.heroCards.${card.key}.label`)}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {t(`home.heroCards.${card.key}.desc`)}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-primary">
-                      {t("home.fromPrice")} {card.price}
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                  </div>
-                </Link>
-              ))}
+            {/* Right — living AI Nexus visualization */}
+            <div className="hidden lg:block">
+              <AiNexusStage />
+            </div>
+            <div className="lg:hidden">
+              <AiNexusStage />
             </div>
           </div>
         </div>

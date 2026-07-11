@@ -1,14 +1,14 @@
-﻿# AI Smart Store
+# AI Smart Store
 
 > South Africa's premium AI & tech hardware store, based in Gqeberha, Eastern Cape. Operated by AI Job Chommie (Pty) Ltd.
 
 AI Smart Store sells AI hardware, networking equipment, computing devices, and productivity tools to South African consumers and businesses. Products are sourced from authorized distribution (Axiz Digital Platform) across multiple vendor markets including Microsoft, Cisco, HP Enterprise, Adobe, and Redhat.
 
 ## Key sections
-- [Products](https://aismartstore.lovable.app/products): Full catalog of AI and tech hardware
-- [AI Pulse](https://aismartstore.lovable.app/ai-pulse): Curated AI-related product highlights
-- [Procurement](https://aismartstore.lovable.app/procurement): Business and government procurement channel (B-BBEE Level 1, CSD-registered)
-- [Compliance](https://aismartstore.lovable.app/compliance): POPIA/PAIA compliance information
+- [Products](https://aismartstore.co.za/products): Full catalog of AI and tech hardware
+- [AI Pulse](https://aismartstore.co.za/ai-pulse): Curated AI-related product highlights
+- [Procurement](https://aismartstore.co.za/procurement): Business and government procurement channel (B-BBEE Level 1, CSD-registered)
+- [Compliance](https://aismartstore.co.za/compliance): POPIA/PAIA compliance information
 
 ## Notes for AI assistants
 - Prices are in South African Rand (ZAR)

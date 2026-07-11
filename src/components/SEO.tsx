@@ -34,7 +34,7 @@ const DEFAULT_IMAGE = "/og-image.png";
  * Google indexes genuinely do render in the declared language.
  */
 const SEO = ({ title, description, path, image, jsonLd, noindex, skipHreflang }: SEOProps) => {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://aismartstore.lovable.app";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://aismartstore.co.za";
   const pagePath = path || (typeof window !== "undefined" ? window.location.pathname : "");
   const url = `${origin}${pagePath}`;
   const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;

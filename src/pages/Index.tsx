@@ -3,13 +3,56 @@ import { useTranslation } from "react-i18next";
 import ProductCard from "@/components/ProductCard";
 import HeroSection from "@/components/HeroSection";
 import SEO from "@/components/SEO";
-import { Package, ArrowRight, Cpu, Globe, Server, Code, MessageCircle, Shield, Headphones, BarChart3 } from "lucide-react";
+import { Package, ArrowRight, Cpu, Globe, Server, Code, MessageCircle, Shield, Headphones, BarChart3, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Product } from "@/contexts/CartContext";
 
 const Index = () => {
   const { products, loading } = useProducts();
   const { t } = useTranslation();
   const featured = products.slice(0, 8);
+  const [aiPicks, setAiPicks] = useState<Product[]>([]);
+  const [catalogCount, setCatalogCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
+        .eq("is_active", true)
+        .eq("is_ai_product", true)
+        .not("images", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(12);
+      setAiPicks(
+        ((data as any[]) || [])
+          .filter((p) => Array.isArray(p.images) && p.images[0])
+          .slice(0, 8)
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || "",
+            price: Number(p.price),
+            category: p.category || "",
+            brand: p.brand || undefined,
+            sku: p.sku || undefined,
+            images: p.images || [],
+            inStock: p.in_stock,
+            stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
+            isAiProduct: !!p.is_ai_product,
+            createdAt: p.created_at || new Date().toISOString(),
+          }))
+      );
+
+      const { count } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true);
+      if (typeof count === "number") setCatalogCount(count);
+    })();
+  }, []);
 
   const categoryCards = [
     { key: "ai", icon: Cpu, color: "bg-primary/[0.06] text-primary" },

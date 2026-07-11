@@ -44,7 +44,10 @@ const toProduct = (r: Row): Product => ({
 });
 
 // Simple module-level cache for distinct categories/brands.
-let facetCache: { categories: string[]; brands: string[] } | null = null;
+type FacetOption = { value: string; count: number };
+let facetCache: { categories: FacetOption[]; brands: FacetOption[] } | null = null;
+
+const fmtCount = (n: number) => n.toLocaleString("en-ZA").replace(/,/g, " ");
 
 const Products = () => {
   const { t } = useTranslation();
@@ -66,7 +69,7 @@ const Products = () => {
   const [rows, setRows] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [facets, setFacets] = useState<{ categories: string[]; brands: string[] }>(
+  const [facets, setFacets] = useState<{ categories: FacetOption[]; brands: FacetOption[] }>(
     facetCache || { categories: [], brands: [] }
   );
 
@@ -77,16 +80,19 @@ const Products = () => {
     setPage(0);
   }, [urlQ]);
 
-  // Load facets once
+  // Load facets once via RPC (covers full 142k-product catalog)
   useEffect(() => {
     if (facetCache) return;
     (async () => {
-      const [cats, brs] = await Promise.all([
-        supabase.from("products").select("category").eq("is_active", true).not("category", "is", null).limit(5000),
-        supabase.from("products").select("brand").eq("is_active", true).not("brand", "is", null).limit(5000),
-      ]);
-      const categories = Array.from(new Set(((cats.data as any[]) || []).map((r) => r.category).filter(Boolean))).sort();
-      const brands = Array.from(new Set(((brs.data as any[]) || []).map((r) => r.brand).filter(Boolean))).sort();
+      const { data, error } = await supabase.rpc("get_product_facets");
+      if (error || !data) return;
+      const categories: FacetOption[] = [];
+      const brands: FacetOption[] = [];
+      for (const row of data as Array<{ facet_type: string; facet_value: string; product_count: number | string }>) {
+        const opt = { value: row.facet_value, count: Number(row.product_count) };
+        if (row.facet_type === "category") categories.push(opt);
+        else if (row.facet_type === "brand") brands.push(opt);
+      }
       facetCache = { categories, brands };
       setFacets(facetCache);
     })();

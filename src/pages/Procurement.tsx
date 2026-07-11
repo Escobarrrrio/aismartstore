@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
+import ProductCard from "@/components/ProductCard";
+import { Product } from "@/contexts/CartContext";
+import { Link } from "react-router-dom";
 import {
   ShieldCheck, FileCheck, Landmark, Building2, HardHat, Send,
-  CheckCircle2, Award, CreditCard,
+  CheckCircle2, Award, CreditCard, Sparkles, ArrowRight,
 } from "lucide-react";
 
 const CREDENTIALS = [
@@ -25,10 +28,47 @@ const ProcurementPage = () => {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [enterpriseAi, setEnterpriseAi] = useState<Product[]>([]);
   const [form, setForm] = useState({
     organisation_name: "", entity_type: "private", contact_name: "",
     email: "", phone: "", requirements: "", estimated_value: "",
   });
+
+  useEffect(() => {
+    (async () => {
+      // Enterprise-tier AI: AI-tagged AND priced R15,000+ (workstations,
+      // GPUs, servers, rack-scale accelerators — what procurement teams
+      // typically issue POs for).
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
+        .eq("is_active", true)
+        .eq("is_ai_product", true)
+        .gte("price", 15000)
+        .not("images", "is", null)
+        .order("price", { ascending: false })
+        .limit(12);
+      setEnterpriseAi(
+        ((data as any[]) || [])
+          .filter((p) => Array.isArray(p.images) && p.images[0])
+          .slice(0, 8)
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || "",
+            price: Number(p.price),
+            category: p.category || "",
+            brand: p.brand || undefined,
+            sku: p.sku || undefined,
+            images: p.images || [],
+            inStock: p.in_stock,
+            stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
+            isAiProduct: !!p.is_ai_product,
+            createdAt: p.created_at || new Date().toISOString(),
+          }))
+      );
+    })();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -91,6 +131,36 @@ const ProcurementPage = () => {
             </div>
           ))}
         </div>
+
+        {/* Enterprise-grade AI catalogue */}
+        {enterpriseAi.length > 0 && (
+          <section className="mb-16">
+            <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold mb-3">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Enterprise AI Hardware
+                </div>
+                <h2 className="text-2xl md:text-3xl font-display font-extrabold tracking-tight mb-2">
+                  <span className="shimmer-text">AI infrastructure procurement teams actually order</span>
+                </h2>
+                <p className="text-muted-foreground max-w-2xl text-sm">
+                  Workstations, GPUs, accelerators and rack-scale AI systems — the enterprise-tier hardware
+                  our government and business clients quote against. Every item has a distributor product
+                  code (SKU) suitable for tender line-items and CSD/BAS capture.
+                </p>
+              </div>
+              <Link to="/products?ai=1" className="text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1">
+                Full AI catalogue <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {enterpriseAi.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Why work with us */}

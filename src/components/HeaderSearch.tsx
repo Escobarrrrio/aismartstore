@@ -46,28 +46,54 @@ const HeaderSearch = ({ className = "", autoFocus, onClose, fullWidth }: Props) 
     }
     setLoading(true);
     const handle = setTimeout(async () => {
-      const { data, error } = await supabase.rpc("search_products", {
-        search_query: q,
-        sort_by: "relevance",
-        page_number: 0,
-        page_size: 5,
-      });
+      // Product-code (SKU) fast-path: if the query looks like a distributor
+      // code (alphanumeric with a digit, no spaces, ≥3 chars) we hit the sku
+      // column directly in parallel with the full-text search. Results are
+      // merged so pasting a code always finds the SKU even if it's not in
+      // the tsvector index. This is what makes tender/procurement flows
+      // reliable.
+      const looksLikeSku = /^[A-Za-z0-9._\-\/]{3,}$/.test(q) && /\d/.test(q);
+      const [rpcRes, skuRes] = await Promise.all([
+        supabase.rpc("search_products", {
+          search_query: q,
+          sort_by: "relevance",
+          page_number: 0,
+          page_size: 5,
+        }),
+        looksLikeSku
+          ? supabase
+              .from("products")
+              .select("id, name, price, images, sku")
+              .eq("is_active", true)
+              .ilike("sku", `%${q}%`)
+              .limit(5)
+          : Promise.resolve({ data: [], error: null } as any),
+      ]);
       setLoading(false);
-      if (error) {
+      if (rpcRes.error && skuRes.error) {
         setResults([]);
         setTotalCount(0);
         return;
       }
-      const rows = (data as any[]) || [];
-      setResults(
-        rows.map((r) => ({
-          id: r.id,
-          name: r.name,
-          price: Number(r.price),
-          images: r.images,
-        }))
+      const rpcRows = (rpcRes.data as any[]) || [];
+      const skuRows = (skuRes.data as any[]) || [];
+      const seen = new Set<string>();
+      const merged: Suggestion[] = [];
+      // SKU exact hits first so a pasted product code jumps to the top.
+      for (const r of skuRows) {
+        if (seen.has(r.id)) continue;
+        seen.add(r.id);
+        merged.push({ id: r.id, name: r.name, price: Number(r.price), images: r.images });
+      }
+      for (const r of rpcRows) {
+        if (seen.has(r.id)) continue;
+        seen.add(r.id);
+        merged.push({ id: r.id, name: r.name, price: Number(r.price), images: r.images });
+      }
+      setResults(merged.slice(0, 6));
+      setTotalCount(
+        rpcRows[0]?.total_count ? Number(rpcRows[0].total_count) : merged.length
       );
-      setTotalCount(rows[0]?.total_count ? Number(rows[0].total_count) : rows.length);
       setOpen(true);
       setHighlight(-1);
     }, 300);

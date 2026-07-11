@@ -1,16 +1,10 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Sparkles, Shield, Truck, Headphones, Zap, Star, ChevronRight, Bot, Globe, Monitor, Package } from "lucide-react";
+import { ArrowRight, Sparkles, Shield, Truck, Headphones, Zap, Star } from "lucide-react";
+import AiNexusStage from "@/components/hero/AiNexusStage";
 
 const HeroSection = () => {
   const { t } = useTranslation();
-
-  const heroCards = [
-    { key: "ai", Icon: Bot, price: "R2,499" },
-    { key: "networking", Icon: Globe, price: "R1,299" },
-    { key: "computing", Icon: Monitor, price: "R4,999" },
-    { key: "software", Icon: Package, price: "R499" },
-  ] as const;
 
   const featureBar = [
     { key: "shipping", icon: Truck },

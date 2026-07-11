@@ -18,14 +18,18 @@ const Index = () => {
 
   useEffect(() => {
     (async () => {
+      // Residential-friendly AI picks: AI-tagged, priced for a household budget
+      // (≤ R15,000), image required. Enterprise/high-ticket AI hardware lives
+      // in the "For Business" (/procurement) section instead.
       const { data } = await supabase
         .from("products")
         .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
         .eq("is_active", true)
         .eq("is_ai_product", true)
+        .lte("price", 15000)
         .not("images", "is", null)
         .order("created_at", { ascending: false })
-        .limit(12);
+        .limit(16);
       setAiPicks(
         ((data as any[]) || [])
           .filter((p) => Array.isArray(p.images) && p.images[0])

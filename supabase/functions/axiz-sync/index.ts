@@ -168,9 +168,11 @@ Deno.serve(async (req) => {
             price: sellingPrice,
             category: item.productCategory,
             brand: item.brand?.brandName,
-            stock_quantity: Number(item.onHand ?? 0),
-            stock_status: Number(item.onHand ?? 0) > 0 ? "in_stock" : "out_of_stock",
-            in_stock: Number(item.onHand ?? 0) > 0,
+            // Axiz omits onHand for most SKUs (they ship on order via distributor).
+            // Treat "unknown" as available; only mark OoS when the field is explicitly present and 0.
+            stock_quantity: item.onHand == null ? null : Number(item.onHand),
+            stock_status: item.onHand == null ? "in_stock" : (Number(item.onHand) > 0 ? "in_stock" : "out_of_stock"),
+            in_stock: item.onHand == null ? true : Number(item.onHand) > 0,
             images: imgs,
             is_active: publishable,
             is_ai_product: ai,

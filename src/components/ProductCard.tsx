@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Heart, Sparkles, Truck, ShieldCheck, Check } from "lucide-react";
+import { ShoppingCart, Heart, Sparkles, Truck, ShieldCheck, Check, Zap, Home, PackageCheck } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";

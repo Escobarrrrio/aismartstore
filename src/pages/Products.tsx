@@ -273,11 +273,11 @@ const Products = () => {
             <div className="lg:hidden card-flat p-5 mb-6 space-y-4 animate-fade-in">
               <select value={category} onChange={(e) => { setCategory(e.target.value); setPage(0); }} className="input-premium">
                 <option value="">All categories</option>
-                {facets.categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                {facets.categories.map((c) => <option key={c.value} value={c.value}>{c.value} ({fmtCount(c.count)})</option>)}
               </select>
               <select value={brand} onChange={(e) => { setBrand(e.target.value); setPage(0); }} className="input-premium">
                 <option value="">All brands</option>
-                {facets.brands.map((b) => <option key={b} value={b}>{b}</option>)}
+                {facets.brands.map((b) => <option key={b.value} value={b.value}>{b.value} ({fmtCount(b.count)})</option>)}
               </select>
               <div className="flex gap-2">
                 <input type="number" placeholder="Min R" value={minPrice} onChange={(e) => { setMinPrice(e.target.value); setPage(0); }} className="input-premium" />

@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
     let deltaPct = 0;
 
     if (activeCount >= thresholds.min_active) {
-      if (baseline) {
+      if (baselineValid && baseline) {
         deltaAbs = oosCount - baseline.out_of_stock;
         deltaPct = Math.round((oosShare - baseline.oos_share) * 100) / 100;
         if (deltaAbs >= thresholds.spike_abs || deltaPct >= thresholds.spike_pct) {
@@ -150,9 +150,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Persist new baseline (upsert).
+    // Persist new baseline (upsert). value column is text — store JSON string.
     await supabase.from("store_settings").upsert(
-      { key: "stock_sanity_baseline", value: current },
+      { key: "stock_sanity_baseline", value: JSON.stringify(current) },
       { onConflict: "key" },
     );
 

@@ -155,6 +155,16 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
         <SettingsInput label="Notification Email" value={settings.notification_email || ""} onChange={(v) => update("notification_email", v)} placeholder="admin@example.com" />
       </SettingsSection>
 
+      <SettingsSection icon={<Bell className="h-4 w-4" />} title="Stock Sanity Alerts" description="Thresholds for the hourly stock sanity check. An alert email is sent when any threshold is breached vs. the last baseline.">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SettingsInput label="Min active products (ignore below)" type="number" value={String(parsedThresholds.min_active)} onChange={(v) => updateThreshold("min_active", v)} placeholder="500" />
+          <SettingsInput label="Absolute OOS jump" type="number" value={String(parsedThresholds.spike_abs)} onChange={(v) => updateThreshold("spike_abs", v)} placeholder="1000" />
+          <SettingsInput label="OOS share jump (pp)" type="number" value={String(parsedThresholds.spike_pct)} onChange={(v) => updateThreshold("spike_pct", v)} placeholder="5" />
+          <SettingsInput label="OOS share ceiling (%)" type="number" value={String(parsedThresholds.oos_share_ceiling)} onChange={(v) => updateThreshold("oos_share_ceiling", v)} placeholder="60" />
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">Alerts fire when: OOS count jumps by ≥ absolute value, OR OOS share jumps by ≥ pp, OR OOS share exceeds ceiling.</p>
+      </SettingsSection>
+
       <button
         onClick={handleSave}
         disabled={saving}

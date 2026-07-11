@@ -97,6 +97,40 @@ const Index = () => {
       />
       <HeroSection />
 
+      {/* AI-Ready Picks — showcase products explicitly flagged as AI-relevant */}
+      {aiPicks.length > 0 && (
+        <section className="section-padding">
+          <div className="container mx-auto px-4">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold mb-3">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  AI-Ready
+                </div>
+                <h2 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">
+                  <span className="shimmer-text">Smart picks for AI workloads</span>
+                </h2>
+                <p className="text-muted-foreground max-w-xl">
+                  Hand-picked hardware and accessories from our{" "}
+                  <span className="font-semibold text-foreground">
+                    {catalogCount ? catalogCount.toLocaleString("en-ZA") : "94,000+"}
+                  </span>{" "}
+                  live SKUs — tagged as AI-ready for inference, edge compute, and creator workflows.
+                </p>
+              </div>
+              <Link to="/products?ai=1" className="hidden md:flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                Browse all AI gear <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {aiPicks.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Categories Section */}
       <section className="section-padding">
         <div className="container mx-auto px-4">

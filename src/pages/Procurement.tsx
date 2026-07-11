@@ -28,10 +28,47 @@ const ProcurementPage = () => {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [enterpriseAi, setEnterpriseAi] = useState<Product[]>([]);
   const [form, setForm] = useState({
     organisation_name: "", entity_type: "private", contact_name: "",
     email: "", phone: "", requirements: "", estimated_value: "",
   });
+
+  useEffect(() => {
+    (async () => {
+      // Enterprise-tier AI: AI-tagged AND priced R15,000+ (workstations,
+      // GPUs, servers, rack-scale accelerators — what procurement teams
+      // typically issue POs for).
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
+        .eq("is_active", true)
+        .eq("is_ai_product", true)
+        .gte("price", 15000)
+        .not("images", "is", null)
+        .order("price", { ascending: false })
+        .limit(12);
+      setEnterpriseAi(
+        ((data as any[]) || [])
+          .filter((p) => Array.isArray(p.images) && p.images[0])
+          .slice(0, 8)
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || "",
+            price: Number(p.price),
+            category: p.category || "",
+            brand: p.brand || undefined,
+            sku: p.sku || undefined,
+            images: p.images || [],
+            inStock: p.in_stock,
+            stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
+            isAiProduct: !!p.is_ai_product,
+            createdAt: p.created_at || new Date().toISOString(),
+          }))
+      );
+    })();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });

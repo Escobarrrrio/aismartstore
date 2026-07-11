@@ -68,7 +68,6 @@ const HeaderSearch = ({ className = "", autoFocus, onClose, fullWidth }: Props) 
               .ilike("sku", `%${q}%`)
               .limit(5)
           : Promise.resolve({ data: [], error: null } as any),
-          : Promise.resolve({ data: [], error: null } as any),
       ]);
       setLoading(false);
       if (rpcRes.error && skuRes.error) {

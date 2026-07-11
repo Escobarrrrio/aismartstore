@@ -52,9 +52,24 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
     }
   };
 
+  const THRESHOLD_DEFAULTS = { min_active: 500, spike_abs: 1000, spike_pct: 5, oos_share_ceiling: 60 };
+  const parsedThresholds = (() => {
+    try {
+      const raw = settings.stock_sanity_thresholds;
+      if (!raw) return THRESHOLD_DEFAULTS;
+      const obj = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return { ...THRESHOLD_DEFAULTS, ...obj };
+    } catch { return THRESHOLD_DEFAULTS; }
+  })();
+
+  const updateThreshold = (field: keyof typeof THRESHOLD_DEFAULTS, val: string) => {
+    const next = { ...parsedThresholds, [field]: Number(val) || 0 };
+    update("stock_sanity_thresholds", JSON.stringify(next));
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold", "resend_api_key"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold", "resend_api_key", "stock_sanity_thresholds"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -138,6 +153,16 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
       <SettingsSection icon={<Bell className="h-4 w-4" />} title="Notifications" description="Email notifications for new orders.">
         <SettingsInput label="Notification Email" value={settings.notification_email || ""} onChange={(v) => update("notification_email", v)} placeholder="admin@example.com" />
+      </SettingsSection>
+
+      <SettingsSection icon={<Bell className="h-4 w-4" />} title="Stock Sanity Alerts" description="Thresholds for the hourly stock sanity check. An alert email is sent when any threshold is breached vs. the last baseline.">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SettingsInput label="Min active products (ignore below)" type="number" value={String(parsedThresholds.min_active)} onChange={(v) => updateThreshold("min_active", v)} placeholder="500" />
+          <SettingsInput label="Absolute OOS jump" type="number" value={String(parsedThresholds.spike_abs)} onChange={(v) => updateThreshold("spike_abs", v)} placeholder="1000" />
+          <SettingsInput label="OOS share jump (pp)" type="number" value={String(parsedThresholds.spike_pct)} onChange={(v) => updateThreshold("spike_pct", v)} placeholder="5" />
+          <SettingsInput label="OOS share ceiling (%)" type="number" value={String(parsedThresholds.oos_share_ceiling)} onChange={(v) => updateThreshold("oos_share_ceiling", v)} placeholder="60" />
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">Alerts fire when: OOS count jumps by ≥ absolute value, OR OOS share jumps by ≥ pp, OR OOS share exceeds ceiling.</p>
       </SettingsSection>
 
       <button

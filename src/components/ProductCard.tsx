@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Heart, Sparkles, Truck, ShieldCheck, Check } from "lucide-react";
+import { ShoppingCart, Heart, Sparkles, Truck, ShieldCheck, Check, Zap, Home, PackageCheck } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -12,6 +12,8 @@ interface ProductCardProps {
 }
 
 const FREE_SHIPPING_THRESHOLD = 1000;
+const RESIDENTIAL_MAX = 15000;
+const SHIPS_FAST_MIN_STOCK = 5;
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
@@ -107,6 +109,37 @@ const ProductCard = ({ product }: ProductCardProps) => {
             {product.name}
           </h3>
         </Link>
+
+        {/* Live status badges */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+          {product.inStock && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              </span>
+              In Stock
+            </span>
+          )}
+          {product.inStock && (typeof product.stockQuantity !== "number" || product.stockQuantity >= SHIPS_FAST_MIN_STOCK) && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-semibold px-2 py-0.5">
+              <Zap className="h-3 w-3" />
+              Ships Fast
+            </span>
+          )}
+          {product.price > 0 && product.price <= RESIDENTIAL_MAX && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 text-violet-700 border border-violet-200 text-[10px] font-semibold px-2 py-0.5">
+              <Home className="h-3 w-3" />
+              Under R15k
+            </span>
+          )}
+          {product.price > RESIDENTIAL_MAX && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold px-2 py-0.5">
+              <PackageCheck className="h-3 w-3" />
+              Enterprise
+            </span>
+          )}
+        </div>
 
         {/* Trust line */}
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground mb-3">

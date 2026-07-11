@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
+import ProductCard from "@/components/ProductCard";
+import { Product } from "@/contexts/CartContext";
+import { Link } from "react-router-dom";
 import {
   ShieldCheck, FileCheck, Landmark, Building2, HardHat, Send,
-  CheckCircle2, Award, CreditCard,
+  CheckCircle2, Award, CreditCard, Sparkles, ArrowRight,
 } from "lucide-react";
 
 const CREDENTIALS = [

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Heart, Eye, Package } from "lucide-react";
+import { ShoppingCart, Heart, Sparkles, Truck, ShieldCheck, Check } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -11,20 +11,28 @@ interface ProductCardProps {
   onQuickView?: (product: Product) => void;
 }
 
-const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
+const FREE_SHIPPING_THRESHOLD = 1000;
+
+const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
   const { t } = useTranslation();
   const { formatPrice } = useLocale();
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
-  const hasImage = !!product.images[0] && !imgFailed;
-  const showDescription =
-    !!product.description &&
-    product.description.trim().toLowerCase() !== product.name.trim().toLowerCase();
-  const metaLine = [product.sku ? `SKU: ${product.sku}` : null, product.brand || null]
-    .filter(Boolean)
-    .join(" · ");
+
+  // Hide entire card if we have no valid image — the listing must feel curated.
+  if (!product.images?.[0] || imgFailed) {
+    return (
+      <img
+        src={product.images?.[0] || ""}
+        alt=""
+        aria-hidden
+        className="hidden"
+        onError={() => setImgFailed(true)}
+      />
+    );
+  }
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -34,102 +42,109 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
     setTimeout(() => setAddedToCart(false), 1500);
   };
 
-  return (
-    <div className="group card-premium overflow-hidden flex flex-col">
-      <Link to={`/product/${product.id}`} className="block relative bg-muted aspect-[4/3] overflow-hidden">
-        {hasImage ? (
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            width={800}
-            height={600}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-            decoding="async"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/40">
-            <Package className="h-10 w-10" />
-          </div>
-        )}
+  const freeShipping = product.price >= FREE_SHIPPING_THRESHOLD;
 
-        {/* Overlay actions */}
-        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/5 transition-colors duration-300" />
-        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setWishlisted(!wishlisted); }}
-            className={`w-9 h-9 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center transition-colors shadow-md ${wishlisted ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <Heart className={`h-4 w-4 ${wishlisted ? 'fill-current' : ''}`} />
-          </button>
-          {onQuickView && (
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product); }}
-              className="w-9 h-9 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-md"
-            >
-              <Eye className="h-4 w-4" />
-            </button>
+  return (
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-card border border-border/60 hover:border-border transition-all duration-300 hover:shadow-[0_20px_50px_-20px_hsl(var(--foreground)/0.18)] hover:-translate-y-0.5">
+      {/* Image */}
+      <Link
+        to={`/product/${product.id}`}
+        className="relative block aspect-square overflow-hidden bg-white"
+      >
+        <img
+          src={product.images[0]}
+          alt={product.name}
+          width={800}
+          height={800}
+          className="absolute inset-0 h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-[1.04]"
+          loading="lazy"
+          decoding="async"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          onError={() => setImgFailed(true)}
+        />
+
+        {/* Top-left chip stack */}
+        <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
+          {product.isAiProduct && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-foreground text-background text-[10px] font-bold px-2.5 py-1 tracking-wide shadow-sm">
+              <Sparkles className="h-3 w-3" />
+              AI READY
+            </span>
+          )}
+          {freeShipping && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5">
+              <Truck className="h-3 w-3" />
+              Free delivery
+            </span>
           )}
         </div>
 
-        {/* Stock badge */}
-        {product.inStock ? (
-          <span className="absolute top-3 left-3 badge-success text-[10px]">{t("product.inStock")}</span>
-        ) : (
-          <span className="absolute top-3 left-3 badge-danger text-[10px]">{t("product.outOfStock")}</span>
-        )}
-
-        {/* AI badge */}
-        {product.isAiProduct && (
-          <span className="absolute bottom-3 left-3 gradient-brand text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md tracking-wide">
-            AI
-          </span>
-        )}
+        {/* Wishlist */}
+        <button
+          type="button"
+          aria-label="Add to wishlist"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setWishlisted(!wishlisted); }}
+          className={`absolute top-3 right-3 h-9 w-9 rounded-full bg-background/95 backdrop-blur-sm flex items-center justify-center shadow-sm transition-all ${
+            wishlisted ? "text-destructive" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
+        </button>
       </Link>
 
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-4">
+        {/* Brand · Category meta */}
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+          {product.brand && <span className="text-foreground">{product.brand}</span>}
+          {product.brand && product.category && <span className="opacity-40">·</span>}
+          {product.category && <span className="truncate">{product.category}</span>}
+        </div>
 
-      <div className="p-4 flex flex-col flex-1">
-        {product.category && (
-          <span className="text-[11px] text-primary font-semibold uppercase tracking-wider mb-1.5">
-            {product.category}
-          </span>
-        )}
-        <Link to={`/product/${product.id}`}>
-          <h3 className="font-display font-bold text-sm leading-snug line-clamp-2 hover:text-primary transition-colors mb-1">
+        {/* Title */}
+        <Link to={`/product/${product.id}`} className="mb-2">
+          <h3 className="font-display font-semibold text-[15px] leading-snug line-clamp-2 hover:text-primary transition-colors min-h-[2.6em]">
             {product.name}
           </h3>
         </Link>
-        {metaLine && (
-          <p className="text-xs text-muted-foreground mb-2 truncate">{metaLine}</p>
-        )}
-        {showDescription ? (
-          <p className="text-xs text-muted-foreground line-clamp-2 flex-1 leading-relaxed mb-3">
-            {product.description}
-          </p>
-        ) : (
-          <div className="flex-1" />
-        )}
-        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
-          <span className="font-display font-extrabold text-base sm:text-lg truncate">
-            {formatPrice(product.price)}
+
+        {/* Trust line */}
+        <div className="flex items-center gap-3 text-[11px] text-muted-foreground mb-3">
+          <span className="inline-flex items-center gap-1">
+            <ShieldCheck className="h-3 w-3 text-emerald-600" />
+            Genuine
           </span>
+          <span className="inline-flex items-center gap-1">
+            <Truck className="h-3 w-3" />
+            Ships from ZA
+          </span>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* Price + CTA */}
+        <div className="flex items-end justify-between gap-2 pt-3 border-t border-border/60">
+          <div className="flex flex-col min-w-0">
+            <span className="font-display font-extrabold text-lg leading-none truncate">
+              {formatPrice(product.price)}
+            </span>
+            <span className="text-[10px] text-muted-foreground mt-1">VAT incl.</span>
+          </div>
           <button
             onClick={handleAddToCart}
-            disabled={!product.inStock}
-            className={`h-10 px-3 sm:px-4 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all duration-300 flex-shrink-0 ${
+            aria-label={`Add ${product.name} to cart`}
+            className={`h-10 rounded-full text-sm font-semibold flex items-center gap-1.5 px-4 transition-all flex-shrink-0 ${
               addedToCart
-                ? 'bg-[hsl(160,84%,39%)] text-white'
-                : 'gradient-brand text-white hover:shadow-elevated hover:-translate-y-0.5'
-            } disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none`}
+                ? "bg-emerald-600 text-white"
+                : "bg-foreground text-background hover:bg-foreground/90 hover:shadow-md"
+            }`}
           >
-            <ShoppingCart className="h-4 w-4" />
-            <span>{addedToCart ? t("product.added") : t("product.add")}</span>
+            {addedToCart ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+            <span className="hidden sm:inline">{addedToCart ? t("product.added") : t("product.add")}</span>
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

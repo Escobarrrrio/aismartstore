@@ -109,17 +109,16 @@ const Index = () => {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold mb-3">
                   <Sparkles className="h-3.5 w-3.5" />
-                  AI-Ready
+                  AI for Home
                 </div>
                 <h2 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">
-                  <span className="shimmer-text">Smart picks for AI workloads</span>
+                  <span className="shimmer-text">Everyday AI picks under R15,000</span>
                 </h2>
                 <p className="text-muted-foreground max-w-xl">
-                  Hand-picked hardware and accessories from our{" "}
-                  <span className="font-semibold text-foreground">
-                    {catalogCount ? catalogCount.toLocaleString("en-ZA") : "94,000+"}
-                  </span>{" "}
-                  live SKUs — tagged as AI-ready for inference, edge compute, and creator workflows.
+                  AI-ready gear priced for real households — creators, students, remote workers.
+                  Enterprise GPUs, servers and rack-scale AI accelerators live on our{" "}
+                  <Link to="/procurement" className="font-semibold text-primary hover:underline">For Business</Link>{" "}
+                  page. Searching a distributor product code? Just paste it into the search bar — it works site-wide.
                 </p>
               </div>
               <Link to="/products?ai=1" className="hidden md:flex items-center gap-2 text-sm font-semibold text-primary hover:underline">

@@ -10,11 +10,15 @@ import {
   CheckCircle2, Award, CreditCard, Sparkles, ArrowRight,
 } from "lucide-react";
 
+// Public-facing credential summary. Real registration numbers, CSD supplier
+// number and banking details are NEVER exposed on this page — procurement
+// officers receive the full verified compliance pack (with a named account
+// manager, e.g. "John Dlomo") once they submit the quote request form below.
 const CREDENTIALS = [
-  { icon: Award, label: "B-BBEE Status", value: "Level 1 EME — 100% Black-Owned" },
-  { icon: FileCheck, label: "CIPC Registration", value: "2025/599261/07 — Active" },
-  { icon: ShieldCheck, label: "CSD Supplier Number", value: "MAAA1656325 — Verified Active" },
-  { icon: CreditCard, label: "Banking", value: "Capitec Business — Active account" },
+  { icon: Award, label: "B-BBEE Status", value: "Level 1 Contributor — verified" },
+  { icon: FileCheck, label: "CIPC Registration", value: "Active — disclosed on request" },
+  { icon: ShieldCheck, label: "CSD Supplier", value: "Verified Active — number on request" },
+  { icon: CreditCard, label: "Account Manager", value: "John Dlomo — Procurement Desk" },
 ];
 
 const ENTITY_TYPES = [

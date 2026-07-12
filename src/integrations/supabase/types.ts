@@ -662,6 +662,27 @@ export type Database = {
           },
         ]
       }
+      product_facets_cache: {
+        Row: {
+          facet_type: string
+          facet_value: string
+          product_count: number
+          refreshed_at: string
+        }
+        Insert: {
+          facet_type: string
+          facet_value: string
+          product_count: number
+          refreshed_at?: string
+        }
+        Update: {
+          facet_type?: string
+          facet_value?: string
+          product_count?: number
+          refreshed_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           brand: string | null
@@ -1183,6 +1204,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      refresh_product_facets_cache: { Args: never; Returns: number }
       search_products: {
         Args: {
           filter_ai_only?: boolean

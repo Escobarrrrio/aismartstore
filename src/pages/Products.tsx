@@ -65,6 +65,8 @@ const Products = () => {
   const [brand, setBrand] = useState("");
   const [aiOnly, setAiOnly] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
+  // Default: hide enterprise/procurement-tier items — those belong on /procurement.
+  const [includeBusiness, setIncludeBusiness] = useState(false);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [sort, setSort] = useState<SortOption>("relevance");

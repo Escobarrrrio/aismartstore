@@ -21,7 +21,12 @@ export default defineConfig({
   projects: [
     {
       name: "mobile-chromium",
-      use: { ...devices["Pixel 7"] },
+      use: {
+        ...devices["Pixel 7"],
+        launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+          ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+          : undefined,
+      },
     },
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL

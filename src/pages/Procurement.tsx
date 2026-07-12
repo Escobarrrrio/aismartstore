@@ -234,12 +234,55 @@ const ProcurementPage = () => {
           {/* Quote request form */}
           <div className="card-flat p-6 md:p-8">
             {submitted ? (
-              <div className="text-center py-10">
-                <CheckCircle2 className="h-12 w-12 text-[hsl(160,84%,39%)] mx-auto mb-4" />
-                <h3 className="font-display font-bold text-lg mb-2">Request received</h3>
-                <p className="text-sm text-muted-foreground">
-                  We'll be in touch to discuss your requirements and provide a formal quote.
-                </p>
+              <div data-testid="compliance-pack" className="py-4">
+                <div className="flex items-start gap-3 mb-5">
+                  <CheckCircle2 className="h-8 w-8 text-[hsl(160,84%,39%)] flex-shrink-0" />
+                  <div>
+                    <h3 className="font-display font-bold text-lg mb-1">Request received — compliance pack unlocked</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Your dedicated account manager will be in touch shortly. The
+                      private supplier compliance details are shown below for your
+                      procurement records.
+                    </p>
+                  </div>
+                </div>
+                {compliancePack ? (
+                  <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5">
+                    <p className="text-xs uppercase tracking-wider font-semibold text-primary mb-3">
+                      Private — for {form.organisation_name || "your organisation"} only
+                    </p>
+                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                      {[
+                        ["Legal entity", compliancePack.entity_legal_name],
+                        ["CIPC registration", compliancePack.cipc_registration_number],
+                        ["VAT number", compliancePack.vat_number],
+                        ["Tax reference", compliancePack.tax_reference_number],
+                        ["CSD supplier no.", compliancePack.csd_supplier_number],
+                        ["B-BBEE level", compliancePack.bbbee_level],
+                        ["Bank", compliancePack.bank_name],
+                        ["Account no.", compliancePack.bank_account_number],
+                        ["Branch code", compliancePack.bank_branch_code],
+                        ["Account manager", compliancePack.account_manager_name],
+                        ["Manager email", compliancePack.account_manager_email],
+                        ["Manager phone", compliancePack.account_manager_phone],
+                      ].map(([label, value]) => value ? (
+                        <div key={label as string}>
+                          <dt className="text-xs text-muted-foreground">{label}</dt>
+                          <dd className="font-medium">{value}</dd>
+                        </div>
+                      ) : null)}
+                    </dl>
+                    {compliancePack.notes && (
+                      <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
+                        {compliancePack.notes}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    The compliance pack will be emailed to you within one business day.
+                  </p>
+                )}
               </div>
             ) : (
               <>

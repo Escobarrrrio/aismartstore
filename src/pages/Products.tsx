@@ -349,6 +349,21 @@ const Products = () => {
               <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
               In stock only
             </label>
+            <label className="flex items-start gap-3 cursor-pointer text-sm border-t border-border pt-4">
+              <input
+                type="checkbox"
+                checked={includeBusiness}
+                onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
+                className="w-4 h-4 accent-primary mt-0.5"
+              />
+              <span>
+                Include business items
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  Enterprise gear ({formatMoney(BUSINESS_PRICE_THRESHOLD)}+) lives on the{" "}
+                  <a href="/procurement" className="text-primary hover:underline">procurement</a> page.
+                </span>
+              </span>
+            </label>
             <button
               onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
               disabled={activeFilters === 0 && !query}

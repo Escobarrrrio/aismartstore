@@ -80,23 +80,56 @@ const Products = () => {
     setPage(0);
   }, [urlQ]);
 
-  // Load facets once via RPC (covers full 142k-product catalog)
+  // Load facets via cached RPC. Falls back to a direct lightweight query if the
+  // RPC fails so the dropdowns are never empty. Retries once on transient error.
   useEffect(() => {
-    if (facetCache) return;
-    (async () => {
+    let cancelled = false;
+    const load = async (attempt = 0): Promise<void> => {
+      // Try the fast cached RPC first.
       const { data, error } = await supabase.rpc("get_product_facets");
-      if (error || !data) return;
-      const categories: FacetOption[] = [];
-      const brands: FacetOption[] = [];
-      for (const row of data as Array<{ facet_type: string; facet_value: string; product_count: number | string }>) {
-        const opt = { value: row.facet_value, count: Number(row.product_count) };
-        if (row.facet_type === "category") categories.push(opt);
-        else if (row.facet_type === "brand") brands.push(opt);
+      if (!cancelled && !error && Array.isArray(data) && data.length > 0) {
+        const categories: FacetOption[] = [];
+        const brands: FacetOption[] = [];
+        for (const row of data as Array<{ facet_type: string; facet_value: string; product_count: number | string }>) {
+          const opt = { value: row.facet_value, count: Number(row.product_count) };
+          if (row.facet_type === "category") categories.push(opt);
+          else if (row.facet_type === "brand") brands.push(opt);
+        }
+        categories.sort((a, b) => b.count - a.count);
+        brands.sort((a, b) => b.count - a.count);
+        facetCache = { categories, brands };
+        setFacets(facetCache);
+        return;
       }
-      facetCache = { categories, brands };
-      setFacets(facetCache);
-    })();
+      // Fallback: read the cache table directly (public SELECT).
+      const { data: cacheRows } = await supabase
+        .from("product_facets_cache")
+        .select("facet_type, facet_value, product_count")
+        .order("product_count", { ascending: false });
+      if (!cancelled && cacheRows && cacheRows.length > 0) {
+        const categories: FacetOption[] = [];
+        const brands: FacetOption[] = [];
+        for (const r of cacheRows) {
+          const opt = { value: r.facet_value as string, count: Number(r.product_count) };
+          if (r.facet_type === "category") categories.push(opt);
+          else if (r.facet_type === "brand") brands.push(opt);
+        }
+        facetCache = { categories, brands };
+        setFacets(facetCache);
+        return;
+      }
+      // One retry with backoff for transient network hiccups.
+      if (!cancelled && attempt < 1) {
+        await new Promise((r) => setTimeout(r, 800));
+        return load(attempt + 1);
+      }
+    };
+    // Use cached result across route changes but always re-verify in background.
+    if (facetCache) setFacets(facetCache);
+    load();
+    return () => { cancelled = true; };
   }, []);
+
 
   const runSearch = useCallback(async () => {
     setLoading(true);

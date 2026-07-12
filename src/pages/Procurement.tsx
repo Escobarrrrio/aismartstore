@@ -28,10 +28,27 @@ const ENTITY_TYPES = [
   { value: "other", label: "Other", icon: Building2 },
 ];
 
+type CompliancePack = {
+  entity_legal_name: string;
+  cipc_registration_number: string | null;
+  vat_number: string | null;
+  tax_reference_number: string | null;
+  csd_supplier_number: string | null;
+  bbbee_level: string | null;
+  bank_name: string | null;
+  bank_account_number: string | null;
+  bank_branch_code: string | null;
+  account_manager_name: string | null;
+  account_manager_email: string | null;
+  account_manager_phone: string | null;
+  notes: string | null;
+};
+
 const ProcurementPage = () => {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [compliancePack, setCompliancePack] = useState<CompliancePack | null>(null);
   const [enterpriseAi, setEnterpriseAi] = useState<Product[]>([]);
   const [form, setForm] = useState({
     organisation_name: "", entity_type: "private", contact_name: "",
@@ -81,20 +98,43 @@ const ProcurementPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.from("quote_requests").insert({
-      organisation_name: form.organisation_name,
-      entity_type: form.entity_type,
-      contact_name: form.contact_name,
-      email: form.email,
-      phone: form.phone || null,
-      requirements: form.requirements,
-      estimated_value: form.estimated_value ? Number(form.estimated_value) : null,
-    });
-    setSubmitting(false);
-    if (error) {
-      toast({ title: "Couldn't send your request", description: error.message, variant: "destructive" });
+    // Insert and return the row so we can prove ownership when unlocking the
+    // private compliance pack via the SECURITY DEFINER get_compliance_pack RPC.
+    const { data: inserted, error } = await supabase
+      .from("quote_requests")
+      .insert({
+        organisation_name: form.organisation_name,
+        entity_type: form.entity_type,
+        contact_name: form.contact_name,
+        email: form.email,
+        phone: form.phone || null,
+        requirements: form.requirements,
+        estimated_value: form.estimated_value ? Number(form.estimated_value) : null,
+      })
+      .select("id, email")
+      .single();
+    if (error || !inserted) {
+      setSubmitting(false);
+      toast({
+        title: "Couldn't send your request",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
       return;
     }
+
+    // Unlock the private compliance pack for THIS submitter only. The RPC
+    // verifies (quote_id, email) server-side; nothing sensitive is available
+    // to anonymous visitors who haven't submitted a matching request.
+    const { data: pack } = await supabase.rpc("get_compliance_pack", {
+      _quote_id: inserted.id,
+      _email: inserted.email,
+    });
+    if (Array.isArray(pack) && pack.length > 0) {
+      setCompliancePack(pack[0] as CompliancePack);
+    }
+
+    setSubmitting(false);
     setSubmitted(true);
   };
 
@@ -194,12 +234,55 @@ const ProcurementPage = () => {
           {/* Quote request form */}
           <div className="card-flat p-6 md:p-8">
             {submitted ? (
-              <div className="text-center py-10">
-                <CheckCircle2 className="h-12 w-12 text-[hsl(160,84%,39%)] mx-auto mb-4" />
-                <h3 className="font-display font-bold text-lg mb-2">Request received</h3>
-                <p className="text-sm text-muted-foreground">
-                  We'll be in touch to discuss your requirements and provide a formal quote.
-                </p>
+              <div data-testid="compliance-pack" className="py-4">
+                <div className="flex items-start gap-3 mb-5">
+                  <CheckCircle2 className="h-8 w-8 text-[hsl(160,84%,39%)] flex-shrink-0" />
+                  <div>
+                    <h3 className="font-display font-bold text-lg mb-1">Request received — compliance pack unlocked</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Your dedicated account manager will be in touch shortly. The
+                      private supplier compliance details are shown below for your
+                      procurement records.
+                    </p>
+                  </div>
+                </div>
+                {compliancePack ? (
+                  <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5">
+                    <p className="text-xs uppercase tracking-wider font-semibold text-primary mb-3">
+                      Private — for {form.organisation_name || "your organisation"} only
+                    </p>
+                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                      {[
+                        ["Legal entity", compliancePack.entity_legal_name],
+                        ["CIPC registration", compliancePack.cipc_registration_number],
+                        ["VAT number", compliancePack.vat_number],
+                        ["Tax reference", compliancePack.tax_reference_number],
+                        ["CSD supplier no.", compliancePack.csd_supplier_number],
+                        ["B-BBEE level", compliancePack.bbbee_level],
+                        ["Bank", compliancePack.bank_name],
+                        ["Account no.", compliancePack.bank_account_number],
+                        ["Branch code", compliancePack.bank_branch_code],
+                        ["Account manager", compliancePack.account_manager_name],
+                        ["Manager email", compliancePack.account_manager_email],
+                        ["Manager phone", compliancePack.account_manager_phone],
+                      ].map(([label, value]) => value ? (
+                        <div key={label as string}>
+                          <dt className="text-xs text-muted-foreground">{label}</dt>
+                          <dd className="font-medium">{value}</dd>
+                        </div>
+                      ) : null)}
+                    </dl>
+                    {compliancePack.notes && (
+                      <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
+                        {compliancePack.notes}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    The compliance pack will be emailed to you within one business day.
+                  </p>
+                )}
               </div>
             ) : (
               <>

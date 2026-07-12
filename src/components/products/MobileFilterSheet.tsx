@@ -27,6 +27,7 @@ interface MobileFilterSheetProps {
   maxPrice: string;
   aiOnly: boolean;
   inStockOnly: boolean;
+  includeBusiness: boolean;
   sort: SortOption;
 
   setCategory: (v: string) => void;
@@ -35,6 +36,7 @@ interface MobileFilterSheetProps {
   setMaxPrice: (v: string) => void;
   setAiOnly: (v: boolean) => void;
   setInStockOnly: (v: boolean) => void;
+  setIncludeBusiness: (v: boolean) => void;
   setSort: (v: SortOption) => void;
 
   resultCount: number;
@@ -56,8 +58,8 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
   const {
     open, onOpenChange,
     categories, brands, facetsLoading, facetsError, onRetryFacets,
-    category, brand, minPrice, maxPrice, aiOnly, inStockOnly, sort,
-    setCategory, setBrand, setMinPrice, setMaxPrice, setAiOnly, setInStockOnly, setSort,
+    category, brand, minPrice, maxPrice, aiOnly, inStockOnly, includeBusiness, sort,
+    setCategory, setBrand, setMinPrice, setMaxPrice, setAiOnly, setInStockOnly, setIncludeBusiness, setSort,
     resultCount, activeFilters, onClearAll,
   } = props;
 
@@ -360,6 +362,22 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
                   checked={inStockOnly}
                   onChange={(e) => setInStockOnly(e.target.checked)}
                   className="w-5 h-5 accent-primary"
+                />
+              </label>
+              <label className="flex items-start justify-between min-h-12 gap-3 rounded-lg px-3 -mx-3 hover:bg-muted cursor-pointer border-t border-border pt-3 mt-2">
+                <span className="text-sm">
+                  Include business items
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">
+                    Enterprise gear (R15 000+) lives on /procurement.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={includeBusiness}
+                  onChange={(e) => setIncludeBusiness(e.target.checked)}
+                  className="w-5 h-5 accent-primary mt-1"
+                  data-testid="mobile-include-business-toggle"
+                  aria-label="Include business items"
                 />
               </label>
             </fieldset>

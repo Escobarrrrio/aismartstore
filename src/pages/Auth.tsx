@@ -2,10 +2,11 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, Building2 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
+import BusinessSignupForm from "@/components/BusinessSignupForm";
 
 const Auth = () => {
   const [email, setEmail] = useState("");

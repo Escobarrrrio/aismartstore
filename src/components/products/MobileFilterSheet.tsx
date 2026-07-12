@@ -58,8 +58,8 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
   const {
     open, onOpenChange,
     categories, brands, facetsLoading, facetsError, onRetryFacets,
-    category, brand, minPrice, maxPrice, aiOnly, inStockOnly, sort,
-    setCategory, setBrand, setMinPrice, setMaxPrice, setAiOnly, setInStockOnly, setSort,
+    category, brand, minPrice, maxPrice, aiOnly, inStockOnly, includeBusiness, sort,
+    setCategory, setBrand, setMinPrice, setMaxPrice, setAiOnly, setInStockOnly, setIncludeBusiness, setSort,
     resultCount, activeFilters, onClearAll,
   } = props;
 

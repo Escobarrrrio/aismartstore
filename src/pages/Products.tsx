@@ -397,31 +397,34 @@ const Products = () => {
             </div>
           </div>
 
-          {/* Mobile filter sheet */}
-          {showFilters && (
-            <div className="lg:hidden card-flat p-5 mb-6 space-y-4 animate-fade-in">
-              {renderFacetSelect("category", category, setCategory)}
-              {renderFacetSelect("brand", brand, setBrand)}
+          {/* Mobile filter bottom-sheet (Radix/vaul-backed) */}
+          <MobileFilterSheet
+            open={showFilters}
+            onOpenChange={setShowFilters}
+            categories={facets.categories}
+            brands={facets.brands}
+            facetsLoading={facetsLoading}
+            facetsError={facetsError}
+            onRetryFacets={() => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); }}
+            category={category}
+            brand={brand}
+            minPrice={minPrice}
+            maxPrice={maxPrice}
+            aiOnly={aiOnly}
+            inStockOnly={inStockOnly}
+            sort={sort}
+            setCategory={(v) => { setCategory(v); setPage(0); }}
+            setBrand={(v) => { setBrand(v); setPage(0); }}
+            setMinPrice={(v) => { setMinPrice(v); setPage(0); }}
+            setMaxPrice={(v) => { setMaxPrice(v); setPage(0); }}
+            setAiOnly={(v) => { setAiOnly(v); setPage(0); }}
+            setInStockOnly={(v) => { setInStockOnly(v); setPage(0); }}
+            setSort={(v) => { setSort(v); setPage(0); }}
+            resultCount={total}
+            activeFilters={activeFilters}
+            onClearAll={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+          />
 
-              <div className="flex gap-2">
-                <input type="number" placeholder="Min R" value={minPrice} onChange={(e) => { setMinPrice(e.target.value); setPage(0); }} className="input-premium" />
-                <input type="number" placeholder="Max R" value={maxPrice} onChange={(e) => { setMaxPrice(e.target.value); setPage(0); }} className="input-premium" />
-              </div>
-              <label className="flex items-center gap-3 text-sm">
-                <input type="checkbox" checked={aiOnly} onChange={(e) => { setAiOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" /> AI products only
-              </label>
-              <label className="flex items-center gap-3 text-sm">
-                <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" /> In stock only
-              </label>
-              <button
-                onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); setShowFilters(false); }}
-                disabled={activeFilters === 0 && !query}
-                className="btn-secondary w-full px-3 py-2 text-sm disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                <X className="h-4 w-4" /> Reset all filters{activeFilters > 0 ? ` (${activeFilters})` : ""}
-              </button>
-            </div>
-          )}
 
           {/* Grid */}
           {loading ? (

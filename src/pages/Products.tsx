@@ -72,6 +72,8 @@ const Products = () => {
   const [facets, setFacets] = useState<{ categories: FacetOption[]; brands: FacetOption[] }>(
     facetCache || { categories: [], brands: [] }
   );
+  const [facetsLoading, setFacetsLoading] = useState(!facetCache);
+  const [facetsError, setFacetsError] = useState(false);
 
   // Keep URL ?q= in sync when the header search updates it
   useEffect(() => {

@@ -183,8 +183,15 @@ const Products = () => {
 
 
 
-  const runSearch = useCallback(async () => {
-    setLoading(true);
+  // Intelligent prefetch cache keyed by the exact RPC args (search + filters +
+  // page). When the user changes filters, we hit the network for the current
+  // page and, in the background, warm the *next* page so pagination clicks feel
+  // instant. Cache is bounded to keep memory tiny (last 12 pages).
+  type PageCache = { rows: Product[]; total: number };
+  const prefetchCache = useRef<Map<string, PageCache>>(new Map());
+  const inflightPrefetch = useRef<Set<string>>(new Set());
+
+  const buildRpcArgs = useCallback((pageIndex: number) => {
     const min = minPrice ? Number(minPrice) : null;
     let max = maxPrice ? Number(maxPrice) : null;
     // Consumer catalogue: cap price unless the user opts into business items,
@@ -192,7 +199,7 @@ const Products = () => {
     if (!includeBusiness) {
       max = max !== null ? Math.min(max, BUSINESS_PRICE_THRESHOLD) : BUSINESS_PRICE_THRESHOLD;
     }
-    const { data, error } = await supabase.rpc("search_products", {
+    return {
       search_query: query,
       filter_category: category || null,
       filter_brand: brand || null,
@@ -201,21 +208,82 @@ const Products = () => {
       min_price: min,
       max_price: max,
       sort_by: sort,
-      page_number: page,
+      page_number: pageIndex,
       page_size: PAGE_SIZE,
-    });
-    if (error) {
-      setRows([]);
-      setTotal(0);
-    } else {
-      const list = (data as Row[]) || [];
-      setRows(list.map(toProduct));
-      setTotal(list[0]?.total_count ? Number(list[0].total_count) : list.length);
+    };
+  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort]);
+
+  const cacheKey = useCallback((pageIndex: number) =>
+    JSON.stringify(buildRpcArgs(pageIndex)), [buildRpcArgs]);
+
+  // Background fetch — never blocks UI, never toggles loading state.
+  const prefetchPage = useCallback(async (pageIndex: number) => {
+    if (pageIndex < 0) return;
+    const key = cacheKey(pageIndex);
+    if (prefetchCache.current.has(key) || inflightPrefetch.current.has(key)) return;
+    inflightPrefetch.current.add(key);
+    try {
+      const { data, error } = await supabase.rpc("search_products", buildRpcArgs(pageIndex));
+      if (!error) {
+        const list = (data as Row[]) || [];
+        prefetchCache.current.set(key, {
+          rows: list.map(toProduct),
+          total: list[0]?.total_count ? Number(list[0].total_count) : list.length,
+        });
+        // Bound cache size.
+        if (prefetchCache.current.size > 12) {
+          const firstKey = prefetchCache.current.keys().next().value;
+          if (firstKey) prefetchCache.current.delete(firstKey);
+        }
+      }
+    } finally {
+      inflightPrefetch.current.delete(key);
     }
-    setLoading(false);
-  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort, page]);
+  }, [buildRpcArgs, cacheKey]);
+
+  const runSearch = useCallback(async () => {
+    const key = cacheKey(page);
+    // Hydrate instantly from prefetch cache when available.
+    const cached = prefetchCache.current.get(key);
+    if (cached) {
+      setRows(cached.rows);
+      setTotal(cached.total);
+      setLoading(false);
+    } else {
+      setLoading(true);
+      const { data, error } = await supabase.rpc("search_products", buildRpcArgs(page));
+      if (error) {
+        setRows([]);
+        setTotal(0);
+      } else {
+        const list = (data as Row[]) || [];
+        const rowsOut = list.map(toProduct);
+        const totalOut = list[0]?.total_count ? Number(list[0].total_count) : list.length;
+        setRows(rowsOut);
+        setTotal(totalOut);
+        prefetchCache.current.set(key, { rows: rowsOut, total: totalOut });
+      }
+      setLoading(false);
+    }
+    // Kick off background prefetch of the next page so pagination is instant.
+    // Only prefetch if there IS a next page (based on total we now know).
+    const knownTotal = prefetchCache.current.get(key)?.total ?? 0;
+    const knownPages = Math.ceil(knownTotal / PAGE_SIZE);
+    if (page + 1 < knownPages) {
+      // Fire and forget — errors don't affect the visible page.
+      void prefetchPage(page + 1);
+    }
+  }, [page, buildRpcArgs, cacheKey, prefetchPage]);
 
   useEffect(() => { runSearch(); }, [runSearch]);
+
+  // Invalidate the prefetch cache whenever filters/query change so we never
+  // show stale pages after a filter switch.
+  useEffect(() => {
+    prefetchCache.current.clear();
+    inflightPrefetch.current.clear();
+  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort]);
+
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const activeFilters = [category, brand, aiOnly ? "ai" : "", inStockOnly ? "stock" : "", includeBusiness ? "biz" : "", minPrice, maxPrice].filter(Boolean).length;

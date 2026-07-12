@@ -229,6 +229,66 @@ export type Database = {
           },
         ]
       }
+      compliance_documents: {
+        Row: {
+          account_manager_email: string | null
+          account_manager_name: string | null
+          account_manager_phone: string | null
+          bank_account_number: string | null
+          bank_branch_code: string | null
+          bank_name: string | null
+          bbbee_certificate_url: string | null
+          bbbee_level: string | null
+          cipc_registration_number: string | null
+          created_at: string
+          csd_supplier_number: string | null
+          entity_legal_name: string
+          id: string
+          notes: string | null
+          tax_reference_number: string | null
+          updated_at: string
+          vat_number: string | null
+        }
+        Insert: {
+          account_manager_email?: string | null
+          account_manager_name?: string | null
+          account_manager_phone?: string | null
+          bank_account_number?: string | null
+          bank_branch_code?: string | null
+          bank_name?: string | null
+          bbbee_certificate_url?: string | null
+          bbbee_level?: string | null
+          cipc_registration_number?: string | null
+          created_at?: string
+          csd_supplier_number?: string | null
+          entity_legal_name: string
+          id?: string
+          notes?: string | null
+          tax_reference_number?: string | null
+          updated_at?: string
+          vat_number?: string | null
+        }
+        Update: {
+          account_manager_email?: string | null
+          account_manager_name?: string | null
+          account_manager_phone?: string | null
+          bank_account_number?: string | null
+          bank_branch_code?: string | null
+          bank_name?: string | null
+          bbbee_certificate_url?: string | null
+          bbbee_level?: string | null
+          cipc_registration_number?: string | null
+          created_at?: string
+          csd_supplier_number?: string | null
+          entity_legal_name?: string
+          id?: string
+          notes?: string | null
+          tax_reference_number?: string | null
+          updated_at?: string
+          vat_number?: string | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1161,6 +1221,34 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_compliance_pack: {
+        Args: { _email: string; _quote_id: string }
+        Returns: {
+          account_manager_email: string | null
+          account_manager_name: string | null
+          account_manager_phone: string | null
+          bank_account_number: string | null
+          bank_branch_code: string | null
+          bank_name: string | null
+          bbbee_certificate_url: string | null
+          bbbee_level: string | null
+          cipc_registration_number: string | null
+          created_at: string
+          csd_supplier_number: string | null
+          entity_legal_name: string
+          id: string
+          notes: string | null
+          tax_reference_number: string | null
+          updated_at: string
+          vat_number: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "compliance_documents"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_product_admin_view: {
         Args: never

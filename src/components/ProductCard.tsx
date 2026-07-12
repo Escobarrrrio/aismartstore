@@ -124,7 +124,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
           {product.inStock && (typeof product.stockQuantity !== "number" || product.stockQuantity >= SHIPS_FAST_MIN_STOCK) && (
             <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-semibold px-2 py-0.5">
               <Zap className="h-3 w-3" />
-              Ships Fast
+              Ships Fast · {
+                typeof product.stockQuantity !== "number"
+                  ? "2–4 days"
+                  : product.stockQuantity >= 20
+                    ? "1–2 days"
+                    : "2–3 days"
+              }
+            </span>
+          )}
+          {product.inStock && typeof product.stockQuantity === "number" && product.stockQuantity > 0 && product.stockQuantity < SHIPS_FAST_MIN_STOCK && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold px-2 py-0.5">
+              <Zap className="h-3 w-3" />
+              Ships in 3–5 days
             </span>
           )}
           {product.price > 0 && product.price <= RESIDENTIAL_MAX && (

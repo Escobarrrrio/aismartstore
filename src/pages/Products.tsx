@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import MobileFilterSheet from "@/components/products/MobileFilterSheet";

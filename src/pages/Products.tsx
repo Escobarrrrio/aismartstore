@@ -82,55 +82,98 @@ const Products = () => {
     setPage(0);
   }, [urlQ]);
 
-  // Load facets via cached RPC. Falls back to a direct lightweight query if the
-  // RPC fails so the dropdowns are never empty. Retries once on transient error.
+  // Load facets via cached RPC. Falls back to (1) the cache table, then (2) a
+  // lightweight distinct query on products, so the dropdowns are never empty.
   useEffect(() => {
     let cancelled = false;
+
+    const setFromRows = (rows: Array<{ facet_type: string; facet_value: string; product_count: number | string }>) => {
+      const categories: FacetOption[] = [];
+      const brands: FacetOption[] = [];
+      for (const r of rows) {
+        if (!r?.facet_value) continue;
+        const opt = { value: r.facet_value, count: Number(r.product_count) || 0 };
+        if (r.facet_type === "category") categories.push(opt);
+        else if (r.facet_type === "brand") brands.push(opt);
+      }
+      categories.sort((a, b) => b.count - a.count);
+      brands.sort((a, b) => b.count - a.count);
+      facetCache = { categories, brands };
+      setFacets(facetCache);
+      setFacetsError(false);
+    };
+
     const load = async (attempt = 0): Promise<void> => {
-      // Try the fast cached RPC first.
-      const { data, error } = await supabase.rpc("get_product_facets");
-      if (!cancelled && !error && Array.isArray(data) && data.length > 0) {
-        const categories: FacetOption[] = [];
-        const brands: FacetOption[] = [];
-        for (const row of data as Array<{ facet_type: string; facet_value: string; product_count: number | string }>) {
-          const opt = { value: row.facet_value, count: Number(row.product_count) };
-          if (row.facet_type === "category") categories.push(opt);
-          else if (row.facet_type === "brand") brands.push(opt);
+      try {
+        // 1) Fast cached RPC.
+        const { data, error } = await supabase.rpc("get_product_facets");
+        if (cancelled) return;
+        if (!error && Array.isArray(data) && data.length > 0) {
+          setFromRows(data as any);
+          setFacetsLoading(false);
+          return;
         }
-        categories.sort((a, b) => b.count - a.count);
-        brands.sort((a, b) => b.count - a.count);
-        facetCache = { categories, brands };
-        setFacets(facetCache);
-        return;
-      }
-      // Fallback: read the cache table directly (public SELECT).
-      const { data: cacheRows } = await supabase
-        .from("product_facets_cache")
-        .select("facet_type, facet_value, product_count")
-        .order("product_count", { ascending: false });
-      if (!cancelled && cacheRows && cacheRows.length > 0) {
-        const categories: FacetOption[] = [];
-        const brands: FacetOption[] = [];
-        for (const r of cacheRows) {
-          const opt = { value: r.facet_value as string, count: Number(r.product_count) };
-          if (r.facet_type === "category") categories.push(opt);
-          else if (r.facet_type === "brand") brands.push(opt);
+        // 2) Direct cache table read.
+        const { data: cacheRows, error: cacheErr } = await supabase
+          .from("product_facets_cache")
+          .select("facet_type, facet_value, product_count")
+          .order("product_count", { ascending: false });
+        if (cancelled) return;
+        if (!cacheErr && cacheRows && cacheRows.length > 0) {
+          setFromRows(cacheRows as any);
+          setFacetsLoading(false);
+          return;
         }
-        facetCache = { categories, brands };
-        setFacets(facetCache);
-        return;
-      }
-      // One retry with backoff for transient network hiccups.
-      if (!cancelled && attempt < 1) {
-        await new Promise((r) => setTimeout(r, 800));
-        return load(attempt + 1);
+        // 3) Distinct sample from products so dropdowns still have something.
+        const { data: sampleRows } = await supabase
+          .from("products")
+          .select("category, brand")
+          .eq("is_active", true)
+          .not("category", "is", null)
+          .limit(500);
+        if (cancelled) return;
+        if (sampleRows && sampleRows.length > 0) {
+          const catMap = new Map<string, number>();
+          const brandMap = new Map<string, number>();
+          for (const r of sampleRows as Array<{ category: string | null; brand: string | null }>) {
+            if (r.category) catMap.set(r.category, (catMap.get(r.category) || 0) + 1);
+            if (r.brand) brandMap.set(r.brand, (brandMap.get(r.brand) || 0) + 1);
+          }
+          const toOpts = (m: Map<string, number>) =>
+            Array.from(m.entries())
+              .map(([value, count]) => ({ value, count }))
+              .sort((a, b) => b.count - a.count);
+          facetCache = { categories: toOpts(catMap), brands: toOpts(brandMap) };
+          setFacets(facetCache);
+          setFacetsError(false);
+          setFacetsLoading(false);
+          return;
+        }
+        // Retry once for transient issues.
+        if (attempt < 1) {
+          await new Promise((r) => setTimeout(r, 800));
+          if (!cancelled) return load(attempt + 1);
+        }
+        if (!cancelled) {
+          setFacetsError(true);
+          setFacetsLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setFacetsError(true);
+          setFacetsLoading(false);
+        }
       }
     };
-    // Use cached result across route changes but always re-verify in background.
-    if (facetCache) setFacets(facetCache);
+
+    if (facetCache) {
+      setFacets(facetCache);
+      setFacetsLoading(false);
+    }
     load();
     return () => { cancelled = true; };
   }, []);
+
 
 
   const runSearch = useCallback(async () => {

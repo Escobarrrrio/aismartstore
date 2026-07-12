@@ -230,6 +230,59 @@ const Products = () => {
     return nums;
   }, [page, totalPages]);
 
+  // Renders a facet <select> with skeleton, error fallback, and empty states so
+  // the dropdowns are always meaningful even if RPC + cache both fail.
+  const renderFacetSelect = (
+    kind: "category" | "brand",
+    value: string,
+    onChange: (v: string) => void,
+  ) => {
+    const options = kind === "category" ? facets.categories : facets.brands;
+    const allLabel = kind === "category" ? "All categories" : "All brands";
+    if (facetsLoading && options.length === 0) {
+      return (
+        <div
+          role="status"
+          aria-label={`Loading ${kind} options`}
+          className="h-11 w-full rounded-lg bg-muted animate-pulse"
+        />
+      );
+    }
+    return (
+      <div className="space-y-1.5">
+        <select
+          value={value}
+          onChange={(e) => { onChange(e.target.value); setPage(0); }}
+          className="input-premium"
+          aria-invalid={facetsError && options.length === 0 ? true : undefined}
+        >
+          <option value="">{allLabel}</option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.value}{o.count ? ` (${fmtCount(o.count)})` : ""}
+            </option>
+          ))}
+          {value && !options.some((o) => o.value === value) && (
+            <option value={value}>{value}</option>
+          )}
+        </select>
+        {facetsError && options.length === 0 && (
+          <p className="text-xs text-muted-foreground">
+            Filter options couldn’t load.{" "}
+            <button
+              type="button"
+              onClick={() => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); }}
+              className="underline hover:text-foreground"
+            >
+              Retry
+            </button>
+          </p>
+        )}
+      </div>
+    );
+  };
+
+
   return (
     <div className="min-h-screen">
       <SEO

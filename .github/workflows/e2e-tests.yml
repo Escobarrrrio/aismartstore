@@ -44,12 +44,30 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
 
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+      # Verify the restored cache actually contains a Chromium binary. Cache
+      # restores can be partial (interrupted uploads, evicted files); trusting
+      # the `cache-hit` boolean alone can leave a broken install that fails
+      # non-deterministically at test time. If the binary is missing, we fall
+      # back to a full install below.
+      - name: Verify cached Chromium
+        id: pw-verify
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: |
+          set -euo pipefail
+          if compgen -G "$HOME/.cache/ms-playwright/chromium-*/chrome-linux/chrome" > /dev/null; then
+            echo "chromium=present" >> "$GITHUB_OUTPUT"
+            echo "Chromium binary found in cache — skipping browser download."
+          else
+            echo "chromium=missing" >> "$GITHUB_OUTPUT"
+            echo "::warning::Cache restored but Chromium binary is missing; will reinstall."
+          fi
+
+      - name: Install Playwright browsers (no cache / corrupt cache)
+        if: steps.playwright-cache.outputs.cache-hit != 'true' || steps.pw-verify.outputs.chromium == 'missing'
         run: npx playwright install --with-deps chromium
 
-      - name: Install Playwright system deps (cache hit)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
+      - name: Install Playwright system deps (valid cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true' && steps.pw-verify.outputs.chromium == 'present'
         run: npx playwright install-deps chromium
 
       - name: Run E2E tests

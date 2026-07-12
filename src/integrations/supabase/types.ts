@@ -194,6 +194,99 @@ export type Database = {
         }
         Relationships: []
       }
+      business_signups: {
+        Row: {
+          address_line: string | null
+          city: string | null
+          contact_full_name: string
+          contact_phone: string | null
+          contact_position: string | null
+          country: string | null
+          created_at: string
+          entity_type: string
+          expected_monthly_spend: number | null
+          honeypot_flag: boolean
+          id: string
+          ip_address: string | null
+          legal_entity_name: string
+          notes: string | null
+          postal_code: string | null
+          province: string | null
+          registration_number: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          sector: string | null
+          status: string
+          trading_name: string | null
+          updated_at: string
+          user_agent: string | null
+          vat_number: string | null
+          website: string | null
+          work_email: string
+          work_email_domain: string
+        }
+        Insert: {
+          address_line?: string | null
+          city?: string | null
+          contact_full_name: string
+          contact_phone?: string | null
+          contact_position?: string | null
+          country?: string | null
+          created_at?: string
+          entity_type: string
+          expected_monthly_spend?: number | null
+          honeypot_flag?: boolean
+          id?: string
+          ip_address?: string | null
+          legal_entity_name: string
+          notes?: string | null
+          postal_code?: string | null
+          province?: string | null
+          registration_number: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          sector?: string | null
+          status?: string
+          trading_name?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          vat_number?: string | null
+          website?: string | null
+          work_email: string
+          work_email_domain: string
+        }
+        Update: {
+          address_line?: string | null
+          city?: string | null
+          contact_full_name?: string
+          contact_phone?: string | null
+          contact_position?: string | null
+          country?: string | null
+          created_at?: string
+          entity_type?: string
+          expected_monthly_spend?: number | null
+          honeypot_flag?: boolean
+          id?: string
+          ip_address?: string | null
+          legal_entity_name?: string
+          notes?: string | null
+          postal_code?: string | null
+          province?: string | null
+          registration_number?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          sector?: string | null
+          status?: string
+          trading_name?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          vat_number?: string | null
+          website?: string | null
+          work_email?: string
+          work_email_domain?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string

@@ -2,16 +2,18 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, Building2 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
+import BusinessSignupForm from "@/components/BusinessSignupForm";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [isForgot, setIsForgot] = useState(false);
+  const [isBusiness, setIsBusiness] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -59,9 +61,22 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}>
-      <SEO title={isLogin ? t("auth.welcomeBack") : t("auth.createAccount")} description="Sign in to AI Smart Store." noindex />
-      <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-elevated p-8">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-10" style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}>
+      <SEO title={isBusiness ? "Business & institution signup" : isLogin ? t("auth.welcomeBack") : t("auth.createAccount")} description="Sign in to AI Smart Store." noindex />
+      <div className={`w-full ${isBusiness ? "max-w-2xl" : "max-w-md"} bg-card rounded-2xl border border-border shadow-elevated p-8`}>
+        {isBusiness ? (
+          <>
+            <div className="flex justify-center mb-5">
+              <Logo size={40} asLink={false} />
+            </div>
+            <h2 className="font-display font-extrabold text-2xl text-center mb-1">Business & institution signup</h2>
+            <p className="text-muted-foreground text-sm text-center mb-6">Verified accounts unlock net-terms, procurement pricing and the compliance pack.</p>
+            <BusinessSignupForm onClose={() => setIsBusiness(false)} />
+          </>
+        ) : (
+        <></>
+        )}
+        {!isBusiness && (<>
         {/* Logo */}
         <div className="flex justify-center mb-7">
           <Logo size={48} asLink={false} />
@@ -160,6 +175,15 @@ const Auth = () => {
             </button>
           </p>
         )}
+
+        {!isForgot && (
+          <p className="text-center text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
+            <button onClick={() => setIsBusiness(true)} className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline">
+              <Building2 className="h-3.5 w-3.5" /> Register a business or institution
+            </button>
+          </p>
+        )}
+        </>)}
       </div>
     </div>
   );

@@ -26,6 +26,8 @@ import BackupsModule from "@/components/admin/BackupsModule";
 import NotificationsModule from "@/components/admin/NotificationsModule";
 import EmailPreviewsModule from "@/components/admin/EmailPreviewsModule";
 import CatalogHealthModule from "@/components/admin/CatalogHealthModule";
+import ComplianceAuditModule from "@/components/admin/ComplianceAuditModule";
+import BusinessSignupsModule from "@/components/admin/BusinessSignupsModule";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useToast } from "@/hooks/use-toast";
@@ -167,6 +169,8 @@ const Admin = () => {
           {activeTab === "customers" && (loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />)}
           {activeTab === "newsletter" && <NewsletterModule />}
           {activeTab === "quotes" && <QuotesModule />}
+          {activeTab === "business-signups" && <BusinessSignupsModule />}
+          {activeTab === "compliance-audit" && <ComplianceAuditModule />}
           {activeTab === "support" && (loading.tickets ? <LoadingSkeleton /> : <SupportModule tickets={tickets} session={session} onReload={reload.loadTickets} />)}
           {activeTab === "ai-logs" && <AILogsModule />}
           {activeTab === "sync-logs" && <SyncLogsModule />}

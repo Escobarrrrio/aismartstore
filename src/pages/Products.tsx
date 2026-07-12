@@ -12,6 +12,10 @@ import { formatMoney } from "@/lib/currency";
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
 const PAGE_SIZE = 24;
+// Enterprise / procurement-tier items (workstations, GPUs, rack gear) live on
+// the /procurement page. The consumer catalogue defaults to items priced below
+// this threshold; users can opt in via the "Include business items" toggle.
+const BUSINESS_PRICE_THRESHOLD = 15000;
 
 interface Row {
   id: string;
@@ -61,6 +65,8 @@ const Products = () => {
   const [brand, setBrand] = useState("");
   const [aiOnly, setAiOnly] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
+  // Default: hide enterprise/procurement-tier items — those belong on /procurement.
+  const [includeBusiness, setIncludeBusiness] = useState(false);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [sort, setSort] = useState<SortOption>("relevance");
@@ -180,7 +186,12 @@ const Products = () => {
   const runSearch = useCallback(async () => {
     setLoading(true);
     const min = minPrice ? Number(minPrice) : null;
-    const max = maxPrice ? Number(maxPrice) : null;
+    let max = maxPrice ? Number(maxPrice) : null;
+    // Consumer catalogue: cap price unless the user opts into business items,
+    // or explicitly sets a higher max. Keeps enterprise SKUs on /procurement.
+    if (!includeBusiness) {
+      max = max !== null ? Math.min(max, BUSINESS_PRICE_THRESHOLD) : BUSINESS_PRICE_THRESHOLD;
+    }
     const { data, error } = await supabase.rpc("search_products", {
       search_query: query,
       filter_category: category || null,
@@ -202,12 +213,12 @@ const Products = () => {
       setTotal(list[0]?.total_count ? Number(list[0].total_count) : list.length);
     }
     setLoading(false);
-  }, [query, category, brand, aiOnly, inStockOnly, minPrice, maxPrice, sort, page]);
+  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort, page]);
 
   useEffect(() => { runSearch(); }, [runSearch]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const activeFilters = [category, brand, aiOnly ? "ai" : "", inStockOnly ? "stock" : "", minPrice, maxPrice].filter(Boolean).length;
+  const activeFilters = [category, brand, aiOnly ? "ai" : "", inStockOnly ? "stock" : "", includeBusiness ? "biz" : "", minPrice, maxPrice].filter(Boolean).length;
 
   const applySearch = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -219,7 +230,7 @@ const Products = () => {
 
   const clearFilters = () => {
     setCategory(""); setBrand(""); setAiOnly(false); setInStockOnly(false);
-    setMinPrice(""); setMaxPrice(""); setPage(0);
+    setIncludeBusiness(false); setMinPrice(""); setMaxPrice(""); setPage(0);
   };
 
   const pageNumbers = useMemo(() => {
@@ -337,6 +348,21 @@ const Products = () => {
             <label className="flex items-center gap-3 cursor-pointer text-sm">
               <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
               In stock only
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer text-sm border-t border-border pt-4">
+              <input
+                type="checkbox"
+                checked={includeBusiness}
+                onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
+                className="w-4 h-4 accent-primary mt-0.5"
+              />
+              <span>
+                Include business items
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  Enterprise gear ({formatMoney(BUSINESS_PRICE_THRESHOLD)}+) lives on the{" "}
+                  <a href="/procurement" className="text-primary hover:underline">procurement</a> page.
+                </span>
+              </span>
             </label>
             <button
               onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}

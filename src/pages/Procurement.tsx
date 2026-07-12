@@ -10,11 +10,15 @@ import {
   CheckCircle2, Award, CreditCard, Sparkles, ArrowRight,
 } from "lucide-react";
 
+// Public-facing credential summary. Real registration numbers, CSD supplier
+// number and banking details are NEVER exposed on this page — procurement
+// officers receive the full verified compliance pack (with a named account
+// manager, e.g. "John Dlomo") once they submit the quote request form below.
 const CREDENTIALS = [
-  { icon: Award, label: "B-BBEE Status", value: "Level 1 EME — 100% Black-Owned" },
-  { icon: FileCheck, label: "CIPC Registration", value: "2025/599261/07 — Active" },
-  { icon: ShieldCheck, label: "CSD Supplier Number", value: "MAAA1656325 — Verified Active" },
-  { icon: CreditCard, label: "Banking", value: "Capitec Business — Active account" },
+  { icon: Award, label: "B-BBEE Status", value: "Level 1 Contributor — verified" },
+  { icon: FileCheck, label: "CIPC Registration", value: "Active — disclosed on request" },
+  { icon: ShieldCheck, label: "CSD Supplier", value: "Verified Active — number on request" },
+  { icon: CreditCard, label: "Account Manager", value: "John Dlomo — Procurement Desk" },
 ];
 
 const ENTITY_TYPES = [
@@ -112,10 +116,13 @@ const ProcurementPage = () => {
             A technology supplier ready for <span className="gradient-brand-text">any procurement process</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg">
-            AI Smart Store is a trading division of AI Job Chommie (Pty) Ltd — a Level 1 B-BBEE,
-            CSD-verified, CIPC-registered South African company. Maximum preferential procurement
-            score, full compliance documentation on request, and a track record with municipal and
-            private sector clients in the Eastern Cape.
+            AI Smart Store is a CIPC-registered, CSD-verified South African technology supplier
+            with Level 1 B-BBEE contributor status — giving procurement teams maximum
+            preferential procurement scoring. Your dedicated account manager,
+            <span className="font-semibold text-foreground"> John Dlomo</span>, coordinates
+            quoting, tender responses, and the full compliance pack (CIPC disclosure, B-BBEE
+            certificate, CSD confirmation, banking confirmation, and tax compliance status)
+            on request.
           </p>
         </div>
       </div>

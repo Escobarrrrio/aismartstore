@@ -32,6 +32,10 @@ const openSheet = async (page: Page) => {
 };
 
 test.describe("Mobile filter bottom sheet", () => {
+  // The bottom sheet is a mobile-only affordance; skip on the desktop project.
+  test.skip(({}, testInfo) => testInfo.project.name !== "mobile-chromium",
+    "Mobile-only bottom sheet");
+
   test("opens, shows tabs, and traps focus", async ({ page }) => {
     await openSheet(page);
     const dialog = page.getByRole("dialog");

@@ -175,6 +175,15 @@ const Auth = () => {
             </button>
           </p>
         )}
+
+        {!isForgot && (
+          <p className="text-center text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
+            <button onClick={() => setIsBusiness(true)} className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline">
+              <Building2 className="h-3.5 w-3.5" /> Register a business or institution
+            </button>
+          </p>
+        )}
+        </>)}
       </div>
     </div>
   );

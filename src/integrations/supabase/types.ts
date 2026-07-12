@@ -229,6 +229,42 @@ export type Database = {
           },
         ]
       }
+      compliance_access_log: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          email: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json
+          quote_request_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          email?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          quote_request_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          email?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          quote_request_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       compliance_documents: {
         Row: {
           account_manager_email: string | null

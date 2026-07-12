@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
+import MobileFilterSheet from "@/components/products/MobileFilterSheet";
 import SEO from "@/components/SEO";
 import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product } from "@/contexts/CartContext";

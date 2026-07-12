@@ -230,7 +230,7 @@ const Products = () => {
 
   const clearFilters = () => {
     setCategory(""); setBrand(""); setAiOnly(false); setInStockOnly(false);
-    setMinPrice(""); setMaxPrice(""); setPage(0);
+    setIncludeBusiness(false); setMinPrice(""); setMaxPrice(""); setPage(0);
   };
 
   const pageNumbers = useMemo(() => {

@@ -12,6 +12,10 @@ import { formatMoney } from "@/lib/currency";
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
 const PAGE_SIZE = 24;
+// Enterprise / procurement-tier items (workstations, GPUs, rack gear) live on
+// the /procurement page. The consumer catalogue defaults to items priced below
+// this threshold; users can opt in via the "Include business items" toggle.
+const BUSINESS_PRICE_THRESHOLD = 15000;
 
 interface Row {
   id: string;

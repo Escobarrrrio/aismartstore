@@ -169,6 +169,8 @@ const Admin = () => {
           {activeTab === "customers" && (loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />)}
           {activeTab === "newsletter" && <NewsletterModule />}
           {activeTab === "quotes" && <QuotesModule />}
+          {activeTab === "business-signups" && <BusinessSignupsModule />}
+          {activeTab === "compliance-audit" && <ComplianceAuditModule />}
           {activeTab === "support" && (loading.tickets ? <LoadingSkeleton /> : <SupportModule tickets={tickets} session={session} onReload={reload.loadTickets} />)}
           {activeTab === "ai-logs" && <AILogsModule />}
           {activeTab === "sync-logs" && <SyncLogsModule />}

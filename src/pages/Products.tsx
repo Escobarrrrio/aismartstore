@@ -186,7 +186,12 @@ const Products = () => {
   const runSearch = useCallback(async () => {
     setLoading(true);
     const min = minPrice ? Number(minPrice) : null;
-    const max = maxPrice ? Number(maxPrice) : null;
+    let max = maxPrice ? Number(maxPrice) : null;
+    // Consumer catalogue: cap price unless the user opts into business items,
+    // or explicitly sets a higher max. Keeps enterprise SKUs on /procurement.
+    if (!includeBusiness) {
+      max = max !== null ? Math.min(max, BUSINESS_PRICE_THRESHOLD) : BUSINESS_PRICE_THRESHOLD;
+    }
     const { data, error } = await supabase.rpc("search_products", {
       search_query: query,
       filter_category: category || null,
@@ -208,12 +213,12 @@ const Products = () => {
       setTotal(list[0]?.total_count ? Number(list[0].total_count) : list.length);
     }
     setLoading(false);
-  }, [query, category, brand, aiOnly, inStockOnly, minPrice, maxPrice, sort, page]);
+  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort, page]);
 
   useEffect(() => { runSearch(); }, [runSearch]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const activeFilters = [category, brand, aiOnly ? "ai" : "", inStockOnly ? "stock" : "", minPrice, maxPrice].filter(Boolean).length;
+  const activeFilters = [category, brand, aiOnly ? "ai" : "", inStockOnly ? "stock" : "", includeBusiness ? "biz" : "", minPrice, maxPrice].filter(Boolean).length;
 
   const applySearch = (e?: React.FormEvent) => {
     e?.preventDefault();

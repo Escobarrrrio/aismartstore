@@ -375,7 +375,7 @@ const Products = () => {
       <div className="bg-muted/50 border-b border-border">
         <div className="container mx-auto px-4 py-8 md:py-12">
           <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">{t("products.title")}</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground" data-testid="results-count" data-total={total} data-loading={loading}>
             {loading
               ? "Searching…"
               : query

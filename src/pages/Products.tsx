@@ -423,6 +423,8 @@ const Products = () => {
                 checked={includeBusiness}
                 onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
                 className="w-4 h-4 accent-primary mt-0.5"
+                data-testid="include-business-toggle"
+                aria-label="Include business items"
               />
               <span>
                 Include business items

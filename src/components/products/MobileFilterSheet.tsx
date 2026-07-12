@@ -27,6 +27,7 @@ interface MobileFilterSheetProps {
   maxPrice: string;
   aiOnly: boolean;
   inStockOnly: boolean;
+  includeBusiness: boolean;
   sort: SortOption;
 
   setCategory: (v: string) => void;
@@ -35,6 +36,7 @@ interface MobileFilterSheetProps {
   setMaxPrice: (v: string) => void;
   setAiOnly: (v: boolean) => void;
   setInStockOnly: (v: boolean) => void;
+  setIncludeBusiness: (v: boolean) => void;
   setSort: (v: SortOption) => void;
 
   resultCount: number;

@@ -11,7 +11,8 @@ export type AdminTab =
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
   | "settings" | "system-health" | "security" | "cost-usage"
   | "integrations" | "backups" | "catalog-health"
-  | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews";
+  | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
+  | "compliance-audit" | "business-signups";
 
 interface AdminSidebarProps {
   activeTab: AdminTab;

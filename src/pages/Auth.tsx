@@ -61,9 +61,22 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}>
-      <SEO title={isLogin ? t("auth.welcomeBack") : t("auth.createAccount")} description="Sign in to AI Smart Store." noindex />
-      <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-elevated p-8">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-10" style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}>
+      <SEO title={isBusiness ? "Business & institution signup" : isLogin ? t("auth.welcomeBack") : t("auth.createAccount")} description="Sign in to AI Smart Store." noindex />
+      <div className={`w-full ${isBusiness ? "max-w-2xl" : "max-w-md"} bg-card rounded-2xl border border-border shadow-elevated p-8`}>
+        {isBusiness ? (
+          <>
+            <div className="flex justify-center mb-5">
+              <Logo size={40} asLink={false} />
+            </div>
+            <h2 className="font-display font-extrabold text-2xl text-center mb-1">Business & institution signup</h2>
+            <p className="text-muted-foreground text-sm text-center mb-6">Verified accounts unlock net-terms, procurement pricing and the compliance pack.</p>
+            <BusinessSignupForm onClose={() => setIsBusiness(false)} />
+          </>
+        ) : (
+        <></>
+        )}
+        {!isBusiness && (<>
         {/* Logo */}
         <div className="flex justify-center mb-7">
           <Logo size={48} asLink={false} />

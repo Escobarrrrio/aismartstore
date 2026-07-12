@@ -28,10 +28,27 @@ const ENTITY_TYPES = [
   { value: "other", label: "Other", icon: Building2 },
 ];
 
+type CompliancePack = {
+  entity_legal_name: string;
+  cipc_registration_number: string | null;
+  vat_number: string | null;
+  tax_reference_number: string | null;
+  csd_supplier_number: string | null;
+  bbbee_level: string | null;
+  bank_name: string | null;
+  bank_account_number: string | null;
+  bank_branch_code: string | null;
+  account_manager_name: string | null;
+  account_manager_email: string | null;
+  account_manager_phone: string | null;
+  notes: string | null;
+};
+
 const ProcurementPage = () => {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [compliancePack, setCompliancePack] = useState<CompliancePack | null>(null);
   const [enterpriseAi, setEnterpriseAi] = useState<Product[]>([]);
   const [form, setForm] = useState({
     organisation_name: "", entity_type: "private", contact_name: "",
@@ -81,20 +98,43 @@ const ProcurementPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.from("quote_requests").insert({
-      organisation_name: form.organisation_name,
-      entity_type: form.entity_type,
-      contact_name: form.contact_name,
-      email: form.email,
-      phone: form.phone || null,
-      requirements: form.requirements,
-      estimated_value: form.estimated_value ? Number(form.estimated_value) : null,
-    });
-    setSubmitting(false);
-    if (error) {
-      toast({ title: "Couldn't send your request", description: error.message, variant: "destructive" });
+    // Insert and return the row so we can prove ownership when unlocking the
+    // private compliance pack via the SECURITY DEFINER get_compliance_pack RPC.
+    const { data: inserted, error } = await supabase
+      .from("quote_requests")
+      .insert({
+        organisation_name: form.organisation_name,
+        entity_type: form.entity_type,
+        contact_name: form.contact_name,
+        email: form.email,
+        phone: form.phone || null,
+        requirements: form.requirements,
+        estimated_value: form.estimated_value ? Number(form.estimated_value) : null,
+      })
+      .select("id, email")
+      .single();
+    if (error || !inserted) {
+      setSubmitting(false);
+      toast({
+        title: "Couldn't send your request",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
       return;
     }
+
+    // Unlock the private compliance pack for THIS submitter only. The RPC
+    // verifies (quote_id, email) server-side; nothing sensitive is available
+    // to anonymous visitors who haven't submitted a matching request.
+    const { data: pack } = await supabase.rpc("get_compliance_pack", {
+      _quote_id: inserted.id,
+      _email: inserted.email,
+    });
+    if (Array.isArray(pack) && pack.length > 0) {
+      setCompliancePack(pack[0] as CompliancePack);
+    }
+
+    setSubmitting(false);
     setSubmitted(true);
   };
 

@@ -509,6 +509,7 @@ const Products = () => {
             maxPrice={maxPrice}
             aiOnly={aiOnly}
             inStockOnly={inStockOnly}
+            includeBusiness={includeBusiness}
             sort={sort}
             setCategory={(v) => { setCategory(v); setPage(0); }}
             setBrand={(v) => { setBrand(v); setPage(0); }}
@@ -516,6 +517,7 @@ const Products = () => {
             setMaxPrice={(v) => { setMaxPrice(v); setPage(0); }}
             setAiOnly={(v) => { setAiOnly(v); setPage(0); }}
             setInStockOnly={(v) => { setInStockOnly(v); setPage(0); }}
+            setIncludeBusiness={(v) => { setIncludeBusiness(v); setPage(0); }}
             setSort={(v) => { setSort(v); setPage(0); }}
             resultCount={total}
             activeFilters={activeFilters}

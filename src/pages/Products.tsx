@@ -311,18 +311,13 @@ const Products = () => {
           <div className="card-flat p-5 sticky top-24 space-y-5">
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Category</label>
-              <select value={category} onChange={(e) => { setCategory(e.target.value); setPage(0); }} className="input-premium">
-                <option value="">All categories</option>
-                {facets.categories.map((c) => <option key={c.value} value={c.value}>{c.value} ({fmtCount(c.count)})</option>)}
-              </select>
+              {renderFacetSelect("category", category, setCategory)}
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Brand</label>
-              <select value={brand} onChange={(e) => { setBrand(e.target.value); setPage(0); }} className="input-premium">
-                <option value="">All brands</option>
-                {facets.brands.map((b) => <option key={b.value} value={b.value}>{b.value} ({fmtCount(b.count)})</option>)}
-              </select>
+              {renderFacetSelect("brand", brand, setBrand)}
             </div>
+
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Price (ZAR)</label>
               <div className="flex gap-2">

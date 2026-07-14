@@ -1421,6 +1421,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recategorize_batch: { Args: { batch_size?: number }; Returns: number }
       refresh_product_facets_cache: { Args: never; Returns: number }
       search_products: {
         Args: {

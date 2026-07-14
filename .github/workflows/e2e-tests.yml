@@ -70,11 +70,18 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true' && steps.pw-verify.outputs.chromium == 'present'
         run: npx playwright install-deps chromium
 
+      - name: Seed deterministic E2E database
+        run: npm run test:e2e:seed
+        env:
+          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          E2E_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+
       - name: Run E2E tests
         id: e2e
         run: npm run test:e2e 2>&1 | tee playwright-output.log
         env:
           CI: true
+          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
 
       - name: Upload Playwright HTML report
         if: always()

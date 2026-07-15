@@ -52,6 +52,9 @@ const Checkout = () => {
         .then(({ data, error }) => {
           setCapturingPaypal(false);
           if (error || data?.status !== "completed") {
+            capturePaymentError(error || new Error("PayPal capture did not complete"), {
+              provider: "paypal", orderId: pendingOrderId, paypalToken, status: data?.status,
+            });
             setPaymentFailed(true);
           } else {
             clearCart();

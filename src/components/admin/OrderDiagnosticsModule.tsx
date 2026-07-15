@@ -88,7 +88,7 @@ const OrderDiagnosticsModule = () => {
       setEmails(emailMap);
 
       const auditMap: Record<string, AuditRow[]> = {};
-      (auditRows as AuditRow[] | null)?.forEach((row) => {
+      (auditRows as unknown as AuditRow[] | null)?.forEach((row) => {
         (auditMap[row.order_id] ||= []).push(row);
       });
       setWebhooks(auditMap);

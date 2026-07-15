@@ -62,7 +62,7 @@ const NewsletterSignup = ({ source = "footer", variant = "footer" }: NewsletterS
         <div className="flex items-center gap-2 text-sm font-display font-semibold text-background/90 mb-3">
           <Check className="h-4 w-4 text-[hsl(160,84%,39%)]" /> You're in. One more thing —
         </div>
-        <p className="text-xs text-background/40 mb-3">
+        <p className="text-xs text-background/75 mb-3">
           What should we tell you about first? (optional, takes 5 seconds)
         </p>
         <div className="flex flex-wrap gap-2">
@@ -73,7 +73,7 @@ const NewsletterSignup = ({ source = "footer", variant = "footer" }: NewsletterS
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                 selected.includes(c.key)
                   ? "bg-primary border-primary text-white"
-                  : "border-background/15 text-background/50 hover:border-background/30"
+                  : "border-background/15 text-background/75 hover:border-background/30"
               }`}
             >
               <c.icon className="h-3 w-3" /> {c.label}
@@ -87,15 +87,15 @@ const NewsletterSignup = ({ source = "footer", variant = "footer" }: NewsletterS
   return (
     <div className={variant === "footer" ? "max-w-sm" : "max-w-md mx-auto text-center"}>
       <h5 className="font-display font-bold text-sm text-background/90 mb-1.5">Be first to know</h5>
-      <p className="text-xs text-background/40 mb-3 leading-relaxed">
+      <p className="text-xs text-background/75 mb-3 leading-relaxed">
         New AI hardware drops, price changes, and early access to limited stock — before they hit the catalogue page.
         {subscriberCount && (
-          <span className="block mt-1 text-background/30">Join {subscriberCount.toLocaleString()} subscribers.</span>
+          <span className="block mt-1 text-background/70">Join {subscriberCount.toLocaleString()} subscribers.</span>
         )}
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <div className="relative flex-1">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-background/30" />
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-background/70" />
           <input
             type="email"
             required

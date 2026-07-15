@@ -12,18 +12,30 @@ type AccountType = "residential" | "business";
 // SA ID validation: exactly 13 digits. The database also enforces uniqueness
 // across all profiles regardless of customer_type, so someone can't hold both
 // a residential and a business account under the same ID number.
-const isValidSaId = (id: string) => /^\d{13}$/.test(id.trim());
+export const isValidSaId = (id: string) => /^\d{13}$/.test(id.trim());
+
+// SA VAT number: SARS assigns 10 digits starting with a 4.
+// (Ref: SARS VAT101 registration.) We accept spaces/dashes in the raw input
+// but validate the stripped digits.
+export const isValidVat = (vat: string) => /^4\d{9}$/.test(vat.replace(/[\s-]/g, ""));
+
+// SA phone: allow +27… or 0… with 9 subscriber digits. Kept intentionally
+// permissive — the DB unique constraint is the source of truth for dedupe.
+export const isValidPhone = (phone: string) => {
+  const digits = phone.replace(/[^\d+]/g, "");
+  return /^(\+27\d{9}|0\d{9})$/.test(digits);
+};
 
 // Detect the "one account per person" unique constraint violations coming back
 // from Postgres so we can show a friendly, actionable message instead of a
 // raw error like `duplicate key value violates unique constraint ...`.
-const isUniqueConstraint = (err: unknown): { field: string } | null => {
+export const isUniqueConstraint = (err: unknown): { field: string } | null => {
   const msg =
     typeof err === "object" && err && "message" in err
       ? String((err as { message?: unknown }).message ?? "")
       : String(err ?? "");
   const lower = msg.toLowerCase();
-  if (!lower.includes("duplicate") && !lower.includes("unique")) return null;
+  if (!lower.includes("duplicate") && !lower.includes("unique") && !lower.includes("23505")) return null;
   if (lower.includes("id_number")) return { field: "ID number" };
   if (lower.includes("phone")) return { field: "phone number" };
   if (lower.includes("vat")) return { field: "VAT number" };

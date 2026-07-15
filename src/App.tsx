@@ -12,6 +12,7 @@ import { LocaleProvider } from "@/contexts/LocaleContext";
 import StoreHeader from "@/components/StoreHeader";
 import StoreFooter from "@/components/StoreFooter";
 import ChatWidget from "@/components/ChatWidget";
+import AudienceGuard from "@/components/AudienceGuard";
 
 // Route-level code splitting: the Admin panel alone pulls in dozens of
 // modules (products, orders, customers, support, sync logs, automations,
@@ -71,7 +72,7 @@ const App = () => (
                     <Route path="/account" element={<StorefrontLayout><Account /></StorefrontLayout>} />
                     <Route path="/auth" element={<StorefrontLayout><Auth /></StorefrontLayout>} />
                     <Route path="/reset-password" element={<StorefrontLayout><ResetPassword /></StorefrontLayout>} />
-                    <Route path="/procurement" element={<StorefrontLayout><Procurement /></StorefrontLayout>} />
+                    <Route path="/procurement" element={<StorefrontLayout><AudienceGuard allow="business"><Procurement /></AudienceGuard></StorefrontLayout>} />
                     <Route path="/ai-pulse" element={<StorefrontLayout><AiPulse /></StorefrontLayout>} />
                     <Route path="/compliance" element={<StorefrontLayout><Compliance /></StorefrontLayout>} />
                     <Route path="/admin" element={<Admin />} />

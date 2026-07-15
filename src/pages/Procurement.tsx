@@ -5,6 +5,7 @@ import SEO from "@/components/SEO";
 import ProductCard from "@/components/ProductCard";
 import { Product } from "@/contexts/CartContext";
 import { Link } from "react-router-dom";
+import { trackEvent } from "@/lib/analytics";
 import {
   ShieldCheck, FileCheck, Landmark, Building2, HardHat, Send,
   CheckCircle2, Award, CreditCard, Sparkles, ArrowRight,
@@ -58,9 +59,8 @@ const ProcurementPage = () => {
   useEffect(() => {
     (async () => {
       // Business/Government storefront: pull enterprise-tier catalogue via
-      // the search RPC with the business audience filter. This surfaces the
-      // full business SKU pool (servers, licensing, networking, warranty,
-      // GPUs, etc.) — not the residential catalogue.
+      // the search RPC with the business audience filter.
+      trackEvent({ name: "storefront_viewed", audience: "business", surface: "procurement" });
       const { data } = await supabase.rpc("search_products", {
         search_query: "",
         filter_ai_only: true,
@@ -69,24 +69,29 @@ const ProcurementPage = () => {
         page_size: 24,
         filter_audience: "business",
       });
+      const list = ((data as any[]) || []).filter((p) => Array.isArray(p.images) && p.images[0]);
+      trackEvent({
+        name: "product_list_returned",
+        audience: "business",
+        surface: "procurement",
+        count: list.length,
+        total: list[0]?.total_count ? Number(list[0].total_count) : list.length,
+      });
       setEnterpriseAi(
-        ((data as any[]) || [])
-          .filter((p) => Array.isArray(p.images) && p.images[0])
-          .slice(0, 8)
-          .map((p) => ({
-            id: p.id,
-            name: p.name,
-            description: p.description || "",
-            price: Number(p.price),
-            category: p.category || "",
-            brand: p.brand || undefined,
-            sku: p.sku || undefined,
-            images: p.images || [],
-            inStock: p.in_stock,
-            stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
-            isAiProduct: !!p.is_ai_product,
-            createdAt: new Date().toISOString(),
-          }))
+        list.slice(0, 8).map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || "",
+          price: Number(p.price),
+          category: p.category || "",
+          brand: p.brand || undefined,
+          sku: p.sku || undefined,
+          images: p.images || [],
+          inStock: p.in_stock,
+          stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
+          isAiProduct: !!p.is_ai_product,
+          createdAt: new Date().toISOString(),
+        }))
       );
     })();
   }, []);

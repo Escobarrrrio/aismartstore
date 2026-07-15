@@ -12,18 +12,30 @@ type AccountType = "residential" | "business";
 // SA ID validation: exactly 13 digits. The database also enforces uniqueness
 // across all profiles regardless of customer_type, so someone can't hold both
 // a residential and a business account under the same ID number.
-const isValidSaId = (id: string) => /^\d{13}$/.test(id.trim());
+export const isValidSaId = (id: string) => /^\d{13}$/.test(id.trim());
+
+// SA VAT number: SARS assigns 10 digits starting with a 4.
+// (Ref: SARS VAT101 registration.) We accept spaces/dashes in the raw input
+// but validate the stripped digits.
+export const isValidVat = (vat: string) => /^4\d{9}$/.test(vat.replace(/[\s-]/g, ""));
+
+// SA phone: allow +27… or 0… with 9 subscriber digits. Kept intentionally
+// permissive — the DB unique constraint is the source of truth for dedupe.
+export const isValidPhone = (phone: string) => {
+  const digits = phone.replace(/[^\d+]/g, "");
+  return /^(\+27\d{9}|0\d{9})$/.test(digits);
+};
 
 // Detect the "one account per person" unique constraint violations coming back
 // from Postgres so we can show a friendly, actionable message instead of a
 // raw error like `duplicate key value violates unique constraint ...`.
-const isUniqueConstraint = (err: unknown): { field: string } | null => {
+export const isUniqueConstraint = (err: unknown): { field: string } | null => {
   const msg =
     typeof err === "object" && err && "message" in err
       ? String((err as { message?: unknown }).message ?? "")
       : String(err ?? "");
   const lower = msg.toLowerCase();
-  if (!lower.includes("duplicate") && !lower.includes("unique")) return null;
+  if (!lower.includes("duplicate") && !lower.includes("unique") && !lower.includes("23505")) return null;
   if (lower.includes("id_number")) return { field: "ID number" };
   if (lower.includes("phone")) return { field: "phone number" };
   if (lower.includes("vat")) return { field: "VAT number" };
@@ -47,6 +59,7 @@ const Auth = () => {
   const [vatNotRegistered, setVatNotRegistered] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -79,6 +92,7 @@ const Auth = () => {
   };
 
   const handleSignUp = async () => {
+    setFieldErrors({});
     if (!accountType) {
       toast({
         title: "Choose an account type",
@@ -87,39 +101,30 @@ const Auth = () => {
       });
       return;
     }
-    if (!isValidSaId(idNumber)) {
-      toast({
-        title: "Invalid South African ID number",
-        description: "Your SA ID number must be exactly 13 digits.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!name.trim() || !phone.trim()) {
-      toast({
-        title: "Missing details",
-        description: "Full name and phone number are required.",
-        variant: "destructive",
-      });
-      return;
-    }
+
+    // Field-level validation — each error is attached to the specific input
+    // so users see exactly what to fix, without needing to read a toast.
+    const errs: Record<string, string> = {};
+    if (!name.trim()) errs.name = "Full name is required.";
+    if (!phone.trim()) errs.phone = "Phone number is required.";
+    else if (!isValidPhone(phone)) errs.phone = "Enter a valid South African phone (e.g. +27 82 123 4567 or 082 123 4567).";
+    if (!idNumber.trim()) errs.idNumber = "SA ID number is required.";
+    else if (!isValidSaId(idNumber)) errs.idNumber = `ID number must be exactly 13 digits (you entered ${idNumber.trim().length}).`;
     if (accountType === "business") {
-      if (!companyName.trim()) {
-        toast({
-          title: "Company name required",
-          description: "Business and government accounts must provide the registered entity name.",
-          variant: "destructive",
-        });
-        return;
+      if (!companyName.trim()) errs.companyName = "Registered company / entity name is required.";
+      if (!vatNotRegistered) {
+        if (!vatNumber.trim()) errs.vatNumber = "Enter your VAT number, or tick 'not yet registered'.";
+        else if (!isValidVat(vatNumber)) errs.vatNumber = "SA VAT numbers are 10 digits starting with 4 (e.g. 4123456789).";
       }
-      if (!vatNotRegistered && !vatNumber.trim()) {
-        toast({
-          title: "VAT number required",
-          description: "Enter your VAT number, or tick 'not yet registered' if applicable.",
-          variant: "destructive",
-        });
-        return;
-      }
+    }
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      toast({
+        title: "Please fix the highlighted fields",
+        description: "Some details need attention before we can create your account.",
+        variant: "destructive",
+      });
+      return;
     }
 
     const { data, error } = await supabase.auth.signUp({
@@ -248,9 +253,10 @@ const Auth = () => {
 
         {/* Account type gate — no default, no skip */}
         {mode === "signup" && accountType === null && (
-          <div className="space-y-3">
+          <div className="space-y-3" data-testid="account-type-gate">
             <button
               type="button"
+              data-testid="account-type-residential"
               onClick={() => setAccountType("residential")}
               className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left"
             >
@@ -264,6 +270,7 @@ const Auth = () => {
             </button>
             <button
               type="button"
+              data-testid="account-type-business"
               onClick={() => setAccountType("business")}
               className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left"
             >
@@ -300,10 +307,10 @@ const Auth = () => {
 
             {mode === "signup" && (
               <>
-                <FieldWithIcon icon={User} label="Full name" value={name} onChange={setName} placeholder="Jane Doe" required />
+                <FieldWithIcon icon={User} label="Full name" value={name} onChange={setName} placeholder="Jane Doe" required error={fieldErrors.name} testId="signup-name" />
                 {accountType === "business" && (
                   <>
-                    <FieldWithIcon icon={Building2} label="Registered company / entity name" value={companyName} onChange={setCompanyName} placeholder="Acme (Pty) Ltd" required />
+                    <FieldWithIcon icon={Building2} label="Registered company / entity name" value={companyName} onChange={setCompanyName} placeholder="Acme (Pty) Ltd" required error={fieldErrors.companyName} testId="signup-company" />
                     <div>
                       <label className="block text-xs font-semibold mb-1.5">VAT number</label>
                       <input
@@ -312,13 +319,22 @@ const Auth = () => {
                         onChange={(e) => setVatNumber(e.target.value)}
                         disabled={vatNotRegistered}
                         placeholder="4XXXXXXXXX"
-                        className="w-full px-4 py-2.5 rounded-lg border border-input bg-muted text-foreground focus:border-secondary focus:bg-card focus:ring-2 focus:ring-secondary/10 outline-none transition text-sm disabled:opacity-50"
+                        aria-invalid={!!fieldErrors.vatNumber}
+                        data-testid="signup-vat"
+                        className={`w-full px-4 py-2.5 rounded-lg border bg-muted text-foreground focus:bg-card focus:ring-2 outline-none transition text-sm disabled:opacity-50 ${
+                          fieldErrors.vatNumber
+                            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+                            : "border-input focus:border-secondary focus:ring-secondary/10"
+                        }`}
                       />
+                      {fieldErrors.vatNumber && (
+                        <p role="alert" className="text-[11px] text-destructive mt-1">{fieldErrors.vatNumber}</p>
+                      )}
                       <label className="flex items-center gap-2 mt-2 text-xs text-muted-foreground cursor-pointer">
                         <input
                           type="checkbox"
                           checked={vatNotRegistered}
-                          onChange={(e) => setVatNotRegistered(e.target.checked)}
+                          onChange={(e) => { setVatNotRegistered(e.target.checked); if (e.target.checked) setFieldErrors((p) => ({ ...p, vatNumber: "" })); }}
                           className="accent-primary"
                         />
                         Not yet registered for VAT
@@ -326,8 +342,11 @@ const Auth = () => {
                     </div>
                   </>
                 )}
-                <FieldWithIcon icon={Phone} label="Phone number" value={phone} onChange={setPhone} placeholder="+27 82 123 4567" type="tel" required />
-                <FieldWithIcon icon={IdCard} label="South African ID number (13 digits)" value={idNumber} onChange={(v) => setIdNumber(v.replace(/\D/g, "").slice(0, 13))} placeholder="0000000000000" required />
+                <FieldWithIcon icon={Phone} label="Phone number" value={phone} onChange={setPhone} placeholder="+27 82 123 4567" type="tel" required error={fieldErrors.phone} testId="signup-phone" />
+                <FieldWithIcon icon={IdCard} label="South African ID number (13 digits)" value={idNumber} onChange={(v) => setIdNumber(v.replace(/\D/g, "").slice(0, 13))} placeholder="0000000000000" required error={fieldErrors.idNumber} testId="signup-id" />
+                {idNumber.length > 0 && idNumber.length < 13 && !fieldErrors.idNumber && (
+                  <p className="text-[11px] text-muted-foreground -mt-2">{13 - idNumber.length} more digit{13 - idNumber.length === 1 ? "" : "s"} to go.</p>
+                )}
               </>
             )}
 
@@ -375,7 +394,7 @@ const Auth = () => {
 
 // Small helper to keep the form JSX flat & consistent.
 const FieldWithIcon = ({
-  icon: Icon, label, value, onChange, placeholder, type = "text", required, minLength,
+  icon: Icon, label, value, onChange, placeholder, type = "text", required, minLength, error, testId,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -385,6 +404,8 @@ const FieldWithIcon = ({
   type?: string;
   required?: boolean;
   minLength?: number;
+  error?: string;
+  testId?: string;
 }) => (
   <div>
     <label className="block text-xs font-semibold mb-1.5">{label}</label>
@@ -397,9 +418,16 @@ const FieldWithIcon = ({
         required={required}
         minLength={minLength}
         placeholder={placeholder}
-        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-muted text-foreground focus:border-secondary focus:bg-card focus:ring-2 focus:ring-secondary/10 outline-none transition text-sm"
+        aria-invalid={!!error}
+        data-testid={testId}
+        className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-muted text-foreground focus:bg-card focus:ring-2 outline-none transition text-sm ${
+          error
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+            : "border-input focus:border-secondary focus:ring-secondary/10"
+        }`}
       />
     </div>
+    {error && <p role="alert" className="text-[11px] text-destructive mt-1">{error}</p>}
   </div>
 );
 

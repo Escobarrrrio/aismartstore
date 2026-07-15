@@ -4,6 +4,7 @@ import { Search, X, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney } from "@/lib/currency";
 import { useTranslation } from "react-i18next";
+import { trackEvent } from "@/lib/analytics";
 
 interface Suggestion {
   id: string;
@@ -93,9 +94,16 @@ const HeaderSearch = ({ className = "", autoFocus, onClose, fullWidth }: Props) 
         merged.push({ id: r.id, name: r.name, price: Number(r.price), images: r.images });
       }
       setResults(merged.slice(0, 6));
-      setTotalCount(
-        rpcRows[0]?.total_count ? Number(rpcRows[0].total_count) : merged.length
-      );
+      const total = rpcRows[0]?.total_count ? Number(rpcRows[0].total_count) : merged.length;
+      setTotalCount(total);
+      trackEvent({
+        name: "product_list_returned",
+        audience: "residential",
+        surface: "header_search",
+        count: merged.length,
+        total,
+        query: q,
+      });
       setOpen(true);
       setHighlight(-1);
     }, 300);

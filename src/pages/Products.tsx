@@ -89,6 +89,13 @@ const Products = () => {
   const [page, setPage] = useState(urlPage);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Fire storefront_viewed once per mount so audience split can be validated
+  // in prod analytics (residential storefront = /products).
+  useEffect(() => {
+    trackEvent({ name: "storefront_viewed", audience: "residential", surface: "products", query: urlQ || undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [rows, setRows] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -308,6 +315,14 @@ const Products = () => {
         setRows(rowsOut);
         setTotal(totalOut);
         prefetchCache.current.set(key, { rows: rowsOut, total: totalOut });
+        trackEvent({
+          name: "product_list_returned",
+          audience: "residential",
+          surface: "products",
+          count: rowsOut.length,
+          total: totalOut,
+          query: query || undefined,
+        });
       }
       setLoading(false);
     }

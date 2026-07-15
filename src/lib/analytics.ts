@@ -17,7 +17,11 @@ export type AnalyticsEvent =
   | { name: "active_filter_chip_dismissed"; key: string; label: string; page: string }
   | { name: "sort_changed"; value: string; page: string }
   | { name: "page_changed"; value: number; page: string }
-  | { name: "filters_cleared_all"; page: string };
+  | { name: "filters_cleared_all"; page: string }
+  // Storefront audience telemetry — proves the residential/business split in prod.
+  | { name: "storefront_viewed"; audience: "residential" | "business"; surface: "home" | "products" | "procurement" | "header_search"; query?: string }
+  | { name: "product_list_returned"; audience: "residential" | "business"; surface: "home" | "products" | "procurement" | "header_search"; count: number; total?: number; query?: string }
+  | { name: "audience_guard_blocked"; allow: "residential" | "business"; actual: "residential" | "business" | "anonymous" };
 
 type AnyRecord = Record<string, unknown>;
 

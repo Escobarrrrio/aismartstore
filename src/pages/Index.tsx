@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/contexts/CartContext";
+import { trackEvent } from "@/lib/analytics";
 
 const Index = () => {
   const { products, loading } = useProducts();

@@ -341,12 +341,13 @@ const Products = () => {
     const q = searchInput.trim();
     setQuery(q);
     setPage(0);
-    if (q) setSearchParams({ q }); else setSearchParams({});
+    // URL sync effect writes the change; no explicit setSearchParams needed.
   };
 
   const clearFilters = () => {
     setCategory(""); setBrand(""); setAiOnly(false); setInStockOnly(false);
     setIncludeBusiness(false); setMinPrice(""); setMaxPrice(""); setPage(0);
+    trackEvent({ name: "filters_cleared_all", page: "/products" });
   };
 
   const pageNumbers = useMemo(() => {
@@ -360,18 +361,51 @@ const Products = () => {
 
   const onRetryFacets = () => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); };
 
+  // Facet setters with analytics tracking. Selecting a value fires
+  // "facet_selected"; clearing (empty string) fires "facet_cleared".
+  const onCategoryChange = useCallback((v: string) => {
+    setCategory(v); setPage(0);
+    trackEvent(v
+      ? { name: "facet_selected", facet: "category", value: v, page: "/products" }
+      : { name: "facet_cleared", facet: "category", page: "/products" });
+  }, []);
+  const onBrandChange = useCallback((v: string) => {
+    setBrand(v); setPage(0);
+    trackEvent(v
+      ? { name: "facet_selected", facet: "brand", value: v, page: "/products" }
+      : { name: "facet_cleared", facet: "brand", page: "/products" });
+  }, []);
+  const onSortChange = useCallback((v: SortOption) => {
+    setSort(v); setPage(0);
+    trackEvent({ name: "sort_changed", value: v, page: "/products" });
+  }, []);
+  const onPageChange = useCallback((n: number) => {
+    setPage(n);
+    trackEvent({ name: "page_changed", value: n + 1, page: "/products" });
+  }, []);
+
   // Active-filter chips model — rendered above the grid so shoppers always see
   // (and can dismiss) each filter they've applied. Mirrors Takealot/Amazon.
-  type Chip = { key: string; label: string; clear: () => void };
+  // Every clear() emits an "active_filter_chip_dismissed" event for analytics.
+  type Chip = { key: string; label: string; ariaLabel: string; clear: () => void };
+  const chip = (key: Chip["key"], label: string, clear: () => void): Chip => ({
+    key,
+    label,
+    ariaLabel: `Remove filter: ${label}`,
+    clear: () => {
+      trackEvent({ name: "active_filter_chip_dismissed", key, label, page: "/products" });
+      clear();
+    },
+  });
   const activeChips: Chip[] = [];
-  if (query) activeChips.push({ key: "q", label: `“${query}”`, clear: () => { setSearchInput(""); setQuery(""); setPage(0); setSearchParams({}); } });
-  if (category) activeChips.push({ key: "cat", label: category, clear: () => { setCategory(""); setPage(0); } });
-  if (brand) activeChips.push({ key: "brand", label: brand, clear: () => { setBrand(""); setPage(0); } });
-  if (aiOnly) activeChips.push({ key: "ai", label: "AI ready", clear: () => { setAiOnly(false); setPage(0); } });
-  if (inStockOnly) activeChips.push({ key: "stock", label: "In stock", clear: () => { setInStockOnly(false); setPage(0); } });
-  if (includeBusiness) activeChips.push({ key: "biz", label: "Incl. business", clear: () => { setIncludeBusiness(false); setPage(0); } });
-  if (minPrice) activeChips.push({ key: "min", label: `Min ${formatMoney(Number(minPrice))}`, clear: () => { setMinPrice(""); setPage(0); } });
-  if (maxPrice) activeChips.push({ key: "max", label: `Max ${formatMoney(Number(maxPrice))}`, clear: () => { setMaxPrice(""); setPage(0); } });
+  if (query) activeChips.push(chip("q", `“${query}”`, () => { setSearchInput(""); setQuery(""); setPage(0); }));
+  if (category) activeChips.push(chip("cat", category, () => { setCategory(""); setPage(0); }));
+  if (brand) activeChips.push(chip("brand", brand, () => { setBrand(""); setPage(0); }));
+  if (aiOnly) activeChips.push(chip("ai", "AI ready", () => { setAiOnly(false); setPage(0); }));
+  if (inStockOnly) activeChips.push(chip("stock", "In stock", () => { setInStockOnly(false); setPage(0); }));
+  if (includeBusiness) activeChips.push(chip("biz", "Incl. business", () => { setIncludeBusiness(false); setPage(0); }));
+  if (minPrice) activeChips.push(chip("min", `Min ${formatMoney(Number(minPrice))}`, () => { setMinPrice(""); setPage(0); }));
+  if (maxPrice) activeChips.push(chip("max", `Max ${formatMoney(Number(maxPrice))}`, () => { setMaxPrice(""); setPage(0); }));
 
 
 

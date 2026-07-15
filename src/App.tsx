@@ -71,7 +71,7 @@ const App = () => (
                     <Route path="/account" element={<StorefrontLayout><Account /></StorefrontLayout>} />
                     <Route path="/auth" element={<StorefrontLayout><Auth /></StorefrontLayout>} />
                     <Route path="/reset-password" element={<StorefrontLayout><ResetPassword /></StorefrontLayout>} />
-                    <Route path="/procurement" element={<StorefrontLayout><Procurement /></StorefrontLayout>} />
+                    <Route path="/procurement" element={<StorefrontLayout><AudienceGuard allow="business"><Procurement /></AudienceGuard></StorefrontLayout>} />
                     <Route path="/ai-pulse" element={<StorefrontLayout><AiPulse /></StorefrontLayout>} />
                     <Route path="/compliance" element={<StorefrontLayout><Compliance /></StorefrontLayout>} />
                     <Route path="/admin" element={<Admin />} />

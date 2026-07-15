@@ -311,57 +311,21 @@ const Products = () => {
     return nums;
   }, [page, totalPages]);
 
-  // Renders a facet <select> with skeleton, error fallback, and empty states so
-  // the dropdowns are always meaningful even if RPC + cache both fail.
-  const renderFacetSelect = (
-    kind: "category" | "brand",
-    value: string,
-    onChange: (v: string) => void,
-  ) => {
-    const options = kind === "category" ? facets.categories : facets.brands;
-    const allLabel = kind === "category" ? "All categories" : "All brands";
-    if (facetsLoading && options.length === 0) {
-      return (
-        <div
-          role="status"
-          aria-label={`Loading ${kind} options`}
-          className="h-11 w-full rounded-lg bg-muted animate-pulse"
-        />
-      );
-    }
-    return (
-      <div className="space-y-1.5">
-        <select
-          value={value}
-          onChange={(e) => { onChange(e.target.value); setPage(0); }}
-          className="input-premium"
-          aria-invalid={facetsError && options.length === 0 ? true : undefined}
-        >
-          <option value="">{allLabel}</option>
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.value}{o.count ? ` (${fmtCount(o.count)})` : ""}
-            </option>
-          ))}
-          {value && !options.some((o) => o.value === value) && (
-            <option value={value}>{value}</option>
-          )}
-        </select>
-        {facetsError && options.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Filter options couldn’t load.{" "}
-            <button
-              type="button"
-              onClick={() => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); }}
-              className="underline hover:text-foreground"
-            >
-              Retry
-            </button>
-          </p>
-        )}
-      </div>
-    );
-  };
+  const onRetryFacets = () => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); };
+
+  // Active-filter chips model — rendered above the grid so shoppers always see
+  // (and can dismiss) each filter they've applied. Mirrors Takealot/Amazon.
+  type Chip = { key: string; label: string; clear: () => void };
+  const activeChips: Chip[] = [];
+  if (query) activeChips.push({ key: "q", label: `“${query}”`, clear: () => { setSearchInput(""); setQuery(""); setPage(0); setSearchParams({}); } });
+  if (category) activeChips.push({ key: "cat", label: category, clear: () => { setCategory(""); setPage(0); } });
+  if (brand) activeChips.push({ key: "brand", label: brand, clear: () => { setBrand(""); setPage(0); } });
+  if (aiOnly) activeChips.push({ key: "ai", label: "AI ready", clear: () => { setAiOnly(false); setPage(0); } });
+  if (inStockOnly) activeChips.push({ key: "stock", label: "In stock", clear: () => { setInStockOnly(false); setPage(0); } });
+  if (includeBusiness) activeChips.push({ key: "biz", label: "Incl. business", clear: () => { setIncludeBusiness(false); setPage(0); } });
+  if (minPrice) activeChips.push({ key: "min", label: `Min ${formatMoney(Number(minPrice))}`, clear: () => { setMinPrice(""); setPage(0); } });
+  if (maxPrice) activeChips.push({ key: "max", label: `Max ${formatMoney(Number(maxPrice))}`, clear: () => { setMaxPrice(""); setPage(0); } });
+
 
 
   return (

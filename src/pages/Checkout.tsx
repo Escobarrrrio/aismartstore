@@ -168,12 +168,21 @@ const Checkout = () => {
         })
         .select().single();
 
-      if (orderError || !order) throw new Error(orderError?.message || "Failed to create order");
+      if (orderError || !order) {
+        captureOrderError(orderError || new Error("Order insert returned no row"), {
+          stage: "orders.insert", email: form.email, total: grandTotal,
+        });
+        throw new Error(orderError?.message || "Failed to create order");
+      }
 
       const orderItems = items.map(({ product, quantity }) => ({
         order_id: order.id, product_id: product.id, quantity, unit_price: product.price,
       }));
-      await supabase.from("order_items").insert(orderItems);
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+      if (itemsError) {
+        captureOrderError(itemsError, { stage: "order_items.insert", orderId: order.id, itemCount: orderItems.length });
+        throw new Error(itemsError.message);
+      }
 
       const baseUrl = window.location.origin;
       const isInternational = currency !== "ZAR";
@@ -198,15 +207,22 @@ const Checkout = () => {
         }
       );
 
-      if (fnError || !checkoutData?.redirectUrl) throw new Error(fnError?.message || checkoutData?.error || "Payment gateway error.");
+      if (fnError || !checkoutData?.redirectUrl) {
+        capturePaymentError(fnError || new Error(checkoutData?.error || "No redirect URL from gateway"), {
+          provider: isInternational ? "paypal" : "yoco", orderId: order.id, amount: chargeAmount, currency,
+        });
+        throw new Error(fnError?.message || checkoutData?.error || "Payment gateway error.");
+      }
       if (!isInternational) {
         // Yoco confirms via redirect status. PayPal confirms via the
         // capture step on return instead (see the paypal_return handler
         // above), which is where notify-order fires for PayPal orders.
-        await supabase.functions.invoke("notify-order", { body: { orderId: order.id } });
+        const { error: notifyError } = await supabase.functions.invoke("notify-order", { body: { orderId: order.id } });
+        if (notifyError) captureOrderError(notifyError, { stage: "notify-order", orderId: order.id });
       }
       window.location.href = checkoutData.redirectUrl;
     } catch (err: any) {
+      captureCheckoutError(err, { email: form.email, total: grandTotal, currency });
       toast({ title: t("checkout.errorTitle"), description: err.message, variant: "destructive" });
       setProcessing(false);
     }

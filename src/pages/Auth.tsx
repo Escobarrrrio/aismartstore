@@ -59,6 +59,7 @@ const Auth = () => {
   const [vatNotRegistered, setVatNotRegistered] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -91,6 +92,7 @@ const Auth = () => {
   };
 
   const handleSignUp = async () => {
+    setFieldErrors({});
     if (!accountType) {
       toast({
         title: "Choose an account type",
@@ -99,39 +101,30 @@ const Auth = () => {
       });
       return;
     }
-    if (!isValidSaId(idNumber)) {
-      toast({
-        title: "Invalid South African ID number",
-        description: "Your SA ID number must be exactly 13 digits.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!name.trim() || !phone.trim()) {
-      toast({
-        title: "Missing details",
-        description: "Full name and phone number are required.",
-        variant: "destructive",
-      });
-      return;
-    }
+
+    // Field-level validation — each error is attached to the specific input
+    // so users see exactly what to fix, without needing to read a toast.
+    const errs: Record<string, string> = {};
+    if (!name.trim()) errs.name = "Full name is required.";
+    if (!phone.trim()) errs.phone = "Phone number is required.";
+    else if (!isValidPhone(phone)) errs.phone = "Enter a valid South African phone (e.g. +27 82 123 4567 or 082 123 4567).";
+    if (!idNumber.trim()) errs.idNumber = "SA ID number is required.";
+    else if (!isValidSaId(idNumber)) errs.idNumber = `ID number must be exactly 13 digits (you entered ${idNumber.trim().length}).`;
     if (accountType === "business") {
-      if (!companyName.trim()) {
-        toast({
-          title: "Company name required",
-          description: "Business and government accounts must provide the registered entity name.",
-          variant: "destructive",
-        });
-        return;
+      if (!companyName.trim()) errs.companyName = "Registered company / entity name is required.";
+      if (!vatNotRegistered) {
+        if (!vatNumber.trim()) errs.vatNumber = "Enter your VAT number, or tick 'not yet registered'.";
+        else if (!isValidVat(vatNumber)) errs.vatNumber = "SA VAT numbers are 10 digits starting with 4 (e.g. 4123456789).";
       }
-      if (!vatNotRegistered && !vatNumber.trim()) {
-        toast({
-          title: "VAT number required",
-          description: "Enter your VAT number, or tick 'not yet registered' if applicable.",
-          variant: "destructive",
-        });
-        return;
-      }
+    }
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      toast({
+        title: "Please fix the highlighted fields",
+        description: "Some details need attention before we can create your account.",
+        variant: "destructive",
+      });
+      return;
     }
 
     const { data, error } = await supabase.auth.signUp({

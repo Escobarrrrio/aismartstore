@@ -874,6 +874,7 @@ export type Database = {
       }
       products: {
         Row: {
+          audience: string
           brand: string | null
           brand_id: string | null
           category: string | null
@@ -897,6 +898,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audience?: string
           brand?: string | null
           brand_id?: string | null
           category?: string | null
@@ -920,6 +922,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audience?: string
           brand?: string | null
           brand_id?: string | null
           category?: string | null
@@ -988,6 +991,7 @@ export type Database = {
           customer_type: string
           email: string | null
           id: string
+          id_number: string | null
           last_login_at: string | null
           marketing_opt_in: boolean
           name: string | null
@@ -1010,6 +1014,7 @@ export type Database = {
           customer_type?: string
           email?: string | null
           id?: string
+          id_number?: string | null
           last_login_at?: string | null
           marketing_opt_in?: boolean
           name?: string | null
@@ -1032,6 +1037,7 @@ export type Database = {
           customer_type?: string
           email?: string | null
           id?: string
+          id_number?: string | null
           last_login_at?: string | null
           marketing_opt_in?: boolean
           name?: string | null

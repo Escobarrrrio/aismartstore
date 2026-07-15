@@ -8,6 +8,9 @@ import DashboardModule from "@/components/admin/DashboardModule";
 import ProductsModule from "@/components/admin/ProductsModule";
 import ImportModule from "@/components/admin/ImportModule";
 import OrdersModule from "@/components/admin/OrdersModule";
+import OrderDiagnosticsModule from "@/components/admin/OrderDiagnosticsModule";
+import YocoHealthModule from "@/components/admin/YocoHealthModule";
+
 import CustomersModule from "@/components/admin/CustomersModule";
 import SupportModule from "@/components/admin/SupportModule";
 import SettingsModule from "@/components/admin/SettingsModule";

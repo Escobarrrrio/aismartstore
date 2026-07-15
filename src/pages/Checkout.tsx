@@ -115,6 +115,7 @@ const Checkout = () => {
       setRetryCount((c) => c + 1);
       window.location.href = data.redirectUrl;
     } catch (err: any) {
+      capturePaymentError(err, { provider: "yoco", flow: "retry", orderId: failedOrderId, attempt: retryCount + 1 });
       toast({ title: "Retry failed", description: err.message, variant: "destructive" });
       setRetrying(false);
     }

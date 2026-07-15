@@ -66,6 +66,7 @@ const HeaderSearch = ({ className = "", autoFocus, onClose, fullWidth }: Props) 
               .from("products")
               .select("id, name, price, images, sku")
               .eq("is_active", true)
+              .eq("audience", "residential")
               .ilike("sku", `%${q}%`)
               .limit(5)
           : Promise.resolve({ data: [], error: null } as any),

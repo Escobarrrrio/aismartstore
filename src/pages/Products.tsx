@@ -241,12 +241,7 @@ const Products = () => {
 
   const buildRpcArgs = useCallback((pageIndex: number) => {
     const min = minPrice ? Number(minPrice) : null;
-    let max = maxPrice ? Number(maxPrice) : null;
-    // Consumer catalogue: cap price unless the user opts into business items,
-    // or explicitly sets a higher max. Keeps enterprise SKUs on /procurement.
-    if (!includeBusiness) {
-      max = max !== null ? Math.min(max, BUSINESS_PRICE_THRESHOLD) : BUSINESS_PRICE_THRESHOLD;
-    }
+    const max = maxPrice ? Number(maxPrice) : null;
     return {
       search_query: query,
       filter_category: category || null,
@@ -258,8 +253,11 @@ const Products = () => {
       sort_by: sort,
       page_number: pageIndex,
       page_size: PAGE_SIZE,
+      // Residential storefront only. The Business/Government portal
+      // (/procurement) explicitly requests filter_audience: 'business'.
+      filter_audience: "residential",
     };
-  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort]);
+  }, [query, category, brand, aiOnly, inStockOnly, minPrice, maxPrice, sort]);
 
   const cacheKey = useCallback((pageIndex: number) =>
     JSON.stringify(buildRpcArgs(pageIndex)), [buildRpcArgs]);

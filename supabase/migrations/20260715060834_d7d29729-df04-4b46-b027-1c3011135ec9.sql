@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.recategorize_batch(integer) FROM authenticated;

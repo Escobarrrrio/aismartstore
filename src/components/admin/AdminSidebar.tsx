@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Users, HeadphonesIcon,
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
-  HardDrive, Wrench, Search, Mail
+  HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard
 } from "lucide-react";
 import Logo from "@/components/Logo";
 
@@ -12,7 +12,9 @@ export type AdminTab =
   | "settings" | "system-health" | "security" | "cost-usage"
   | "integrations" | "backups" | "catalog-health"
   | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
-  | "compliance-audit" | "business-signups";
+  | "compliance-audit" | "business-signups"
+  | "order-diagnostics" | "yoco-health";
+
 
 interface AdminSidebarProps {
   activeTab: AdminTab;

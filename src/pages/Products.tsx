@@ -685,7 +685,7 @@ const Products = () => {
               {totalPages > 1 && (
                 <nav className="flex items-center justify-center gap-2 mt-10" aria-label="Pagination">
                   <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    onClick={() => onPageChange(Math.max(0, page - 1))}
                     disabled={page === 0}
                     className="btn-ghost px-3 py-2 text-sm disabled:opacity-40"
                   >
@@ -693,14 +693,15 @@ const Products = () => {
                   </button>
                   {pageNumbers[0] > 0 && (
                     <>
-                      <button onClick={() => setPage(0)} className="btn-ghost px-3 py-2 text-sm">1</button>
+                      <button onClick={() => onPageChange(0)} className="btn-ghost px-3 py-2 text-sm">1</button>
                       {pageNumbers[0] > 1 && <span className="px-2 text-muted-foreground">…</span>}
                     </>
                   )}
                   {pageNumbers.map((n) => (
                     <button
                       key={n}
-                      onClick={() => setPage(n)}
+                      onClick={() => onPageChange(n)}
+                      aria-current={n === page ? "page" : undefined}
                       className={`px-3 py-2 text-sm rounded-lg font-semibold ${
                         n === page ? "gradient-brand text-white" : "hover:bg-muted"
                       }`}
@@ -711,11 +712,11 @@ const Products = () => {
                   {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
                     <>
                       {pageNumbers[pageNumbers.length - 1] < totalPages - 2 && <span className="px-2 text-muted-foreground">…</span>}
-                      <button onClick={() => setPage(totalPages - 1)} className="btn-ghost px-3 py-2 text-sm">{totalPages}</button>
+                      <button onClick={() => onPageChange(totalPages - 1)} className="btn-ghost px-3 py-2 text-sm">{totalPages}</button>
                     </>
                   )}
                   <button
-                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                    onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
                     disabled={page >= totalPages - 1}
                     className="btn-ghost px-3 py-2 text-sm disabled:opacity-40"
                   >

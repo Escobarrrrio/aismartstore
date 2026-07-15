@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import MobileFilterSheet from "@/components/products/MobileFilterSheet";
+import FacetList from "@/components/products/FacetList";
 import SEO from "@/components/SEO";
-import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Sparkles, PackageCheck } from "lucide-react";
 import type { Product } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
@@ -11,7 +12,7 @@ import { formatMoney } from "@/lib/currency";
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 48;
 // Enterprise / procurement-tier items (workstations, GPUs, rack gear) live on
 // the /procurement page. The consumer catalogue defaults to items priced below
 // this threshold; users can opt in via the "Include business items" toggle.

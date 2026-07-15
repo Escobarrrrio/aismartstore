@@ -39,17 +39,36 @@ function buildOwnerHtml(order: any, itemRows: string) {
   </div>`;
 }
 
+function estimatedDeliveryWindow(order: any): { label: string; from: Date; to: Date } {
+  // Business-day ETA: 2 days processing + 3–5 day courier for ZA metros.
+  // If any item is out of stock, add a 3–7 day backorder window.
+  const items = (order.order_items || []) as any[];
+  const anyBackorder = items.some((i) => (i.products?.stock_quantity ?? 0) < i.quantity);
+  const start = new Date();
+  const addDays = (d: Date, n: number) => { const c = new Date(d); c.setDate(c.getDate() + n); return c; };
+  const from = addDays(start, anyBackorder ? 5 : 2);
+  const to = addDays(start, anyBackorder ? 12 : 7);
+  const fmt = (d: Date) => d.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
+  return { label: `${fmt(from)} – ${fmt(to)}${anyBackorder ? " (backorder)" : ""}`, from, to };
+}
+
 function buildCustomerHtml(order: any, itemRows: string) {
+  const eta = estimatedDeliveryWindow(order);
   return `
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:640px;margin:0 auto;padding:24px;color:#0f172a">
     <h1 style="font-size:22px;margin:0 0 8px">Thank you for your order, ${escapeHtml(order.customer_name ?? "")}</h1>
-    <p style="color:#475569;margin:0 0 24px">We've received your order <strong>${escapeHtml(order.id)}</strong> and will email you again once it ships.</p>
+    <p style="color:#475569;margin:0 0 20px">We've received your order <strong>#${escapeHtml(String(order.id).slice(0, 8))}</strong> and it's now being prepared.</p>
+    <div style="background:#f1f5f9;border-radius:10px;padding:14px 16px;margin:0 0 20px">
+      <p style="margin:0 0 4px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.06em"><strong>Estimated delivery</strong></p>
+      <p style="margin:0;font-size:16px;font-weight:600">${escapeHtml(eta.label)}</p>
+      <p style="margin:6px 0 0;font-size:12px;color:#64748b">Shipping to: ${escapeHtml(order.address ?? "")}, ${escapeHtml(order.city ?? "")} ${escapeHtml(order.postal_code ?? "")}</p>
+    </div>
     <table style="width:100%;border-collapse:collapse;border-top:1px solid #e2e8f0">
       <thead><tr><th align="left" style="padding:8px 0">Item</th><th align="right" style="padding:8px 0">Qty</th><th align="right" style="padding:8px 0">Price</th></tr></thead>
       <tbody>${itemRows}</tbody>
     </table>
     <p style="margin-top:24px;font-size:18px"><strong>Total: ${escapeHtml(formatZAR(Number(order.total_amount)))}</strong></p>
-    <p style="color:#64748b;font-size:13px;margin-top:32px">If you have any questions, just reply to this email.</p>
+    <p style="color:#64748b;font-size:13px;margin-top:32px">If you have any questions, just reply to this email — we're here to help.</p>
   </div>`;
 }
 

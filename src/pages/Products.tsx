@@ -544,7 +544,8 @@ const Products = () => {
               {searchInput && (
                 <button
                   type="button"
-                  onClick={() => { setSearchInput(""); setQuery(""); setPage(0); setSearchParams({}); }}
+                  aria-label="Clear search"
+                  onClick={() => { setSearchInput(""); setQuery(""); setPage(0); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
@@ -554,18 +555,22 @@ const Products = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
+                aria-label={`Open filters${activeFilters > 0 ? ` (${activeFilters} active)` : ""}`}
+                aria-expanded={showFilters}
                 className={`btn-secondary px-4 py-3 text-sm lg:hidden ${showFilters ? 'border-primary bg-primary/[0.04]' : ''}`}
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 Filters
                 {activeFilters > 0 && (
-                  <span className="ml-1 w-5 h-5 rounded-full gradient-brand text-white text-xs flex items-center justify-center">{activeFilters}</span>
+                  <span className="ml-1 w-5 h-5 rounded-full gradient-brand text-white text-xs flex items-center justify-center" aria-hidden="true">{activeFilters}</span>
                 )}
               </button>
               <div className="relative">
+                <label htmlFor="products-sort" className="sr-only">Sort products</label>
                 <select
+                  id="products-sort"
                   value={sort}
-                  onChange={(e) => { setSort(e.target.value as SortOption); setPage(0); }}
+                  onChange={(e) => onSortChange(e.target.value as SortOption)}
                   className="input-premium pr-10 appearance-none cursor-pointer min-w-[180px]"
                 >
                   <option value="relevance">Relevance</option>

@@ -305,10 +305,10 @@ const Auth = () => {
 
             {mode === "signup" && (
               <>
-                <FieldWithIcon icon={User} label="Full name" value={name} onChange={setName} placeholder="Jane Doe" required />
+                <FieldWithIcon icon={User} label="Full name" value={name} onChange={setName} placeholder="Jane Doe" required error={fieldErrors.name} testId="signup-name" />
                 {accountType === "business" && (
                   <>
-                    <FieldWithIcon icon={Building2} label="Registered company / entity name" value={companyName} onChange={setCompanyName} placeholder="Acme (Pty) Ltd" required />
+                    <FieldWithIcon icon={Building2} label="Registered company / entity name" value={companyName} onChange={setCompanyName} placeholder="Acme (Pty) Ltd" required error={fieldErrors.companyName} testId="signup-company" />
                     <div>
                       <label className="block text-xs font-semibold mb-1.5">VAT number</label>
                       <input
@@ -317,13 +317,22 @@ const Auth = () => {
                         onChange={(e) => setVatNumber(e.target.value)}
                         disabled={vatNotRegistered}
                         placeholder="4XXXXXXXXX"
-                        className="w-full px-4 py-2.5 rounded-lg border border-input bg-muted text-foreground focus:border-secondary focus:bg-card focus:ring-2 focus:ring-secondary/10 outline-none transition text-sm disabled:opacity-50"
+                        aria-invalid={!!fieldErrors.vatNumber}
+                        data-testid="signup-vat"
+                        className={`w-full px-4 py-2.5 rounded-lg border bg-muted text-foreground focus:bg-card focus:ring-2 outline-none transition text-sm disabled:opacity-50 ${
+                          fieldErrors.vatNumber
+                            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+                            : "border-input focus:border-secondary focus:ring-secondary/10"
+                        }`}
                       />
+                      {fieldErrors.vatNumber && (
+                        <p role="alert" className="text-[11px] text-destructive mt-1">{fieldErrors.vatNumber}</p>
+                      )}
                       <label className="flex items-center gap-2 mt-2 text-xs text-muted-foreground cursor-pointer">
                         <input
                           type="checkbox"
                           checked={vatNotRegistered}
-                          onChange={(e) => setVatNotRegistered(e.target.checked)}
+                          onChange={(e) => { setVatNotRegistered(e.target.checked); if (e.target.checked) setFieldErrors((p) => ({ ...p, vatNumber: "" })); }}
                           className="accent-primary"
                         />
                         Not yet registered for VAT
@@ -331,8 +340,11 @@ const Auth = () => {
                     </div>
                   </>
                 )}
-                <FieldWithIcon icon={Phone} label="Phone number" value={phone} onChange={setPhone} placeholder="+27 82 123 4567" type="tel" required />
-                <FieldWithIcon icon={IdCard} label="South African ID number (13 digits)" value={idNumber} onChange={(v) => setIdNumber(v.replace(/\D/g, "").slice(0, 13))} placeholder="0000000000000" required />
+                <FieldWithIcon icon={Phone} label="Phone number" value={phone} onChange={setPhone} placeholder="+27 82 123 4567" type="tel" required error={fieldErrors.phone} testId="signup-phone" />
+                <FieldWithIcon icon={IdCard} label="South African ID number (13 digits)" value={idNumber} onChange={(v) => setIdNumber(v.replace(/\D/g, "").slice(0, 13))} placeholder="0000000000000" required error={fieldErrors.idNumber} testId="signup-id" />
+                {idNumber.length > 0 && idNumber.length < 13 && !fieldErrors.idNumber && (
+                  <p className="text-[11px] text-muted-foreground -mt-2">{13 - idNumber.length} more digit{13 - idNumber.length === 1 ? "" : "s"} to go.</p>
+                )}
               </>
             )}
 
@@ -380,7 +392,7 @@ const Auth = () => {
 
 // Small helper to keep the form JSX flat & consistent.
 const FieldWithIcon = ({
-  icon: Icon, label, value, onChange, placeholder, type = "text", required, minLength,
+  icon: Icon, label, value, onChange, placeholder, type = "text", required, minLength, error, testId,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -390,6 +402,8 @@ const FieldWithIcon = ({
   type?: string;
   required?: boolean;
   minLength?: number;
+  error?: string;
+  testId?: string;
 }) => (
   <div>
     <label className="block text-xs font-semibold mb-1.5">{label}</label>
@@ -402,9 +416,16 @@ const FieldWithIcon = ({
         required={required}
         minLength={minLength}
         placeholder={placeholder}
-        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-muted text-foreground focus:border-secondary focus:bg-card focus:ring-2 focus:ring-secondary/10 outline-none transition text-sm"
+        aria-invalid={!!error}
+        data-testid={testId}
+        className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-muted text-foreground focus:bg-card focus:ring-2 outline-none transition text-sm ${
+          error
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+            : "border-input focus:border-secondary focus:ring-secondary/10"
+        }`}
       />
     </div>
+    {error && <p role="alert" className="text-[11px] text-destructive mt-1">{error}</p>}
   </div>
 );
 

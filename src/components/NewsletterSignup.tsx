@@ -102,7 +102,7 @@ const NewsletterSignup = ({ source = "footer", variant = "footer" }: NewsletterS
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-background/[0.06] border border-background/10 text-background text-sm placeholder:text-background/30 focus:border-primary/50 outline-none transition"
+            className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-background/[0.08] border border-background/20 text-background text-sm placeholder:text-background/70 focus:border-primary outline-none transition"
           />
         </div>
         <button

@@ -287,7 +287,7 @@ const Index = () => {
             {["Dell", "HP", "Lenovo", "Cisco", "Microsoft", "Intel", "AMD", "NVIDIA"].map((brand) => (
               <span
                 key={brand}
-                className="font-display font-bold text-lg text-muted-foreground/70 hover:text-foreground transition-colors cursor-default"
+                className="font-display font-bold text-lg text-foreground/80 hover:text-foreground transition-colors cursor-default"
               >
                 {brand}
               </span>

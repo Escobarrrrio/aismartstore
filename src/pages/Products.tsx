@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import MobileFilterSheet from "@/components/products/MobileFilterSheet";
+import FacetList from "@/components/products/FacetList";
 import SEO from "@/components/SEO";
-import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Sparkles, PackageCheck } from "lucide-react";
 import type { Product } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
@@ -11,7 +12,7 @@ import { formatMoney } from "@/lib/currency";
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 48;
 // Enterprise / procurement-tier items (workstations, GPUs, rack gear) live on
 // the /procurement page. The consumer catalogue defaults to items priced below
 // this threshold; users can opt in via the "Include business items" toggle.
@@ -310,57 +311,21 @@ const Products = () => {
     return nums;
   }, [page, totalPages]);
 
-  // Renders a facet <select> with skeleton, error fallback, and empty states so
-  // the dropdowns are always meaningful even if RPC + cache both fail.
-  const renderFacetSelect = (
-    kind: "category" | "brand",
-    value: string,
-    onChange: (v: string) => void,
-  ) => {
-    const options = kind === "category" ? facets.categories : facets.brands;
-    const allLabel = kind === "category" ? "All categories" : "All brands";
-    if (facetsLoading && options.length === 0) {
-      return (
-        <div
-          role="status"
-          aria-label={`Loading ${kind} options`}
-          className="h-11 w-full rounded-lg bg-muted animate-pulse"
-        />
-      );
-    }
-    return (
-      <div className="space-y-1.5">
-        <select
-          value={value}
-          onChange={(e) => { onChange(e.target.value); setPage(0); }}
-          className="input-premium"
-          aria-invalid={facetsError && options.length === 0 ? true : undefined}
-        >
-          <option value="">{allLabel}</option>
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.value}{o.count ? ` (${fmtCount(o.count)})` : ""}
-            </option>
-          ))}
-          {value && !options.some((o) => o.value === value) && (
-            <option value={value}>{value}</option>
-          )}
-        </select>
-        {facetsError && options.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Filter options couldn’t load.{" "}
-            <button
-              type="button"
-              onClick={() => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); }}
-              className="underline hover:text-foreground"
-            >
-              Retry
-            </button>
-          </p>
-        )}
-      </div>
-    );
-  };
+  const onRetryFacets = () => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); };
+
+  // Active-filter chips model — rendered above the grid so shoppers always see
+  // (and can dismiss) each filter they've applied. Mirrors Takealot/Amazon.
+  type Chip = { key: string; label: string; clear: () => void };
+  const activeChips: Chip[] = [];
+  if (query) activeChips.push({ key: "q", label: `“${query}”`, clear: () => { setSearchInput(""); setQuery(""); setPage(0); setSearchParams({}); } });
+  if (category) activeChips.push({ key: "cat", label: category, clear: () => { setCategory(""); setPage(0); } });
+  if (brand) activeChips.push({ key: "brand", label: brand, clear: () => { setBrand(""); setPage(0); } });
+  if (aiOnly) activeChips.push({ key: "ai", label: "AI ready", clear: () => { setAiOnly(false); setPage(0); } });
+  if (inStockOnly) activeChips.push({ key: "stock", label: "In stock", clear: () => { setInStockOnly(false); setPage(0); } });
+  if (includeBusiness) activeChips.push({ key: "biz", label: "Incl. business", clear: () => { setIncludeBusiness(false); setPage(0); } });
+  if (minPrice) activeChips.push({ key: "min", label: `Min ${formatMoney(Number(minPrice))}`, clear: () => { setMinPrice(""); setPage(0); } });
+  if (maxPrice) activeChips.push({ key: "max", label: `Max ${formatMoney(Number(maxPrice))}`, clear: () => { setMaxPrice(""); setPage(0); } });
+
 
 
   return (
@@ -400,52 +365,77 @@ const Products = () => {
       <div className="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
         {/* Filter sidebar (desktop) */}
         <aside className="hidden lg:block">
-          <div className="card-flat p-5 sticky top-24 space-y-5">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Category</label>
-              {renderFacetSelect("category", category, setCategory)}
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Brand</label>
-              {renderFacetSelect("brand", brand, setBrand)}
-            </div>
+          <div className="card-flat p-5 sticky top-24 space-y-5 max-h-[calc(100vh-7rem)] overflow-y-auto">
+            <FacetList
+              label="Category"
+              options={facets.categories}
+              selected={category}
+              onSelect={(v) => { setCategory(v); setPage(0); }}
+              loading={facetsLoading}
+              error={facetsError}
+              onRetry={onRetryFacets}
+              initialVisible={10}
+            />
+            <FacetList
+              label="Brand"
+              options={facets.brands}
+              selected={brand}
+              onSelect={(v) => { setBrand(v); setPage(0); }}
+              loading={facetsLoading}
+              error={facetsError}
+              onRetry={onRetryFacets}
+              initialVisible={8}
+            />
 
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Price (ZAR)</label>
               <div className="flex gap-2">
                 <input type="number" min="0" placeholder="Min" value={minPrice}
                   onChange={(e) => { setMinPrice(e.target.value); setPage(0); }}
-                  className="input-premium" />
+                  className="input-premium" aria-label="Minimum price" />
                 <input type="number" min="0" placeholder="Max" value={maxPrice}
                   onChange={(e) => { setMaxPrice(e.target.value); setPage(0); }}
-                  className="input-premium" />
+                  className="input-premium" aria-label="Maximum price" />
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {[500, 2000, 5000, 10000].map((p) => (
+                  <button key={p} type="button"
+                    onClick={() => { setMaxPrice(String(p)); setPage(0); }}
+                    className="text-[11px] px-2 py-1 rounded-full border border-input hover:border-primary hover:text-primary transition-colors">
+                    Under R{p.toLocaleString("en-ZA")}
+                  </button>
+                ))}
               </div>
             </div>
-            <label className="flex items-center gap-3 cursor-pointer text-sm">
-              <input type="checkbox" checked={aiOnly} onChange={(e) => { setAiOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
-              AI products only
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer text-sm">
-              <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
-              In stock only
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer text-sm border-t border-border pt-4">
-              <input
-                type="checkbox"
-                checked={includeBusiness}
-                onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
-                className="w-4 h-4 accent-primary mt-0.5"
-                data-testid="include-business-toggle"
-                aria-label="Include business items"
-              />
-              <span>
-                Include business items
-                <span className="block text-xs text-muted-foreground mt-0.5">
-                  Enterprise gear ({formatMoney(BUSINESS_PRICE_THRESHOLD)}+) lives on the{" "}
-                  <a href="/procurement" className="text-primary hover:underline">procurement</a> page.
+
+            <div className="border-t border-border pt-4 space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer text-sm">
+                <input type="checkbox" checked={aiOnly} onChange={(e) => { setAiOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
+                <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> AI products only</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer text-sm">
+                <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
+                In stock only
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeBusiness}
+                  onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
+                  className="w-4 h-4 accent-primary mt-0.5"
+                  data-testid="include-business-toggle"
+                  aria-label="Include business items"
+                />
+                <span>
+                  <span className="inline-flex items-center gap-1.5"><PackageCheck className="h-3.5 w-3.5" /> Include business items</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5">
+                    Enterprise gear ({formatMoney(BUSINESS_PRICE_THRESHOLD)}+) lives on the{" "}
+                    <a href="/procurement" className="text-primary hover:underline">procurement</a> page.
+                  </span>
                 </span>
-              </span>
-            </label>
+              </label>
+            </div>
+
             <button
               onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
               disabled={activeFilters === 0 && !query}
@@ -456,6 +446,7 @@ const Products = () => {
             </button>
           </div>
         </aside>
+
 
         <div>
           {/* Search + sort controls */}
@@ -537,12 +528,37 @@ const Products = () => {
           />
 
 
+          {/* Active filter chips — Takealot-style dismissible pills */}
+          {activeChips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-5" aria-label="Active filters">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Filters:</span>
+              {activeChips.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={c.clear}
+                  className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary/[0.08] text-primary text-xs font-medium hover:bg-primary/[0.14] transition-colors"
+                >
+                  {c.label}
+                  <X className="h-3 w-3" />
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+                className="text-xs text-muted-foreground hover:text-foreground underline ml-1"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
           {/* Grid */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[...Array(6)].map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(12)].map((_, i) => (
                 <div key={i} className="card-flat overflow-hidden animate-pulse">
-                  <div className="aspect-[4/3] bg-muted" />
+                  <div className="aspect-square bg-muted" />
                   <div className="p-4 space-y-3">
                     <div className="h-3 bg-muted rounded w-1/4" />
                     <div className="h-4 bg-muted rounded w-3/4" />
@@ -569,9 +585,10 @@ const Products = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {rows.map((p) => <ProductCard key={p.id} product={p} />)}
               </div>
+
 
               {/* Pagination */}
               {totalPages > 1 && (

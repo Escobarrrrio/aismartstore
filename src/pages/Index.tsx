@@ -25,8 +25,8 @@ const Index = () => {
         .from("products")
         .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
         .eq("is_active", true)
+        .eq("audience", "residential")
         .eq("is_ai_product", true)
-        .lte("price", 15000)
         .not("images", "is", null)
         .order("created_at", { ascending: false })
         .limit(16);
@@ -53,7 +53,8 @@ const Index = () => {
       const { count } = await supabase
         .from("products")
         .select("id", { count: "exact", head: true })
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .eq("audience", "residential");
       if (typeof count === "number") setCatalogCount(count);
     })();
   }, []);

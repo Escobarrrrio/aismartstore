@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
 
     const [{ data: emailSetting }, { data: order }] = await Promise.all([
       supabase.from("store_settings").select("value").eq("key", "notification_email").maybeSingle(),
-      supabase.from("orders").select("*, order_items(*, products(name))").eq("id", orderId).maybeSingle(),
+      supabase.from("orders").select("*, order_items(*, products(name, stock_quantity))").eq("id", orderId).maybeSingle(),
     ]);
 
     if (!order) {

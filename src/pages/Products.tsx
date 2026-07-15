@@ -600,38 +600,43 @@ const Products = () => {
             inStockOnly={inStockOnly}
             includeBusiness={includeBusiness}
             sort={sort}
-            setCategory={(v) => { setCategory(v); setPage(0); }}
-            setBrand={(v) => { setBrand(v); setPage(0); }}
+            setCategory={onCategoryChange}
+            setBrand={onBrandChange}
             setMinPrice={(v) => { setMinPrice(v); setPage(0); }}
             setMaxPrice={(v) => { setMaxPrice(v); setPage(0); }}
             setAiOnly={(v) => { setAiOnly(v); setPage(0); }}
             setInStockOnly={(v) => { setInStockOnly(v); setPage(0); }}
             setIncludeBusiness={(v) => { setIncludeBusiness(v); setPage(0); }}
-            setSort={(v) => { setSort(v); setPage(0); }}
+            setSort={onSortChange}
             resultCount={total}
             activeFilters={activeFilters}
-            onClearAll={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+            onClearAll={() => { setSearchInput(""); setQuery(""); clearFilters(); }}
           />
 
 
           {/* Active filter chips — Takealot-style dismissible pills */}
           {activeChips.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mb-5" aria-label="Active filters">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Filters:</span>
+            <div
+              className="flex flex-wrap items-center gap-2 mb-5"
+              role="region"
+              aria-label={`Active filters, ${activeChips.length}`}
+            >
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1" aria-hidden="true">Filters:</span>
               {activeChips.map((c) => (
                 <button
                   key={c.key}
                   type="button"
                   onClick={c.clear}
-                  className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary/[0.08] text-primary text-xs font-medium hover:bg-primary/[0.14] transition-colors"
+                  aria-label={c.ariaLabel}
+                  className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary/[0.08] text-primary text-xs font-medium hover:bg-primary/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
                 >
-                  {c.label}
-                  <X className="h-3 w-3" />
+                  <span>{c.label}</span>
+                  <X className="h-3 w-3" aria-hidden="true" />
                 </button>
               ))}
               <button
                 type="button"
-                onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+                onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); }}
                 className="text-xs text-muted-foreground hover:text-foreground underline ml-1"
               >
                 Clear all

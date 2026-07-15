@@ -168,7 +168,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <div className="flex-1" />
 
         {/* Price + CTA */}
-        <div className="flex items-end justify-between gap-2 pt-3 border-t border-border/60">
+        <div className="flex flex-col gap-3 pt-3 border-t border-border/60">
           <div className="flex flex-col min-w-0">
             <span className="font-display font-extrabold text-lg leading-none truncate">
               {formatPrice(product.price)}
@@ -178,14 +178,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <button
             onClick={handleAddToCart}
             aria-label={`Add ${product.name} to cart`}
-            className={`h-10 rounded-full text-sm font-semibold flex items-center gap-1.5 px-4 transition-all flex-shrink-0 ${
+            className={`h-10 w-full rounded-full text-sm font-semibold flex items-center justify-center gap-1.5 px-4 transition-all ${
               addedToCart
                 ? "bg-emerald-600 text-white"
                 : "bg-foreground text-background hover:bg-foreground/90 hover:shadow-md"
             }`}
           >
             {addedToCart ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
-            <span className="hidden sm:inline">{addedToCart ? t("product.added") : t("product.add")}</span>
+            <span>{addedToCart ? t("product.added") : t("product.add")}</span>
           </button>
         </div>
       </div>

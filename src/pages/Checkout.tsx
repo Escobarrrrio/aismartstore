@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useShippingSettings } from "@/hooks/useShippingSettings";
 import SEO from "@/components/SEO";
+import { captureCheckoutError, capturePaymentError, captureOrderError } from "@/lib/sentry";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();

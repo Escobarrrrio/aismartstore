@@ -9,6 +9,7 @@ import type { Product } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { formatMoney } from "@/lib/currency";
+import { trackEvent } from "@/lib/analytics";
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 

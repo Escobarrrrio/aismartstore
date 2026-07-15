@@ -432,6 +432,11 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
           <DrawerClose asChild>
             <button
               type="button"
+              aria-label={
+                activeFilters > 0
+                  ? `Apply ${activeFilters} filter${activeFilters === 1 ? "" : "s"} and show ${resultCount.toLocaleString("en-ZA")} result${resultCount === 1 ? "" : "s"}`
+                  : `Show ${resultCount.toLocaleString("en-ZA")} result${resultCount === 1 ? "" : "s"}`
+              }
               className="gradient-brand text-white font-semibold flex-1 min-h-12 rounded-lg px-4 text-sm"
             >
               Show {resultCount.toLocaleString("en-ZA")} result{resultCount === 1 ? "" : "s"}

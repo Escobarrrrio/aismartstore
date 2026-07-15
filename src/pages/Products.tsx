@@ -9,6 +9,7 @@ import type { Product } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { formatMoney } from "@/lib/currency";
+import { trackEvent } from "@/lib/analytics";
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
@@ -59,19 +60,33 @@ const Products = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // ── URL is the source of truth ───────────────────────────────────────────
+  // Every filter is serialized into the query string so Back/Forward restore
+  // the exact result set (and links are shareable). We hydrate local state
+  // from `searchParams` on every render — the router already re-renders on
+  // popstate, so no manual popstate listener is needed.
   const urlQ = searchParams.get("q") || "";
+  const urlCategory = searchParams.get("category") || "";
+  const urlBrand = searchParams.get("brand") || "";
+  const urlAiOnly = searchParams.get("ai") === "1";
+  const urlInStockOnly = searchParams.get("stock") === "1";
+  const urlIncludeBusiness = searchParams.get("biz") === "1";
+  const urlMinPrice = searchParams.get("min") || "";
+  const urlMaxPrice = searchParams.get("max") || "";
+  const urlSort = (searchParams.get("sort") || "relevance") as SortOption;
+  const urlPage = Math.max(0, Number(searchParams.get("page") || "0") - 1) || 0;
+
   const [searchInput, setSearchInput] = useState(urlQ);
   const [query, setQuery] = useState(urlQ);
-  const [category, setCategory] = useState("");
-  const [brand, setBrand] = useState("");
-  const [aiOnly, setAiOnly] = useState(false);
-  const [inStockOnly, setInStockOnly] = useState(false);
-  // Default: hide enterprise/procurement-tier items — those belong on /procurement.
-  const [includeBusiness, setIncludeBusiness] = useState(false);
-  const [minPrice, setMinPrice] = useState<string>("");
-  const [maxPrice, setMaxPrice] = useState<string>("");
-  const [sort, setSort] = useState<SortOption>("relevance");
-  const [page, setPage] = useState(0);
+  const [category, setCategory] = useState(urlCategory);
+  const [brand, setBrand] = useState(urlBrand);
+  const [aiOnly, setAiOnly] = useState(urlAiOnly);
+  const [inStockOnly, setInStockOnly] = useState(urlInStockOnly);
+  const [includeBusiness, setIncludeBusiness] = useState(urlIncludeBusiness);
+  const [minPrice, setMinPrice] = useState<string>(urlMinPrice);
+  const [maxPrice, setMaxPrice] = useState<string>(urlMaxPrice);
+  const [sort, setSort] = useState<SortOption>(urlSort);
+  const [page, setPage] = useState(urlPage);
   const [showFilters, setShowFilters] = useState(false);
 
   const [rows, setRows] = useState<Product[]>([]);
@@ -83,12 +98,44 @@ const Products = () => {
   const [facetsLoading, setFacetsLoading] = useState(!facetCache);
   const [facetsError, setFacetsError] = useState(false);
 
-  // Keep URL ?q= in sync when the header search updates it
+  // Re-hydrate local state from URL on browser Back/Forward (popstate). The
+  // router re-invokes this component with fresh `searchParams`; syncing here
+  // keeps local state consistent without wiping user typing.
   useEffect(() => {
     setSearchInput(urlQ);
     setQuery(urlQ);
-    setPage(0);
-  }, [urlQ]);
+    setCategory(urlCategory);
+    setBrand(urlBrand);
+    setAiOnly(urlAiOnly);
+    setInStockOnly(urlInStockOnly);
+    setIncludeBusiness(urlIncludeBusiness);
+    setMinPrice(urlMinPrice);
+    setMaxPrice(urlMaxPrice);
+    setSort(urlSort);
+    setPage(urlPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQ, urlCategory, urlBrand, urlAiOnly, urlInStockOnly, urlIncludeBusiness, urlMinPrice, urlMaxPrice, urlSort, urlPage]);
+
+  // Serialize state → URL. `replace: true` avoids polluting history on every
+  // keystroke; a full push only happens on hard navigations elsewhere.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (category) params.set("category", category);
+    if (brand) params.set("brand", brand);
+    if (aiOnly) params.set("ai", "1");
+    if (inStockOnly) params.set("stock", "1");
+    if (includeBusiness) params.set("biz", "1");
+    if (minPrice) params.set("min", minPrice);
+    if (maxPrice) params.set("max", maxPrice);
+    if (sort && sort !== "relevance") params.set("sort", sort);
+    if (page > 0) params.set("page", String(page + 1));
+    // Avoid feedback loop: only write if different.
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next !== current) setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort, page]);
 
   // Load facets via cached RPC. Falls back to (1) the cache table, then (2) a
   // lightweight distinct query on products, so the dropdowns are never empty.
@@ -294,12 +341,13 @@ const Products = () => {
     const q = searchInput.trim();
     setQuery(q);
     setPage(0);
-    if (q) setSearchParams({ q }); else setSearchParams({});
+    // URL sync effect writes the change; no explicit setSearchParams needed.
   };
 
   const clearFilters = () => {
     setCategory(""); setBrand(""); setAiOnly(false); setInStockOnly(false);
     setIncludeBusiness(false); setMinPrice(""); setMaxPrice(""); setPage(0);
+    trackEvent({ name: "filters_cleared_all", page: "/products" });
   };
 
   const pageNumbers = useMemo(() => {
@@ -313,18 +361,51 @@ const Products = () => {
 
   const onRetryFacets = () => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); };
 
+  // Facet setters with analytics tracking. Selecting a value fires
+  // "facet_selected"; clearing (empty string) fires "facet_cleared".
+  const onCategoryChange = useCallback((v: string) => {
+    setCategory(v); setPage(0);
+    trackEvent(v
+      ? { name: "facet_selected", facet: "category", value: v, page: "/products" }
+      : { name: "facet_cleared", facet: "category", page: "/products" });
+  }, []);
+  const onBrandChange = useCallback((v: string) => {
+    setBrand(v); setPage(0);
+    trackEvent(v
+      ? { name: "facet_selected", facet: "brand", value: v, page: "/products" }
+      : { name: "facet_cleared", facet: "brand", page: "/products" });
+  }, []);
+  const onSortChange = useCallback((v: SortOption) => {
+    setSort(v); setPage(0);
+    trackEvent({ name: "sort_changed", value: v, page: "/products" });
+  }, []);
+  const onPageChange = useCallback((n: number) => {
+    setPage(n);
+    trackEvent({ name: "page_changed", value: n + 1, page: "/products" });
+  }, []);
+
   // Active-filter chips model — rendered above the grid so shoppers always see
   // (and can dismiss) each filter they've applied. Mirrors Takealot/Amazon.
-  type Chip = { key: string; label: string; clear: () => void };
+  // Every clear() emits an "active_filter_chip_dismissed" event for analytics.
+  type Chip = { key: string; label: string; ariaLabel: string; clear: () => void };
+  const chip = (key: Chip["key"], label: string, clear: () => void): Chip => ({
+    key,
+    label,
+    ariaLabel: `Remove filter: ${label}`,
+    clear: () => {
+      trackEvent({ name: "active_filter_chip_dismissed", key, label, page: "/products" });
+      clear();
+    },
+  });
   const activeChips: Chip[] = [];
-  if (query) activeChips.push({ key: "q", label: `“${query}”`, clear: () => { setSearchInput(""); setQuery(""); setPage(0); setSearchParams({}); } });
-  if (category) activeChips.push({ key: "cat", label: category, clear: () => { setCategory(""); setPage(0); } });
-  if (brand) activeChips.push({ key: "brand", label: brand, clear: () => { setBrand(""); setPage(0); } });
-  if (aiOnly) activeChips.push({ key: "ai", label: "AI ready", clear: () => { setAiOnly(false); setPage(0); } });
-  if (inStockOnly) activeChips.push({ key: "stock", label: "In stock", clear: () => { setInStockOnly(false); setPage(0); } });
-  if (includeBusiness) activeChips.push({ key: "biz", label: "Incl. business", clear: () => { setIncludeBusiness(false); setPage(0); } });
-  if (minPrice) activeChips.push({ key: "min", label: `Min ${formatMoney(Number(minPrice))}`, clear: () => { setMinPrice(""); setPage(0); } });
-  if (maxPrice) activeChips.push({ key: "max", label: `Max ${formatMoney(Number(maxPrice))}`, clear: () => { setMaxPrice(""); setPage(0); } });
+  if (query) activeChips.push(chip("q", `“${query}”`, () => { setSearchInput(""); setQuery(""); setPage(0); }));
+  if (category) activeChips.push(chip("cat", category, () => { setCategory(""); setPage(0); }));
+  if (brand) activeChips.push(chip("brand", brand, () => { setBrand(""); setPage(0); }));
+  if (aiOnly) activeChips.push(chip("ai", "AI ready", () => { setAiOnly(false); setPage(0); }));
+  if (inStockOnly) activeChips.push(chip("stock", "In stock", () => { setInStockOnly(false); setPage(0); }));
+  if (includeBusiness) activeChips.push(chip("biz", "Incl. business", () => { setIncludeBusiness(false); setPage(0); }));
+  if (minPrice) activeChips.push(chip("min", `Min ${formatMoney(Number(minPrice))}`, () => { setMinPrice(""); setPage(0); }));
+  if (maxPrice) activeChips.push(chip("max", `Max ${formatMoney(Number(maxPrice))}`, () => { setMaxPrice(""); setPage(0); }));
 
 
 
@@ -370,7 +451,7 @@ const Products = () => {
               label="Category"
               options={facets.categories}
               selected={category}
-              onSelect={(v) => { setCategory(v); setPage(0); }}
+              onSelect={onCategoryChange}
               loading={facetsLoading}
               error={facetsError}
               onRetry={onRetryFacets}
@@ -380,7 +461,7 @@ const Products = () => {
               label="Brand"
               options={facets.brands}
               selected={brand}
-              onSelect={(v) => { setBrand(v); setPage(0); }}
+              onSelect={onBrandChange}
               loading={facetsLoading}
               error={facetsError}
               onRetry={onRetryFacets}
@@ -437,7 +518,7 @@ const Products = () => {
             </div>
 
             <button
-              onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+              onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); }}
               disabled={activeFilters === 0 && !query}
               className="btn-secondary w-full px-3 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
@@ -463,7 +544,8 @@ const Products = () => {
               {searchInput && (
                 <button
                   type="button"
-                  onClick={() => { setSearchInput(""); setQuery(""); setPage(0); setSearchParams({}); }}
+                  aria-label="Clear search"
+                  onClick={() => { setSearchInput(""); setQuery(""); setPage(0); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
@@ -473,18 +555,22 @@ const Products = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
+                aria-label={`Open filters${activeFilters > 0 ? ` (${activeFilters} active)` : ""}`}
+                aria-expanded={showFilters}
                 className={`btn-secondary px-4 py-3 text-sm lg:hidden ${showFilters ? 'border-primary bg-primary/[0.04]' : ''}`}
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 Filters
                 {activeFilters > 0 && (
-                  <span className="ml-1 w-5 h-5 rounded-full gradient-brand text-white text-xs flex items-center justify-center">{activeFilters}</span>
+                  <span className="ml-1 w-5 h-5 rounded-full gradient-brand text-white text-xs flex items-center justify-center" aria-hidden="true">{activeFilters}</span>
                 )}
               </button>
               <div className="relative">
+                <label htmlFor="products-sort" className="sr-only">Sort products</label>
                 <select
+                  id="products-sort"
                   value={sort}
-                  onChange={(e) => { setSort(e.target.value as SortOption); setPage(0); }}
+                  onChange={(e) => onSortChange(e.target.value as SortOption)}
                   className="input-premium pr-10 appearance-none cursor-pointer min-w-[180px]"
                 >
                   <option value="relevance">Relevance</option>
@@ -514,38 +600,43 @@ const Products = () => {
             inStockOnly={inStockOnly}
             includeBusiness={includeBusiness}
             sort={sort}
-            setCategory={(v) => { setCategory(v); setPage(0); }}
-            setBrand={(v) => { setBrand(v); setPage(0); }}
+            setCategory={onCategoryChange}
+            setBrand={onBrandChange}
             setMinPrice={(v) => { setMinPrice(v); setPage(0); }}
             setMaxPrice={(v) => { setMaxPrice(v); setPage(0); }}
             setAiOnly={(v) => { setAiOnly(v); setPage(0); }}
             setInStockOnly={(v) => { setInStockOnly(v); setPage(0); }}
             setIncludeBusiness={(v) => { setIncludeBusiness(v); setPage(0); }}
-            setSort={(v) => { setSort(v); setPage(0); }}
+            setSort={onSortChange}
             resultCount={total}
             activeFilters={activeFilters}
-            onClearAll={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+            onClearAll={() => { setSearchInput(""); setQuery(""); clearFilters(); }}
           />
 
 
           {/* Active filter chips — Takealot-style dismissible pills */}
           {activeChips.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mb-5" aria-label="Active filters">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Filters:</span>
+            <div
+              className="flex flex-wrap items-center gap-2 mb-5"
+              role="region"
+              aria-label={`Active filters, ${activeChips.length}`}
+            >
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1" aria-hidden="true">Filters:</span>
               {activeChips.map((c) => (
                 <button
                   key={c.key}
                   type="button"
                   onClick={c.clear}
-                  className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary/[0.08] text-primary text-xs font-medium hover:bg-primary/[0.14] transition-colors"
+                  aria-label={c.ariaLabel}
+                  className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary/[0.08] text-primary text-xs font-medium hover:bg-primary/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
                 >
-                  {c.label}
-                  <X className="h-3 w-3" />
+                  <span>{c.label}</span>
+                  <X className="h-3 w-3" aria-hidden="true" />
                 </button>
               ))}
               <button
                 type="button"
-                onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+                onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); }}
                 className="text-xs text-muted-foreground hover:text-foreground underline ml-1"
               >
                 Clear all
@@ -576,7 +667,7 @@ const Products = () => {
               </p>
               {(query || activeFilters > 0) && (
                 <button
-                  onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+                  onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); }}
                   className="btn-secondary px-5 py-2.5 text-sm"
                 >
                   Reset all
@@ -594,7 +685,7 @@ const Products = () => {
               {totalPages > 1 && (
                 <nav className="flex items-center justify-center gap-2 mt-10" aria-label="Pagination">
                   <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    onClick={() => onPageChange(Math.max(0, page - 1))}
                     disabled={page === 0}
                     className="btn-ghost px-3 py-2 text-sm disabled:opacity-40"
                   >
@@ -602,14 +693,15 @@ const Products = () => {
                   </button>
                   {pageNumbers[0] > 0 && (
                     <>
-                      <button onClick={() => setPage(0)} className="btn-ghost px-3 py-2 text-sm">1</button>
+                      <button onClick={() => onPageChange(0)} className="btn-ghost px-3 py-2 text-sm">1</button>
                       {pageNumbers[0] > 1 && <span className="px-2 text-muted-foreground">…</span>}
                     </>
                   )}
                   {pageNumbers.map((n) => (
                     <button
                       key={n}
-                      onClick={() => setPage(n)}
+                      onClick={() => onPageChange(n)}
+                      aria-current={n === page ? "page" : undefined}
                       className={`px-3 py-2 text-sm rounded-lg font-semibold ${
                         n === page ? "gradient-brand text-white" : "hover:bg-muted"
                       }`}
@@ -620,11 +712,11 @@ const Products = () => {
                   {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
                     <>
                       {pageNumbers[pageNumbers.length - 1] < totalPages - 2 && <span className="px-2 text-muted-foreground">…</span>}
-                      <button onClick={() => setPage(totalPages - 1)} className="btn-ghost px-3 py-2 text-sm">{totalPages}</button>
+                      <button onClick={() => onPageChange(totalPages - 1)} className="btn-ghost px-3 py-2 text-sm">{totalPages}</button>
                     </>
                   )}
                   <button
-                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                    onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
                     disabled={page >= totalPages - 1}
                     className="btn-ghost px-3 py-2 text-sm disabled:opacity-40"
                   >

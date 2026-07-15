@@ -5,6 +5,7 @@ import SEO from "@/components/SEO";
 import ProductCard from "@/components/ProductCard";
 import { Product } from "@/contexts/CartContext";
 import { Link } from "react-router-dom";
+import { trackEvent } from "@/lib/analytics";
 import {
   ShieldCheck, FileCheck, Landmark, Building2, HardHat, Send,
   CheckCircle2, Award, CreditCard, Sparkles, ArrowRight,

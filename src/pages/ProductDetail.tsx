@@ -82,23 +82,37 @@ const ProductDetail = () => {
         description={product.description || `${product.name} — available now at AI Smart Store. ${product.inStock ? "In stock" : "Currently out of stock"}, with secure checkout and SA-wide delivery.`}
         path={`/product/${product.id}`}
         image={product.images[0]}
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: product.name,
-          description: product.description,
-          image: product.images,
-          category: product.category || undefined,
-          offers: {
-            "@type": "Offer",
-            priceCurrency: "ZAR",
-            price: product.price,
-            availability: product.inStock
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
-            url: `${window.location.origin}/product/${product.id}`,
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.name,
+            description: product.description,
+            image: product.images,
+            category: product.category || undefined,
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "ZAR",
+              price: product.price,
+              availability: product.inStock
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+              url: `${window.location.origin}/product/${product.id}`,
+            },
           },
-        }}
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://aismartstore.co.za/" },
+              { "@type": "ListItem", position: 2, name: "Products", item: "https://aismartstore.co.za/products" },
+              ...(product.category
+                ? [{ "@type": "ListItem", position: 3, name: product.category, item: `https://aismartstore.co.za/products?category=${encodeURIComponent(product.category)}` }]
+                : []),
+              { "@type": "ListItem", position: product.category ? 4 : 3, name: product.name, item: `https://aismartstore.co.za/product/${product.id}` },
+            ],
+          },
+        ]}
       />
       {/* Breadcrumb */}
       <div className="bg-muted/50 border-b border-border">

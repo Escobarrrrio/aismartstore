@@ -367,8 +367,20 @@ const Products = () => {
     <div className="min-h-screen">
       <SEO
         title={query ? `${query} — ${t("products.title")}` : t("products.title")}
-        description="Browse AI hardware, networking equipment, computing, and enterprise software at AI Smart Store."
+        description="Browse AI hardware, networking, computing and enterprise software at AI Smart Store."
         path="/products"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: query ? `Search: ${query}` : "AI Smart Store products",
+          numberOfItems: rows.length,
+          itemListElement: rows.slice(0, 24).map((r, i) => ({
+            "@type": "ListItem",
+            position: page * PAGE_SIZE + i + 1,
+            url: `https://aismartstore.co.za/product/${r.id}`,
+            name: r.name,
+          })),
+        }}
       />
 
       {/* Header */}

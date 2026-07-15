@@ -8,6 +8,9 @@ import DashboardModule from "@/components/admin/DashboardModule";
 import ProductsModule from "@/components/admin/ProductsModule";
 import ImportModule from "@/components/admin/ImportModule";
 import OrdersModule from "@/components/admin/OrdersModule";
+import OrderDiagnosticsModule from "@/components/admin/OrderDiagnosticsModule";
+import YocoHealthModule from "@/components/admin/YocoHealthModule";
+
 import CustomersModule from "@/components/admin/CustomersModule";
 import SupportModule from "@/components/admin/SupportModule";
 import SettingsModule from "@/components/admin/SettingsModule";
@@ -165,6 +168,9 @@ const Admin = () => {
           {activeTab === "import" && <ImportModule />}
           {activeTab === "catalog-health" && <CatalogHealthModule />}
           {activeTab === "orders" && (loading.orders ? <LoadingSkeleton /> : <OrdersModule orders={orders} onReload={reload.loadOrders} />)}
+          {activeTab === "order-diagnostics" && <OrderDiagnosticsModule />}
+          {activeTab === "yoco-health" && <YocoHealthModule />}
+
           {activeTab === "returns" && <ReturnsModule />}
           {activeTab === "customers" && (loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />)}
           {activeTab === "newsletter" && <NewsletterModule />}

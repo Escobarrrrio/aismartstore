@@ -140,20 +140,64 @@ Deno.serve(async (req) => {
     const resend = new Resend(resendKey);
     const results: Record<string, unknown> = {};
 
-    if (emailSetting?.value) {
-      results.owner = await resend.emails.send({
-        from: FROM_ADDRESS, to: [emailSetting.value],
-        subject: `New order ${order.id} — ${formatZAR(Number(order.total_amount))}`,
-        html: ownerHtml,
+    const logSend = async (
+      role: "owner" | "customer",
+      recipient: string,
+      template: string,
+      status: "sent" | "failed",
+      err: string | null,
+      providerId?: string,
+    ) => {
+      const message_id = `order-notify-${orderId}-${role}`;
+      await supabase.from("email_send_log").upsert({
+        message_id, template_name: template, recipient_email: recipient,
+        status, error_message: err,
+        metadata: { orderId, role, provider_id: providerId ?? null },
+      }, { onConflict: "message_id" });
+      await supabase.from("order_audit_log").insert({
+        order_id: orderId,
+        actor_email: "notify-order",
+        event_type: status === "sent" ? "email.sent" : "email.failed",
+        to_value: recipient,
+        metadata: { role, template, error: err, provider_id: providerId ?? null },
       });
+    };
+
+    if (emailSetting?.value) {
+      try {
+        const r = await resend.emails.send({
+          from: FROM_ADDRESS, to: [emailSetting.value],
+          subject: `New order ${order.id} — ${formatZAR(Number(order.total_amount))}`,
+          html: ownerHtml,
+        });
+        results.owner = r;
+        await logSend("owner", emailSetting.value, "order-owner-notification",
+          r?.error ? "failed" : "sent",
+          r?.error ? (r.error.message ?? "resend error") : null,
+          (r as any)?.data?.id);
+      } catch (e) {
+        await logSend("owner", emailSetting.value, "order-owner-notification", "failed", (e as Error).message);
+        throw e;
+      }
     }
     if (order.customer_email) {
-      results.customer = await resend.emails.send({
-        from: FROM_ADDRESS, to: [order.customer_email],
-        subject: `Your order is confirmed — ${order.id}`,
-        html: customerHtml,
-      });
+      try {
+        const r = await resend.emails.send({
+          from: FROM_ADDRESS, to: [order.customer_email],
+          subject: `Your order is confirmed — ${order.id}`,
+          html: customerHtml,
+        });
+        results.customer = r;
+        await logSend("customer", order.customer_email, "order-confirmation",
+          r?.error ? "failed" : "sent",
+          r?.error ? (r.error.message ?? "resend error") : null,
+          (r as any)?.data?.id);
+      } catch (e) {
+        await logSend("customer", order.customer_email, "order-confirmation", "failed", (e as Error).message);
+        throw e;
+      }
     }
+
 
     return new Response(JSON.stringify({ success: true, sent: true, results }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },

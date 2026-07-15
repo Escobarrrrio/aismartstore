@@ -59,6 +59,7 @@ const HeaderSearch = ({ className = "", autoFocus, onClose, fullWidth }: Props) 
           sort_by: "relevance",
           page_number: 0,
           page_size: 5,
+          filter_audience: "residential",
         }),
         looksLikeSku
           ? supabase

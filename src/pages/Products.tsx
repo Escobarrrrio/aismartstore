@@ -60,19 +60,33 @@ const Products = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // ── URL is the source of truth ───────────────────────────────────────────
+  // Every filter is serialized into the query string so Back/Forward restore
+  // the exact result set (and links are shareable). We hydrate local state
+  // from `searchParams` on every render — the router already re-renders on
+  // popstate, so no manual popstate listener is needed.
   const urlQ = searchParams.get("q") || "";
+  const urlCategory = searchParams.get("category") || "";
+  const urlBrand = searchParams.get("brand") || "";
+  const urlAiOnly = searchParams.get("ai") === "1";
+  const urlInStockOnly = searchParams.get("stock") === "1";
+  const urlIncludeBusiness = searchParams.get("biz") === "1";
+  const urlMinPrice = searchParams.get("min") || "";
+  const urlMaxPrice = searchParams.get("max") || "";
+  const urlSort = (searchParams.get("sort") || "relevance") as SortOption;
+  const urlPage = Math.max(0, Number(searchParams.get("page") || "0") - 1) || 0;
+
   const [searchInput, setSearchInput] = useState(urlQ);
   const [query, setQuery] = useState(urlQ);
-  const [category, setCategory] = useState("");
-  const [brand, setBrand] = useState("");
-  const [aiOnly, setAiOnly] = useState(false);
-  const [inStockOnly, setInStockOnly] = useState(false);
-  // Default: hide enterprise/procurement-tier items — those belong on /procurement.
-  const [includeBusiness, setIncludeBusiness] = useState(false);
-  const [minPrice, setMinPrice] = useState<string>("");
-  const [maxPrice, setMaxPrice] = useState<string>("");
-  const [sort, setSort] = useState<SortOption>("relevance");
-  const [page, setPage] = useState(0);
+  const [category, setCategory] = useState(urlCategory);
+  const [brand, setBrand] = useState(urlBrand);
+  const [aiOnly, setAiOnly] = useState(urlAiOnly);
+  const [inStockOnly, setInStockOnly] = useState(urlInStockOnly);
+  const [includeBusiness, setIncludeBusiness] = useState(urlIncludeBusiness);
+  const [minPrice, setMinPrice] = useState<string>(urlMinPrice);
+  const [maxPrice, setMaxPrice] = useState<string>(urlMaxPrice);
+  const [sort, setSort] = useState<SortOption>(urlSort);
+  const [page, setPage] = useState(urlPage);
   const [showFilters, setShowFilters] = useState(false);
 
   const [rows, setRows] = useState<Product[]>([]);
@@ -84,12 +98,44 @@ const Products = () => {
   const [facetsLoading, setFacetsLoading] = useState(!facetCache);
   const [facetsError, setFacetsError] = useState(false);
 
-  // Keep URL ?q= in sync when the header search updates it
+  // Re-hydrate local state from URL on browser Back/Forward (popstate). The
+  // router re-invokes this component with fresh `searchParams`; syncing here
+  // keeps local state consistent without wiping user typing.
   useEffect(() => {
     setSearchInput(urlQ);
     setQuery(urlQ);
-    setPage(0);
-  }, [urlQ]);
+    setCategory(urlCategory);
+    setBrand(urlBrand);
+    setAiOnly(urlAiOnly);
+    setInStockOnly(urlInStockOnly);
+    setIncludeBusiness(urlIncludeBusiness);
+    setMinPrice(urlMinPrice);
+    setMaxPrice(urlMaxPrice);
+    setSort(urlSort);
+    setPage(urlPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQ, urlCategory, urlBrand, urlAiOnly, urlInStockOnly, urlIncludeBusiness, urlMinPrice, urlMaxPrice, urlSort, urlPage]);
+
+  // Serialize state → URL. `replace: true` avoids polluting history on every
+  // keystroke; a full push only happens on hard navigations elsewhere.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (category) params.set("category", category);
+    if (brand) params.set("brand", brand);
+    if (aiOnly) params.set("ai", "1");
+    if (inStockOnly) params.set("stock", "1");
+    if (includeBusiness) params.set("biz", "1");
+    if (minPrice) params.set("min", minPrice);
+    if (maxPrice) params.set("max", maxPrice);
+    if (sort && sort !== "relevance") params.set("sort", sort);
+    if (page > 0) params.set("page", String(page + 1));
+    // Avoid feedback loop: only write if different.
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next !== current) setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort, page]);
 
   // Load facets via cached RPC. Falls back to (1) the cache table, then (2) a
   // lightweight distinct query on products, so the dropdowns are never empty.

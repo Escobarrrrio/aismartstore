@@ -57,18 +57,18 @@ const ProcurementPage = () => {
 
   useEffect(() => {
     (async () => {
-      // Enterprise-tier AI: AI-tagged AND priced R15,000+ (workstations,
-      // GPUs, servers, rack-scale accelerators — what procurement teams
-      // typically issue POs for).
-      const { data } = await supabase
-        .from("products")
-        .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
-        .eq("is_active", true)
-        .eq("is_ai_product", true)
-        .gte("price", 15000)
-        .not("images", "is", null)
-        .order("price", { ascending: false })
-        .limit(12);
+      // Business/Government storefront: pull enterprise-tier catalogue via
+      // the search RPC with the business audience filter. This surfaces the
+      // full business SKU pool (servers, licensing, networking, warranty,
+      // GPUs, etc.) — not the residential catalogue.
+      const { data } = await supabase.rpc("search_products", {
+        search_query: "",
+        filter_ai_only: true,
+        sort_by: "price_desc",
+        page_number: 0,
+        page_size: 24,
+        filter_audience: "business",
+      });
       setEnterpriseAi(
         ((data as any[]) || [])
           .filter((p) => Array.isArray(p.images) && p.images[0])
@@ -85,7 +85,7 @@ const ProcurementPage = () => {
             inStock: p.in_stock,
             stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
             isAiProduct: !!p.is_ai_product,
-            createdAt: p.created_at || new Date().toISOString(),
+            createdAt: new Date().toISOString(),
           }))
       );
     })();

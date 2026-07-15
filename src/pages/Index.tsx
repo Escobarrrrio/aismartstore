@@ -25,8 +25,8 @@ const Index = () => {
         .from("products")
         .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
         .eq("is_active", true)
+        .eq("audience", "residential")
         .eq("is_ai_product", true)
-        .lte("price", 15000)
         .not("images", "is", null)
         .order("created_at", { ascending: false })
         .limit(16);
@@ -53,7 +53,8 @@ const Index = () => {
       const { count } = await supabase
         .from("products")
         .select("id", { count: "exact", head: true })
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .eq("audience", "residential");
       if (typeof count === "number") setCatalogCount(count);
     })();
   }, []);
@@ -100,6 +101,33 @@ const Index = () => {
         ]}
       />
       <HeroSection />
+
+      {/* Business / Government portal callout — residential storefront visitors
+          who are actually procuring for a company or department get a clear
+          one-click path to the right catalogue. */}
+      <section className="border-y border-primary/15 bg-primary/[0.04]">
+        <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-sm text-foreground">
+            <span className="font-display font-bold">Shopping for your business or government department?</span>{" "}
+            <span className="text-muted-foreground">
+              Servers, licensing, warranty, networking and the full compliance pack
+              live on our Business Portal ({catalogCount !== null ? "" : ""}
+              <span className="font-semibold">86,000+ enterprise SKUs</span>).
+            </span>
+          </p>
+          <Link
+            to="/procurement"
+            className="btn-primary px-5 py-2.5 text-sm whitespace-nowrap"
+          >
+            Visit Business Portal <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+      {catalogCount !== null && (
+        <p className="container mx-auto px-4 pt-6 text-xs text-muted-foreground text-center">
+          Currently curating {catalogCount.toLocaleString("en-ZA")}+ residential-friendly products across AI, computing and creator gear.
+        </p>
+      )}
 
       {/* AI-Ready Picks — showcase products explicitly flagged as AI-relevant */}
       {aiPicks.length > 0 && (

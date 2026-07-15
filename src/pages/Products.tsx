@@ -241,12 +241,7 @@ const Products = () => {
 
   const buildRpcArgs = useCallback((pageIndex: number) => {
     const min = minPrice ? Number(minPrice) : null;
-    let max = maxPrice ? Number(maxPrice) : null;
-    // Consumer catalogue: cap price unless the user opts into business items,
-    // or explicitly sets a higher max. Keeps enterprise SKUs on /procurement.
-    if (!includeBusiness) {
-      max = max !== null ? Math.min(max, BUSINESS_PRICE_THRESHOLD) : BUSINESS_PRICE_THRESHOLD;
-    }
+    const max = maxPrice ? Number(maxPrice) : null;
     return {
       search_query: query,
       filter_category: category || null,
@@ -258,8 +253,11 @@ const Products = () => {
       sort_by: sort,
       page_number: pageIndex,
       page_size: PAGE_SIZE,
+      // Residential storefront only. The Business/Government portal
+      // (/procurement) explicitly requests filter_audience: 'business'.
+      filter_audience: "residential",
     };
-  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort]);
+  }, [query, category, brand, aiOnly, inStockOnly, minPrice, maxPrice, sort]);
 
   const cacheKey = useCallback((pageIndex: number) =>
     JSON.stringify(buildRpcArgs(pageIndex)), [buildRpcArgs]);
@@ -403,7 +401,7 @@ const Products = () => {
   if (brand) activeChips.push(chip("brand", brand, () => { setBrand(""); setPage(0); }));
   if (aiOnly) activeChips.push(chip("ai", "AI ready", () => { setAiOnly(false); setPage(0); }));
   if (inStockOnly) activeChips.push(chip("stock", "In stock", () => { setInStockOnly(false); setPage(0); }));
-  if (includeBusiness) activeChips.push(chip("biz", "Incl. business", () => { setIncludeBusiness(false); setPage(0); }));
+  
   if (minPrice) activeChips.push(chip("min", `Min ${formatMoney(Number(minPrice))}`, () => { setMinPrice(""); setPage(0); }));
   if (maxPrice) activeChips.push(chip("max", `Max ${formatMoney(Number(maxPrice))}`, () => { setMaxPrice(""); setPage(0); }));
 
@@ -498,23 +496,12 @@ const Products = () => {
                 <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
                 In stock only
               </label>
-              <label className="flex items-start gap-3 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  checked={includeBusiness}
-                  onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
-                  className="w-4 h-4 accent-primary mt-0.5"
-                  data-testid="include-business-toggle"
-                  aria-label="Include business items"
-                />
-                <span>
-                  <span className="inline-flex items-center gap-1.5"><PackageCheck className="h-3.5 w-3.5" /> Include business items</span>
-                  <span className="block text-xs text-muted-foreground mt-0.5">
-                    Enterprise gear ({formatMoney(BUSINESS_PRICE_THRESHOLD)}+) lives on the{" "}
-                    <a href="/procurement" className="text-primary hover:underline">procurement</a> page.
-                  </span>
-                </span>
-              </label>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <PackageCheck className="h-3.5 w-3.5 inline mr-1" />
+                Shopping for your business or a government department?
+                Enterprise gear (servers, warranty, licensing, rack-scale AI)
+                lives on our <a href="/procurement" className="text-primary font-semibold hover:underline">Business Portal</a>.
+              </p>
             </div>
 
             <button

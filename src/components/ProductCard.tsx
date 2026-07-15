@@ -55,7 +55,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       >
         <img
           src={product.images[0]}
-          alt={product.name}
+          alt={`${product.name}${product.brand ? ` by ${product.brand}` : ""}${product.category ? ` — ${product.category}` : ""}`}
           width={800}
           height={800}
           className="absolute inset-0 h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-[1.04]"

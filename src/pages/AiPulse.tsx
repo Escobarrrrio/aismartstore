@@ -38,6 +38,21 @@ const AiPulse = () => {
         title="AI Pulse"
         description="The latest in artificial intelligence -- real research papers and news, updated automatically. From the announcement to the creation."
         path="/ai-pulse"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "AI Pulse — AI research & news",
+          description: "Automatically curated AI research papers and news articles.",
+          url: "https://aismartstore.co.za/ai-pulse",
+          hasPart: filtered.slice(0, 20).map((i) => ({
+            "@type": "Article",
+            headline: i.title,
+            url: i.url,
+            datePublished: i.published_at || undefined,
+            articleSection: i.category,
+            publisher: { "@type": "Organization", name: i.source },
+          })),
+        }}
       />
 
       <div className="bg-muted/50 border-b border-border">

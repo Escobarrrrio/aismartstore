@@ -116,7 +116,13 @@ const StoreHeader = () => {
           )}
 
           {/* Mobile hamburger */}
-          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav-menu"
+          >
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -132,7 +138,7 @@ const StoreHeader = () => {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-border bg-background animate-fade-in">
+        <div id="mobile-nav-menu" className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-1 max-w-full">
             {[
               { to: "/", label: t("nav.home") },

@@ -31,4 +31,4 @@ Disallow: /account
 Disallow: /auth
 Disallow: /reset-password
 
-Sitemap: https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/sitemap
+Sitemap: https://aismartstore.co.za/sitemap.xml

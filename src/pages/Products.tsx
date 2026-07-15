@@ -667,7 +667,7 @@ const Products = () => {
               </p>
               {(query || activeFilters > 0) && (
                 <button
-                  onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+                  onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); }}
                   className="btn-secondary px-5 py-2.5 text-sm"
                 >
                   Reset all

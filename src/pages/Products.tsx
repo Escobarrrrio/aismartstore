@@ -451,7 +451,7 @@ const Products = () => {
               label="Category"
               options={facets.categories}
               selected={category}
-              onSelect={(v) => { setCategory(v); setPage(0); }}
+              onSelect={onCategoryChange}
               loading={facetsLoading}
               error={facetsError}
               onRetry={onRetryFacets}
@@ -461,7 +461,7 @@ const Products = () => {
               label="Brand"
               options={facets.brands}
               selected={brand}
-              onSelect={(v) => { setBrand(v); setPage(0); }}
+              onSelect={onBrandChange}
               loading={facetsLoading}
               error={facetsError}
               onRetry={onRetryFacets}

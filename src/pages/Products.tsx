@@ -518,7 +518,7 @@ const Products = () => {
             </div>
 
             <button
-              onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+              onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); }}
               disabled={activeFilters === 0 && !query}
               className="btn-secondary w-full px-3 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >

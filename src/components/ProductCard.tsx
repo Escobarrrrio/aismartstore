@@ -22,19 +22,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
-
-  // Hide entire card if we have no valid image — the listing must feel curated.
-  if (!product.images?.[0] || imgFailed) {
-    return (
-      <img
-        src={product.images?.[0] || ""}
-        alt=""
-        aria-hidden
-        className="hidden"
-        onError={() => setImgFailed(true)}
-      />
-    );
-  }
+  const hasImage = Boolean(product.images?.[0]) && !imgFailed;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,17 +41,31 @@ const ProductCard = ({ product }: ProductCardProps) => {
         to={`/product/${product.id}`}
         className="relative block aspect-square overflow-hidden bg-white"
       >
-        <img
-          src={product.images[0]}
-          alt={`${product.name}${product.brand ? ` by ${product.brand}` : ""}${product.category ? ` — ${product.category}` : ""}`}
-          width={800}
-          height={800}
-          className="absolute inset-0 h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-[1.04]"
-          loading="lazy"
-          decoding="async"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          onError={() => setImgFailed(true)}
-        />
+        {hasImage ? (
+          <img
+            src={product.images[0]}
+            alt={`${product.name}${product.brand ? ` by ${product.brand}` : ""}${product.category ? ` — ${product.category}` : ""}`}
+            width={800}
+            height={800}
+            className="absolute inset-0 h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-[1.04]"
+            loading="lazy"
+            decoding="async"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <div
+            role="img"
+            aria-label={`${product.name} — image unavailable`}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted/40 via-background to-muted/30 text-muted-foreground p-6"
+          >
+            <PackageCheck className="h-10 w-10 opacity-40" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-center line-clamp-2">
+              {product.brand || product.category || "Product"}
+            </span>
+          </div>
+        )}
+
 
         {/* Top-left chip stack */}
         <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">

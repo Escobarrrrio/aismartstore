@@ -5,6 +5,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { captureEdgeError } from "../_shared/sentry.ts";
 
 const MAX_SKEW_SECONDS = 300; // 5 minute replay window
 
@@ -30,22 +31,62 @@ async function verifyYocoSignature(rawBody: string, headers: Headers, secret: st
   return { ok, reason: ok ? "ok" : "signature_mismatch" };
 }
 
+function requestMetadata(req: Request, rawBody: string) {
+  return {
+    webhook_id: req.headers.get("webhook-id"),
+    webhook_timestamp: req.headers.get("webhook-timestamp"),
+    signature_present: Boolean(req.headers.get("webhook-signature")),
+    user_agent: req.headers.get("user-agent"),
+    forwarded_for: req.headers.get("x-forwarded-for"),
+    body_bytes: rawBody.length,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const rawBody = await req.text();
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
   try {
-    const rawBody = await req.text();
     const secret = Deno.env.get("YOCO_WEBHOOK_SECRET");
-    // Fail closed: without a configured secret, we can't authenticate the sender.
     if (!secret) {
-      console.error("[yoco-webhook] YOCO_WEBHOOK_SECRET not configured -- rejecting");
+      const meta = requestMetadata(req, rawBody);
+      await captureEdgeError("yoco-webhook: missing secret", new Error("YOCO_WEBHOOK_SECRET not configured"), {
+        level: "error",
+        tags: { function: "yoco-webhook", failure: "missing_secret" },
+        extra: meta,
+        fingerprint: ["yoco-webhook", "missing_secret"],
+      });
+      await supabase.from("automation_events").insert({
+        source: "yoco", event_type: "webhook.rejected", status: "failed",
+        error_message: "YOCO_WEBHOOK_SECRET not configured", payload: meta,
+      });
       return new Response(JSON.stringify({ error: "Webhook not configured" }), {
         status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
     const verdict = await verifyYocoSignature(rawBody, req.headers, secret);
     if (!verdict.ok) {
-      console.warn("[yoco-webhook] rejected:", verdict.reason);
+      const meta = requestMetadata(req, rawBody);
+      await captureEdgeError(
+        `yoco-webhook: signature verification failed (${verdict.reason})`,
+        new Error(`signature_${verdict.reason}`),
+        {
+          level: "warning",
+          tags: { function: "yoco-webhook", failure: verdict.reason },
+          extra: meta,
+          fingerprint: ["yoco-webhook", "signature", verdict.reason],
+        },
+      );
+      await supabase.from("automation_events").insert({
+        source: "yoco", event_type: "webhook.signature_failed", status: "failed",
+        error_message: verdict.reason, payload: meta,
+      });
       return new Response(JSON.stringify({ error: "Invalid signature", reason: verdict.reason }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -56,6 +97,12 @@ Deno.serve(async (req) => {
     const metadata = payload?.payload?.metadata ?? {};
     const orderId = metadata.orderId ?? metadata.order_id;
 
+    // Always record the raw event for the diagnostics screen.
+    await supabase.from("automation_events").insert({
+      source: "yoco", event_type: `webhook.${event || "unknown"}`, status: "received",
+      payload: { payload_id: payload?.id, orderId, amount: payload?.payload?.amount, event },
+    });
+
     if (!orderId) {
       console.warn("[yoco-webhook] no orderId in metadata", payload?.id);
       return new Response(JSON.stringify({ received: true, note: "no orderId" }), {
@@ -63,24 +110,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
     const updates: Record<string, unknown> = {};
     if (event === "payment.succeeded") {
-      // SECURITY: verify Yoco actually charged the full order total before marking paid.
       const { data: order } = await supabase
         .from("orders").select("total_amount").eq("id", orderId).maybeSingle();
       const expectedCents = order ? Math.round(Number(order.total_amount) * 100) : null;
       const paidCents = Number(payload?.payload?.amount ?? 0);
       if (expectedCents === null || Math.abs(paidCents - expectedCents) > 1) {
-        console.error("[yoco-webhook] amount mismatch", { orderId, expectedCents, paidCents });
+        await captureEdgeError("yoco-webhook: amount mismatch", new Error("amount_mismatch"), {
+          level: "error",
+          tags: { function: "yoco-webhook", failure: "amount_mismatch" },
+          extra: { orderId, expectedCents, paidCents, payload_id: payload?.id },
+        });
         await supabase.from("order_audit_log").insert({
-          order_id: orderId,
-          event_type: "yoco.amount_mismatch",
-          actor_email: "yoco-webhook",
+          order_id: orderId, event_type: "yoco.amount_mismatch", actor_email: "yoco-webhook",
           metadata: { expectedCents, paidCents, payload_id: payload?.id },
         });
         return new Response(JSON.stringify({ error: "amount_mismatch" }), {
@@ -98,9 +141,7 @@ Deno.serve(async (req) => {
     if (Object.keys(updates).length) {
       await supabase.from("orders").update(updates).eq("id", orderId);
       await supabase.from("order_audit_log").insert({
-        order_id: orderId,
-        event_type: `yoco.${event}`,
-        actor_email: "yoco-webhook",
+        order_id: orderId, event_type: `yoco.${event}`, actor_email: "yoco-webhook",
         metadata: { payload_id: payload?.id, amount: payload?.payload?.amount },
       });
       if (updates.payment_status === "paid") {
@@ -115,7 +156,11 @@ Deno.serve(async (req) => {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("[yoco-webhook] failure:", error);
+    await captureEdgeError("yoco-webhook: handler crashed", error, {
+      level: "error",
+      tags: { function: "yoco-webhook", failure: "handler_crash" },
+      extra: requestMetadata(req, rawBody),
+    });
     return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

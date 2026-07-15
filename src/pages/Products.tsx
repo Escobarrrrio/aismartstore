@@ -496,23 +496,12 @@ const Products = () => {
                 <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
                 In stock only
               </label>
-              <label className="flex items-start gap-3 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  checked={includeBusiness}
-                  onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
-                  className="w-4 h-4 accent-primary mt-0.5"
-                  data-testid="include-business-toggle"
-                  aria-label="Include business items"
-                />
-                <span>
-                  <span className="inline-flex items-center gap-1.5"><PackageCheck className="h-3.5 w-3.5" /> Include business items</span>
-                  <span className="block text-xs text-muted-foreground mt-0.5">
-                    Enterprise gear ({formatMoney(BUSINESS_PRICE_THRESHOLD)}+) lives on the{" "}
-                    <a href="/procurement" className="text-primary hover:underline">procurement</a> page.
-                  </span>
-                </span>
-              </label>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <PackageCheck className="h-3.5 w-3.5 inline mr-1" />
+                Shopping for your business or a government department?
+                Enterprise gear (servers, warranty, licensing, rack-scale AI)
+                lives on our <a href="/procurement" className="text-primary font-semibold hover:underline">Business Portal</a>.
+              </p>
             </div>
 
             <button

@@ -528,12 +528,37 @@ const Products = () => {
           />
 
 
+          {/* Active filter chips — Takealot-style dismissible pills */}
+          {activeChips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-5" aria-label="Active filters">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Filters:</span>
+              {activeChips.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={c.clear}
+                  className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary/[0.08] text-primary text-xs font-medium hover:bg-primary/[0.14] transition-colors"
+                >
+                  {c.label}
+                  <X className="h-3 w-3" />
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
+                className="text-xs text-muted-foreground hover:text-foreground underline ml-1"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
           {/* Grid */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[...Array(6)].map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(12)].map((_, i) => (
                 <div key={i} className="card-flat overflow-hidden animate-pulse">
-                  <div className="aspect-[4/3] bg-muted" />
+                  <div className="aspect-square bg-muted" />
                   <div className="p-4 space-y-3">
                     <div className="h-3 bg-muted rounded w-1/4" />
                     <div className="h-4 bg-muted rounded w-3/4" />
@@ -560,9 +585,10 @@ const Products = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {rows.map((p) => <ProductCard key={p.id} product={p} />)}
               </div>
+
 
               {/* Pagination */}
               {totalPages > 1 && (

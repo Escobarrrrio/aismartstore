@@ -401,7 +401,7 @@ const Products = () => {
   if (brand) activeChips.push(chip("brand", brand, () => { setBrand(""); setPage(0); }));
   if (aiOnly) activeChips.push(chip("ai", "AI ready", () => { setAiOnly(false); setPage(0); }));
   if (inStockOnly) activeChips.push(chip("stock", "In stock", () => { setInStockOnly(false); setPage(0); }));
-  if (includeBusiness) activeChips.push(chip("biz", "Incl. business", () => { setIncludeBusiness(false); setPage(0); }));
+  
   if (minPrice) activeChips.push(chip("min", `Min ${formatMoney(Number(minPrice))}`, () => { setMinPrice(""); setPage(0); }));
   if (maxPrice) activeChips.push(chip("max", `Max ${formatMoney(Number(maxPrice))}`, () => { setMaxPrice(""); setPage(0); }));
 

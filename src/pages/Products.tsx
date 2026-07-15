@@ -365,52 +365,77 @@ const Products = () => {
       <div className="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
         {/* Filter sidebar (desktop) */}
         <aside className="hidden lg:block">
-          <div className="card-flat p-5 sticky top-24 space-y-5">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Category</label>
-              {renderFacetSelect("category", category, setCategory)}
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Brand</label>
-              {renderFacetSelect("brand", brand, setBrand)}
-            </div>
+          <div className="card-flat p-5 sticky top-24 space-y-5 max-h-[calc(100vh-7rem)] overflow-y-auto">
+            <FacetList
+              label="Category"
+              options={facets.categories}
+              selected={category}
+              onSelect={(v) => { setCategory(v); setPage(0); }}
+              loading={facetsLoading}
+              error={facetsError}
+              onRetry={onRetryFacets}
+              initialVisible={10}
+            />
+            <FacetList
+              label="Brand"
+              options={facets.brands}
+              selected={brand}
+              onSelect={(v) => { setBrand(v); setPage(0); }}
+              loading={facetsLoading}
+              error={facetsError}
+              onRetry={onRetryFacets}
+              initialVisible={8}
+            />
 
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Price (ZAR)</label>
               <div className="flex gap-2">
                 <input type="number" min="0" placeholder="Min" value={minPrice}
                   onChange={(e) => { setMinPrice(e.target.value); setPage(0); }}
-                  className="input-premium" />
+                  className="input-premium" aria-label="Minimum price" />
                 <input type="number" min="0" placeholder="Max" value={maxPrice}
                   onChange={(e) => { setMaxPrice(e.target.value); setPage(0); }}
-                  className="input-premium" />
+                  className="input-premium" aria-label="Maximum price" />
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {[500, 2000, 5000, 10000].map((p) => (
+                  <button key={p} type="button"
+                    onClick={() => { setMaxPrice(String(p)); setPage(0); }}
+                    className="text-[11px] px-2 py-1 rounded-full border border-input hover:border-primary hover:text-primary transition-colors">
+                    Under R{p.toLocaleString("en-ZA")}
+                  </button>
+                ))}
               </div>
             </div>
-            <label className="flex items-center gap-3 cursor-pointer text-sm">
-              <input type="checkbox" checked={aiOnly} onChange={(e) => { setAiOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
-              AI products only
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer text-sm">
-              <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
-              In stock only
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer text-sm border-t border-border pt-4">
-              <input
-                type="checkbox"
-                checked={includeBusiness}
-                onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
-                className="w-4 h-4 accent-primary mt-0.5"
-                data-testid="include-business-toggle"
-                aria-label="Include business items"
-              />
-              <span>
-                Include business items
-                <span className="block text-xs text-muted-foreground mt-0.5">
-                  Enterprise gear ({formatMoney(BUSINESS_PRICE_THRESHOLD)}+) lives on the{" "}
-                  <a href="/procurement" className="text-primary hover:underline">procurement</a> page.
+
+            <div className="border-t border-border pt-4 space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer text-sm">
+                <input type="checkbox" checked={aiOnly} onChange={(e) => { setAiOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
+                <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> AI products only</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer text-sm">
+                <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
+                In stock only
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeBusiness}
+                  onChange={(e) => { setIncludeBusiness(e.target.checked); setPage(0); }}
+                  className="w-4 h-4 accent-primary mt-0.5"
+                  data-testid="include-business-toggle"
+                  aria-label="Include business items"
+                />
+                <span>
+                  <span className="inline-flex items-center gap-1.5"><PackageCheck className="h-3.5 w-3.5" /> Include business items</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5">
+                    Enterprise gear ({formatMoney(BUSINESS_PRICE_THRESHOLD)}+) lives on the{" "}
+                    <a href="/procurement" className="text-primary hover:underline">procurement</a> page.
+                  </span>
                 </span>
-              </span>
-            </label>
+              </label>
+            </div>
+
             <button
               onClick={() => { setSearchInput(""); setQuery(""); clearFilters(); setSearchParams({}); }}
               disabled={activeFilters === 0 && !query}
@@ -421,6 +446,7 @@ const Products = () => {
             </button>
           </div>
         </aside>
+
 
         <div>
           {/* Search + sort controls */}

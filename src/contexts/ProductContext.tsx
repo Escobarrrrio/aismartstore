@@ -64,6 +64,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       sort_by: "newest",
       page_number: 0,
       page_size: 24,
+      filter_audience: "residential",
     });
 
     if (error) {

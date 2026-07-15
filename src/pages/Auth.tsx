@@ -253,9 +253,10 @@ const Auth = () => {
 
         {/* Account type gate — no default, no skip */}
         {mode === "signup" && accountType === null && (
-          <div className="space-y-3">
+          <div className="space-y-3" data-testid="account-type-gate">
             <button
               type="button"
+              data-testid="account-type-residential"
               onClick={() => setAccountType("residential")}
               className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left"
             >
@@ -269,6 +270,7 @@ const Auth = () => {
             </button>
             <button
               type="button"
+              data-testid="account-type-business"
               onClick={() => setAccountType("business")}
               className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left"
             >

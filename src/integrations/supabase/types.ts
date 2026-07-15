@@ -1429,35 +1429,67 @@ export type Database = {
       }
       recategorize_batch: { Args: { batch_size?: number }; Returns: number }
       refresh_product_facets_cache: { Args: never; Returns: number }
-      search_products: {
-        Args: {
-          filter_ai_only?: boolean
-          filter_brand?: string
-          filter_category?: string
-          filter_in_stock_only?: boolean
-          max_price?: number
-          min_price?: number
-          page_number?: number
-          page_size?: number
-          search_query?: string
-          sort_by?: string
-        }
-        Returns: {
-          brand: string
-          category: string
-          description: string
-          id: string
-          images: string[]
-          in_stock: boolean
-          is_ai_product: boolean
-          name: string
-          price: number
-          sku: string
-          slug: string
-          stock_quantity: number
-          total_count: number
-        }[]
-      }
+      search_products:
+        | {
+            Args: {
+              filter_ai_only?: boolean
+              filter_brand?: string
+              filter_category?: string
+              filter_in_stock_only?: boolean
+              max_price?: number
+              min_price?: number
+              page_number?: number
+              page_size?: number
+              search_query?: string
+              sort_by?: string
+            }
+            Returns: {
+              brand: string
+              category: string
+              description: string
+              id: string
+              images: string[]
+              in_stock: boolean
+              is_ai_product: boolean
+              name: string
+              price: number
+              sku: string
+              slug: string
+              stock_quantity: number
+              total_count: number
+            }[]
+          }
+        | {
+            Args: {
+              filter_ai_only?: boolean
+              filter_audience?: string
+              filter_brand?: string
+              filter_category?: string
+              filter_in_stock_only?: boolean
+              max_price?: number
+              min_price?: number
+              page_number?: number
+              page_size?: number
+              search_query?: string
+              sort_by?: string
+            }
+            Returns: {
+              audience: string
+              brand: string
+              category: string
+              description: string
+              id: string
+              images: string[]
+              in_stock: boolean
+              is_ai_product: boolean
+              name: string
+              price: number
+              sku: string
+              slug: string
+              stock_quantity: number
+              total_count: number
+            }[]
+          }
     }
     Enums: {
       app_role: "customer" | "admin"

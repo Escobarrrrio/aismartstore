@@ -104,9 +104,10 @@ const ChatWidget = () => {
       {!open && (
         <button
           onClick={() => setOpen(true)}
+          aria-label="Open customer support chat"
           className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full gradient-brand text-white flex items-center justify-center shadow-elevated hover:scale-105 transition-transform"
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="h-6 w-6" aria-hidden="true" />
         </button>
       )}
 

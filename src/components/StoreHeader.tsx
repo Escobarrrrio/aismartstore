@@ -85,12 +85,13 @@ const StoreHeader = () => {
           {/* Cart - now gradient pill matching brand */}
           <Link
             to="/cart"
+            aria-label={`${t("nav.cart")}${totalItems > 0 ? `, ${totalItems} items` : ""}`}
             className="relative flex items-center gap-2 h-10 px-3 sm:px-4 rounded-xl gradient-brand text-white text-sm font-semibold hover:opacity-90 transition-opacity"
           >
-            <ShoppingCart className="h-4 w-4 flex-shrink-0" />
+            <ShoppingCart className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
             <span className="hidden sm:inline">{t("nav.cart")}</span>
             {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center shadow-md">
+              <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center shadow-md">
                 {totalItems}
               </span>
             )}

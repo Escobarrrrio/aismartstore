@@ -569,6 +569,7 @@ const Products = () => {
                 <label htmlFor="products-sort" className="sr-only">Sort products</label>
                 <select
                   id="products-sort"
+                  aria-label="Sort products"
                   value={sort}
                   onChange={(e) => onSortChange(e.target.value as SortOption)}
                   className="input-premium pr-10 appearance-none cursor-pointer min-w-[180px]"

@@ -308,6 +308,14 @@ const Products = () => {
         setRows(rowsOut);
         setTotal(totalOut);
         prefetchCache.current.set(key, { rows: rowsOut, total: totalOut });
+        trackEvent({
+          name: "product_list_returned",
+          audience: "residential",
+          surface: "products",
+          count: rowsOut.length,
+          total: totalOut,
+          query: query || undefined,
+        });
       }
       setLoading(false);
     }

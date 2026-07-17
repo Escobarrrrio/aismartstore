@@ -32,7 +32,9 @@ const Checkout = () => {
   const failedOrderId = searchParams.get("orderId");
   const [form, setForm] = useState({
     name: "", email: "", phone: "", address: "", city: "", postalCode: "",
+  });
   const [userId, setUserId] = useState<string | null>(null);
+
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {

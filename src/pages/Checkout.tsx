@@ -181,9 +181,11 @@ const Checkout = () => {
     e.preventDefault();
     setProcessing(true);
     try {
+      if (!userId) throw new Error("Please sign in to complete your order.");
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
+          user_id: userId,
           customer_name: form.name, customer_email: form.email, customer_phone: form.phone,
           address: form.address, city: form.city, postal_code: form.postalCode,
           total_amount: grandTotal, status: "pending",

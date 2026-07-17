@@ -82,6 +82,14 @@ const Checkout = () => {
     if (!searchParams.get("status")) { navigate("/cart"); return null; }
   }
 
+  // RLS on `orders` requires user_id = auth.uid(), so checkout only works when
+  // signed in. Bounce guests to /auth and come straight back afterwards.
+  if (authChecked && !userId && !submitted && !paymentFailed && !capturingPaypal) {
+    navigate(`/auth?redirect=${encodeURIComponent("/checkout")}`);
+    return null;
+  }
+
+
   if (capturingPaypal) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">

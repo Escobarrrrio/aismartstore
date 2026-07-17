@@ -69,9 +69,24 @@ Deno.serve(async (req) => {
     // SECURITY: verify the captured amount matches the order's authoritative total.
     const capturedUnit = capture?.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
     const capturedValue = Number(capturedUnit?.value ?? 0);
-    const expected = Number(order.total_amount);
+    const capturedCurrency = String(capturedUnit?.currency_code ?? "ZAR");
+    // total_amount is ZAR-denominated; convert to the currency PayPal captured in
+    // so we compare like-for-like instead of over-charging non-ZAR shoppers.
+    let expected = Number(order.total_amount);
+    if (capturedCurrency !== "ZAR") {
+      const { data: rateRow } = await supabase
+        .from("exchange_rates").select("rate_to_zar").eq("currency_code", capturedCurrency).maybeSingle();
+      const rate = Number(rateRow?.rate_to_zar);
+      if (!rate || rate <= 0) {
+        console.error("[capture-paypal-order] no exchange rate for", capturedCurrency);
+        return new Response(JSON.stringify({ status: "amount_mismatch" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      expected = Number(order.total_amount) / rate;
+    }
     if (!capturedValue || Math.abs(capturedValue - expected) > 0.01) {
-      console.error("[capture-paypal-order] amount mismatch", { expected, capturedValue });
+      console.error("[capture-paypal-order] amount mismatch", { expected, capturedValue, capturedCurrency });
       return new Response(JSON.stringify({ status: "amount_mismatch" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

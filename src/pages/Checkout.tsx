@@ -33,6 +33,20 @@ const Checkout = () => {
   const [form, setForm] = useState({
     name: "", email: "", phone: "", address: "", city: "", postalCode: "",
   });
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserId(data.session?.user?.id ?? null);
+      setAuthChecked(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const status = searchParams.get("status");
@@ -67,6 +81,14 @@ const Checkout = () => {
   if (items.length === 0 && !submitted && !paymentFailed && !capturingPaypal) {
     if (!searchParams.get("status")) { navigate("/cart"); return null; }
   }
+
+  // RLS on `orders` requires user_id = auth.uid(), so checkout only works when
+  // signed in. Bounce guests to /auth and come straight back afterwards.
+  if (authChecked && !userId && !submitted && !paymentFailed && !capturingPaypal) {
+    navigate(`/auth?redirect=${encodeURIComponent("/checkout")}`);
+    return null;
+  }
+
 
   if (capturingPaypal) {
     return (
@@ -159,9 +181,11 @@ const Checkout = () => {
     e.preventDefault();
     setProcessing(true);
     try {
+      if (!userId) throw new Error("Please sign in to complete your order.");
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
+          user_id: userId,
           customer_name: form.name, customer_email: form.email, customer_phone: form.phone,
           address: form.address, city: form.city, postal_code: form.postalCode,
           total_amount: grandTotal, status: "pending",

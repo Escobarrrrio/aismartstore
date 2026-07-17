@@ -67,7 +67,22 @@ Deno.serve(async (req) => {
     }
 
     const accessToken = await getAccessToken(settings.paypal_client_id, settings.paypal_client_secret);
-    const authoritativeAmount = Number(order.total_amount);
+    // Order totals are stored in ZAR. Convert authoritatively server-side to the
+    // buyer's chosen currency using our exchange_rates table so PayPal receives
+    // a value that actually matches the currency_code label.
+    const zarTotal = Number(order.total_amount);
+    let authoritativeAmount = zarTotal;
+    if (currency !== "ZAR") {
+      const { data: rateRow } = await supabase
+        .from("exchange_rates").select("rate_to_zar").eq("currency_code", currency).maybeSingle();
+      const rate = Number(rateRow?.rate_to_zar);
+      if (!rate || rate <= 0) {
+        return new Response(JSON.stringify({ error: `No exchange rate available for ${currency}` }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      authoritativeAmount = zarTotal / rate;
+    }
 
     const paypalRes = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
       method: "POST",

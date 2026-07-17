@@ -1395,14 +1395,23 @@ export type Database = {
           selling_price: number
         }[]
       }
-      get_product_facets: {
-        Args: never
-        Returns: {
-          facet_type: string
-          facet_value: string
-          product_count: number
-        }[]
-      }
+      get_product_facets:
+        | {
+            Args: never
+            Returns: {
+              facet_type: string
+              facet_value: string
+              product_count: number
+            }[]
+          }
+        | {
+            Args: { filter_audience?: string }
+            Returns: {
+              facet_type: string
+              facet_value: string
+              product_count: number
+            }[]
+          }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

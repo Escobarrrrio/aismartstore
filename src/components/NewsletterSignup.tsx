@@ -47,7 +47,7 @@ const NewsletterSignup = ({ source = "footer", variant = "footer" }: NewsletterS
       return;
     }
     setSubscribed(true);
-    supabase.functions.invoke("send-welcome-email", { body: { email, categories: [] } });
+    // Welcome email is dispatched server-side by a DB trigger on newsletter_subscribers insert.
   };
 
   const toggleCategory = async (key: string) => {

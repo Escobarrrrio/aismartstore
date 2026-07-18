@@ -61,8 +61,16 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
+
+  // Safe redirect target — only allow internal same-origin paths so this can't
+  // be abused as an open redirect. Falls back to "/" when missing/invalid.
+  const rawRedirect = searchParams.get("redirect");
+  const redirectTo = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+    ? rawRedirect
+    : "/";
 
   const resetSignupFields = () => {
     setName(""); setPhone(""); setIdNumber("");

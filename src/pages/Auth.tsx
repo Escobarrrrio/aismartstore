@@ -83,7 +83,7 @@ const Auth = () => {
       toast({ title: t("auth.loginFailedTitle"), description: error.message, variant: "destructive" });
     } else {
       toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
-      navigate("/");
+      navigate(redirectTo);
     }
   };
 

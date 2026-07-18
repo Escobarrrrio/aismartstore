@@ -1,10 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Welcome email — sends to a NEWLY subscribed email only. Verifies the
-// address exists in newsletter_subscribers, was created recently (last
-// 15 minutes), and has not been unsubscribed. This prevents the
-// function from being abused as an open email relay to arbitrary
-// third-party addresses.
+// Welcome email — invoked ONLY server-side by the newsletter_subscribers
+// AFTER INSERT trigger, using the internal service-role JWT as bearer.
+// Direct calls from browsers/attackers are rejected, so this function can no
+// longer be abused to send templated email to arbitrary third-party addresses.
 
 const CATEGORY_COPY: Record<string, { headline: string; body: string }> = {
   ai: { headline: "AI & Machine Learning", body: "GPUs, TPUs, and AI accelerators land here first -- often before they're listed on the main catalogue." },
@@ -13,34 +12,47 @@ const CATEGORY_COPY: Record<string, { headline: string; body: string }> = {
   software: { headline: "Software & Licenses", body: "Enterprise and cloud licensing, sourced and priced for South African businesses." },
 };
 
-Deno.serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  const { email } = await req.json();
-  if (!email || typeof email !== "string") {
-    return new Response(JSON.stringify({ status: "error", reason: "email required" }), { status: 400 });
+Deno.serve(async (req) => {
+  // Authorization: only the DB trigger (or other trusted server) may invoke this.
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const expected = `Bearer ${SERVICE_ROLE_KEY}`;
+  if (authHeader.length !== expected.length || authHeader !== expected) {
+    return new Response(JSON.stringify({ status: "error", reason: "unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
-  // SECURITY: only send if this address just subscribed via the site.
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    SERVICE_ROLE_KEY
+  );
+
+  let body: any = {};
+  try { body = await req.json(); } catch {}
+  const subscriberId: string | undefined = body?.subscriber_id;
+  if (!subscriberId || typeof subscriberId !== "string") {
+    return new Response(JSON.stringify({ status: "error", reason: "subscriber_id required" }), { status: 400 });
+  }
+
   const { data: subscriber } = await supabase
     .from("newsletter_subscribers")
     .select("email, interested_categories, subscribed_at, unsubscribed_at, unsubscribe_token")
-
-    .eq("email", email)
+    .eq("id", subscriberId)
     .maybeSingle();
 
   if (!subscriber || subscriber.unsubscribed_at) {
-    return new Response(JSON.stringify({ status: "skipped", reason: "no active subscription" }), { status: 403 });
+    return new Response(JSON.stringify({ status: "skipped", reason: "no active subscription" }), { status: 200 });
   }
 
   const ageMs = Date.now() - new Date(subscriber.subscribed_at).getTime();
   if (ageMs > 15 * 60 * 1000) {
-    return new Response(JSON.stringify({ status: "skipped", reason: "subscription too old for welcome" }), { status: 403 });
+    return new Response(JSON.stringify({ status: "skipped", reason: "subscription too old for welcome" }), { status: 200 });
   }
 
+  const email = subscriber.email;
   const categories: string[] = subscriber.interested_categories ?? [];
 
   const { data: settingsRows } = await supabase

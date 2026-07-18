@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Building2, User, Home as HomeIcon, IdCard, Phone } from "lucide-react";
 import Logo from "@/components/Logo";

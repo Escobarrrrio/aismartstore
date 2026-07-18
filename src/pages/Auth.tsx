@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Building2, User, Home as HomeIcon, IdCard, Phone } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -61,8 +61,16 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
+
+  // Safe redirect target — only allow internal same-origin paths so this can't
+  // be abused as an open redirect. Falls back to "/" when missing/invalid.
+  const rawRedirect = searchParams.get("redirect");
+  const redirectTo = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+    ? rawRedirect
+    : "/";
 
   const resetSignupFields = () => {
     setName(""); setPhone(""); setIdNumber("");
@@ -75,7 +83,7 @@ const Auth = () => {
       toast({ title: t("auth.loginFailedTitle"), description: error.message, variant: "destructive" });
     } else {
       toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
-      navigate("/");
+      navigate(redirectTo);
     }
   };
 
@@ -131,7 +139,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: `${window.location.origin}/auth${rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? `?redirect=${encodeURIComponent(rawRedirect)}` : ""}`,
         data: {
           full_name: name.trim(),
           customer_type: accountType,

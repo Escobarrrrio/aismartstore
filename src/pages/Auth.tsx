@@ -139,7 +139,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: `${window.location.origin}/auth${rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? `?redirect=${encodeURIComponent(rawRedirect)}` : ""}`,
         data: {
           full_name: name.trim(),
           customer_type: accountType,

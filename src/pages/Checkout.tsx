@@ -294,11 +294,25 @@ const Checkout = () => {
               <label className="block text-xs font-semibold mb-1.5">{t("checkout.city")}</label>
               <input name="city" value={form.city} onChange={handleChange} required className="input-premium" />
             </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.city")}</label>
+              <input name="city" value={form.city} onChange={handleChange} required className="input-premium" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold mb-1.5">Province</label>
+              <select name="province" value={form.province} onChange={handleChange} required className="input-premium">
+                {SA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-semibold mb-1.5">{t("checkout.postalCode")}</label>
               <input name="postalCode" value={form.postalCode} onChange={handleChange} required className="input-premium" />
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground -mt-1">
+            Shipping is calculated from our Gqeberha (NMBM) warehouse using a benchmark zone × weight rate table. Weight above 5&nbsp;kg is an estimate.
+          </p>
           <button
             type="submit"
             disabled={processing}

@@ -69,7 +69,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "free_shipping_threshold", "resend_api_key", "stock_sanity_thresholds"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "resend_api_key", "stock_sanity_thresholds"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -119,10 +119,9 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
         <SettingsInput label="Webhook URL" value={settings.make_webhook_url || ""} onChange={(v) => update("make_webhook_url", v)} placeholder="https://hook.eu1.make.com/..." mono />
       </SettingsSection>
 
-      <SettingsSection icon={<Truck className="h-4 w-4" />} title="Shipping" description="Shown to every shopper on Cart and Checkout, and charged as part of the order total. This is the only place to change it -- editing it here updates the live site immediately.">
+      <SettingsSection icon={<Truck className="h-4 w-4" />} title="Shipping" description="Every order ships via courier and is charged for it -- there is no free-shipping threshold. Shown to every shopper on Cart and Checkout, and charged as part of the order total. This is the only place to change it -- editing it here updates the live site immediately.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <SettingsInput label="Flat Rate (R)" type="number" value={settings.shipping_flat_rate || ""} onChange={(v) => update("shipping_flat_rate", v)} placeholder="75" />
-          <SettingsInput label="Free Shipping Threshold (R)" type="number" value={settings.free_shipping_threshold || ""} onChange={(v) => update("free_shipping_threshold", v)} placeholder="500" />
         </div>
       </SettingsSection>
 

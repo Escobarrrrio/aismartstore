@@ -17,7 +17,6 @@ import { supabase } from "@/integrations/supabase/client";
  */
 
 const DEFAULT_FLAT_RATE = 75;
-const DEFAULT_FREE_THRESHOLD = 500;
 
 // Midpoints of the published sub-5kg bands. NMBM (Eastern Cape) sits in
 // "regional" — cheapest for local Eastern Cape / KZN deliveries.
@@ -61,7 +60,6 @@ export const SA_PROVINCES = Object.keys(DEFAULT_ZONES);
 
 export function useShippingSettings() {
   const [flatRate, setFlatRate] = useState(DEFAULT_FLAT_RATE);
-  const [freeThreshold, setFreeThreshold] = useState(DEFAULT_FREE_THRESHOLD);
   const [zones, setZones] = useState<Record<string, string>>(DEFAULT_ZONES);
   const [rateTable, setRateTable] = useState<RateTable>(DEFAULT_RATE_TABLE);
   const [loaded, setLoaded] = useState(false);
@@ -75,14 +73,12 @@ export function useShippingSettings() {
           .select("key, value")
           .in("key", [
             "shipping_flat_rate",
-            "free_shipping_threshold",
             "shipping_zones",
             "shipping_rate_table",
           ]);
         if (cancelled || !data) return;
         const map = Object.fromEntries(data.map((r) => [r.key, r.value]));
         if (map.shipping_flat_rate) setFlatRate(Number(map.shipping_flat_rate));
-        if (map.free_shipping_threshold) setFreeThreshold(Number(map.free_shipping_threshold));
         const parse = (v: unknown) => {
           if (!v) return null;
           if (typeof v === "string") { try { return JSON.parse(v); } catch { return null; } }
@@ -114,22 +110,20 @@ export function useShippingSettings() {
   };
 
   /**
-   * Backwards-compatible entry point.
+   * Every order ships via courier and is charged for it -- there is no
+   * free-shipping threshold.
    *   getShippingFee(subtotal)                          -> flat rate
    *   getShippingFee(subtotal, { province, weightKg }) -> zoned rate
-   * Free-shipping-over-threshold applies uniformly across zones for now.
    */
   const getShippingFee = (
     subtotal: number,
     opts?: { province?: string; weightKg?: number },
   ) => {
-    if (subtotal >= freeThreshold) return 0;
     return computeZonedFee(opts?.province, opts?.weightKg ?? 0);
   };
 
   return {
     flatRate,
-    freeThreshold,
     zones,
     rateTable,
     getShippingFee,

@@ -11,7 +11,6 @@ interface ProductCardProps {
   onQuickView?: (product: Product) => void;
 }
 
-const FREE_SHIPPING_THRESHOLD = 1000;
 const RESIDENTIAL_MAX = 15000;
 const SHIPS_FAST_MIN_STOCK = 5;
 
@@ -31,8 +30,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1500);
   };
-
-  const freeShipping = product.price >= FREE_SHIPPING_THRESHOLD;
 
   return (
     <article data-testid="product-card" data-product-id={product.id} data-product-category={product.category ?? ''} className="group relative flex flex-col overflow-hidden rounded-2xl bg-card border border-border/60 hover:border-border transition-all duration-300 hover:shadow-[0_20px_50px_-20px_hsl(var(--foreground)/0.18)] hover:-translate-y-0.5">
@@ -73,12 +70,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <span className="inline-flex items-center gap-1 rounded-full bg-foreground text-background text-[10px] font-bold px-2.5 py-1 tracking-wide shadow-sm">
               <Sparkles className="h-3 w-3" />
               AI READY
-            </span>
-          )}
-          {freeShipping && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5">
-              <Truck className="h-3 w-3" />
-              Free delivery
             </span>
           )}
         </div>

@@ -339,9 +339,7 @@ const Checkout = () => {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("cart.shipping")}</span>
-              <span className={shippingFee === 0 ? "text-[hsl(160,84%,39%)] font-semibold" : "font-medium"}>
-                {shippingFee === 0 ? t("cart.free") : formatPrice(shippingFee)}
-              </span>
+              <span className="font-medium">{formatPrice(shippingFee)}</span>
             </div>
             <div className="flex justify-between font-display font-extrabold text-xl pt-2 border-t border-border">
               <span>{t("checkout.total")}</span>

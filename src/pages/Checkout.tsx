@@ -7,7 +7,7 @@ import { CheckCircle, XCircle, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
-import { useShippingSettings } from "@/hooks/useShippingSettings";
+import { useShippingSettings, SA_PROVINCES } from "@/hooks/useShippingSettings";
 import SEO from "@/components/SEO";
 import { captureCheckoutError, capturePaymentError, captureOrderError } from "@/lib/sentry";
 

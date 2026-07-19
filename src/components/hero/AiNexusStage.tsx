@@ -1,19 +1,22 @@
 import { useEffect, useRef, useState, Component, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Cpu, Sparkles, Zap, ShieldCheck } from "lucide-react";
+import { Cpu, Sparkles, Zap, ShieldCheck, Brain } from "lucide-react";
 
 /**
  * AiNexusStage
  * -------------
- * Living, generative hero visualization for the AI Smart Store home page.
+ * Living, generative hero visualization for the AI Smart Store home page —
+ * the main-attraction centerpiece: a neural core actively "thinking."
  *
  * Design goals:
- *   1. Feel ALIVE — a real neural-mesh that reacts to cursor + time.
+ *   1. Feel ALIVE — a real neural-mesh that reacts to cursor + time, with
+ *      data visibly flowing between hub nodes like an active AI system.
  *   2. Be unbreakable — no external deps, offscreen-safe, DPR-aware,
  *      auto-pauses when tab is hidden, respects prefers-reduced-motion,
  *      wrapped in an ErrorBoundary with a graceful static fallback.
- *   3. Feel premium — brand gradient (cyan → violet → magenta) matches
- *      the site's shimmer text, on a clean white surface.
+ *   3. Feel premium and unmistakably "AI at its peak" — brand gradient
+ *      (cyan → violet → magenta), a reactor-style rotating core, orbiting
+ *      capability glyphs, and a slow radar sweep across the mesh.
  *
  * No <canvas> access is ever assumed — every ctx call is guarded, and
  * the animation loop cancels itself on error rather than crashing React.
@@ -26,6 +29,14 @@ type Node = {
   hue: number;                  // 190 (cyan) → 320 (magenta)
   pulse: number;                // 0..1 pulse phase
   pulseSpeed: number;
+  hub: boolean;                 // hub nodes render bigger/brighter, anchor the mesh
+};
+
+type Packet = {
+  from: number; to: number;     // node indices
+  t: number;                    // 0..1 progress along the link
+  speed: number;
+  hue: number;
 };
 
 class NexusBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
@@ -49,11 +60,14 @@ const StaticFallback = () => (
   </div>
 );
 
+const HUB_RATIO = 0.16; // ~1 in 6 nodes is a bright "core" hub
+
 const NexusCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const nodesRef = useRef<Node[]>([]);
+  const packetsRef = useRef<Packet[]>([]);
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
   const sizeRef = useRef<{ w: number; h: number; dpr: number }>({ w: 0, h: 0, dpr: 1 });
   const [reduced, setReduced] = useState(false);
@@ -91,21 +105,24 @@ const NexusCanvas = () => {
     if (!ctx) return; // Boundary fallback would replace us via the outer StaticFallback.
 
     const seedNodes = (w: number, h: number) => {
-      const count = Math.max(22, Math.min(46, Math.floor((w * h) / 22000)));
+      const count = Math.max(28, Math.min(60, Math.floor((w * h) / 17000)));
       const nodes: Node[] = [];
       for (let i = 0; i < count; i++) {
+        const hub = Math.random() < HUB_RATIO;
         nodes.push({
           x: Math.random() * w,
           y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.35,
-          vy: (Math.random() - 0.5) * 0.35,
-          r: 1.5 + Math.random() * 2.2,
+          vx: (Math.random() - 0.5) * (hub ? 0.18 : 0.35),
+          vy: (Math.random() - 0.5) * (hub ? 0.18 : 0.35),
+          r: hub ? 3.4 + Math.random() * 1.8 : 1.4 + Math.random() * 1.8,
           hue: 190 + Math.random() * 130,     // cyan → magenta band
           pulse: Math.random(),
-          pulseSpeed: 0.005 + Math.random() * 0.012,
+          pulseSpeed: (hub ? 0.008 : 0.005) + Math.random() * 0.012,
+          hub,
         });
       }
       nodesRef.current = nodes;
+      packetsRef.current = [];
     };
 
     const resize = () => {
@@ -147,7 +164,25 @@ const NexusCanvas = () => {
     };
     document.addEventListener("visibilitychange", onVis);
 
-    const LINK_DIST = 130;
+    const LINK_DIST = 138;
+    const activeLinks: Array<[number, number, number]> = []; // [i, j, distanceFactor] reused each frame
+
+    const maybeSpawnPacket = () => {
+      // Keep a light, capped population of "data flowing through the mesh" packets.
+      if (packetsRef.current.length >= 6 || activeLinks.length === 0) return;
+      if (Math.random() > 0.045) return;
+      const [i, j] = activeLinks[Math.floor(Math.random() * activeLinks.length)];
+      const a = nodesRef.current[i];
+      const b = nodesRef.current[j];
+      packetsRef.current.push({
+        from: i,
+        to: j,
+        t: 0,
+        speed: 0.012 + Math.random() * 0.014,
+        hue: (a.hue + b.hue) / 2,
+      });
+    };
+
     const draw = () => {
       const { w, h } = sizeRef.current;
       const nodes = nodesRef.current;
@@ -167,7 +202,7 @@ const NexusCanvas = () => {
       g2.addColorStop(1, "hsla(320, 90%, 62%, 0)");
       ctx.fillStyle = g2; ctx.fillRect(0, 0, w, h);
 
-      // Update + draw links
+      // Update nodes
       for (let i = 0; i < nodes.length; i++) {
         const n = nodes[i];
         n.x += n.vx;
@@ -178,13 +213,13 @@ const NexusCanvas = () => {
         n.y = Math.max(0, Math.min(h, n.y));
         n.pulse = (n.pulse + n.pulseSpeed) % 1;
 
-        // Cursor attraction
+        // Cursor attraction — hubs resist it slightly, feels more "anchored"
         if (mouseRef.current.active) {
           const dx = mouseRef.current.x - n.x;
           const dy = mouseRef.current.y - n.y;
           const d2 = dx * dx + dy * dy;
           if (d2 < 180 * 180) {
-            const f = 0.0006;
+            const f = n.hub ? 0.0003 : 0.0006;
             n.vx += dx * f;
             n.vy += dy * f;
           }
@@ -196,7 +231,8 @@ const NexusCanvas = () => {
         if (Math.abs(n.vy) < 0.05) n.vy += (Math.random() - 0.5) * 0.06;
       }
 
-      // Links
+      // Links (collect active ones for data-packet spawning as we go)
+      activeLinks.length = 0;
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i];
         for (let j = i + 1; j < nodes.length; j++) {
@@ -206,33 +242,69 @@ const NexusCanvas = () => {
           const d = Math.sqrt(dx * dx + dy * dy);
           if (d < LINK_DIST) {
             const t = 1 - d / LINK_DIST;
+            const bothHubs = a.hub && b.hub;
             const hue = (a.hue + b.hue) / 2;
-            ctx.strokeStyle = `hsla(${hue}, 90%, 60%, ${0.18 * t})`;
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = `hsla(${hue}, 90%, 60%, ${(bothHubs ? 0.32 : 0.18) * t})`;
+            ctx.lineWidth = bothHubs ? 1.4 : 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.stroke();
+            activeLinks.push([i, j, t]);
           }
         }
       }
 
-      // Nodes with pulse glow
+      // Data packets: bright dots traveling along live links — the mesh "thinking"
+      maybeSpawnPacket();
+      const packets = packetsRef.current;
+      for (let p = packets.length - 1; p >= 0; p--) {
+        const pk = packets[p];
+        const a = nodes[pk.from];
+        const b = nodes[pk.to];
+        if (!a || !b) { packets.splice(p, 1); continue; }
+        pk.t += pk.speed;
+        if (pk.t >= 1) { packets.splice(p, 1); continue; }
+        const px = a.x + (b.x - a.x) * pk.t;
+        const py = a.y + (b.y - a.y) * pk.t;
+        const grad = ctx.createRadialGradient(px, py, 0, px, py, 7);
+        grad.addColorStop(0, `hsla(${pk.hue}, 100%, 72%, 0.95)`);
+        grad.addColorStop(1, `hsla(${pk.hue}, 100%, 72%, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(px, py, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `hsla(${pk.hue}, 100%, 85%, 0.95)`;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Nodes with pulse glow — hubs render as bright anchor cores
       for (const n of nodes) {
         const glow = 0.6 + 0.4 * Math.sin(n.pulse * Math.PI * 2);
-        const rr = n.r * (1 + 0.25 * glow);
-        const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, rr * 6);
-        grad.addColorStop(0, `hsla(${n.hue}, 95%, 65%, ${0.55 * glow})`);
+        const rr = n.r * (1 + (n.hub ? 0.4 : 0.25) * glow);
+        const haloMult = n.hub ? 9 : 6;
+        const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, rr * haloMult);
+        grad.addColorStop(0, `hsla(${n.hue}, 95%, 65%, ${(n.hub ? 0.7 : 0.55) * glow})`);
         grad.addColorStop(1, `hsla(${n.hue}, 95%, 65%, 0)`);
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(n.x, n.y, rr * 6, 0, Math.PI * 2);
+        ctx.arc(n.x, n.y, rr * haloMult, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = `hsl(${n.hue}, 90%, 55%)`;
+        ctx.fillStyle = `hsl(${n.hue}, 90%, ${n.hub ? 60 : 55}%)`;
         ctx.beginPath();
         ctx.arc(n.x, n.y, rr, 0, Math.PI * 2);
         ctx.fill();
+
+        if (n.hub) {
+          ctx.strokeStyle = `hsla(${n.hue}, 100%, 85%, ${0.5 * glow})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, rr + 3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
       }
     };
 
@@ -268,6 +340,18 @@ const NexusCanvas = () => {
     <div ref={wrapRef} className="relative aspect-[5/4] w-full rounded-3xl overflow-hidden bg-white border border-border/60 shadow-[0_30px_80px_-40px_hsl(260_85%_60%/0.35)]">
       <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
 
+      {/* Slow radar-style sweep across the mesh — reinforces "actively scanning/thinking" */}
+      {!reduced && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none opacity-[0.35] mix-blend-plus-lighter animate-[spin_9s_linear_infinite]"
+          style={{
+            background:
+              "conic-gradient(from 0deg, transparent 0deg, hsla(190,95%,65%,0.22) 12deg, transparent 26deg, transparent 360deg)",
+          }}
+        />
+      )}
+
       {/* Foreground UI layer */}
       <div className="absolute inset-0 flex flex-col justify-between p-5 md:p-6 pointer-events-none">
         {/* Top status pill */}
@@ -284,19 +368,59 @@ const NexusCanvas = () => {
           </div>
         </div>
 
-        {/* Center brand medallion */}
+        {/* Center reactor core — the main attraction */}
         <div className="flex items-center justify-center">
-          <div className="pointer-events-auto flex flex-col items-center">
-            <div className="relative">
-              <div className="absolute inset-0 -m-3 rounded-full bg-gradient-to-br from-[hsl(190,95%,60%)] via-[hsl(260,85%,60%)] to-[hsl(320,85%,60%)] blur-2xl opacity-40 animate-pulse" />
-              <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-full bg-gradient-to-br from-[hsl(190,95%,60%)] via-[hsl(260,85%,60%)] to-[hsl(320,85%,60%)] flex items-center justify-center shadow-lg">
-                <Cpu className="h-9 w-9 md:h-11 md:w-11 text-white drop-shadow" />
+          <div className="pointer-events-auto relative flex flex-col items-center">
+            <div className="relative h-28 w-28 md:h-32 md:w-32 flex items-center justify-center">
+              {/* Outer halo */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[hsl(190,95%,60%)] via-[hsl(260,85%,60%)] to-[hsl(320,85%,60%)] blur-2xl opacity-40 animate-pulse" />
+
+              {/* Rotating reactor rings */}
+              {!reduced && (
+                <>
+                  <div className="absolute inset-0 rounded-full border-2 border-dashed border-primary/40 animate-[spin_14s_linear_infinite]" />
+                  <div className="absolute inset-2 rounded-full border border-dotted border-secondary/50 animate-[spin_10s_linear_infinite_reverse]" />
+                </>
+              )}
+
+              {/* Orbiting capability glyphs — vision · speed · trust */}
+              {!reduced && (
+                <div className="absolute inset-[-6px] animate-[spin_16s_linear_infinite]">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 animate-[spin_16s_linear_infinite_reverse]">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md border border-border/60">
+                      <Sparkles className="h-3 w-3 text-[hsl(190,90%,50%)]" />
+                    </span>
+                  </div>
+                </div>
+              )}
+              {!reduced && (
+                <div className="absolute inset-[-6px] animate-[spin_16s_linear_infinite] [animation-delay:-5.3s]">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 animate-[spin_16s_linear_infinite_reverse] [animation-delay:-5.3s]">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md border border-border/60">
+                      <Zap className="h-3 w-3 text-[hsl(260,85%,55%)]" />
+                    </span>
+                  </div>
+                </div>
+              )}
+              {!reduced && (
+                <div className="absolute inset-[-6px] animate-[spin_16s_linear_infinite] [animation-delay:-10.6s]">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 animate-[spin_16s_linear_infinite_reverse] [animation-delay:-10.6s]">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md border border-border/60">
+                      <ShieldCheck className="h-3 w-3 text-[hsl(320,80%,55%)]" />
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Core */}
+              <div className="relative h-16 w-16 md:h-[4.5rem] md:w-[4.5rem] rounded-full bg-gradient-to-br from-[hsl(190,95%,60%)] via-[hsl(260,85%,60%)] to-[hsl(320,85%,60%)] flex items-center justify-center shadow-lg ring-4 ring-white">
+                <Brain className="h-8 w-8 md:h-9 md:w-9 text-white drop-shadow" />
               </div>
             </div>
             <p className="mt-3 font-display font-extrabold text-base md:text-lg tracking-tight text-foreground">
               AI Nexus
             </p>
-            <p className="text-[11px] text-muted-foreground">South Africa's living catalogue</p>
+            <p className="text-[11px] text-muted-foreground">South Africa's living catalogue — thinking in real time</p>
           </div>
         </div>
 

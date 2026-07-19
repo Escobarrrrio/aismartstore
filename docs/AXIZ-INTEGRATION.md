@@ -1,60 +1,72 @@
 # Axiz Distributor Integration
 
-Axiz is our South African tech distributor. The integration lets the store
-automatically ingest their product catalogue, apply a configurable markup
-(default 26%), and keep stock levels and pricing in sync.
+Axiz is our South African tech distributor. The `axiz-sync` edge function pulls
+their full product catalogue, applies a configurable markup (default 17%), and
+keeps pricing, stock, images, and audience tags in sync with the storefront.
 
 ## Status
 
-**Scaffold complete — awaiting Axiz API credentials.**
+**Live and connected.** The integration has been running end-to-end against the
+production Axiz API. The most recent successful run completed on
+**2026-07-10** with `catalog_complete` status and **153,176 products** synced.
 
-The edge function `axiz-sync` is deployed and wired end-to-end:
+The function:
 
-- Reads `axiz_api_key` and `axiz_markup_pct` from `store_settings`
-- Writes to `sync_logs` on every run (running / success / skipped / failed)
-- Upserts into `products` on `sku`
-- Stores raw cost in `product_costs` (isolated table protected by RLS)
+- Reads OAuth credentials from Supabase secrets (`AXIZ_CLIENT_ID`,
+  `AXIZ_CLIENT_SECRET`, `AXIZ_SCOPE`)
+- Mints a token against `identity.goaxiz.co.za/connect/token`
+- Pages through `SearchPriceList` in 1,000-item chunks, 8 pages per invocation
+- Persists a cursor (`axiz_sync_cursor` in `store_settings`) so long runs
+  resume where the previous invocation stopped — safe to re-trigger
+- Writes each page to the DB immediately so progress survives timeouts
+- Upserts on `sku` into `products`, isolates raw cost in `product_costs`
 - Applies markup: `price = cost * (1 + markup_pct/100)`
+- Filters out placeholder / blocklisted images
+- Logs every run to `sync_logs`
 
-The only piece that isn't real yet is `fetchAxizCatalog()`, because Axiz
-has not published API documentation to us. It currently throws a clear
-error so the sync_logs row records "not implemented" instead of silently
-succeeding.
+## Audience & price-cap tuning
 
-## Enabling the integration (once credentials arrive)
+Every synced row is tagged with an `audience` value based on the marked-up
+selling price:
 
-1. In the Admin Control Centre → **Settings → Axiz Distributor**, paste:
-   - **API Key** → stored as `axiz_api_key`
-   - **Markup %** → stored as `axiz_markup_pct`
-2. Replace the body of `fetchAxizCatalog()` in
-   `supabase/functions/axiz-sync/index.ts` with a real `fetch()` call
-   against the Axiz endpoint, using their documented auth scheme.
-3. Trigger a manual sync from the Command Centre (**Resync Axiz** quick
-   action) to verify.
-4. Schedule via `pg_cron` — recommend daily 02:00 SAST:
+- `price <= R15,000` → `audience = 'residential'` (surfaces on the main
+  storefront and home page "AI Picks")
+- `price >  R15,000` → `audience = 'business'` (surfaces on `/procurement`,
+  the business / government procurement portal)
 
-```sql
-select cron.schedule(
-  'axiz-nightly-sync', '0 0 * * *',
-  $$ select net.http_post(
-       url := 'https://<project>.supabase.co/functions/v1/axiz-sync',
-       headers := jsonb_build_object('Authorization', 'Bearer <SERVICE_ROLE>')
-     ); $$
-);
-```
+The cut-off matches the household-budget bar used across the home page and
+`search_products` RPC. If the cap needs to change, update it in three places:
 
-## What the sync guarantees
+1. `supabase/functions/axiz-sync/index.ts` (row mapping)
+2. `src/pages/Index.tsx` (`.lte("price", 15000)` on the AI Picks query)
+3. `src/contexts/ProductContext.tsx` (`addProducts` bulk-import default)
 
-- Idempotent: safe to run every hour if desired
-- Non-destructive: never deletes existing products (marks `is_active=false`
-  if SKU disappears)
-- Auditable: every run has a `sync_logs` row with counts and errors
-- Non-blocking: if the API is down, the run fails cleanly and the next
-  run picks up where it left off
+There is also a backend helper, `public.backfill_audience_batch(batch_size,
+price_cap)`, that re-tags existing rows in small batches — useful after a
+cap change or after a bulk import from a different source.
 
 ## Related tables
 
-- `products` — public catalogue rows (price includes markup)
+- `products` — public catalogue rows (price includes markup, tagged with
+  `audience`, `is_ai_product`, `is_active`)
 - `product_costs` — raw cost prices; visible only to admins
-- `sync_logs` — full audit trail
-- `store_settings` — API key + markup config
+- `sync_logs` — full audit trail of every run
+- `store_settings` — `axiz_markup_pct`, `axiz_markets`, `axiz_brand_filter`,
+  `axiz_sync_cursor`
+- `image_blocklist` — URLs of known placeholder / broken images; the sync
+  refuses to publish products whose primary image matches
+
+## Scheduling
+
+Recommended: daily at 02:00 SAST via `pg_cron`, calling the function with
+the `x-internal-secret: <INTERNAL_CRON_SECRET>` header so it bypasses the
+admin-role check.
+
+## Guarantees
+
+- Idempotent — safe to re-run
+- Non-destructive — products with missing/blocked images or zero cost are
+  marked `is_active = false` instead of deleted
+- Auditable — every run has a `sync_logs` row with counts, cursor, and errors
+- Resumable — the cursor design means a killed invocation loses at most one
+  in-flight page

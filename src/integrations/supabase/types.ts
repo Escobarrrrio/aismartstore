@@ -1344,6 +1344,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      backfill_audience_batch: {
+        Args: { batch_size?: number; price_cap?: number }
+        Returns: number
+      }
       deactivate_blocked_products_batch: {
         Args: { batch_size?: number }
         Returns: number

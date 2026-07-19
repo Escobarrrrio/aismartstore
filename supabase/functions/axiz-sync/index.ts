@@ -20,6 +20,7 @@ function isAiRelated(s: string): boolean {
   if (/\bAI\b/i.test(s)) return true;
   if (/artificial intelligence/i.test(s)) return true;
   if (/\b(machine learning|neural|edge ai|genai|deep learning)\b/i.test(s)) return true;
+  if (/\b(copilot|co-pilot|NPU|smart camera|ai speaker|smart home|smart speaker|smart display|smart hub|voice assistant|alexa|google assistant)\b/i.test(s)) return true;
   return false;
 }
 
@@ -176,6 +177,7 @@ Deno.serve(async (req) => {
             images: imgs,
             is_active: publishable,
             is_ai_product: ai,
+            audience: sellingPrice <= 15000 ? "residential" : "business",
             last_synced_at: now,
             _cost: cost,
             _axiz_id: String(item.productCode),

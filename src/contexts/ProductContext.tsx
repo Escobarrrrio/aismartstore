@@ -106,6 +106,9 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       category: p.category,
       images: p.images,
       in_stock: p.inStock,
+      is_active: true,
+      is_ai_product: false,
+      audience: (p.price ?? 0) <= 15000 ? "residential" : "business",
     }));
     const { error } = await supabase.from("products").insert(rows);
     if (error) {

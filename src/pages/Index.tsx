@@ -28,6 +28,7 @@ const Index = () => {
         .eq("is_active", true)
         .eq("audience", "residential")
         .eq("is_ai_product", true)
+        .lte("price", 15000)
         .not("images", "is", null)
         .order("created_at", { ascending: false })
         .limit(16);

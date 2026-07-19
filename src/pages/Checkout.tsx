@@ -289,11 +289,6 @@ const Checkout = () => {
             <label className="block text-xs font-semibold mb-1.5">{t("checkout.address")}</label>
             <textarea name="address" value={form.address} onChange={handleChange} required rows={2} className="input-premium resize-none" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold mb-1.5">{t("checkout.city")}</label>
-              <input name="city" value={form.city} onChange={handleChange} required className="input-premium" />
-            </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold mb-1.5">{t("checkout.city")}</label>

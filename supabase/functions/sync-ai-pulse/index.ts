@@ -31,6 +31,50 @@ function parseArxivRss(xml: string) {
   return items;
 }
 
+/**
+ * Best-effort og:image scrape of the article's own page -- a real preview
+ * image for that specific story, never a stock/fabricated placeholder.
+ * Bounded read (stop at </head> or 100KB) and a hard timeout so one slow
+ * or hostile site can't stall the whole sync. Returns null on any failure,
+ * which the UI treats as "no image" rather than something broken.
+ */
+async function fetchOgImage(url: string, timeoutMs = 4000): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; AISmartStoreBot/1.0; +https://aismartstore.co.za)" },
+    });
+    if (!res.ok || !(res.headers.get("content-type") || "").includes("text/html") || !res.body) {
+      return null;
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let html = "";
+    let bytes = 0;
+    const MAX_BYTES = 100_000;
+    while (bytes < MAX_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.length;
+      html += decoder.decode(value, { stream: true });
+      if (/<\/head>/i.test(html)) break;
+    }
+    reader.cancel().catch(() => {});
+    const match =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    const raw = match?.[1];
+    if (!raw) return null;
+    return new URL(raw, url).toString();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 Deno.serve(async (_req) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -46,20 +90,24 @@ Deno.serve(async (_req) => {
     );
     const xml = await arxivRes.text();
     const papers = parseArxivRss(xml);
-    for (const p of papers) {
-      const { error } = await supabase.from("ai_pulse_items").upsert(
-        {
-          title: p.title,
-          url: p.url,
-          source: "arxiv",
-          category: "research",
-          summary: p.summary,
-          published_at: p.published_at,
-        },
-        { onConflict: "url" }
-      );
-      if (!error) results.arxiv++;
-    }
+    await Promise.all(
+      papers.map(async (p) => {
+        const image_url = await fetchOgImage(p.url);
+        const { error } = await supabase.from("ai_pulse_items").upsert(
+          {
+            title: p.title,
+            url: p.url,
+            source: "arxiv",
+            category: "research",
+            summary: p.summary,
+            published_at: p.published_at,
+            image_url,
+          },
+          { onConflict: "url" }
+        );
+        if (!error) results.arxiv++;
+      })
+    );
   } catch (e) {
     errors.push(`arxiv: ${e.message}`);
   }
@@ -72,23 +120,29 @@ Deno.serve(async (_req) => {
         fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then((r) => r.json())
       )
     );
-    for (const s of stories) {
-      if (!s?.title || !s?.url) continue;
+    const aiStories = stories.filter((s) => {
+      if (!s?.title || !s?.url) return false;
       const lower = s.title.toLowerCase();
-      if (!AI_KEYWORDS.some((kw) => lower.includes(kw))) continue;
-      const { error } = await supabase.from("ai_pulse_items").upsert(
-        {
-          title: s.title,
-          url: s.url,
-          source: "hn",
-          category: "news",
-          summary: `${s.score ?? 0} points, ${s.descendants ?? 0} comments on Hacker News`,
-          published_at: new Date(s.time * 1000).toISOString(),
-        },
-        { onConflict: "url" }
-      );
-      if (!error) results.hn++;
-    }
+      return AI_KEYWORDS.some((kw) => lower.includes(kw));
+    });
+    await Promise.all(
+      aiStories.map(async (s) => {
+        const image_url = await fetchOgImage(s.url);
+        const { error } = await supabase.from("ai_pulse_items").upsert(
+          {
+            title: s.title,
+            url: s.url,
+            source: "hn",
+            category: "news",
+            summary: `${s.score ?? 0} points, ${s.descendants ?? 0} comments on Hacker News`,
+            published_at: new Date(s.time * 1000).toISOString(),
+            image_url,
+          },
+          { onConflict: "url" }
+        );
+        if (!error) results.hn++;
+      })
+    );
   } catch (e) {
     errors.push(`hn: ${e.message}`);
   }

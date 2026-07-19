@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Heart, Sparkles, Truck, ShieldCheck, Check, Zap, Home, PackageCheck } from "lucide-react";
+import { ShoppingCart, Heart, Sparkles, Truck, ShieldCheck, Check, Zap, Rocket, PackageCheck } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -133,9 +133,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </span>
           )}
           {product.price > 0 && product.price <= RESIDENTIAL_MAX && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 text-violet-700 border border-violet-200 text-[10px] font-semibold px-2 py-0.5">
-              <Home className="h-3 w-3" />
-              Under R15k
+            <span className="inline-flex items-center gap-1 rounded-full gradient-brand text-white text-[10px] font-bold px-2 py-0.5 shadow-sm">
+              <Rocket className="h-3 w-3" />
+              Smart Pick
             </span>
           )}
           {product.price > RESIDENTIAL_MAX && (

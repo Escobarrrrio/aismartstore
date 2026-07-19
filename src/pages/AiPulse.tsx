@@ -5,7 +5,6 @@ import {
   FlaskConical,
   Newspaper,
   ExternalLink,
-  Sparkles,
   Search,
   TrendingUp,
   AlertTriangle,
@@ -21,6 +20,7 @@ interface PulseItem {
   category: string;
   summary: string | null;
   published_at: string | null;
+  image_url: string | null;
 }
 
 const PAGE_SIZE = 30;
@@ -53,6 +53,17 @@ const CategoryBadge = ({ category }: { category: string }) =>
       <Newspaper className="h-3 w-3" /> NEWS
     </span>
   );
+
+/** Real per-story preview image scraped from the article's own page at
+ *  sync time -- never a stock photo. Collapses cleanly if it 404s by the
+ *  time a visitor loads the page. */
+const PulseThumb = ({ src, alt, className }: { src: string; alt: string; className: string }) => {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setFailed(true)} className={className} />
+  );
+};
 
 const AiPulse = () => {
   const [items, setItems] = useState<PulseItem[]>([]);
@@ -267,30 +278,41 @@ const AiPulse = () => {
                 href={featured.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative block card-flat overflow-hidden mb-6 p-6 md:p-8 hover:shadow-elevated transition-shadow"
+                className="group relative block card-flat overflow-hidden mb-6 hover:shadow-elevated transition-shadow"
               >
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/[0.07] to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-                <div className="relative">
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-foreground text-background text-[10px] font-display font-bold tracking-wide">
-                      <TrendingUp className="h-3 w-3" /> LATEST
-                    </span>
-                    <CategoryBadge category={featured.category} />
-                    <span className="text-[11px] text-muted-foreground">
-                      {SOURCE_LABELS[featured.source] ?? featured.source} · {timeAgo(featured.published_at)}
+                <div className="relative flex flex-col md:flex-row">
+                  {featured.image_url && (
+                    <div className="md:w-2/5 shrink-0 bg-muted">
+                      <PulseThumb
+                        src={featured.image_url}
+                        alt=""
+                        className="w-full h-48 md:h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="p-6 md:p-8 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-foreground text-background text-[10px] font-display font-bold tracking-wide">
+                        <TrendingUp className="h-3 w-3" /> LATEST
+                      </span>
+                      <CategoryBadge category={featured.category} />
+                      <span className="text-[11px] text-muted-foreground">
+                        {SOURCE_LABELS[featured.source] ?? featured.source} · {timeAgo(featured.published_at)}
+                      </span>
+                    </div>
+                    <h2 className="font-display font-extrabold text-xl md:text-2xl leading-snug mb-2 group-hover:text-primary transition-colors">
+                      {featured.title}
+                    </h2>
+                    {featured.summary && (
+                      <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl line-clamp-3">
+                        {featured.summary}
+                      </p>
+                    )}
+                    <span className="inline-flex items-center gap-1.5 text-sm text-primary mt-4 font-semibold">
+                      Read the full {featured.category === "research" ? "paper" : "story"} <ExternalLink className="h-3.5 w-3.5" />
                     </span>
                   </div>
-                  <h2 className="font-display font-extrabold text-xl md:text-2xl leading-snug mb-2 group-hover:text-primary transition-colors">
-                    {featured.title}
-                  </h2>
-                  {featured.summary && (
-                    <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl line-clamp-3">
-                      {featured.summary}
-                    </p>
-                  )}
-                  <span className="inline-flex items-center gap-1.5 text-sm text-primary mt-4 font-semibold">
-                    Read the full {featured.category === "research" ? "paper" : "story"} <ExternalLink className="h-3.5 w-3.5" />
-                  </span>
                 </div>
               </a>
             )}
@@ -302,22 +324,29 @@ const AiPulse = () => {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="card-flat p-5 hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-200 group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="card-flat overflow-hidden hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-200 group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <CategoryBadge category={item.category} />
-                  </div>
-                  <h3 className="font-display font-bold text-sm leading-snug mb-1.5 group-hover:text-primary transition-colors line-clamp-2">
-                    {item.title}
-                  </h3>
-                  {item.summary && (
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{item.summary}</p>
+                  {item.image_url && (
+                    <div className="bg-muted">
+                      <PulseThumb src={item.image_url} alt="" className="w-full h-36 object-cover" />
+                    </div>
                   )}
-                  <div className="mt-auto flex items-center justify-between pt-3 border-t border-border/60">
-                    <span className="text-[11px] text-muted-foreground">
-                      {SOURCE_LABELS[item.source] ?? item.source} · {timeAgo(item.published_at)}
-                    </span>
-                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <CategoryBadge category={item.category} />
+                    </div>
+                    <h3 className="font-display font-bold text-sm leading-snug mb-1.5 group-hover:text-primary transition-colors line-clamp-2">
+                      {item.title}
+                    </h3>
+                    {item.summary && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{item.summary}</p>
+                    )}
+                    <div className="mt-auto flex items-center justify-between pt-3 border-t border-border/60">
+                      <span className="text-[11px] text-muted-foreground">
+                        {SOURCE_LABELS[item.source] ?? item.source} · {timeAgo(item.published_at)}
+                      </span>
+                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
                   </div>
                 </a>
               ))}

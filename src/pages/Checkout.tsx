@@ -7,7 +7,7 @@ import { CheckCircle, XCircle, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
-import { useShippingSettings } from "@/hooks/useShippingSettings";
+import { useShippingSettings, SA_PROVINCES } from "@/hooks/useShippingSettings";
 import SEO from "@/components/SEO";
 import { captureCheckoutError, capturePaymentError, captureOrderError } from "@/lib/sentry";
 
@@ -20,7 +20,17 @@ const Checkout = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
   const { getShippingFee } = useShippingSettings();
-  const shippingFee = getShippingFee(totalPrice);
+  const [form, setForm] = useState({
+    name: "", email: "", phone: "", address: "", city: "", province: "Eastern Cape", postalCode: "",
+  });
+  // Rough parcel-weight estimate: 1kg per item until products carry a real
+  // weight column. Good enough for the sub-5kg tier which covers almost
+  // everything we sell today.
+  const estimatedWeightKg = items.reduce((s, i) => s + i.quantity, 0);
+  const shippingFee = getShippingFee(totalPrice, {
+    province: form.province,
+    weightKg: estimatedWeightKg,
+  });
   const grandTotal = totalPrice + shippingFee;
   const [submitted, setSubmitted] = useState(false);
   const [paymentFailed, setPaymentFailed] = useState(false);
@@ -30,9 +40,6 @@ const Checkout = () => {
   const MAX_RETRIES = 3;
   const [capturingPaypal, setCapturingPaypal] = useState(searchParams.get("status") === "paypal_return");
   const failedOrderId = searchParams.get("orderId");
-  const [form, setForm] = useState({
-    name: "", email: "", phone: "", address: "", city: "", postalCode: "",
-  });
   const [userId, setUserId] = useState<string | null>(null);
 
   const [authChecked, setAuthChecked] = useState(false);
@@ -252,7 +259,7 @@ const Checkout = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -282,16 +289,25 @@ const Checkout = () => {
             <label className="block text-xs font-semibold mb-1.5">{t("checkout.address")}</label>
             <textarea name="address" value={form.address} onChange={handleChange} required rows={2} className="input-premium resize-none" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold mb-1.5">{t("checkout.city")}</label>
               <input name="city" value={form.city} onChange={handleChange} required className="input-premium" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold mb-1.5">Province</label>
+              <select name="province" value={form.province} onChange={handleChange} required className="input-premium">
+                {SA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-semibold mb-1.5">{t("checkout.postalCode")}</label>
               <input name="postalCode" value={form.postalCode} onChange={handleChange} required className="input-premium" />
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground -mt-1">
+            Shipping is calculated from our Gqeberha (NMBM) warehouse using a benchmark zone × weight rate table. Weight above 5&nbsp;kg is an estimate.
+          </p>
           <button
             type="submit"
             disabled={processing}

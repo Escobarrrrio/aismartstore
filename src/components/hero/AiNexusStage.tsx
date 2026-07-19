@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, Component, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Cpu, Sparkles, Zap, ShieldCheck, Brain } from "lucide-react";
+import { Sparkles, Zap, ShieldCheck, Brain } from "lucide-react";
 
 /**
  * AiNexusStage
@@ -412,9 +412,48 @@ const NexusCanvas = () => {
                 </div>
               )}
 
-              {/* Core */}
-              <div className="relative h-16 w-16 md:h-[4.5rem] md:w-[4.5rem] rounded-full bg-gradient-to-br from-[hsl(190,95%,60%)] via-[hsl(260,85%,60%)] to-[hsl(320,85%,60%)] flex items-center justify-center shadow-lg ring-4 ring-white">
-                <Brain className="h-8 w-8 md:h-9 md:w-9 text-white drop-shadow" />
+              {/* Core — dark glass reactor housing with cinematic rim light,
+                  chromatic hologram split, and power-surge pulses. */}
+              <div className="relative h-16 w-16 md:h-[4.5rem] md:w-[4.5rem]">
+                {/* Expanding energy-discharge rings (arc-reactor power surge) */}
+                {!reduced && (
+                  <>
+                    <span className="absolute inset-0 rounded-full border border-[hsl(190,95%,60%)]/70 animate-[ping_2.8s_cubic-bezier(0,0,0.2,1)_infinite]" />
+                    <span className="absolute inset-0 rounded-full border border-[hsl(320,85%,60%)]/60 animate-[ping_2.8s_cubic-bezier(0,0,0.2,1)_infinite] [animation-delay:-1.4s]" />
+                  </>
+                )}
+
+                <div className="relative h-full w-full rounded-full overflow-hidden shadow-[0_10px_40px_-8px_rgba(0,0,0,0.55)] ring-4 ring-white">
+                  {/* Deep glass housing — the "chamber" the core sits in */}
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_28%,hsl(258,55%,20%),hsl(258,70%,6%)_72%)]" />
+                  {/* Brand energy suffusing the glass */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(190,95%,55%)]/35 via-[hsl(260,85%,55%)]/25 to-[hsl(320,85%,55%)]/35 mix-blend-screen" />
+
+                  {/* Rim light sweep — simulates a rotating studio key light on a 3D object */}
+                  {!reduced && (
+                    <div
+                      className="absolute inset-0 animate-[spin_5s_linear_infinite]"
+                      style={{
+                        background:
+                          "conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.95) 6deg, transparent 18deg, transparent 360deg)",
+                      }}
+                    />
+                  )}
+
+                  {/* Chromatic hologram-split ghosts (subtle RGB fringe, sci-fi projection feel) */}
+                  {!reduced && (
+                    <>
+                      <Brain className="absolute inset-0 m-auto h-8 w-8 md:h-9 md:w-9 -translate-x-[1.5px] text-[hsl(190,100%,60%)] opacity-60" />
+                      <Brain className="absolute inset-0 m-auto h-8 w-8 md:h-9 md:w-9 translate-x-[1.5px] text-[hsl(320,100%,62%)] opacity-60" />
+                    </>
+                  )}
+
+                  {/* Primary core glyph — bright, backlit, breathing */}
+                  <Brain className="absolute inset-0 m-auto h-8 w-8 md:h-9 md:w-9 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.85)] drop-shadow-[0_0_16px_rgba(147,197,253,0.65)] animate-[pulse_3s_ease-in-out_infinite]" />
+
+                  {/* Specular glass highlight */}
+                  <div className="absolute -top-2.5 -left-2 h-7 w-7 rounded-full bg-white/35 blur-md" />
+                </div>
               </div>
             </div>
             <p className="mt-3 font-display font-extrabold text-base md:text-lg tracking-tight text-foreground">

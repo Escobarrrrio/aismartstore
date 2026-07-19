@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.backfill_audience_batch(integer, numeric) FROM PUBLIC, anon, authenticated;

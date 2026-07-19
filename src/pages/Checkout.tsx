@@ -20,7 +20,17 @@ const Checkout = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
   const { getShippingFee } = useShippingSettings();
-  const shippingFee = getShippingFee(totalPrice);
+  const [form, setForm] = useState({
+    name: "", email: "", phone: "", address: "", city: "", province: "Eastern Cape", postalCode: "",
+  });
+  // Rough parcel-weight estimate: 1kg per item until products carry a real
+  // weight column. Good enough for the sub-5kg tier which covers almost
+  // everything we sell today.
+  const estimatedWeightKg = items.reduce((s, i) => s + i.quantity, 0);
+  const shippingFee = getShippingFee(totalPrice, {
+    province: form.province,
+    weightKg: estimatedWeightKg,
+  });
   const grandTotal = totalPrice + shippingFee;
   const [submitted, setSubmitted] = useState(false);
   const [paymentFailed, setPaymentFailed] = useState(false);
@@ -30,9 +40,6 @@ const Checkout = () => {
   const MAX_RETRIES = 3;
   const [capturingPaypal, setCapturingPaypal] = useState(searchParams.get("status") === "paypal_return");
   const failedOrderId = searchParams.get("orderId");
-  const [form, setForm] = useState({
-    name: "", email: "", phone: "", address: "", city: "", postalCode: "",
-  });
   const [userId, setUserId] = useState<string | null>(null);
 
   const [authChecked, setAuthChecked] = useState(false);

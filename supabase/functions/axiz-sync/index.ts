@@ -177,6 +177,7 @@ Deno.serve(async (req) => {
             images: imgs,
             is_active: publishable,
             is_ai_product: ai,
+            audience: sellingPrice <= 15000 ? "residential" : "business",
             last_synced_at: now,
             _cost: cost,
             _axiz_id: String(item.productCode),

@@ -108,7 +108,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "resend_api_key", "stock_sanity_thresholds"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "resend_api_key", "email_from_address", "stock_sanity_thresholds"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -150,8 +150,11 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
         <SettingsInput label="API Key" type="password" value={settings.openai_api_key || ""} onChange={(v) => update("openai_api_key", v)} placeholder="sk-..." mono />
       </SettingsSection>
 
-      <SettingsSection icon={<Bot className="h-4 w-4" />} title="Resend — Email & Newsletters" description="Powers the welcome email and newsletter campaigns. Get a free API key at resend.com.">
-        <SettingsInput label="API Key" type="password" value={settings.resend_api_key || ""} onChange={(v) => update("resend_api_key", v)} placeholder="re_..." mono />
+      <SettingsSection icon={<Bot className="h-4 w-4" />} title="Resend — Email & Newsletters" description="Powers order confirmations, the welcome email, and newsletter campaigns. Get a free API key at resend.com. The From address MUST be on a domain you've verified in Resend's dashboard (Domains -> Add Domain, then add the SPF/DKIM records it gives you) -- sending from an unverified domain is why emails land in spam. Check Admin -> Email Health for a live check of whichever domain you use here.">
+        <div className="space-y-3">
+          <SettingsInput label="API Key" type="password" value={settings.resend_api_key || ""} onChange={(v) => update("resend_api_key", v)} placeholder="re_..." mono />
+          <SettingsInput label="From Address (must be a Resend-verified domain)" value={settings.email_from_address || ""} onChange={(v) => update("email_from_address", v)} placeholder="AI Smart Store <orders@yourverifieddomain.co.za>" />
+        </div>
       </SettingsSection>
 
       <SettingsSection icon={<Link2 className="h-4 w-4" />} title="Make Pro — Automation" description="Trigger webhooks for order and workflow automation.">

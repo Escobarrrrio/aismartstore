@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveEmailFromAddress } from "../_shared/email-from.ts";
 
 // Welcome email — invoked ONLY server-side by the newsletter_subscribers
 // AFTER INSERT trigger, using the internal service-role JWT as bearer.
@@ -97,11 +98,12 @@ Deno.serve(async (req) => {
       </p>
     </div>`;
 
+  const fromAddress = await resolveEmailFromAddress(supabase);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "AI Smart Store <hello@aismartstore.lovable.app>",
+      from: fromAddress,
       to: email,
       subject: "Here's what you just got access to",
       html,

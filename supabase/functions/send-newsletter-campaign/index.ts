@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getAuthContext } from "../_shared/auth-guard.ts";
+import { resolveEmailFromAddress } from "../_shared/email-from.ts";
 
 Deno.serve(async (req) => {
   const auth = await getAuthContext(req);
@@ -62,6 +63,7 @@ Deno.serve(async (req) => {
     .update({ status: "sending", recipient_count: recipients.length })
     .eq("id", campaign_id);
 
+  const fromAddress = await resolveEmailFromAddress(supabase);
   let sent = 0;
   const batchSize = 50;
   for (let i = 0; i < recipients.length; i += batchSize) {
@@ -79,7 +81,7 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "AI Smart Store <hello@aismartstore.lovable.app>",
+            from: fromAddress,
             to: r.email,
             subject: campaign.subject,
             html,

@@ -6,14 +6,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.1";
 import { getAuthContext, escapeHtml } from "../_shared/auth-guard.ts";
+import { resolveEmailFromAddress } from "../_shared/email-from.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-const FROM_ADDRESS = Deno.env.get("ORDER_FROM_ADDRESS") ?? "Orders <orders@resend.dev>";
 
 function formatZAR(value: number) {
   return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(value || 0);
@@ -87,6 +86,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+    const FROM_ADDRESS = await resolveEmailFromAddress(supabase);
 
     // Authorization: internal secret (webhooks / capture flow) OR admin/order owner.
     const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";

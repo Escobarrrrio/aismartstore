@@ -67,9 +67,24 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
     update("stock_sanity_thresholds", JSON.stringify(next));
   };
 
+  const RATE_DEFAULTS = { metro: 98, outlying: 128, regional: 150, rest: 195 };
+  const parsedRates = (() => {
+    try {
+      const raw = settings.shipping_rate_table;
+      if (!raw) return RATE_DEFAULTS;
+      const obj = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return { ...RATE_DEFAULTS, ...obj };
+    } catch { return RATE_DEFAULTS; }
+  })();
+
+  const updateZoneRate = (zone: keyof typeof RATE_DEFAULTS, val: string) => {
+    const next = { ...parsedRates, [zone]: Number(val) || 0 };
+    update("shipping_rate_table", JSON.stringify(next));
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "resend_api_key", "stock_sanity_thresholds"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "resend_api_key", "stock_sanity_thresholds"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -119,9 +134,18 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
         <SettingsInput label="Webhook URL" value={settings.make_webhook_url || ""} onChange={(v) => update("make_webhook_url", v)} placeholder="https://hook.eu1.make.com/..." mono />
       </SettingsSection>
 
-      <SettingsSection icon={<Truck className="h-4 w-4" />} title="Shipping" description="Every order ships via courier and is charged for it -- there is no free-shipping threshold. Shown to every shopper on Cart and Checkout, and charged as part of the order total. This is the only place to change it -- editing it here updates the live site immediately.">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SettingsInput label="Flat Rate (R)" type="number" value={settings.shipping_flat_rate || ""} onChange={(v) => update("shipping_flat_rate", v)} placeholder="75" />
+      <SettingsSection icon={<Truck className="h-4 w-4" />} title="Shipping" description="Every order ships via courier and is charged for it -- there is no free-shipping threshold. Checkout prices ZAR orders by delivery zone (below) once the customer's province is known; the Flat Rate is only the fallback shown on Cart, before an address is entered. Editing the zone rates here changes what customers are actually charged at Checkout, live.">
+        <div className="space-y-4">
+          <SettingsInput label="Flat Rate -- Cart fallback (R)" type="number" value={settings.shipping_flat_rate || ""} onChange={(v) => update("shipping_flat_rate", v)} placeholder="75" />
+          <div>
+            <label className="block text-xs font-semibold mb-2">Zone Rates -- what Checkout actually charges (R)</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <SettingsInput label="Metro (GP/WC)" type="number" value={String(parsedRates.metro)} onChange={(v) => updateZoneRate("metro", v)} placeholder="98" />
+              <SettingsInput label="Outlying" type="number" value={String(parsedRates.outlying)} onChange={(v) => updateZoneRate("outlying", v)} placeholder="128" />
+              <SettingsInput label="Regional (KZN/EC)" type="number" value={String(parsedRates.regional)} onChange={(v) => updateZoneRate("regional", v)} placeholder="150" />
+              <SettingsInput label="Rest of SA" type="number" value={String(parsedRates.rest)} onChange={(v) => updateZoneRate("rest", v)} placeholder="195" />
+            </div>
+          </div>
         </div>
       </SettingsSection>
 

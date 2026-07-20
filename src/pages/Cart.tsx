@@ -4,15 +4,11 @@ import { Link } from "react-router-dom";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
-import { useShippingSettings } from "@/hooks/useShippingSettings";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const { formatPrice } = useLocale();
   const { t } = useTranslation();
-  const { getShippingFee } = useShippingSettings();
-  const shippingFee = getShippingFee(totalPrice);
-  const grandTotal = totalPrice + shippingFee;
 
   if (items.length === 0) {
     return (
@@ -96,13 +92,13 @@ const Cart = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cart.shipping")}</span>
-              <span className="font-medium">{formatPrice(shippingFee)}</span>
+              <span className="text-muted-foreground">{t("cart.calculatedAtCheckout")}</span>
             </div>
           </div>
           <div className="border-t border-border pt-4">
             <div className="flex justify-between font-display font-extrabold text-xl">
-              <span>{t("cart.total")}</span>
-              <span>{formatPrice(grandTotal)}</span>
+              <span>{t("cart.subtotal")}</span>
+              <span>{formatPrice(totalPrice)}</span>
             </div>
           </div>
           <Link to="/checkout" className="btn-primary w-full py-3.5 text-sm shadow-elevated">

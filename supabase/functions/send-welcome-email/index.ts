@@ -78,24 +78,33 @@ Deno.serve(async (req) => {
     : `<p style="margin:0 0 16px;color:#555;font-size:14px;">You'll hear about new arrivals across AI hardware, networking, computing, and software -- whichever lands first.</p>`;
 
   const html = `
-    <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;">
-      <h1 style="font-size:22px;margin:0 0 4px;color:#1a1a2e;">Here's what you just got access to</h1>
-      <p style="color:#888;font-size:13px;margin:0 0 24px;">AI Smart Store</p>
-      <p style="color:#333;font-size:15px;line-height:1.6;margin:0 0 20px;">
-        You're now on the list for early access to new AI hardware, networking gear, and
-        enterprise tech -- before it shows up on the main catalogue, and before stock runs out
-        on limited items.
+    <div style="background:#f4f4f7;padding:32px 12px;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;">
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:18px">
+        <tr>
+          <td style="vertical-align:middle"><img src="https://aismartstore.co.za/icon-512.png" width="28" height="28" alt="AI Smart Store" style="display:block;border-radius:6px" /></td>
+          <td style="vertical-align:middle;padding-left:9px;font-family:Outfit,-apple-system,Segoe UI,sans-serif;font-size:17px;font-weight:800;color:#1a1a2e">Smart Store</td>
+        </tr>
+      </table>
+      <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;padding:28px 24px;">
+        <h1 style="font-size:22px;margin:0 0 20px;color:#1a1a2e;">Here's what you just got access to</h1>
+        <p style="color:#333;font-size:15px;line-height:1.6;margin:0 0 20px;">
+          You're now on the list for early access to new AI hardware, networking gear, and
+          enterprise tech -- before it shows up on the main catalogue, and before stock runs out
+          on limited items.
+        </p>
+        ${categoryBlock}
+        <a href="https://aismartstore.co.za/products"
+           style="display:inline-block;background:linear-gradient(135deg,#06b6d4,#ec4899);color:#fff;
+                  text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:600;font-size:14px;margin-top:8px;">
+          Browse What's In Stock Now
+        </a>
+      </div>
+      <p style="color:#94a3b8;font-size:11px;margin-top:20px;">
+        AI Smart Store, a division of AI Job Chommie (Pty) Ltd. &middot;
+        <a href="https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribe_token)}" style="color:#94a3b8;">Unsubscribe</a>
       </p>
-      ${categoryBlock}
-      <a href="https://aismartstore.lovable.app/products"
-         style="display:inline-block;background:linear-gradient(135deg,#06b6d4,#ec4899);color:#fff;
-                text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:600;font-size:14px;margin-top:8px;">
-        Browse What's In Stock Now
-      </a>
-      <p style="color:#aaa;font-size:11px;margin-top:32px;">
-        AI Smart Store, a division of AI Job Chommie (Pty) Ltd.
-        <a href="https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribe_token)}" style="color:#aaa;">Unsubscribe</a>
-      </p>
+    </div>
     </div>`;
 
   const fromAddress = await resolveEmailFromAddress(supabase);

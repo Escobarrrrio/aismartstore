@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Building2, User, Home as HomeIcon, IdCard, Phone } from "lucide-react";
 import Logo from "@/components/Logo";
+import PasswordToggleButton from "@/components/PasswordToggleButton";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
 
@@ -414,29 +415,36 @@ const FieldWithIcon = ({
   minLength?: number;
   error?: string;
   testId?: string;
-}) => (
-  <div>
-    <label className="block text-xs font-semibold mb-1.5">{label}</label>
-    <div className="relative">
-      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-        minLength={minLength}
-        placeholder={placeholder}
-        aria-invalid={!!error}
-        data-testid={testId}
-        className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-muted text-foreground focus:bg-card focus:ring-2 outline-none transition text-sm ${
-          error
-            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-            : "border-input focus:border-secondary focus:ring-secondary/10"
-        }`}
-      />
+}) => {
+  const isPassword = type === "password";
+  const [visible, setVisible] = useState(false);
+  return (
+    <div>
+      <label className="block text-xs font-semibold mb-1.5">{label}</label>
+      <div className="relative">
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <input
+          type={isPassword ? (visible ? "text" : "password") : type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required={required}
+          minLength={minLength}
+          placeholder={placeholder}
+          aria-invalid={!!error}
+          data-testid={testId}
+          className={`w-full pl-10 py-2.5 rounded-lg border bg-muted text-foreground focus:bg-card focus:ring-2 outline-none transition text-sm ${
+            isPassword ? "pr-10" : "pr-4"
+          } ${
+            error
+              ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+              : "border-input focus:border-secondary focus:ring-secondary/10"
+          }`}
+        />
+        {isPassword && <PasswordToggleButton visible={visible} onToggle={() => setVisible((v) => !v)} />}
+      </div>
+      {error && <p role="alert" className="text-[11px] text-destructive mt-1">{error}</p>}
     </div>
-    {error && <p role="alert" className="text-[11px] text-destructive mt-1">{error}</p>}
-  </div>
-);
+  );
+};
 
 export default Auth;

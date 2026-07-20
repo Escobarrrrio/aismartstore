@@ -18,9 +18,28 @@ function formatZAR(value: number) {
   return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(value || 0);
 }
 
+// Same publicly-hosted icon used across the site's PWA manifest and the
+// auth-email templates (see _shared/email-templates/EmailShell.tsx) --
+// one consistent logo everywhere an email goes out from this store.
+const EMAIL_HEADER = `
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:18px">
+    <tr>
+      <td style="vertical-align:middle"><img src="https://aismartstore.co.za/icon-512.png" width="28" height="28" alt="AI Smart Store" style="display:block;border-radius:6px" /></td>
+      <td style="vertical-align:middle;padding-left:9px;font-family:Outfit,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:17px;font-weight:800;color:#0f172a">Smart Store</td>
+    </tr>
+  </table>`;
+
+const EMAIL_FOOTER = `
+  <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;line-height:1.5;border-top:1px solid #e2e8f0;padding-top:16px">
+    AI Smart Store, a division of AI Job Chommie (Pty) Ltd. &middot; <a href="https://aismartstore.co.za" style="color:#94a3b8">aismartstore.co.za</a>
+  </p>`;
+
 function buildOwnerHtml(order: any, itemRows: string) {
   return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:640px;margin:0 auto;padding:24px;color:#0f172a">
+  <div style="background:#f4f4f7;padding:32px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:600px;margin:0 auto">
+    ${EMAIL_HEADER}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:28px 24px;color:#0f172a">
     <h1 style="font-size:20px;margin:0 0 4px">New order placed</h1>
     <p style="color:#64748b;margin:0 0 24px">Order <strong>${escapeHtml(order.id)}</strong></p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
@@ -35,6 +54,9 @@ function buildOwnerHtml(order: any, itemRows: string) {
       <tbody>${itemRows}</tbody>
     </table>
     <p style="margin-top:24px;font-size:18px"><strong>Total: ${escapeHtml(formatZAR(Number(order.total_amount)))}</strong></p>
+    </div>
+    ${EMAIL_FOOTER}
+  </div>
   </div>`;
 }
 
@@ -54,7 +76,10 @@ function estimatedDeliveryWindow(order: any): { label: string; from: Date; to: D
 function buildCustomerHtml(order: any, itemRows: string) {
   const eta = estimatedDeliveryWindow(order);
   return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:640px;margin:0 auto;padding:24px;color:#0f172a">
+  <div style="background:#f4f4f7;padding:32px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:600px;margin:0 auto">
+    ${EMAIL_HEADER}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:28px 24px;color:#0f172a">
     <h1 style="font-size:22px;margin:0 0 8px">Thank you for your order, ${escapeHtml(order.customer_name ?? "")}</h1>
     <p style="color:#475569;margin:0 0 20px">We've received your order <strong>#${escapeHtml(String(order.id).slice(0, 8))}</strong> and it's now being prepared.</p>
     <div style="background:#f1f5f9;border-radius:10px;padding:14px 16px;margin:0 0 20px">
@@ -68,6 +93,9 @@ function buildCustomerHtml(order: any, itemRows: string) {
     </table>
     <p style="margin-top:24px;font-size:18px"><strong>Total: ${escapeHtml(formatZAR(Number(order.total_amount)))}</strong></p>
     <p style="color:#64748b;font-size:13px;margin-top:32px">If you have any questions, just reply to this email — we're here to help.</p>
+    </div>
+    ${EMAIL_FOOTER}
+  </div>
   </div>`;
 }
 

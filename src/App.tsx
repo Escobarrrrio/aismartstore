@@ -13,6 +13,7 @@ import StoreHeader from "@/components/StoreHeader";
 import StoreFooter from "@/components/StoreFooter";
 import ChatWidget from "@/components/ChatWidget";
 import AudienceGuard from "@/components/AudienceGuard";
+import ScrollToTop from "@/components/ScrollToTop";
 
 // Route-level code splitting: the Admin panel alone pulls in dozens of
 // modules (products, orders, customers, support, sync logs, automations,
@@ -62,6 +63,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <ScrollToTop />
                 <Suspense fallback={<RouteFallback />}>
                   <Routes>
                     <Route path="/" element={<StorefrontLayout><Index /></StorefrontLayout>} />

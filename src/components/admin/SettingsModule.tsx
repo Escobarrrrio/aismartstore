@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Bot, Link2, Package, Bell, Save, CheckCircle, Truck } from "lucide-react";
+import { Key, Bot, Link2, Package, Bell, Save, CheckCircle, Truck, Calculator } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SA_PROVINCES } from "@/hooks/useShippingSettings";
+
+const DEFAULT_ZONES: Record<string, string> = {
+  "Gauteng": "metro", "Western Cape": "metro",
+  "KwaZulu-Natal": "regional", "Eastern Cape": "regional",
+  "Free State": "outlying", "North West": "outlying", "Mpumalanga": "outlying",
+  "Limpopo": "rest", "Northern Cape": "rest",
+};
+const DEFAULT_WEIGHT_TIERS = [
+  { max_kg: 5, multiplier: 1.0 },
+  { max_kg: 10, multiplier: 1.3 },
+  { max_kg: 20, multiplier: 1.6 },
+  { max_kg: 9999, multiplier: 2.0 },
+];
 
 interface SettingsModuleProps {
   settings: Record<string, string>;
@@ -82,6 +96,16 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
     update("shipping_rate_table", JSON.stringify(next));
   };
 
+  const [previewProvince, setPreviewProvince] = useState(SA_PROVINCES[0]);
+  const [previewWeight, setPreviewWeight] = useState(1);
+  const previewFee = (() => {
+    const zone = DEFAULT_ZONES[previewProvince] as keyof typeof RATE_DEFAULTS | undefined;
+    const flatRate = Number(settings.shipping_flat_rate) || 75;
+    const base = zone ? parsedRates[zone] ?? flatRate : flatRate;
+    const tier = DEFAULT_WEIGHT_TIERS.find((t) => previewWeight <= t.max_kg) ?? DEFAULT_WEIGHT_TIERS[DEFAULT_WEIGHT_TIERS.length - 1];
+    return Math.round(base * tier.multiplier);
+  })();
+
   const handleSave = async () => {
     setSaving(true);
     const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "resend_api_key", "stock_sanity_thresholds"];
@@ -144,6 +168,37 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
               <SettingsInput label="Outlying" type="number" value={String(parsedRates.outlying)} onChange={(v) => updateZoneRate("outlying", v)} placeholder="128" />
               <SettingsInput label="Regional (KZN/EC)" type="number" value={String(parsedRates.regional)} onChange={(v) => updateZoneRate("regional", v)} placeholder="150" />
               <SettingsInput label="Rest of SA" type="number" value={String(parsedRates.rest)} onChange={(v) => updateZoneRate("rest", v)} placeholder="195" />
+            </div>
+          </div>
+
+          <div className="bg-muted rounded-xl p-4">
+            <label className="flex items-center gap-1.5 text-xs font-semibold mb-3">
+              <Calculator className="h-3.5 w-3.5" /> Preview — what would Checkout charge?
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] text-muted-foreground mb-1.5">Province</label>
+                <select
+                  value={previewProvince}
+                  onChange={(e) => setPreviewProvince(e.target.value)}
+                  className="input-premium"
+                >
+                  {SA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] text-muted-foreground mb-1.5">Parcel weight (kg)</label>
+                <input
+                  type="number" min={0} step={0.5}
+                  value={previewWeight}
+                  onChange={(e) => setPreviewWeight(Number(e.target.value) || 0)}
+                  className="input-premium"
+                />
+              </div>
+            </div>
+            <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
+              <span className="text-xs text-muted-foreground">Shipping fee for this order</span>
+              <span className="font-display font-extrabold text-lg gradient-brand-text">R{previewFee.toFixed(2)}</span>
             </div>
           </div>
         </div>

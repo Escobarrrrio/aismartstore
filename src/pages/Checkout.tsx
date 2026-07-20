@@ -140,7 +140,21 @@ const Checkout = () => {
           cancelUrl: `${baseUrl}/cart`,
         },
       });
-      if (error || !data?.redirectUrl) throw new Error(error?.message || data?.error || "Retry failed");
+      if (error || !data?.redirectUrl) {
+        const errorBody = error && "context" in error
+          ? await (error as any).context?.json?.().catch(() => null)
+          : data;
+        if (errorBody?.priceChanged) {
+          toast({
+            title: "Your order total changed",
+            description: `The price is now ${formatPrice(errorBody.newTotal)} (was ${formatPrice(errorBody.previousTotal)}). Please review your order and pay again.`,
+            variant: "destructive",
+          });
+          setRetrying(false);
+          return;
+        }
+        throw new Error(errorBody?.error || error?.message || "Retry failed");
+      }
       setRetryCount((c) => c + 1);
       window.location.href = data.redirectUrl;
     } catch (err: any) {
@@ -194,7 +208,7 @@ const Checkout = () => {
         .insert({
           user_id: userId,
           customer_name: form.name, customer_email: form.email, customer_phone: form.phone,
-          address: form.address, city: form.city, postal_code: form.postalCode,
+          address: form.address, city: form.city, province: form.province, postal_code: form.postalCode,
           total_amount: grandTotal, status: "pending",
         })
         .select().single();
@@ -239,10 +253,27 @@ const Checkout = () => {
       );
 
       if (fnError || !checkoutData?.redirectUrl) {
-        capturePaymentError(fnError || new Error(checkoutData?.error || "No redirect URL from gateway"), {
+        // supabase-js only puts the parsed JSON body in `data` on success --
+        // on a non-2xx response it's on error.context instead, which is
+        // where our structured price-changed/diagnostic payloads live.
+        const errorBody = fnError && "context" in fnError
+          ? await (fnError as any).context?.json?.().catch(() => null)
+          : checkoutData;
+
+        if (errorBody?.priceChanged) {
+          toast({
+            title: "Your order total changed",
+            description: `The price is now ${formatPrice(errorBody.newTotal)} (was ${formatPrice(errorBody.previousTotal)}). Please review your order and pay again.`,
+            variant: "destructive",
+          });
+          setProcessing(false);
+          return;
+        }
+
+        capturePaymentError(fnError || new Error(errorBody?.error || "No redirect URL from gateway"), {
           provider: isInternational ? "paypal" : "yoco", orderId: order.id, amount: chargeAmount, currency,
         });
-        throw new Error(fnError?.message || checkoutData?.error || "Payment gateway error.");
+        throw new Error(errorBody?.error || fnError?.message || "Payment gateway error.");
       }
       if (!isInternational) {
         // Yoco confirms via redirect status. PayPal confirms via the

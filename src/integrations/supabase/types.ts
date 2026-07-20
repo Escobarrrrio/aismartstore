@@ -775,6 +775,7 @@ export type Database = {
           payment_id: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           postal_code: string
+          province: string | null
           status: string
           total_amount: number
           tracking_number: string | null
@@ -793,6 +794,7 @@ export type Database = {
           payment_id?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           postal_code: string
+          province?: string | null
           status?: string
           total_amount: number
           tracking_number?: string | null
@@ -811,6 +813,7 @@ export type Database = {
           payment_id?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           postal_code?: string
+          province?: string | null
           status?: string
           total_amount?: number
           tracking_number?: string | null

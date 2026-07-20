@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search, User } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, User, ShieldCheck } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import LanguageCurrencySwitcher from "@/components/LanguageCurrencySwitcher";
 import Logo from "@/components/Logo";
 import HeaderSearch from "@/components/HeaderSearch";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 
 const StoreHeader = () => {
@@ -17,6 +18,7 @@ const StoreHeader = () => {
   const [session, setSession] = useState<any>(null);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const isAdmin = useIsAdmin(session);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -81,6 +83,16 @@ const StoreHeader = () => {
           </button>
 
           <LanguageCurrencySwitcher />
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="hidden sm:flex items-center gap-2 h-10 px-3 rounded-xl border border-border hover:bg-muted transition-colors"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              <span className="text-sm font-medium hidden md:inline">{t("nav.admin")}</span>
+            </Link>
+          )}
 
           {/* Cart - now gradient pill matching brand */}
           <Link
@@ -149,7 +161,7 @@ const StoreHeader = () => {
               { to: "/cart", label: t("nav.cart") },
               ...(session ? [
                 { to: "/account", label: t("nav.account") },
-                { to: "/admin", label: t("nav.admin") },
+                ...(isAdmin ? [{ to: "/admin", label: t("nav.admin") }] : []),
               ] : [
                 { to: "/auth", label: t("nav.login") },
               ]),

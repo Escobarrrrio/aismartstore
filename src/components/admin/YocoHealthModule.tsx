@@ -73,27 +73,42 @@ const YocoHealthModule = () => {
       <div className="bg-card border border-border rounded-xl">
         <div className="px-5 py-4 border-b border-border flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          <h3 className="font-display font-bold text-sm">Latest 20 webhook events</h3>
+          <h3 className="font-display font-bold text-sm">Latest 20 Yoco events</h3>
+          <span className="text-[11px] text-muted-foreground font-normal">— checkout creation attempts and webhook deliveries</span>
         </div>
         {data && data.events.length ? (
           <div className="divide-y divide-border/50">
-            {data.events.map((e) => (
-              <div key={e.id} className="px-5 py-3 text-sm flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-mono text-[12px] truncate">{e.event_type}</p>
-                  <p className="text-[10px] text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
-                  {e.error_message && <p className="text-[11px] text-red-600 mt-0.5">{e.error_message}</p>}
+            {data.events.map((e) => {
+              const ok = e.status === "received" || e.status === "recovered";
+              const orderId = e.payload?.orderId as string | undefined;
+              const yocoStatus = e.payload?.httpStatus ?? e.payload?.yocoStatus;
+              return (
+                <div key={e.id} className="px-5 py-3 text-sm flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-mono text-[12px] truncate">{e.event_type}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {new Date(e.created_at).toLocaleString()}
+                      {orderId && <> · order #{orderId.slice(0, 8)}</>}
+                      {yocoStatus != null && <> · Yoco HTTP {yocoStatus}</>}
+                    </p>
+                    {e.error_message && <p className="text-[11px] text-red-600 mt-0.5">{e.error_message}</p>}
+                    {e.payload?.yocoResponse && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5 font-mono truncate max-w-md" title={JSON.stringify(e.payload.yocoResponse)}>
+                        {JSON.stringify(e.payload.yocoResponse)}
+                      </p>
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${
+                    ok
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-red-50 text-red-700 border-red-200"
+                  }`}>{e.status}</span>
                 </div>
-                <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                  e.status === "received"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-red-50 text-red-700 border-red-200"
-                }`}>{e.status}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <p className="px-5 py-6 text-sm text-muted-foreground">No webhook events recorded yet.</p>
+          <p className="px-5 py-6 text-sm text-muted-foreground">No events recorded yet.</p>
         )}
       </div>
     </div>

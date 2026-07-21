@@ -108,7 +108,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "resend_api_key", "email_from_address", "stock_sanity_thresholds"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "resend_api_key", "email_from_address", "courier_guy_api_key", "courier_guy_api_base", "stock_sanity_thresholds"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -204,6 +204,13 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
               <span className="font-display font-extrabold text-lg gradient-brand-text">R{previewFee.toFixed(2)}</span>
             </div>
           </div>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection icon={<Truck className="h-4 w-4" />} title="The Courier Guy — Tracking Automation" description="Paste the API key from portal.thecourierguy.co.za -> Integrations -> API keys. Every 30 minutes the store checks paid orders against the courier API, saves new tracking numbers automatically, and emails the customer a branded shipping notification with their tracking link (via Resend, no extra cost). Typing a tracking number manually into Orders triggers the same email on the next run -- each customer is only ever emailed once per order.">
+        <div className="space-y-3">
+          <SettingsInput label="API Key" type="password" value={settings.courier_guy_api_key || ""} onChange={(v) => update("courier_guy_api_key", v)} placeholder="Your Courier Guy API key..." mono />
+          <SettingsInput label="API Base URL (leave blank for default)" value={settings.courier_guy_api_base || ""} onChange={(v) => update("courier_guy_api_base", v)} placeholder="https://api.shiplogic.com/v2" mono />
         </div>
       </SettingsSection>
 

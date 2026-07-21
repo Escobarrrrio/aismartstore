@@ -1395,6 +1395,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_newsletter_subscriber_count: { Args: never; Returns: number }
       get_product_admin_view: {
         Args: never
         Returns: {

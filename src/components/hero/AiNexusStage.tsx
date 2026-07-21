@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, Component, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Sparkles, Zap, ShieldCheck, Brain } from "lucide-react";
+import { Sparkles, Zap, ShieldCheck, RefreshCw, Brain } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * AiNexusStage
@@ -71,7 +72,13 @@ const NexusCanvas = () => {
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
   const sizeRef = useRef<{ w: number; h: number; dpr: number }>({ w: 0, h: 0, dpr: 1 });
   const [reduced, setReduced] = useState(false);
-  const [live, setLive] = useState({ skus: 94111, ai: 209, latency: 42 });
+  // Real counts fetched from the catalogue -- these used to be a fabricated
+  // starting number (94,111) that faked its own growth every few seconds.
+  // A store showing invented "live" stats is exactly the kind of thing that
+  // reads as untrustworthy once anyone checks, so this now reflects what's
+  // actually in the database, refreshed periodically rather than randomly
+  // incremented.
+  const [live, setLive] = useState<{ skus: number | null; ai: number | null }>({ skus: null, ai: null });
 
   // Reduced-motion preference
   useEffect(() => {
@@ -83,16 +90,18 @@ const NexusCanvas = () => {
     return () => mq.removeEventListener?.("change", apply);
   }, []);
 
-  // Micro live-counter (purely cosmetic; never crashes)
   useEffect(() => {
-    const id = window.setInterval(() => {
-      setLive((s) => ({
-        skus: s.skus + Math.floor(Math.random() * 3),
-        ai: s.ai + (Math.random() > 0.7 ? 1 : 0),
-        latency: 32 + Math.floor(Math.random() * 24),
-      }));
-    }, 2400);
-    return () => window.clearInterval(id);
+    let cancelled = false;
+    const fetchCounts = async () => {
+      const [{ count: skus }, { count: ai }] = await Promise.all([
+        supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true).eq("is_ai_product", true),
+      ]);
+      if (!cancelled) setLive({ skus: skus ?? null, ai: ai ?? null });
+    };
+    fetchCounts();
+    const id = window.setInterval(fetchCounts, 5 * 60 * 1000);
+    return () => { cancelled = true; window.clearInterval(id); };
   }, []);
 
   useEffect(() => {
@@ -363,9 +372,6 @@ const NexusCanvas = () => {
             </span>
             <span className="text-[11px] font-semibold text-foreground">Neural mesh · live</span>
           </div>
-          <div className="pointer-events-auto rounded-full bg-white/85 backdrop-blur px-3 py-1.5 border border-border/60 shadow-sm text-[11px] font-mono text-muted-foreground">
-            {live.latency}ms
-          </div>
         </div>
 
         {/* Center reactor core — the main attraction */}
@@ -463,11 +469,11 @@ const NexusCanvas = () => {
           </div>
         </div>
 
-        {/* Bottom stat strip */}
+        {/* Bottom stat strip -- real counts, fetched from the catalogue */}
         <div className="pointer-events-auto grid grid-cols-3 gap-2">
-          <StatChip icon={<Sparkles className="h-3 w-3" />} label="Live SKUs" value={live.skus.toLocaleString("en-ZA")} />
-          <StatChip icon={<Zap className="h-3 w-3" />} label="AI-ready" value={live.ai.toLocaleString("en-ZA")} />
-          <StatChip icon={<ShieldCheck className="h-3 w-3" />} label="Uptime" value="99.98%" />
+          <StatChip icon={<Sparkles className="h-3 w-3" />} label="Live SKUs" value={live.skus === null ? "…" : live.skus.toLocaleString("en-ZA")} />
+          <StatChip icon={<Zap className="h-3 w-3" />} label="AI-ready" value={live.ai === null ? "…" : live.ai.toLocaleString("en-ZA")} />
+          <StatChip icon={<RefreshCw className="h-3 w-3" />} label="Distributor Sync" value="Hourly" />
         </div>
       </div>
 

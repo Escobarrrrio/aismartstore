@@ -45,8 +45,8 @@
     "fromPrice": "Kusukela ku",
     "featureBar": {
       "shipping": {
-        "title": "Ukuthumela Kwamahhala",
-        "desc": "Kuma-oda angaphezu kuka-R500"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "Ukukhokha Okuphephile",
@@ -213,7 +213,7 @@
     "outOfStock": "Iphelile",
     "addedToCart": "Yengezwe Ekalishini!",
     "addToCart": "Engeza Ekalishini",
-    "freeDelivery": "Ukuthunyelwa mahhala ngenhla kwaR500",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "Ukukhokha okuvikelekile",
     "easyReturns": "Ukubuyisela okulula",
     "specifications": "Imininingwane Yokwakheka",

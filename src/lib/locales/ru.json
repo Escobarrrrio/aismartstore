@@ -45,8 +45,8 @@
     "fromPrice": "От",
     "featureBar": {
       "shipping": {
-        "title": "Бесплатная Доставка",
-        "desc": "При заказе свыше R500"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "Безопасная Оплата",
@@ -213,7 +213,7 @@
     "outOfStock": "Нет в Наличии",
     "addedToCart": "Добавлено в Корзину!",
     "addToCart": "В Корзину",
-    "freeDelivery": "Бесплатная доставка при заказе свыше R500",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "Безопасное оформление",
     "easyReturns": "Лёгкий возврат",
     "specifications": "Характеристики",

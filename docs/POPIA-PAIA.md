@@ -15,7 +15,7 @@ is presented publicly at `/compliance`.
 | --- | --- |
 | Responsible Party | AI Smart Store |
 | Information Officer | Ferdinand Steyn |
-| Contact | fsteyn@rocketmail.com |
+| Contact | privacy@aismartstore.co.za |
 | Jurisdiction | Republic of South Africa |
 | Regulator | Information Regulator of South Africa (https://inforegulator.org.za) |
 
@@ -51,7 +51,7 @@ as PCI-DSS certified processors.
 
 ## 5. Data-subject rights procedure
 
-Requests are received at `fsteyn@rocketmail.com`. Turnaround:
+Requests are received at `privacy@aismartstore.co.za`. Turnaround:
 
 | Right | POPIA s. | Turnaround |
 | --- | --- | --- |

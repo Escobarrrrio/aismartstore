@@ -20,7 +20,7 @@ describe("POPIA & PAIA compliance surface", () => {
     expect(src).toMatch(/POPIA/);
     expect(src).toMatch(/PAIA/);
     expect(src).toMatch(/Information Officer/i);
-    expect(src).toMatch(/fsteyn@rocketmail\.com/);
+    expect(src).toMatch(/privacy@aismartstore\.co\.za/);
   });
 
   it("routes /compliance from the app shell", () => {

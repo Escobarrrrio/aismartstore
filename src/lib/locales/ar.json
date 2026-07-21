@@ -45,8 +45,8 @@
     "fromPrice": "ابتداءً من",
     "featureBar": {
       "shipping": {
-        "title": "شحن مجاني",
-        "desc": "للطلبات التي تزيد عن R500"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "دفع آمن",
@@ -213,7 +213,7 @@
     "outOfStock": "غير متوفر",
     "addedToCart": "تمت الإضافة إلى السلة!",
     "addToCart": "أضف إلى السلة",
-    "freeDelivery": "شحن مجاني للطلبات أكثر من R500",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "دفع آمن",
     "easyReturns": "إرجاع سهل",
     "specifications": "المواصفات",

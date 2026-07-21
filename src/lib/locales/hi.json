@@ -45,8 +45,8 @@
     "fromPrice": "शुरुआती कीमत",
     "featureBar": {
       "shipping": {
-        "title": "मुफ्त शिपिंग",
-        "desc": "R500 से अधिक के ऑर्डर पर"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "सुरक्षित चेकआउट",
@@ -213,7 +213,7 @@
     "outOfStock": "स्टॉक खत्म",
     "addedToCart": "कार्ट में जोड़ा गया!",
     "addToCart": "कार्ट में जोड़ें",
-    "freeDelivery": "R500 से अधिक पर मुफ्त डिलीवरी",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "सुरक्षित चेकआउट",
     "easyReturns": "आसान रिटर्न",
     "specifications": "विशेषताएं",

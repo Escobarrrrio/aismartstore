@@ -45,8 +45,8 @@
     "fromPrice": "起价",
     "featureBar": {
       "shipping": {
-        "title": "免费配送",
-        "desc": "订单满 R500 即可"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "安全结账",
@@ -213,7 +213,7 @@
     "outOfStock": "缺货",
     "addedToCart": "已加入购物车！",
     "addToCart": "加入购物车",
-    "freeDelivery": "满 R500 免运费",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "安全结账",
     "easyReturns": "轻松退货",
     "specifications": "产品规格",

@@ -3,11 +3,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { Shield, Users, Activity, Lock, Eye, EyeOff, LogOut, AlertTriangle, Key, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+type AuditRow = { event_type: string; actor_email: string | null; created_at: string };
+
+function timeAgo(iso: string): string {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+const SEVERITY_BY_EVENT: Record<string, "danger" | "warning" | "info"> = {
+  "webhook.signature_failed": "danger",
+  "webhook.rejected": "danger",
+  "yoco.amount_mismatch": "danger",
+  "email.failed": "warning",
+  "email.shipped_failed": "warning",
+  "price.reconciled": "warning",
+};
+
 const SecurityModule = () => {
   const { toast } = useToast();
   const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
+  const [auditLog, setAuditLog] = useState<AuditRow[]>([]);
+  const [auditLoading, setAuditLoading] = useState(true);
 
   const loadRoles = useCallback(async () => {
     setLoading(true);
@@ -16,15 +38,18 @@ const SecurityModule = () => {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadRoles(); }, [loadRoles]);
+  const loadAuditLog = useCallback(async () => {
+    setAuditLoading(true);
+    const { data } = await supabase
+      .from("order_audit_log" as any)
+      .select("event_type, actor_email, created_at")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setAuditLog((data as unknown as AuditRow[]) ?? []);
+    setAuditLoading(false);
+  }, []);
 
-  const auditLog = [
-    { action: "Login", user: "fsteyn@rocketmail.com", time: "2 min ago", severity: "info" },
-    { action: "Settings Updated", user: "fsteyn@rocketmail.com", time: "15 min ago", severity: "warning" },
-    { action: "Product Created", user: "fsteyn@rocketmail.com", time: "1 hr ago", severity: "info" },
-    { action: "Order Status Changed", user: "fsteyn@rocketmail.com", time: "2 hrs ago", severity: "info" },
-    { action: "Bulk Delete", user: "fsteyn@rocketmail.com", time: "3 hrs ago", severity: "danger" },
-  ];
+  useEffect(() => { loadRoles(); loadAuditLog(); }, [loadRoles, loadAuditLog]);
 
   const severityColor = (s: string) => {
     if (s === "danger") return "bg-red-500/10 text-red-600 border-red-200";
@@ -71,23 +96,29 @@ const SecurityModule = () => {
         </div>
       </div>
 
-      {/* Audit Trail */}
+      {/* Audit Trail -- real order_audit_log events, not sample data */}
       <div className="card-flat overflow-hidden">
         <div className="px-5 py-4 border-b border-border">
           <h3 className="font-display font-bold text-sm flex items-center gap-2">
-            <Activity className="h-4 w-4 text-primary" /> Admin Activity Log
+            <Activity className="h-4 w-4 text-primary" /> Recent Order Activity
           </h3>
         </div>
         <div className="divide-y divide-border/50">
-          {auditLog.map((log, i) => (
-            <div key={i} className="flex items-center justify-between px-5 py-3">
-              <div className="flex items-center gap-3">
-                <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-display font-bold border ${severityColor(log.severity)}`}>{log.action}</span>
-                <span className="text-xs text-muted-foreground">{log.user}</span>
+          {auditLoading ? (
+            <p className="px-5 py-6 text-sm text-muted-foreground">Loading…</p>
+          ) : auditLog.length === 0 ? (
+            <p className="px-5 py-6 text-sm text-muted-foreground">No activity recorded yet.</p>
+          ) : (
+            auditLog.map((log, i) => (
+              <div key={i} className="flex items-center justify-between px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-display font-bold border ${severityColor(SEVERITY_BY_EVENT[log.event_type] ?? "info")}`}>{log.event_type}</span>
+                  <span className="text-xs text-muted-foreground">{log.actor_email ?? "system"}</span>
+                </div>
+                <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(log.created_at)}</span>
               </div>
-              <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{log.time}</span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

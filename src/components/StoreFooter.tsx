@@ -14,7 +14,7 @@ const StoreFooter = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
-              { icon: Truck, title: "Free Shipping Over R500", desc: "Fast SA-wide delivery" },
+              { icon: Truck, title: "Courier Delivery", desc: "SA-wide via The Courier Guy" },
               { icon: Shield, title: "Secure & Trusted", desc: "SSL encrypted checkout" },
               { icon: CreditCard, title: "Easy Payments", desc: "Yoco card payments accepted" },
             ].map((item, i) => (
@@ -73,7 +73,7 @@ const StoreFooter = () => {
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2.5 text-sm">
                 <Mail className="h-4 w-4 text-background/70 flex-shrink-0" />
-                fsteyn@rocketmail.com
+                <a href="mailto:support@aismartstore.co.za" className="hover:text-background transition-colors">support@aismartstore.co.za</a>
               </div>
               <div className="flex items-center gap-2.5 text-sm">
                 <MapPin className="h-4 w-4 text-background/70 flex-shrink-0" />
@@ -91,7 +91,7 @@ const StoreFooter = () => {
             <Shield className="h-3 w-3" />
             <Link to="/compliance" className="hover:text-background/70 transition-colors">POPIA &amp; PAIA compliant</Link>
             <span className="text-background/20">·</span>
-            <span>store.aijobchommie.co.za</span>
+            <span>aismartstore.co.za</span>
           </p>
         </div>
       </div>

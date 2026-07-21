@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Shield, Key, Bot, DollarSign, Users, Activity, Zap, FileText,
@@ -91,6 +91,25 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
   const [moduleSearch, setModuleSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [showConfirm, setShowConfirm] = useState<{ action: string; label: string } | null>(null);
+  const [auditLog, setAuditLog] = useState<Array<{ event_type: string; actor_email: string | null; created_at: string }>>([]);
+
+  useEffect(() => {
+    supabase
+      .from("order_audit_log" as any)
+      .select("event_type, actor_email, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => setAuditLog((data as any) ?? []));
+  }, []);
+
+  const timeAgo = (iso: string) => {
+    const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  };
 
   const filteredModules = useMemo(() =>
     centreModules.filter(m => m.label.toLowerCase().includes(moduleSearch.toLowerCase()) || m.desc.toLowerCase().includes(moduleSearch.toLowerCase())),
@@ -606,19 +625,19 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
             <button className="text-xs text-primary font-semibold flex items-center gap-1"><Download className="h-3 w-3" /> Export</button>
           }>
             <div className="space-y-2">
-              {[
-                { action: "Settings saved", user: "fsteyn@rocketmail.com", time: "Just now", severity: "info" },
-                { action: "Login", user: "fsteyn@rocketmail.com", time: "5 min ago", severity: "info" },
-                { action: "Product updated", user: "fsteyn@rocketmail.com", time: "1 hr ago", severity: "info" },
-              ].map((log, i) => (
-                <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <span className={`badge-${log.severity === "danger" ? "danger" : log.severity === "warning" ? "warning" : "info"} text-[10px]`}>{log.action}</span>
-                    <span className="text-xs text-muted-foreground">{log.user}</span>
+              {auditLog.length === 0 ? (
+                <p className="text-xs text-muted-foreground p-2.5">No activity recorded yet.</p>
+              ) : (
+                auditLog.map((log, i) => (
+                  <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <span className="badge-info text-[10px]">{log.event_type}</span>
+                      <span className="text-xs text-muted-foreground">{log.actor_email ?? "system"}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> {timeAgo(log.created_at)}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> {log.time}</span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </SectionCard>
           <SectionCard title="Governance" icon={<Shield className="h-4 w-4" />}>

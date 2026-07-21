@@ -10,7 +10,7 @@ If you've found a security issue (a way to access another customer's
 data, bypass payment, escalate privileges, etc.), please report it
 privately rather than opening a public issue:
 
-**fsteyn@rocketmail.com**
+**privacy@aismartstore.co.za**
 
 Please include:
 - What you found and how to reproduce it

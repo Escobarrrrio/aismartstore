@@ -45,8 +45,8 @@
     "fromPrice": "Ho tloha ho",
     "featureBar": {
       "shipping": {
-        "title": "Phano ea Mahala",
-        "desc": "Litaelong tse fetang R500"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "Tefo e Sireletsehileng",
@@ -213,7 +213,7 @@
     "outOfStock": "E Felile",
     "addedToCart": "E ekelitsoe Setlolong!",
     "addToCart": "Eketsa Setlolong",
-    "freeDelivery": "Phepelo ya mahala holim'a R500",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "Tefo e sireletsehileng",
     "easyReturns": "Khutliso e bonolo",
     "specifications": "Lintlha tsa Tlhaho",

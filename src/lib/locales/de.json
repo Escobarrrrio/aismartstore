@@ -45,8 +45,8 @@
     "fromPrice": "Ab",
     "featureBar": {
       "shipping": {
-        "title": "Kostenloser Versand",
-        "desc": "Bei Bestellungen über R500"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "Sicherer Checkout",
@@ -213,7 +213,7 @@
     "outOfStock": "Nicht Vorrätig",
     "addedToCart": "Zum Warenkorb Hinzugefügt!",
     "addToCart": "In den Warenkorb",
-    "freeDelivery": "Kostenloser Versand über R500",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "Sicherer Checkout",
     "easyReturns": "Einfache Rücksendungen",
     "specifications": "Spezifikationen",

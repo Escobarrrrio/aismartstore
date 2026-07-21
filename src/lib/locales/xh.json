@@ -45,8 +45,8 @@
     "fromPrice": "Ukusuka kwi",
     "featureBar": {
       "shipping": {
-        "title": "Ukuhanjiswa Kwasimahla",
-        "desc": "Kwii-oda ezingaphezu kweR500"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "Intlawulo Ekhuselekileyo",
@@ -213,7 +213,7 @@
     "outOfStock": "Iphelile",
     "addedToCart": "Yongezelwe Enqwelweni!",
     "addToCart": "Yongeza Enqwelweni",
-    "freeDelivery": "Ukuthunyelwa simahla ngaphezu kweR500",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "Ukuhlawula okukhuselekileyo",
     "easyReturns": "Ukubuyisela okulula",
     "specifications": "Iinkcukacha",

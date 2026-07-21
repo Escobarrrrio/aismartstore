@@ -45,8 +45,8 @@
     "fromPrice": "Vanaf",
     "featureBar": {
       "shipping": {
-        "title": "Gratis Aflewering",
-        "desc": "Op bestellings oor R500"
+        "title": "Courier Delivery",
+        "desc": "SA-wide via The Courier Guy"
       },
       "checkout": {
         "title": "Veilige Betaling",
@@ -213,7 +213,7 @@
     "outOfStock": "Uitverkoop",
     "addedToCart": "Bygevoeg by Mandjie!",
     "addToCart": "Voeg by Mandjie",
-    "freeDelivery": "Gratis aflewering oor R500",
+    "freeDelivery": "Courier Delivery",
     "secureCheckout": "Veilige uitbetaling",
     "easyReturns": "Maklike terugstuur",
     "specifications": "Spesifikasies",

@@ -69,7 +69,7 @@ const Compliance = () => (
         </ul>
         <p>
           To exercise any of these rights, email us at{" "}
-          <a className="text-primary underline" href="mailto:fsteyn@rocketmail.com">fsteyn@rocketmail.com</a>.
+          <a className="text-primary underline" href="mailto:privacy@aismartstore.co.za">privacy@aismartstore.co.za</a>.
         </p>
       </Section>
 
@@ -85,7 +85,7 @@ const Compliance = () => (
         <p>
           <strong>Ferdinand Steyn</strong><br />
           Information Officer, AI Smart Store<br />
-          Email: <a className="text-primary underline" href="mailto:fsteyn@rocketmail.com">fsteyn@rocketmail.com</a><br />
+          Email: <a className="text-primary underline" href="mailto:privacy@aismartstore.co.za">privacy@aismartstore.co.za</a><br />
           Response time: within 30 days of a written request, per POPIA s.23.
         </p>
         <p className="text-xs pt-2">

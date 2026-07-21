@@ -24,12 +24,12 @@ const NewsletterSignup = ({ source = "footer", variant = "footer" }: NewsletterS
   const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
 
   useEffect(() => {
-    supabase
-      .from("newsletter_subscribers")
-      .select("id", { count: "exact", head: true })
-      .then(({ count }) => {
-        if (count && count >= 50) setSubscriberCount(count);
-      });
+    // Anon cannot SELECT from newsletter_subscribers (emails are private);
+    // use a security-definer RPC that only exposes the count.
+    supabase.rpc("get_newsletter_subscriber_count").then(({ data }) => {
+      const count = typeof data === "number" ? data : Number(data);
+      if (Number.isFinite(count) && count >= 50) setSubscriberCount(count);
+    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

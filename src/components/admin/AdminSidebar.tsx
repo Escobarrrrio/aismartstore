@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Users, HeadphonesIcon,
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
-  HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard, ShieldCheck
+  HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard, ShieldCheck, Bot
 } from "lucide-react";
 import Logo from "@/components/Logo";
 
@@ -13,7 +13,7 @@ export type AdminTab =
   | "integrations" | "backups" | "catalog-health"
   | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
   | "compliance-audit" | "business-signups"
-  | "order-diagnostics" | "yoco-health" | "email-health";
+  | "order-diagnostics" | "yoco-health" | "email-health" | "ai-agent";
 
 
 interface AdminSidebarProps {
@@ -44,6 +44,7 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "business-signups", label: "Business Signups", icon: <Shield className="h-4 w-4" /> },
   { id: "compliance-audit", label: "Compliance Audit", icon: <Shield className="h-4 w-4" /> },
   { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" />, section: "Operations" },
+  { id: "ai-agent", label: "AI Agent", icon: <Bot className="h-4 w-4" /> },
   { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },
   { id: "notifications-mgmt", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
   { id: "email-previews", label: "Email Previews", icon: <Mail className="h-4 w-4" /> },

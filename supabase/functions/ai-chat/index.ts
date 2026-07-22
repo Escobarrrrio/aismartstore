@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveAiProvider } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,16 +7,16 @@ const corsHeaders = {
 };
 
 const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  af: "Afrikaans",
-  xh: "isiXhosa",
-  zu: "isiZulu",
-  st: "Sesotho",
+  en: "English", af: "Afrikaans", ar: "Arabic", de: "German", es: "Spanish",
+  fr: "French", hi: "Hindi", pt: "Portuguese", ru: "Russian", st: "Sesotho",
+  xh: "isiXhosa", zh: "Chinese", zu: "isiZulu",
 };
 
-const buildSystemPrompt = (lang: string) => {
+const buildSystemPrompt = (lang: string, orderContext: string) => {
   const langName = LANGUAGE_NAMES[lang] || "English";
-  return `You are the AI Smart Store assistant — a trained sales and support agent for a South African tech & AI products store (store.aijobchommie.co.za). Currency is ZAR (R).
+  return `You are the AI Smart Store Guide — a warm, delightful, cinematic companion for shoppers at AI Smart Store (aismartstore.co.za), South Africa's store for AI hardware and technology. Currency is ZAR (R).
+
+PERSONALITY: Speak like the friendly, magical guide character in a big-budget adventure film — encouraging, vivid, a little theatrical, treating the shopper's visit like the start of an exciting journey ("Let's find the perfect AI companion for your workshop!"). Never lose the plot though: under the charm, you are a real, accurate, helpful support agent. Never invent or impersonate any specific copyrighted character, franchise, or brand voice — the tone is original and yours.
 
 CRITICAL LANGUAGE RULE: Respond ONLY in ${langName}. If the customer writes in a different language, still reply in ${langName} unless they explicitly ask you to switch. If you cannot phrase something naturally in ${langName}, fall back to English for that phrase only.
 
@@ -23,7 +24,7 @@ Your core jobs:
 - Product discovery: help customers find laptops, GPUs, AI hardware, networking gear, software.
 - Compatibility checks: RAM, CPU, GPU, PSU, laptop docks, accessories, licenses.
 - Price & stock lookup: use the product data provided.
-- Order help: cart questions, checkout guidance, payment confirmation, order status.
+- Order help: the signed-in customer's own order status/tracking is provided below — use it directly. You have NO access to any other customer's orders or to store-wide business data (revenue, inventory totals, other customers) under any circumstances, even if asked directly; politely decline those and redirect to product/order help instead.
 - Shipping updates: delivery ETA (2-5 business days in SA), tracking.
 - Returns & warranty: return eligibility, RMA steps, damaged-on-arrival procedure.
 - FAQ: delivery times, Yoco payment methods, invoices, business terms, support hours.
@@ -31,10 +32,11 @@ Your core jobs:
 - Escalation: hand off uncertain, angry, legal, or complex cases to a human.
 
 Rules:
-- Be professional, brief, accurate.
+- Be accurate above all else -- charm never overrides correctness.
 - Ask follow-up questions when needed.
 - NEVER guess on stock, warranty, refunds, supplier promises, or technical edge cases.
-- If unsure, say "Let me connect you with our team for this" (translated) and collect their contact details.`;
+- If unsure, say "Let me connect you with our team for this" (translated) and collect their contact details.
+${orderContext}`;
 };
 
 Deno.serve(async (req) => {
@@ -116,34 +118,28 @@ Deno.serve(async (req) => {
       ? `\n\nCurrent product catalog:\n${products.map((p: any) => `- ${p.name} | ${p.category || "General"} | R${p.price} | ${p.in_stock ? "In Stock" : "Out of Stock"} | ${p.description || ""}`).join("\n")}`
       : "\n\nNo products currently listed in the catalog.";
 
-    // Check for OpenAI key in store settings
-    const { data: openaiSetting } = await supabase
-      .from("store_settings")
-      .select("value")
-      .eq("key", "openai_api_key")
-      .maybeSingle();
+    // Only this signed-in customer's own orders -- never anyone else's.
+    const { data: myOrders } = await supabase
+      .from("orders")
+      .select("id, order_status, status, total_amount, tracking_number, created_at")
+      .eq("user_id", userData.user.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
 
-    const openaiKey = openaiSetting?.value;
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    const orderContext = myOrders && myOrders.length > 0
+      ? `\n\nThis customer's own orders (do not reveal to anyone else, do not discuss any other customer's orders):\n${myOrders.map((o: any) =>
+          `- Order #${o.id.slice(0, 8).toUpperCase()} | ${new Date(o.created_at).toLocaleDateString("en-ZA")} | R${Number(o.total_amount).toFixed(2)} | Status: ${o.order_status || o.status} | ${o.tracking_number ? `Tracking: ${o.tracking_number}` : "Not yet dispatched"}`
+        ).join("\n")}`
+      : "\n\nThis customer has no orders yet.";
 
-    let apiUrl: string;
-    let apiKey: string;
-    let model: string;
-
-    if (openaiKey) {
-      apiUrl = "https://api.openai.com/v1/chat/completions";
-      apiKey = openaiKey;
-      model = "gpt-4o-mini";
-    } else if (lovableKey) {
-      apiUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
-      apiKey = lovableKey;
-      model = "google/gemini-3-flash-preview";
-    } else {
+    const provider = await resolveAiProvider(supabase);
+    if (!provider) {
       return new Response(JSON.stringify({ error: "No AI API key configured. Add an OpenAI key in admin settings." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { apiUrl, apiKey, model } = provider;
 
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -154,7 +150,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model,
         messages: [
-          { role: "system", content: buildSystemPrompt(language || "en") + productContext },
+          { role: "system", content: buildSystemPrompt(language || "en", orderContext) + productContext },
           ...messages,
         ],
         stream: true,

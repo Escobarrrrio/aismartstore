@@ -40,7 +40,7 @@ export const EmailShell = ({ preview, children }: EmailShellProps) => (
           <tbody>
             <tr>
               <td style={brandBarCell}>
-                <table role="presentation" cellPadding={0} cellSpacing={0}>
+                <table role="presentation" cellPadding={0} cellSpacing={0} style={brandBarInner}>
                   <tbody>
                     <tr>
                       <td style={{ verticalAlign: 'middle' }}>
@@ -84,6 +84,12 @@ const main = {
 const outer = { maxWidth: '520px', margin: '0 auto' }
 const brandBarTable = { marginBottom: '18px' }
 const brandBarCell = { padding: '0 6px' }
+const brandBarInner = {
+  backgroundColor: '#fdfdfb',
+  border: '1px solid hsl(220, 13%, 91%)',
+  borderRadius: '12px',
+  padding: '14px 18px',
+}
 const logoImg = { display: 'block', borderRadius: '7px' }
 const wordmark = {
   fontFamily: 'Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',

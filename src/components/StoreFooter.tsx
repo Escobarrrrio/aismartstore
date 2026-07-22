@@ -85,7 +85,7 @@ const StoreFooter = () => {
 
         <div className="border-t border-background/[0.06] pt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           <p className="text-xs text-background/70">
-            © {new Date().getFullYear()} AI Smart Store. All rights reserved.
+            © {new Date().getFullYear()} AI Smart Store. All rights reserved. · Est. 19 July 2026
           </p>
           <p className="text-xs text-background/75 inline-flex items-center gap-1.5">
             <Shield className="h-3 w-3" />

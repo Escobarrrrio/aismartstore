@@ -135,7 +135,7 @@ const Admin = () => {
       />
       <CommandPalette open={commandOpen} setOpen={setCommandOpen} setActiveTab={setActiveTab} onAction={handleAction} />
 
-      <div className="flex-1 min-w-0 min-h-screen overflow-x-hidden">
+      <div className="flex-1 min-w-0 overflow-x-hidden">
         {/* Top bar */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border px-4 lg:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">

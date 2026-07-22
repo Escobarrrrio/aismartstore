@@ -1,7 +1,62 @@
 import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History, Download } from "lucide-react";
+import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History, Download, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+function escapeHtml(s: string): string {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+}
+
+// Packing-slip style address label -- a supplement to whatever waybill
+// Courier Guy's own app generates at collection, not a replacement for it.
+// Opens a plain, self-contained print window (no app CSS/JS dependency)
+// so it prints cleanly regardless of screen size or theme.
+function printShippingLabel(order: any, dispatchCity: string) {
+  const itemLines = (order.order_items || [])
+    .map((item: any) => `<div class="item">${escapeHtml(item.products?.name || "Product")} &times; ${item.quantity}</div>`)
+    .join("");
+
+  const html = `<!doctype html>
+<html><head><title>Shipping Label — Order #${escapeHtml(order.id.slice(0, 8).toUpperCase())}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; margin: 24px; color: #111; }
+  .label { max-width: 480px; border: 2px solid #111; border-radius: 8px; padding: 20px; }
+  .section { margin-bottom: 14px; }
+  .caption { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #666; margin-bottom: 4px; }
+  .name { font-size: 18px; font-weight: 700; }
+  .addr { font-size: 14px; line-height: 1.5; }
+  .divider { border-top: 2px dashed #999; margin: 16px 0; }
+  .meta { font-size: 12px; color: #444; }
+  .item { font-size: 13px; padding: 2px 0; }
+  @media print { body { margin: 0; } }
+</style></head>
+<body>
+  <div class="label">
+    <div class="section">
+      <div class="caption">From</div>
+      <div class="addr">AI Smart Store<br/>Dispatched from ${escapeHtml(dispatchCity)}</div>
+    </div>
+    <div class="divider"></div>
+    <div class="section">
+      <div class="caption">To</div>
+      <div class="name">${escapeHtml(order.customer_name)}</div>
+      <div class="addr">${escapeHtml(order.address)}<br/>${escapeHtml(order.city)}, ${escapeHtml(order.postal_code)}<br/>${escapeHtml(order.customer_phone || "")}</div>
+    </div>
+    <div class="divider"></div>
+    <div class="section meta">
+      Order #${escapeHtml(order.id.slice(0, 8).toUpperCase())} &middot; ${new Date(order.created_at).toLocaleDateString("en-ZA")}
+      ${order.tracking_number ? `<br/>Tracking: ${escapeHtml(order.tracking_number)}` : ""}
+    </div>
+    ${itemLines ? `<div class="section"><div class="caption">Contents</div>${itemLines}</div>` : ""}
+  </div>
+  <script>window.onload = () => window.print();</script>
+</body></html>`;
+
+  const win = window.open("", "_blank", "width=560,height=720");
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+}
 
 
 interface OrdersModuleProps {
@@ -35,8 +90,14 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
   const [auditByOrder, setAuditByOrder] = useState<Record<string, any[]>>({});
   const [auditEventFilter, setAuditEventFilter] = useState("");
   const [exportingAudit, setExportingAudit] = useState(false);
+  const [dispatchCity, setDispatchCity] = useState("Gqeberha");
 
   const AUDIT_EVENT_TYPES = ["order_created", "status_changed", "payment_status_changed", "tracking_updated"];
+
+  useEffect(() => {
+    supabase.from("store_settings").select("value").eq("key", "dispatch_city").maybeSingle()
+      .then(({ data }) => { if (data?.value) setDispatchCity(data.value); });
+  }, []);
 
   useEffect(() => {
     if (!expandedId || auditByOrder[expandedId]) return;
@@ -239,6 +300,12 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                             className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md border border-input bg-card text-[11px] font-display font-semibold hover:bg-muted transition-colors"
                           >
                             <Mail className="h-3 w-3" /> Resend confirmation email
+                          </button>
+                          <button
+                            onClick={() => printShippingLabel(order, dispatchCity)}
+                            className="mt-1.5 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md border border-input bg-card text-[11px] font-display font-semibold hover:bg-muted transition-colors"
+                          >
+                            <Printer className="h-3 w-3" /> Print shipping label
                           </button>
                         </div>
                       </div>

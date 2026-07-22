@@ -25,7 +25,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [showAdd, setShowAdd] = useState(false);
-  const [addForm, setAddForm] = useState({ name: "", description: "", price: "", category: "", brand: "" });
+  const [addForm, setAddForm] = useState({ name: "", description: "", price: "", category: "", brand: "", stockQuantity: "", isAiProduct: false });
   const [images, setImages] = useState<string[]>([]);
 
   const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
@@ -93,6 +93,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    const qty = parseInt(addForm.stockQuantity) || 0;
     await supabase.from("products").insert({
       name: addForm.name,
       description: addForm.description,
@@ -100,10 +101,17 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
       category: addForm.category,
       brand: addForm.brand,
       images,
-      in_stock: true,
+      stock_quantity: qty,
+      in_stock: qty > 0,
+      stock_status: qty > 0 ? "in_stock" : "out_of_stock",
       is_active: true,
+      is_ai_product: addForm.isAiProduct,
+      // Defaults to 'business' at the DB level, which hides it from the
+      // residential storefront -- explicit here so anything added through
+      // this form actually shows up, matching the CSV-import fix earlier.
+      audience: "residential",
     });
-    setAddForm({ name: "", description: "", price: "", category: "", brand: "" });
+    setAddForm({ name: "", description: "", price: "", category: "", brand: "", stockQuantity: "", isAiProduct: false });
     setImages([]);
     setShowAdd(false);
     onReload();
@@ -152,6 +160,11 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
             <input value={addForm.brand} onChange={(e) => setAddForm({ ...addForm, brand: e.target.value })} placeholder="Brand" className="px-3 py-2 rounded-lg border border-input bg-muted text-sm focus:border-primary outline-none" />
             <input type="number" step="0.01" min="0" value={addForm.price} onChange={(e) => setAddForm({ ...addForm, price: e.target.value })} required placeholder="Price (ZAR)" className="px-3 py-2 rounded-lg border border-input bg-muted text-sm focus:border-primary outline-none" />
             <input value={addForm.category} onChange={(e) => setAddForm({ ...addForm, category: e.target.value })} placeholder="Category" className="px-3 py-2 rounded-lg border border-input bg-muted text-sm focus:border-primary outline-none" />
+            <input type="number" min="0" value={addForm.stockQuantity} onChange={(e) => setAddForm({ ...addForm, stockQuantity: e.target.value })} placeholder="Stock quantity" className="px-3 py-2 rounded-lg border border-input bg-muted text-sm focus:border-primary outline-none" />
+            <label className="flex items-center gap-2 px-3 py-2 text-sm">
+              <input type="checkbox" checked={addForm.isAiProduct} onChange={(e) => setAddForm({ ...addForm, isAiProduct: e.target.checked })} className="rounded accent-primary" />
+              Show in AI Picks
+            </label>
             <textarea value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })} placeholder="Description" rows={2} className="md:col-span-2 px-3 py-2 rounded-lg border border-input bg-muted text-sm focus:border-primary outline-none resize-none" />
             <div className="md:col-span-2 flex items-center gap-3">
               <div className="flex gap-2">

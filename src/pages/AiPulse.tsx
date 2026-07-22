@@ -140,6 +140,7 @@ const AiPulse = () => {
         title="AI Pulse"
         description="The latest in artificial intelligence -- real research papers and news, updated automatically. From the announcement to the creation."
         path="/ai-pulse"
+        ogType="article"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
@@ -286,7 +287,7 @@ const AiPulse = () => {
                     <div className="md:w-2/5 shrink-0 bg-muted">
                       <PulseThumb
                         src={featured.image_url}
-                        alt=""
+                        alt={featured.title}
                         className="w-full h-48 md:h-full object-cover"
                       />
                     </div>
@@ -328,7 +329,7 @@ const AiPulse = () => {
                 >
                   {item.image_url && (
                     <div className="bg-muted">
-                      <PulseThumb src={item.image_url} alt="" className="w-full h-36 object-cover" />
+                      <PulseThumb src={item.image_url} alt={item.title} className="w-full h-36 object-cover" />
                     </div>
                   )}
                   <div className="p-5 flex flex-col flex-1">

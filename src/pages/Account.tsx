@@ -211,14 +211,15 @@ const Account = () => {
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-xl border border-border hover:bg-muted transition-colors">
                 <Menu className="h-5 w-5" />
               </button>
-              <h1 className="font-display font-extrabold text-lg">{accountTabs.find(t => t.id === activeTab)?.label}</h1>
+              <h2 className="font-display font-extrabold text-lg">{accountTabs.find(t => t.id === activeTab)?.label}</h2>
             </div>
 
             {/* Overview */}
             {activeTab === "overview" && (
               <div className="space-y-6">
                 <div className="card-flat p-6 lg:p-8">
-                  <h1 className="font-display font-extrabold text-2xl mb-1">Welcome back, {userName}</h1>
+                  <h1 className="font-display font-extrabold text-2xl mb-1 sr-only lg:not-sr-only">Welcome back, {userName}</h1>
+                  <p className="lg:hidden font-display font-extrabold text-2xl mb-1">Welcome back, {userName}</p>
                   <p className="text-sm text-muted-foreground">Manage your orders, returns, and account settings all in one place.</p>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

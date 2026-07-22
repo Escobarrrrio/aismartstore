@@ -54,22 +54,41 @@ const CategoryBadge = ({ category }: { category: string }) =>
     </span>
   );
 
+// A handful of distinct gradients, deterministically picked per item (by
+// id hash) so a page full of image-less cards doesn't read as N copies of
+// the same broken placeholder.
+const FALLBACK_GRADIENTS = [
+  "from-cyan-500 via-blue-600 to-indigo-700",
+  "from-fuchsia-600 via-purple-600 to-indigo-600",
+  "from-emerald-500 via-teal-600 to-cyan-700",
+  "from-amber-500 via-orange-600 to-rose-600",
+  "from-violet-600 via-fuchsia-600 to-pink-600",
+];
+
+function pickGradient(id: string): string {
+  const sum = id.split("").reduce((s, c) => s + c.charCodeAt(0), 0);
+  return FALLBACK_GRADIENTS[sum % FALLBACK_GRADIENTS.length];
+}
+
 /** Real per-story preview image scraped from the article's own page at
  *  sync time -- never a stock photo. Falls back to a themed gradient
  *  card (not a blank gap) if no image was found at sync time, or if it
- *  404s by the time a visitor loads the page. */
-const PulseThumb = ({ src, alt, category, className }: { src: string | null; alt: string; category: string; className: string }) => {
+ *  404s by the time a visitor loads the page. Real images crop from the
+ *  top since these are page screenshots/banners with their headline near
+ *  the top, not center-weighted stock photos. */
+const PulseThumb = ({ src, alt, category, id, sourceLabel, className }: { src: string | null; alt: string; category: string; id: string; sourceLabel: string; className: string }) => {
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
     const Icon = category === "research" ? FlaskConical : Newspaper;
     return (
-      <div className={`${className} flex items-center justify-center gradient-brand`}>
-        <Icon className="h-8 w-8 text-white/70" />
+      <div className={`${className} flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br ${pickGradient(id)}`}>
+        <Icon className="h-7 w-7 text-white/80" />
+        <span className="text-[10px] font-display font-bold uppercase tracking-widest text-white/60">{sourceLabel}</span>
       </div>
     );
   }
   return (
-    <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setFailed(true)} className={className} />
+    <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setFailed(true)} className={`${className} object-top`} />
   );
 };
 
@@ -296,6 +315,8 @@ const AiPulse = () => {
                       src={featured.image_url}
                       alt={featured.title}
                       category={featured.category}
+                      id={featured.id}
+                      sourceLabel={SOURCE_LABELS[featured.source] ?? featured.source}
                       className="w-full h-48 md:h-full object-cover"
                     />
                   </div>
@@ -335,7 +356,14 @@ const AiPulse = () => {
                   className="card-flat overflow-hidden hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-200 group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="bg-muted">
-                    <PulseThumb src={item.image_url} alt={item.title} category={item.category} className="w-full h-36 object-cover" />
+                    <PulseThumb
+                      src={item.image_url}
+                      alt={item.title}
+                      category={item.category}
+                      id={item.id}
+                      sourceLabel={SOURCE_LABELS[item.source] ?? item.source}
+                      className="w-full h-36 object-cover"
+                    />
                   </div>
                   <div className="p-5 flex flex-col flex-1">
                     <div className="flex items-center gap-2 mb-2.5">

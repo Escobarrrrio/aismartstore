@@ -56,15 +56,11 @@ Deno.serve(async (req) => {
   const email = subscriber.email;
   const categories: string[] = subscriber.interested_categories ?? [];
 
-  const { data: settingsRows } = await supabase
-    .from("store_settings")
-    .select("key, value")
-    .eq("key", "resend_api_key");
-  const resendApiKey = settingsRows?.[0]?.value;
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
   if (!resendApiKey) {
     return new Response(
-      JSON.stringify({ status: "skipped", reason: "resend_api_key not configured in Settings" }),
+      JSON.stringify({ status: "skipped", reason: "RESEND_API_KEY not configured" }),
       { headers: { "Content-Type": "application/json" } }
     );
   }

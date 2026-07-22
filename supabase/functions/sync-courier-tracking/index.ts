@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
     }
 
     // ---------- Phase B: shipped email for every tracked, un-notified order ----------
-    const resendKey = await getSetting(supabase, "resend_api_key") || Deno.env.get("RESEND_API_KEY") || "";
+    const resendKey = Deno.env.get("RESEND_API_KEY") || "";
     if (resendKey) {
       const { data: tracked } = await supabase
         .from("orders")
@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
         }
       }
     } else {
-      summary.errors.push("resend_api_key not configured — shipped emails skipped");
+      summary.errors.push("RESEND_API_KEY not configured — shipped emails skipped");
     }
 
     return new Response(JSON.stringify(summary), {

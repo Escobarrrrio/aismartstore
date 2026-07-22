@@ -35,8 +35,6 @@ const SettingsSection = ({ icon, title, description, children }: { icon: React.R
   </div>
 );
 
-const SettingsInput = ({ label, type = "text", value, onChange, placeholder, mono = false }: {
-  label: string; type?: string; value: string; onChange: (v: string) => void; placeholder: string; mono?: boolean;
 const isMasked = (v: string) => typeof v === "string" && v.startsWith("__MASKED__:");
 const displayValue = (v: string) => (isMasked(v) ? "" : v);
 const maskedPlaceholder = (v: string, fallback: string) =>

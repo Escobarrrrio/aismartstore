@@ -83,13 +83,18 @@ export function useAdminData(session: any) {
   }, []);
 
   const loadSettings = useCallback(async () => {
-    const { data } = await supabase.from("store_settings").select("*");
-    if (data) {
-      const map: Record<string, string> = {};
-      data.forEach((s: any) => { map[s.key] = s.value; });
-      setSettings(map);
+    // Load store settings through an admin-only edge function so that
+    // sensitive API secrets (Yoco, Stripe, PayPal, Resend, Axiz, etc.)
+    // are returned to the browser only as masked previews. The raw
+    // values never leave the server.
+    const { data, error } = await supabase.functions.invoke("admin-get-settings");
+    if (error || !data?.settings) {
+      setSettings({});
+      return;
     }
+    setSettings(data.settings as Record<string, string>);
   }, []);
+
 
   useEffect(() => {
     if (session) {

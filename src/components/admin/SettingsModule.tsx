@@ -35,6 +35,11 @@ const SettingsSection = ({ icon, title, description, children }: { icon: React.R
   </div>
 );
 
+const isMasked = (v: string) => typeof v === "string" && v.startsWith("__MASKED__:");
+const displayValue = (v: string) => (isMasked(v) ? "" : v);
+const maskedPlaceholder = (v: string, fallback: string) =>
+  isMasked(v) ? "•••• " + v.slice("__MASKED__:".length) + " (saved — retype to change)" : fallback;
+
 const SettingsInput = ({ label, type = "text", value, onChange, placeholder, mono = false }: {
   label: string; type?: string; value: string; onChange: (v: string) => void; placeholder: string; mono?: boolean;
 }) => (
@@ -42,9 +47,9 @@ const SettingsInput = ({ label, type = "text", value, onChange, placeholder, mon
     <label className="block text-xs font-semibold mb-1.5">{label}</label>
     <input
       type={type}
-      value={value}
+      value={displayValue(value)}
       onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
+      placeholder={maskedPlaceholder(value, placeholder)}
       className={`input-premium ${mono ? "font-mono text-xs" : ""}`}
     />
   </div>
@@ -58,6 +63,9 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
   const update = (key: string, value: string) => setSettings((prev) => ({ ...prev, [key]: value }));
 
   const saveSetting = async (key: string, value: string) => {
+    // Never persist a masked placeholder back to the database — that would
+    // overwrite the real secret with the "••••1234" preview string.
+    if (isMasked(value)) return;
     const { data: existing } = await supabase.from("store_settings").select("id").eq("key", key).maybeSingle();
     if (existing) {
       await supabase.from("store_settings").update({ value }).eq("key", key);
@@ -65,6 +73,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
       await supabase.from("store_settings").insert({ key, value });
     }
   };
+
 
   const THRESHOLD_DEFAULTS = { min_active: 500, spike_abs: 1000, spike_pct: 5, oos_share_ceiling: 60 };
   const parsedThresholds = (() => {

@@ -9,14 +9,12 @@ const IntegrationsModule = () => {
   const [testing, setTesting] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.from("store_settings").select("*").then(({ data }) => {
-      if (data) {
-        const map: Record<string, string> = {};
-        data.forEach((s: any) => { map[s.key] = s.value; });
-        setSettings(map);
-      }
+    // Fetch via admin edge function; sensitive values arrive masked.
+    supabase.functions.invoke("admin-get-settings").then(({ data }) => {
+      if (data?.settings) setSettings(data.settings as Record<string, string>);
     });
   }, []);
+
 
   const integrations = [
     { id: "axiz", name: "Axiz Distributor", desc: "Product catalogue sync", icon: Package, key: "axiz_api_key" },

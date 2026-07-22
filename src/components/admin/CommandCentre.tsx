@@ -119,10 +119,14 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
   const update = (key: string, value: string) => setSettings((prev) => ({ ...prev, [key]: value }));
 
   const saveSetting = async (key: string, value: string) => {
+    // Skip masked placeholders (e.g. "__MASKED__:1234") so we don't overwrite
+    // real secrets with the preview string the admin just viewed.
+    if (typeof value === "string" && value.startsWith("__MASKED__:")) return;
     const { data: existing } = await supabase.from("store_settings").select("id").eq("key", key).maybeSingle();
     if (existing) await supabase.from("store_settings").update({ value }).eq("key", key);
     else await supabase.from("store_settings").insert({ key, value });
   };
+
 
   const handleSaveAll = async () => {
     setSaving(true);

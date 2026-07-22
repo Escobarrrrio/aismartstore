@@ -12,6 +12,10 @@ interface SEOProps {
   noindex?: boolean;
   /** Skip hreflang alternates -- use for pages with no real SEO value (cart, checkout, account). */
   skipHreflang?: boolean;
+  /** Open Graph type. Defaults to "website"; product detail passes "product", editorial passes "article". */
+  ogType?: "website" | "product" | "article";
+  /** Omit the " | AI Smart Store" suffix (e.g. homepage where the title already carries the brand). */
+  noSiteNameSuffix?: boolean;
 }
 
 const SITE_NAME = "AI Smart Store";

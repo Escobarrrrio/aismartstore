@@ -144,9 +144,13 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
 
   const maskSecret = (val?: string) => {
     if (!val) return "Not configured";
+    // Values from admin-get-settings arrive as "__MASKED__:1234" for
+    // sensitive keys — the raw secret is never sent to the browser.
+    if (val.startsWith("__MASKED__:")) return "•••• " + val.slice("__MASKED__:".length);
     if (val.length < 8) return "****";
     return val.slice(0, 4) + "****" + val.slice(-4);
   };
+
 
   const secretStatus = (val?: string): "ok" | "warn" | "off" => val ? "ok" : "off";
 

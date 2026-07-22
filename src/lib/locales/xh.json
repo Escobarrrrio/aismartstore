@@ -219,7 +219,8 @@
     "specifications": "Iinkcukacha",
     "specPlaceholder": "Iinkcukacha ezithe vetshe ziya kufumaneka xa idatha yemveliso isalathiswe ivela kumboneleli.",
     "relatedProducts": "Iimveliso Ezinxulumeneyo",
-    "viewAll": "Jonga Zonke"
+    "viewAll": "Jonga Zonke",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "Yhini! Iphepha alifumaneki",

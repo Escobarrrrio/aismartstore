@@ -219,7 +219,8 @@
     "specifications": "المواصفات",
     "specPlaceholder": "ستكون المواصفات التفصيلية متاحة بعد مزامنة بيانات المنتج مع المورد.",
     "relatedProducts": "منتجات ذات صلة",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "عذرًا! الصفحة غير موجودة",

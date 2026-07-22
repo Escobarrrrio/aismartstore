@@ -219,7 +219,8 @@
     "specifications": "Spesifikasies",
     "specPlaceholder": "Detailspesifikasies sal beskikbaar wees sodra produkdata vanaf die verskaffer gesinchroniseer is.",
     "relatedProducts": "Verwante Produkte",
-    "viewAll": "Bekyk Alles"
+    "viewAll": "Bekyk Alles",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "Oeps! Bladsy nie gevind nie",

@@ -219,7 +219,8 @@
     "specifications": "Характеристики",
     "specPlaceholder": "Подробные характеристики будут доступны после синхронизации данных о товаре с поставщиком.",
     "relatedProducts": "Похожие Товары",
-    "viewAll": "Посмотреть Все"
+    "viewAll": "Посмотреть Все",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "Упс! Страница не найдена",

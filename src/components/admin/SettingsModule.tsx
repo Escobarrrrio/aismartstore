@@ -117,7 +117,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "email_from_address", "courier_guy_api_key", "courier_guy_api_base", "stock_sanity_thresholds"];
+    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "dispatch_city", "email_from_address", "courier_guy_api_key", "courier_guy_api_base", "stock_sanity_thresholds"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -169,6 +169,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
       <SettingsSection icon={<Truck className="h-4 w-4" />} title="Shipping" description="Every order ships via courier and is charged for it -- there is no free-shipping threshold. Checkout prices ZAR orders by delivery zone (below) once the customer's province is known; the Flat Rate is only the fallback shown on Cart, before an address is entered. Editing the zone rates here changes what customers are actually charged at Checkout, live.">
         <div className="space-y-4">
+          <SettingsInput label="Dispatch City -- shown to customers on product pages" value={settings.dispatch_city || ""} onChange={(v) => update("dispatch_city", v)} placeholder="Gqeberha" />
           <SettingsInput label="Flat Rate -- Cart fallback (R)" type="number" value={settings.shipping_flat_rate || ""} onChange={(v) => update("shipping_flat_rate", v)} placeholder="75" />
           <div>
             <label className="block text-xs font-semibold mb-2">Zone Rates -- what Checkout actually charges (R)</label>

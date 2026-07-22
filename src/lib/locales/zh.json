@@ -219,7 +219,8 @@
     "specifications": "产品规格",
     "specPlaceholder": "产品数据与供应商同步后，详细规格将可用。",
     "relatedProducts": "相关产品",
-    "viewAll": "查看全部"
+    "viewAll": "查看全部",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "哎呀！页面未找到",

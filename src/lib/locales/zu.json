@@ -219,7 +219,8 @@
     "specifications": "Imininingwane Yokwakheka",
     "specPlaceholder": "Imininingwane eningiliziwe izotholakala uma idatha yomkhiqizo isivunyelaniswe isuselwe kumhlinzeki.",
     "relatedProducts": "Imikhiqizo Ehlobene",
-    "viewAll": "Buka Konke"
+    "viewAll": "Buka Konke",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "Maa! Ikhasi alitholakali",

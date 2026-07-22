@@ -219,7 +219,8 @@
     "specifications": "Lintlha tsa Tlhaho",
     "specPlaceholder": "Lintlha tse qaqileng li tla fumaneha ha boitsebiso ba sehlahisoa bo se bo lumellanngwa ho tswa ho mofani.",
     "relatedProducts": "Lihlahisoa tse Amanang",
-    "viewAll": "Sheba Tsohle"
+    "viewAll": "Sheba Tsohle",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "Joo! Leqephe ha le fumanwe",

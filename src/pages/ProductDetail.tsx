@@ -4,12 +4,15 @@ import { useProducts } from "@/contexts/ProductContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Product } from "@/contexts/CartContext";
 import SEO from "@/components/SEO";
+import { supabase } from "@/integrations/supabase/client";
 import {
-  ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw,
+  ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw, MapPin,
   Star, ChevronRight, Package, MessageCircle, Minus, Plus
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+const DEFAULT_DISPATCH_CITY = "Gqeberha";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -24,6 +27,12 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [resolved, setResolved] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
+  const [dispatchCity, setDispatchCity] = useState(DEFAULT_DISPATCH_CITY);
+
+  useEffect(() => {
+    supabase.from("store_settings").select("value").eq("key", "dispatch_city").maybeSingle()
+      .then(({ data }) => { if (data?.value) setDispatchCity(data.value); });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -252,11 +261,12 @@ const ProductDetail = () => {
             </div>
 
             {/* Reassurance */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {[
                 { icon: Truck, label: t("productDetail.freeDelivery") },
                 { icon: Shield, label: t("productDetail.secureCheckout") },
                 { icon: RotateCcw, label: t("productDetail.easyReturns") },
+                { icon: MapPin, label: t("productDetail.dispatchedFrom", { city: dispatchCity }) },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/50 border border-border/50">
                   <item.icon className="h-4 w-4 text-primary flex-shrink-0" />

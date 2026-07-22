@@ -219,7 +219,8 @@
     "specifications": "Spécifications",
     "specPlaceholder": "Les spécifications détaillées seront disponibles une fois les données du produit synchronisées avec le fournisseur.",
     "relatedProducts": "Produits Similaires",
-    "viewAll": "Voir Tout"
+    "viewAll": "Voir Tout",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "Oups ! Page introuvable",

@@ -219,7 +219,8 @@
     "specifications": "Specifications",
     "specPlaceholder": "Detailed specifications will be available once product data is synced from the supplier.",
     "relatedProducts": "Related Products",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "Oops! Page not found",

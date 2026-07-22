@@ -219,7 +219,8 @@
     "specifications": "विशेषताएं",
     "specPlaceholder": "सप्लायर से उत्पाद डेटा सिंक होने के बाद विस्तृत विशेषताएं उपलब्ध होंगी।",
     "relatedProducts": "संबंधित उत्पाद",
-    "viewAll": "सभी देखें"
+    "viewAll": "सभी देखें",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "उफ़! पेज नहीं मिला",

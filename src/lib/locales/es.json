@@ -219,7 +219,8 @@
     "specifications": "Especificaciones",
     "specPlaceholder": "Las especificaciones detalladas estarán disponibles una vez que los datos del producto se sincronicen con el proveedor.",
     "relatedProducts": "Productos Relacionados",
-    "viewAll": "Ver Todo"
+    "viewAll": "Ver Todo",
+    "dispatchedFrom": "Dispatched from {{city}}"
   },
   "notFound": {
     "message": "¡Vaya! Página no encontrada",

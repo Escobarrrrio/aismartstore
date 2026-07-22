@@ -43,6 +43,30 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Require a signed-in Supabase user so this endpoint can't be scripted
+    // by anonymous callers to burn through the store's paid AI credits.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { messages, language } = await req.json();
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages array required" }), {
@@ -51,9 +75,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Hard caps to prevent large payloads from draining AI credits.
+    const MAX_MESSAGES = 30;
+    const MAX_TOTAL_CHARS = 20_000;
+    const MAX_MESSAGE_CHARS = 4_000;
+    if (messages.length > MAX_MESSAGES) {
+      return new Response(JSON.stringify({ error: `Conversation too long (max ${MAX_MESSAGES} messages).` }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    let totalChars = 0;
+    for (const m of messages as Array<{ content?: unknown }>) {
+      const c = typeof m?.content === "string" ? m.content : "";
+      if (c.length > MAX_MESSAGE_CHARS) {
+        return new Response(JSON.stringify({ error: `Message too long (max ${MAX_MESSAGE_CHARS} characters).` }), {
+          status: 413,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      totalChars += c.length;
+    }
+    if (totalChars > MAX_TOTAL_CHARS) {
+      return new Response(JSON.stringify({ error: `Conversation payload too large (max ${MAX_TOTAL_CHARS} characters).` }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+
 
     // Fetch products for context
     const { data: products } = await supabase

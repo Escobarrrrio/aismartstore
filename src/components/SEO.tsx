@@ -12,6 +12,10 @@ interface SEOProps {
   noindex?: boolean;
   /** Skip hreflang alternates -- use for pages with no real SEO value (cart, checkout, account). */
   skipHreflang?: boolean;
+  /** Open Graph type. Defaults to "website"; product detail passes "product", editorial passes "article". */
+  ogType?: "website" | "product" | "article";
+  /** Omit the " | AI Smart Store" suffix (e.g. homepage where the title already carries the brand). */
+  noSiteNameSuffix?: boolean;
 }
 
 const SITE_NAME = "AI Smart Store";
@@ -33,13 +37,15 @@ const DEFAULT_IMAGE = "/og-image.png";
  * the i18next querystring detector picks up on load -- so the URLs
  * Google indexes genuinely do render in the declared language.
  */
-const SEO = ({ title, description, path, image, jsonLd, noindex, skipHreflang }: SEOProps) => {
+const SEO = ({ title, description, path, image, jsonLd, noindex, skipHreflang, ogType, noSiteNameSuffix }: SEOProps) => {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://aismartstore.co.za";
   const pagePath = path || (typeof window !== "undefined" ? window.location.pathname : "");
   const url = `${origin}${pagePath}`;
-  const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
+  const fullTitle =
+    noSiteNameSuffix || title === SITE_NAME || title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
   const ogImage = image ? (image.startsWith("http") ? image : `${origin}${image}`) : `${origin}${DEFAULT_IMAGE}`;
   const jsonLdArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+  const resolvedOgType = ogType ?? "website";
 
   return (
     <Helmet>
@@ -61,7 +67,7 @@ const SEO = ({ title, description, path, image, jsonLd, noindex, skipHreflang }:
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:type" content={path === "/" ? "website" : "product"} />
+      <meta property="og:type" content={resolvedOgType} />
       <meta property="og:locale" content="en_ZA" />
 
       <meta name="twitter:title" content={fullTitle} />

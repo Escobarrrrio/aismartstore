@@ -77,7 +77,7 @@ const Index = () => {
   return (
     <div className="flex flex-col">
       <SEO
-        title="AI Smart Store — AI hardware, networking & enterprise software in South Africa"
+        title="AI & Enterprise Hardware in South Africa"
         description="Shop curated AI hardware, networking gear, computing devices, and enterprise software in South Africa. Distributor-backed pricing in ZAR with SA-wide delivery."
         path="/"
         jsonLd={[

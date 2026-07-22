@@ -81,6 +81,7 @@ const ProductDetail = () => {
         title={product.name}
         description={product.description || `${product.name} — available now at AI Smart Store. ${product.inStock ? "In stock" : "Currently out of stock"}, with secure checkout and SA-wide delivery.`}
         path={`/product/${product.id}`}
+        ogType="product"
         image={product.images[0]}
         jsonLd={[
           {

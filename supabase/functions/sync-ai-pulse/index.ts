@@ -14,7 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // automated -- no manual refresh needed. Safe to call repeatedly: it
 // upserts by URL so re-running just refreshes existing entries.
 
-const AI_KEYWORDS = ["ai", "llm", "gpt", "claude", "gemini", "openai", "anthropic", "machine learning", "neural network", "artificial intelligence"];
+const AI_KEYWORDS = ["ai", "llm", "gpt", "claude", "gemini", "openai", "anthropic", "machine learning", "neural network", "artificial intelligence"]; // lovable-ref-ok: AI-news keyword (the model), unrelated to how this site was built
 
 // Real, standard WordPress RSS feeds from established South African tech
 // news publishers. Each is fetched and filtered independently -- if one

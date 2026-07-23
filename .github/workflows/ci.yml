@@ -25,6 +25,9 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
+      - name: No stray platform/assistant-name references
+        run: npm run check:no-platform-refs
+
       - name: Run test suite
         run: npm test
 

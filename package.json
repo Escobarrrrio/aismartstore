@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:seed": "tsx e2e/fixtures/seed-cli.ts"
+    "test:e2e:seed": "tsx e2e/fixtures/seed-cli.ts",
+    "check:no-platform-refs": "tsx scripts/check-no-platform-refs.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.11",

@@ -50,9 +50,9 @@ const StoreFooter = () => {
             <h5 className="font-display font-bold text-sm text-background/90 mb-4">Shop</h5>
             <nav className="flex flex-col gap-2">
               <Link to="/products" className="text-sm hover:text-background/80 transition-colors">All Products</Link>
-              <Link to="/products" className="text-sm hover:text-background/80 transition-colors">AI & Hardware</Link>
-              <Link to="/products" className="text-sm hover:text-background/80 transition-colors">Networking</Link>
-              <Link to="/products" className="text-sm hover:text-background/80 transition-colors">Software</Link>
+              <Link to="/products?ai=1" className="text-sm hover:text-background/80 transition-colors">AI & Hardware</Link>
+              <Link to={`/products?category=${encodeURIComponent("Networking")}`} className="text-sm hover:text-background/80 transition-colors">Networking</Link>
+              <Link to={`/products?category=${encodeURIComponent("Software & Licensing")}`} className="text-sm hover:text-background/80 transition-colors">Software</Link>
             </nav>
           </div>
 
@@ -63,7 +63,6 @@ const StoreFooter = () => {
               <Link to="/auth" className="text-sm hover:text-background/80 transition-colors">Login / Register</Link>
               <Link to="/compliance" className="text-sm hover:text-background/80 transition-colors">Privacy (POPIA)</Link>
               <Link to="/compliance" className="text-sm hover:text-background/80 transition-colors">PAIA Manual</Link>
-              <span className="text-sm">Shipping & Returns</span>
             </nav>
           </div>
 

@@ -66,10 +66,13 @@ const Index = () => {
   }, []);
 
   const categoryCards = [
-    { key: "ai", icon: Cpu, color: "bg-primary/[0.06] text-primary" },
-    { key: "networking", icon: Globe, color: "bg-secondary/[0.06] text-secondary" },
-    { key: "computing", icon: Server, color: "bg-[hsl(160,84%,39%)]/[0.06] text-[hsl(160,84%,39%)]" },
-    { key: "software", icon: Code, color: "bg-[hsl(38,92%,50%)]/[0.06] text-[hsl(38,92%,50%)]" },
+    { key: "ai", icon: Cpu, color: "bg-primary/[0.06] text-primary", to: "/products?ai=1" },
+    { key: "networking", icon: Globe, color: "bg-secondary/[0.06] text-secondary", to: `/products?category=${encodeURIComponent("Networking")}` },
+    // No single category cleanly covers "computing" (spans Laptop, Desktops &
+    // Workstations, Servers, AIO, Storage, Monitors) -- link to the general
+    // catalogue rather than a filter that would hide most of what it promises.
+    { key: "computing", icon: Server, color: "bg-[hsl(160,84%,39%)]/[0.06] text-[hsl(160,84%,39%)]", to: "/products" },
+    { key: "software", icon: Code, color: "bg-[hsl(38,92%,50%)]/[0.06] text-[hsl(38,92%,50%)]", to: `/products?category=${encodeURIComponent("Software & Licensing")}` },
   ] as const;
 
   const benefits = [
@@ -184,7 +187,7 @@ const Index = () => {
             {categoryCards.map((cat) => (
               <Link
                 key={cat.key}
-                to="/products"
+                to={cat.to}
                 className="card-premium p-6 text-center group"
               >
                 <div className={`w-14 h-14 rounded-2xl ${cat.color} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
@@ -204,7 +207,7 @@ const Index = () => {
           <div className="flex items-end justify-between mb-10">
             <div>
               <h2 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">
-                {t("home.featuredTitle")}
+                <span className="shimmer-text">{t("home.featuredTitle")}</span>
               </h2>
               <p className="text-muted-foreground">{t("home.featuredSubtitle")}</p>
             </div>

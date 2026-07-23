@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Heart, Sparkles, Truck, ShieldCheck, Check, Zap, Rocket, PackageCheck } from "lucide-react";
+import { ShoppingCart, Heart, Sparkles, Truck, Check, Rocket, PackageCheck } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -13,6 +13,13 @@ interface ProductCardProps {
 
 const RESIDENTIAL_MAX = 15000;
 const SHIPS_FAST_MIN_STOCK = 5;
+
+function shipEstimate(stockQuantity?: number): string {
+  if (typeof stockQuantity !== "number") return "2–4 days";
+  if (stockQuantity >= 20) return "1–2 days";
+  if (stockQuantity >= SHIPS_FAST_MIN_STOCK) return "2–3 days";
+  return "3–5 days";
+}
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
@@ -103,33 +110,20 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </h3>
         </Link>
 
-        {/* Live status badges */}
-        <div className="flex flex-wrap items-center gap-1.5 mb-2">
-          {product.inStock && (
+        {/* Live status badge — one line, not a stack: what it is + when it ships */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          {product.inStock ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
               </span>
-              In Stock
+              In Stock · Ships in {shipEstimate(product.stockQuantity)}
             </span>
-          )}
-          {product.inStock && (typeof product.stockQuantity !== "number" || product.stockQuantity >= SHIPS_FAST_MIN_STOCK) && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-semibold px-2 py-0.5">
-              <Zap className="h-3 w-3" />
-              Ships Fast · {
-                typeof product.stockQuantity !== "number"
-                  ? "2–4 days"
-                  : product.stockQuantity >= 20
-                    ? "1–2 days"
-                    : "2–3 days"
-              }
-            </span>
-          )}
-          {product.inStock && typeof product.stockQuantity === "number" && product.stockQuantity > 0 && product.stockQuantity < SHIPS_FAST_MIN_STOCK && (
+          ) : (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold px-2 py-0.5">
-              <Zap className="h-3 w-3" />
-              Ships in 3–5 days
+              <Truck className="h-3 w-3" />
+              Backorder · Ships in 3–7 days
             </span>
           )}
           {product.price > 0 && product.price <= RESIDENTIAL_MAX && (
@@ -144,18 +138,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
               Enterprise
             </span>
           )}
-        </div>
-
-        {/* Trust line */}
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground mb-3">
-          <span className="inline-flex items-center gap-1">
-            <ShieldCheck className="h-3 w-3 text-emerald-600" />
-            Genuine
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Truck className="h-3 w-3" />
-            Ships from ZA
-          </span>
         </div>
 
         <div className="flex-1" />

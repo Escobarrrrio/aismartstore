@@ -13,8 +13,12 @@ import { trackEvent } from "@/lib/analytics";
 const Index = () => {
   const { products, loading } = useProducts();
   const { t } = useTranslation();
-  const featured = products.slice(0, 8);
   const [aiPicks, setAiPicks] = useState<Product[]>([]);
+  // AI Picks and Featured both draw from the newest-residential-products
+  // pool, so without this exclusion the same items show up in both grids
+  // back to back. Featured should showcase what AI Picks isn't already covering.
+  const aiPickIds = new Set(aiPicks.map((p) => p.id));
+  const featured = products.filter((p) => !aiPickIds.has(p.id)).slice(0, 8);
   const [catalogCount, setCatalogCount] = useState<number | null>(null);
 
   useEffect(() => {

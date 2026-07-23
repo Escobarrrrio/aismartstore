@@ -47,59 +47,61 @@ const ChatWidget = () => {
       });
     };
 
+    const logCtx = { url: CHAT_URL, ts: new Date().toISOString(), lang: i18n.language || "en" };
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        upsertAssistant("Please sign in to chat with our AI assistant.");
+        console.info("[ChatWidget] no session – prompting sign-in", logCtx);
+        upsertAssistant("You'll need to sign in to chat with our AI assistant. Tap Login/Register at the top of the page and we'll pick up right where you left off.");
         setLoading(false);
         return;
       }
 
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ messages: newMessages, language: i18n.language || "en" }),
-      });
+      let resp: Response;
+      try {
+        resp = await fetch(CHAT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ messages: newMessages, language: i18n.language || "en" }),
+        });
+      } catch (netErr) {
+        console.error("[ChatWidget] network failure calling ai-chat", { ...logCtx, error: netErr });
+        upsertAssistant("I couldn't reach our AI service just now — please check your connection and try again.");
+        setLoading(false);
+        return;
+      }
+
+      const requestId = resp.headers.get("x-request-id") || resp.headers.get("sb-request-id") || undefined;
 
       if (!resp.ok || !resp.body) {
-        const err = await resp.json().catch(() => ({ error: "Network error" }));
-        upsertAssistant(err.error || "Sorry, something went wrong. Please try again.");
+        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+        console.error("[ChatWidget] ai-chat error response", { ...logCtx, status: resp.status, requestId, body: err });
+        let friendly = "Sorry, something went wrong. Please try again.";
+        if (resp.status === 401 || resp.status === 403) {
+          friendly = "Your session expired — please sign in again to keep chatting.";
+        } else if (resp.status === 402) {
+          friendly = "Our AI assistant is temporarily unavailable (credits exhausted). We've been alerted — please try again shortly or email support.";
+        } else if (resp.status === 429) {
+          friendly = "Whoa, lots of questions! Please wait a few seconds and try again.";
+        } else if (resp.status === 413) {
+          friendly = err.error || "This conversation is getting long — please start a fresh chat.";
+        } else if (resp.status >= 500) {
+          friendly = "Our AI service hit a snag. Please try again in a moment.";
+        } else if (err?.error) {
+          friendly = err.error;
+        }
+        if (requestId) friendly += `\n(ref: ${requestId})`;
+        upsertAssistant(friendly);
         setLoading(false);
         return;
       }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) upsertAssistant(content);
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
+...
       }
     } catch (e) {
+      console.error("[ChatWidget] unexpected error", { ...logCtx, error: e });
       upsertAssistant("Sorry, I'm having trouble connecting. Please try again later.");
     }
 

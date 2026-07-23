@@ -1,14 +1,14 @@
 # AI Smart Store -- Uptime & Security Monitor (Cloudflare Worker)
 
 A standalone Cloudflare Worker that checks the live site every 10 minutes
-and exposes a `/status` endpoint. Independent of Lovable/Supabase --
-this is a separate, external watchdog.
+and exposes a `/status` endpoint. Independent of the main app's hosting
+stack -- this is a separate, external watchdog.
 
 ## Deploy (one-time, ~3 minutes)
 
 You need Node.js installed locally for this (same requirement as the
-main app). Claude cannot deploy this directly -- the Cloudflare MCP
-connection only has read access to your account, not deploy permission.
+main app), and to run the commands below yourself -- automated deploy
+access to Cloudflare isn't available in this environment.
 
 ```bash
 npm install -g wrangler
@@ -29,6 +29,6 @@ That's it. Wrangler prints a `*.workers.dev` URL -- that's your monitor.
 ## Adding alerts (optional next step)
 
 Right now it just records history to KV. To get pinged when something's
-actually wrong, tell Claude where to send alerts (email, Slack, Telegram,
-a webhook) and it'll wire a notification call into the `scheduled()`
-function -- the hook is already marked in the code with a comment.
+actually wrong, decide where alerts should go (email, Slack, Telegram,
+a webhook) and wire a notification call into the `scheduled()` function
+-- the hook is already marked in the code with a comment.

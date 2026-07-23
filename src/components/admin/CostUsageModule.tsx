@@ -12,7 +12,7 @@ const CostUsageModule = () => {
     hardStop: 50.00,
     services: [
       { name: "OpenAI GPT", tokens: 120_000, cost: 12.00, pct: 84 },
-      { name: "Lovable AI", tokens: 22_350, cost: 2.23, pct: 16 },
+      { name: "AI Gateway", tokens: 22_350, cost: 2.23, pct: 16 },
     ],
     history: [
       { date: "May 1", spend: 2.10 }, { date: "May 2", spend: 3.45 }, { date: "May 3", spend: 1.80 },

@@ -1,5 +1,5 @@
 // Runs before `vite dev` and `vite build` (predev/prebuild hooks); writes public/sitemap.xml.
-// Pulls active products from the Lovable Cloud database so /product/:id routes are discoverable.
+// Pulls active products from the live database so /product/:id routes are discoverable.
 import { writeFileSync } from "fs"
 import { resolve } from "path"
 

@@ -74,7 +74,7 @@ export async function captureEdgeError(
       method: "POST",
       headers: {
         "Content-Type": "application/x-sentry-envelope",
-        "X-Sentry-Auth": `Sentry sentry_version=7, sentry_key=${parsed.publicKey}, sentry_client=lovable-edge/1.0`,
+        "X-Sentry-Auth": `Sentry sentry_version=7, sentry_key=${parsed.publicKey}, sentry_client=aismartstore-edge/1.0`,
       },
       body,
     });

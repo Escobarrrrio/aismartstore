@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
  * casing for the `filter_category` argument (e.g. "accessories" vs
  * "Accessories"), across every category surfaced by `get_product_facets`.
  *
- * Runs against the live Lovable Cloud backend using the public anon key.
+ * Runs against the live backend using the public anon key.
  * Skipped automatically when the endpoint is unreachable (offline CI).
  *
  * Run: `bunx vitest run src/test/filter-case-insensitivity.test.ts`

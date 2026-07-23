@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       <div style="text-align:center;">
         <h2 style="color:#1a1a2e;">You've been unsubscribed</h2>
         <p style="color:#888;">${email.replace(/[<>&"']/g, "")} will no longer receive emails from AI Smart Store.</p>
-        <a href="https://aismartstore.lovable.app" style="color:#06b6d4;">Return to the store</a>
+        <a href="https://aismartstore.co.za" style="color:#06b6d4;">Return to the store</a>
       </div>
     </body></html>`,
     { headers: { "Content-Type": "text/html" } }

@@ -13,10 +13,10 @@ import { test, expect, request } from "@playwright/test";
  * Scope: only status/shape contracts that are deterministically forceable
  * over a live HTTP call are tested here (401, 400, 413). 402 (AI credits
  * exhausted), 403, 429 (upstream rate limit), and 5xx all depend on live
- * upstream AI-provider state (OpenAI/Lovable AI Gateway billing, rate
- * limits, real outages) that can't be forced deterministically against the
- * real deployed function without adding test-mode dependency injection to
- * the function itself, which is out of scope here. Those five codes'
+ * upstream AI-provider state (billing, rate limits, real outages) that
+ * can't be forced deterministically against the real deployed function
+ * without adding test-mode dependency injection to the function itself,
+ * which is out of scope here. Those five codes'
  * exact fallback-message contract is covered instead by the mocked-route
  * tests in e2e/chat-widget.spec.ts, which pin the same status codes and
  * response shapes at the point ChatWidget actually consumes them.

@@ -10,8 +10,8 @@
  * The seed is idempotent — it upserts by primary key so re-running never
  * duplicates rows. When the env vars are missing (e.g. local dev without the
  * service role key), the seeder exits 0 without touching the database and
- * logs a clear warning so CI does not fail on Lovable Cloud projects where
- * the service role key is intentionally unavailable.
+ * logs a clear warning so CI does not fail on projects where the service
+ * role key is intentionally unavailable.
  */
 
 import { createClient } from "@supabase/supabase-js";

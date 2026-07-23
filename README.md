@@ -11,7 +11,7 @@
 ![Languages](https://img.shields.io/badge/i18n-13%20languages-orange)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
 
-[Live Site](https://aismartstore.lovable.app) · [Report an Issue](https://github.com/Escobarrrrio/aismartstore/issues)
+[Live Site](https://aismartstore.co.za) · [Report an Issue](https://github.com/Escobarrrrio/aismartstore/issues)
 
 </div>
 
@@ -77,7 +77,7 @@ src/
 supabase/
   migrations/     Database schema and RLS policy history (applied in order)
   functions/      Edge functions (checkout, notifications, AI chat, newsletter,
-                   dynamic sitemap, AI content sync, distributor catalog sync)
+                   AI content sync, distributor catalog sync)
 cloudflare-worker/
                   Standalone uptime + security-header monitor (deploy separately)
 ```

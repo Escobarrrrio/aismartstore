@@ -9,7 +9,7 @@ import { getAuthContext } from "../_shared/auth-guard.ts";
 
 // Hardcoded in supabase/functions/auth-email-hook/index.ts (SENDER_DOMAIN) --
 // password reset / signup / magic-link emails always send from here via
-// Lovable's built-in auth email pipeline, regardless of the Resend setting.
+// the platform's built-in auth email pipeline, regardless of the Resend setting.
 const AUTH_EMAIL_DOMAIN = "notify.aismartstore.co.za";
 
 const COMMON_DKIM_SELECTORS = ["resend", "mailo", "smtp", "k1", "s1", "s2", "mg", "google", "selector1", "selector2"];

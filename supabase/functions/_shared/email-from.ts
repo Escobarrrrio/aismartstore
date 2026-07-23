@@ -2,7 +2,7 @@
 // uses (order notifications, welcome email, newsletter). Previously each
 // function hardcoded its own value independently -- notify-order fell back
 // to Resend's own shared orders@resend.dev, while send-welcome-email and
-// send-newsletter-campaign hardcoded hello@aismartstore.lovable.app. Both
+// send-newsletter-campaign hardcoded hello@ the old preview domain. Both
 // are unverified-domain sends that fail SPF/DMARC checks at strict
 // providers (Yahoo, Gmail) and land in spam -- which is the whole reason
 // this file exists. Fix it once, in one place, via Admin -> Settings.

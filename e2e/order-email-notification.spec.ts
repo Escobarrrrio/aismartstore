@@ -4,7 +4,7 @@ import { test, expect, request } from "@playwright/test";
  * End-to-end: place an order, then confirm the customer receives the
  * "order placed" email notification pipeline.
  *
- * This runs at the API layer against Lovable Cloud:
+ * This runs at the API layer against the live backend:
  *  1. Sign in as a test customer (PLAYWRIGHT_TEST_USER_EMAIL/PASSWORD).
  *  2. Insert a real `orders` row as that customer.
  *  3. Insert a matching `order_items` row.

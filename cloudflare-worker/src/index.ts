@@ -13,7 +13,7 @@ export interface Env {
   HEALTH_KV: KVNamespace;
 }
 
-const SITE_URL = "https://aismartstore.lovable.app";
+const SITE_URL = "https://aismartstore.co.za";
 const HISTORY_KEY = "health-history";
 const MAX_HISTORY = 50;
 
@@ -48,11 +48,11 @@ async function runHealthCheck(): Promise<HealthCheck> {
     }
     if (body.includes("files are missing")) {
       noPermissionErrors = false;
-      notes.push("Detected Lovable's 'published but files are missing' signature -- may need a re-publish.");
+      notes.push("Detected the 'published but files are missing' hosting signature -- may need a re-publish.");
     }
 
-    // Basic security header sanity (Lovable manages most of this, but
-    // worth tracking in case the hosting config ever regresses)
+    // Basic security header sanity (the hosting platform manages most of
+    // this, but worth tracking in case the config ever regresses)
     const csp = res.headers.get("content-security-policy");
     const xfo = res.headers.get("x-frame-options");
     if (!csp && !xfo) {
@@ -87,8 +87,8 @@ export default {
     const check = await runHealthCheck();
     await recordCheck(env, check);
     // To add alerting (email/Slack/Telegram on status !== "healthy"),
-    // add a fetch() call to your chosen webhook here -- ask Claude to
-    // wire this up once you've decided where alerts should go.
+    // add a fetch() call to your chosen webhook here once you've
+    // decided where alerts should go.
   },
 
   async fetch(req: Request, env: Env) {

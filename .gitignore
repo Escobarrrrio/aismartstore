@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 bun.lock*
+
+# Platform-internal planning scratch files -- not meant for the repo
+.lovable/

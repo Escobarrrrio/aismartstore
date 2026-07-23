@@ -5,7 +5,7 @@ import { test, expect, request, type Page } from "@playwright/test";
  * see it persisted server-side (not just optimistic UI), find it under
  * Account -> Saved Items, and remove it from there too.
  *
- * Runs against real Lovable Cloud with a real signed-in session (same
+ * Runs against the real live backend with a real signed-in session (same
  * pattern as order-email-notification.spec.ts) so RLS on the `wishlists`
  * table is exercised for real, not faked.
  */

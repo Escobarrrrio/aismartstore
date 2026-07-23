@@ -11,18 +11,32 @@ interface Message {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
 const ChatWidget = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages, open]);
+
+  // Move focus into the panel when it opens (keyboard users shouldn't have
+  // to tab past the whole page to reach it), and back to the launcher
+  // button when it closes so focus isn't lost.
+  useEffect(() => {
+    if (open) {
+      inputRef.current?.focus();
+    } else {
+      openButtonRef.current?.focus();
+    }
+  }, [open]);
 
   const sendMessage = async () => {
     const text = input.trim();
@@ -52,7 +66,7 @@ const ChatWidget = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         console.info("[ChatWidget] no session – prompting sign-in", logCtx);
-        upsertAssistant("You'll need to sign in to chat with our AI assistant. Tap Login/Register at the top of the page and we'll pick up right where you left off.");
+        upsertAssistant(t("chat.signInPrompt"));
         setLoading(false);
         return;
       }
@@ -69,7 +83,7 @@ const ChatWidget = () => {
         });
       } catch (netErr) {
         console.error("[ChatWidget] network failure calling ai-chat", { ...logCtx, error: netErr });
-        upsertAssistant("I couldn't reach our AI service just now — please check your connection and try again.");
+        upsertAssistant(t("chat.networkError"));
         setLoading(false);
         return;
       }
@@ -79,17 +93,17 @@ const ChatWidget = () => {
       if (!resp.ok || !resp.body) {
         const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
         console.error("[ChatWidget] ai-chat error response", { ...logCtx, status: resp.status, requestId, body: err });
-        let friendly = "Sorry, something went wrong. Please try again.";
+        let friendly = t("chat.genericError");
         if (resp.status === 401 || resp.status === 403) {
-          friendly = "Your session expired — please sign in again to keep chatting.";
+          friendly = t("chat.sessionExpired");
         } else if (resp.status === 402) {
-          friendly = "Our AI assistant is temporarily unavailable (credits exhausted). We've been alerted — please try again shortly or email support.";
+          friendly = t("chat.creditsExhausted");
         } else if (resp.status === 429) {
-          friendly = "Whoa, lots of questions! Please wait a few seconds and try again.";
+          friendly = t("chat.rateLimited");
         } else if (resp.status === 413) {
-          friendly = err.error || "This conversation is getting long — please start a fresh chat.";
+          friendly = err.error || t("chat.conversationTooLong");
         } else if (resp.status >= 500) {
-          friendly = "Our AI service hit a snag. Please try again in a moment.";
+          friendly = t("chat.serverError");
         } else if (err?.error) {
           friendly = err.error;
         }
@@ -130,7 +144,7 @@ const ChatWidget = () => {
       }
     } catch (e) {
       console.error("[ChatWidget] unexpected error", { ...logCtx, error: e });
-      upsertAssistant("Sorry, I'm having trouble connecting. Please try again later.");
+      upsertAssistant(t("chat.unexpectedError"));
     }
 
     setLoading(false);
@@ -141,9 +155,10 @@ const ChatWidget = () => {
       {/* FAB */}
       {!open && (
         <button
+          ref={openButtonRef}
           onClick={() => setOpen(true)}
-          aria-label="Open customer support chat"
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full gradient-brand text-white flex items-center justify-center shadow-elevated hover:scale-105 transition-transform"
+          aria-label={t("chat.openLabel")}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full gradient-brand text-white flex items-center justify-center shadow-elevated hover:scale-105 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <MessageCircle className="h-6 w-6" aria-hidden="true" />
         </button>
@@ -151,34 +166,52 @@ const ChatWidget = () => {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-4rem)] bg-card border border-border rounded-2xl shadow-elevated flex flex-col overflow-hidden">
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("chat.title")}
+          onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+          className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-4rem)] bg-card border border-border rounded-2xl shadow-elevated flex flex-col overflow-hidden"
+        >
           {/* Header */}
           <div className="gradient-brand px-4 py-3 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2 text-white">
-              <Bot className="h-5 w-5" />
+              <Bot className="h-5 w-5" aria-hidden="true" />
               <div>
-                <p className="font-display font-bold text-sm">Smart Store AI</p>
-                <p className="text-[10px] opacity-80">Product help & support</p>
+                <p className="font-display font-bold text-sm">{t("chat.title")}</p>
+                <p className="text-[10px] opacity-80">{t("chat.subtitle")}</p>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white p-1">
-              <X className="h-5 w-5" />
+            <button
+              onClick={() => setOpen(false)}
+              aria-label={t("chat.closeLabel")}
+              className="text-white/80 hover:text-white p-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
 
-          {/* Messages */}
-          <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Messages -- aria-live so screen readers announce new assistant
+              replies and error fallbacks as they arrive, not just on focus. */}
+          <div
+            ref={listRef}
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+            className="flex-1 overflow-y-auto p-4 space-y-3"
+          >
             {messages.length === 0 && (
               <div className="text-center py-8">
-                <Bot className="h-10 w-10 text-secondary/40 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground font-display font-semibold">How can I help you?</p>
-                <p className="text-xs text-muted-foreground mt-1">Ask about products, orders, or shipping</p>
+                <Bot className="h-10 w-10 text-secondary/40 mx-auto mb-3" aria-hidden="true" />
+                <p className="text-sm text-muted-foreground font-display font-semibold">{t("chat.emptyTitle")}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("chat.emptyHint")}</p>
                 <div className="flex flex-wrap justify-center gap-2 mt-4">
-                  {["What laptops do you have?", "Track my order", "Return policy"].map((q) => (
+                  {[t("chat.suggestion1"), t("chat.suggestion2"), t("chat.suggestion3")].map((q) => (
                     <button
                       key={q}
                       onClick={() => { setInput(q); }}
-                      className="text-xs bg-muted border border-border rounded-full px-3 py-1.5 text-muted-foreground hover:bg-secondary/10 hover:text-foreground transition-colors"
+                      className="text-xs bg-muted border border-border rounded-full px-3 py-1.5 text-muted-foreground hover:bg-secondary/10 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {q}
                     </button>
@@ -191,7 +224,7 @@ const ChatWidget = () => {
               <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
                   <div className="w-7 h-7 rounded-full gradient-brand flex items-center justify-center text-white flex-shrink-0 mt-1">
-                    <Bot className="h-3.5 w-3.5" />
+                    <Bot className="h-3.5 w-3.5" aria-hidden="true" />
                   </div>
                 )}
                 <div className={`max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed ${
@@ -203,16 +236,16 @@ const ChatWidget = () => {
                 </div>
                 {msg.role === "user" && (
                   <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center text-muted-foreground flex-shrink-0 mt-1">
-                    <User className="h-3.5 w-3.5" />
+                    <User className="h-3.5 w-3.5" aria-hidden="true" />
                   </div>
                 )}
               </div>
             ))}
 
             {loading && messages[messages.length - 1]?.role !== "assistant" && (
-              <div className="flex gap-2">
+              <div className="flex gap-2" aria-label={t("chat.title")}>
                 <div className="w-7 h-7 rounded-full gradient-brand flex items-center justify-center text-white flex-shrink-0">
-                  <Bot className="h-3.5 w-3.5" />
+                  <Bot className="h-3.5 w-3.5" aria-hidden="true" />
                 </div>
                 <div className="bg-muted rounded-xl px-4 py-3">
                   <div className="flex gap-1">
@@ -228,19 +261,24 @@ const ChatWidget = () => {
           {/* Input */}
           <div className="border-t border-border p-3 flex-shrink-0">
             <div className="flex gap-2">
+              <label htmlFor="chat-widget-input" className="sr-only">{t("chat.inputLabel")}</label>
               <input
+                id="chat-widget-input"
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                placeholder="Ask me anything..."
+                placeholder={t("chat.inputPlaceholder")}
+                aria-label={t("chat.inputLabel")}
                 className="flex-1 px-3 py-2 rounded-full border border-input bg-muted text-sm outline-none focus:border-secondary transition text-foreground placeholder:text-muted-foreground"
               />
               <button
                 onClick={sendMessage}
                 disabled={loading || !input.trim()}
-                className="w-9 h-9 rounded-full gradient-brand text-white flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-50 flex-shrink-0"
+                aria-label={t("chat.sendLabel")}
+                className="w-9 h-9 rounded-full gradient-brand text-white flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-50 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>

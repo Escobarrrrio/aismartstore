@@ -265,5 +265,28 @@
     "viewDetails": "Sheba Lintlha",
     "addToCart": "Eketsa Setlolong",
     "catalogueHeading": "Katalogo ea Hardware le Theknoloji ea AI"
+  },
+  "chat": {
+    "openLabel": "Open customer support chat",
+    "closeLabel": "Close chat",
+    "title": "Smart Store AI",
+    "subtitle": "Product help & support",
+    "inputLabel": "Chat message",
+    "inputPlaceholder": "Ask me anything...",
+    "sendLabel": "Send message",
+    "emptyTitle": "How can I help you?",
+    "emptyHint": "Ask about products, orders, or shipping",
+    "suggestion1": "What laptops do you have?",
+    "suggestion2": "Track my order",
+    "suggestion3": "Return policy",
+    "signInPrompt": "You'll need to sign in to chat with our AI assistant. Tap Login/Register at the top of the page and we'll pick up right where you left off.",
+    "networkError": "I couldn't reach our AI service just now — please check your connection and try again.",
+    "sessionExpired": "Your session expired — please sign in again to keep chatting.",
+    "creditsExhausted": "Our AI assistant is temporarily unavailable (credits exhausted). We've been alerted — please try again shortly or email support.",
+    "rateLimited": "Whoa, lots of questions! Please wait a few seconds and try again.",
+    "conversationTooLong": "This conversation is getting long — please start a fresh chat.",
+    "serverError": "Our AI service hit a snag. Please try again in a moment.",
+    "genericError": "Sorry, something went wrong. Please try again.",
+    "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
   }
 }

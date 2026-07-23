@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 
 /**
  * E2E coverage for the in-store ChatWidget.
@@ -176,4 +177,122 @@ test.describe("ChatWidget – signed-in user", () => {
     await send(page, "Hey");
     await expect(page.getByText(/couldn't reach our AI service/i)).toBeVisible({ timeout: 5000 });
   });
+});
+
+/**
+ * Locale forced via the same localStorage key i18next-browser-languagedetector
+ * reads (see src/lib/i18n.ts detection.lookupLocalStorage), set before the
+ * app boots so the very first render picks it up -- same pattern as
+ * seedSession() above.
+ */
+async function setLanguage(page: Page, code: string) {
+  await page.addInitScript(
+    ({ key, value }) => window.localStorage.setItem(key, value),
+    { key: "ai-smart-store.lang", value: code }
+  );
+}
+
+test.describe("ChatWidget – accessibility", () => {
+  test("launcher button and panel have no axe violations, anonymous user", async ({ page }) => {
+    await seedSession(page, null);
+    await openWidget(page);
+
+    const results = await new AxeBuilder({ page })
+      .include('[role="dialog"][aria-label="Smart Store AI"]')
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+  });
+
+  test("panel has no axe violations after an error fallback is shown, signed-in user", async ({ page }) => {
+    await seedSession(page, "good-token");
+    await page.route(AI_CHAT_GLOB, (route) =>
+      route.fulfill({ status: 500, headers: { "content-type": "application/json" }, body: JSON.stringify({ error: "boom" }) })
+    );
+    await openWidget(page);
+    await send(page, "Hey");
+    await expect(page.getByText(/hit a snag/i)).toBeVisible({ timeout: 5000 });
+
+    const results = await new AxeBuilder({ page })
+      .include('[role="dialog"][aria-label="Smart Store AI"]')
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+  });
+
+  test("chat input, send button, and close button expose accessible names", async ({ page }) => {
+    await seedSession(page, null);
+    await openWidget(page);
+
+    await expect(page.getByRole("textbox", { name: /chat message/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /send message/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /close chat/i })).toBeVisible();
+  });
+
+  test("messages region is a live region so replies are announced to screen readers", async ({ page }) => {
+    await seedSession(page, null);
+    await openWidget(page);
+
+    const log = page.getByRole("log");
+    await expect(log).toBeVisible();
+    await expect(log).toHaveAttribute("aria-live", "polite");
+  });
+
+  test("launcher is keyboard-reachable, opening moves focus to the input, Escape closes and returns focus", async ({ page }) => {
+    await seedSession(page, null);
+    await page.goto("/");
+
+    const launcher = page.getByRole("button", { name: /open customer support chat/i });
+    await launcher.focus();
+    await expect(launcher).toBeFocused();
+    await page.keyboard.press("Enter");
+
+    const input = page.getByRole("textbox", { name: /chat message/i });
+    await expect(input).toBeFocused();
+
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: /smart store ai/i })).toBeHidden();
+    await expect(launcher).toBeFocused();
+  });
+});
+
+test.describe("ChatWidget – fallback messages across locales", () => {
+  const LOCALES = ["en", "af", "zu", "ar"]; // mix of bundled (en/af/zu) + lazy-loaded (ar)
+
+  for (const locale of LOCALES) {
+    test(`anonymous sign-in prompt renders in "${locale}" locale, not a raw i18n key`, async ({ page }) => {
+      await setLanguage(page, locale);
+      await seedSession(page, null);
+
+      let aiCalled = false;
+      await page.route(AI_CHAT_GLOB, async (route) => {
+        aiCalled = true;
+        await route.fulfill({ status: 200, body: "" });
+      });
+
+      await openWidget(page);
+      await send(page, "Hi there");
+
+      const prompt = page.getByText(/sign in to chat with our AI assistant/i);
+      await expect(prompt).toBeVisible({ timeout: 5000 });
+      // Guards against a missing translation key silently rendering
+      // "chat.signInPrompt" literally instead of resolved text.
+      await expect(page.getByText("chat.signInPrompt")).toHaveCount(0);
+      expect(aiCalled).toBe(false);
+    });
+
+    test(`signed-in server-error fallback renders in "${locale}" locale, not a raw i18n key`, async ({ page }) => {
+      await setLanguage(page, locale);
+      await seedSession(page, "good-token");
+      await page.route(AI_CHAT_GLOB, (route) =>
+        route.fulfill({ status: 500, headers: { "content-type": "application/json" }, body: JSON.stringify({ error: "boom" }) })
+      );
+
+      await openWidget(page);
+      await send(page, "Hey");
+
+      await expect(page.getByText(/hit a snag/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText("chat.serverError")).toHaveCount(0);
+    });
+  }
 });

@@ -27,9 +27,11 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Auth = lazy(() => import("./pages/Auth"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Account = lazy(() => import("./pages/Account"));
+const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const Procurement = lazy(() => import("./pages/Procurement"));
 const AiPulse = lazy(() => import("./pages/AiPulse"));
 const Compliance = lazy(() => import("./pages/Compliance"));
+const ShippingReturns = lazy(() => import("./pages/ShippingReturns"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -72,11 +74,13 @@ const App = () => (
                     <Route path="/cart" element={<StorefrontLayout><Cart /></StorefrontLayout>} />
                     <Route path="/checkout" element={<StorefrontLayout><Checkout /></StorefrontLayout>} />
                     <Route path="/account" element={<StorefrontLayout><Account /></StorefrontLayout>} />
+                    <Route path="/orders/:id" element={<StorefrontLayout><OrderTracking /></StorefrontLayout>} />
                     <Route path="/auth" element={<StorefrontLayout><Auth /></StorefrontLayout>} />
                     <Route path="/reset-password" element={<StorefrontLayout><ResetPassword /></StorefrontLayout>} />
                     <Route path="/procurement" element={<StorefrontLayout><AudienceGuard allow="business"><Procurement /></AudienceGuard></StorefrontLayout>} />
                     <Route path="/ai-pulse" element={<StorefrontLayout><AiPulse /></StorefrontLayout>} />
                     <Route path="/compliance" element={<StorefrontLayout><Compliance /></StorefrontLayout>} />
+                    <Route path="/shipping-returns" element={<StorefrontLayout><ShippingReturns /></StorefrontLayout>} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
                   </Routes>

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Sparkles, Shield, Truck, Headphones, Zap, Star } from "lucide-react";
-import AiNexusStage from "@/components/hero/AiNexusStage";
+import StorefrontShowcase from "@/components/hero/StorefrontShowcase";
 
 const HeroSection = () => {
   const { t } = useTranslation();
@@ -67,13 +67,8 @@ const HeroSection = () => {
               </div>
             </div>
 
-            {/* Right — living AI Nexus visualization */}
-            <div className="hidden lg:block">
-              <AiNexusStage />
-            </div>
-            <div className="lg:hidden">
-              <AiNexusStage />
-            </div>
+            {/* Right — real catalogue showcase */}
+            <StorefrontShowcase />
           </div>
         </div>
       </section>

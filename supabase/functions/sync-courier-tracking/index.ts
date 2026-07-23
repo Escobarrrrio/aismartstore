@@ -43,6 +43,7 @@ const EMAIL_FOOTER = `
 
 function buildShippedHtml(order: any, trackingNumber: string) {
   const trackUrl = `${TRACK_PAGE}?ref=${encodeURIComponent(trackingNumber)}`;
+  const orderUrl = `https://aismartstore.co.za/orders/${order.id}`;
   return `
   <div style="background:#f4f4f7;padding:32px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
   <div style="max-width:600px;margin:0 auto">
@@ -55,13 +56,13 @@ function buildShippedHtml(order: any, trackingNumber: string) {
         <p style="margin:0;font-size:22px;font-weight:700;font-family:'SF Mono',Menlo,Consolas,monospace;letter-spacing:0.06em">${escapeHtml(trackingNumber)}</p>
       </div>
       <div style="text-align:center;margin:0 0 8px">
-        <a href="${trackUrl}"
+        <a href="${orderUrl}"
            style="display:inline-block;background:linear-gradient(135deg,#06b6d4,#7c3aed,#d946ef);color:#fff;text-decoration:none;padding:13px 30px;border-radius:999px;font-weight:600;font-size:14px">
           Track My Parcel
         </a>
       </div>
       <p style="color:#64748b;font-size:12px;text-align:center;margin:12px 0 0">
-        Or paste the tracking number at thecourierguy.co.za any time.
+        Or view live courier scan events directly at <a href="${trackUrl}" style="color:#64748b">The Courier Guy</a>.
       </p>
       <p style="color:#64748b;font-size:13px;margin-top:28px">Delivering to: ${escapeHtml(order.address ?? "")}, ${escapeHtml(order.city ?? "")} ${escapeHtml(order.postal_code ?? "")}</p>
     </div>

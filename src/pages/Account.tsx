@@ -327,7 +327,7 @@ const Account = () => {
                           </div>
                         )}
                         <div className="flex items-center gap-2 flex-wrap">
-                          <button onClick={() => toast({ title: `Order #${order.id.slice(0, 8).toUpperCase()}`, description: `${order.order_items?.length || 0} item(s), total ${formatPrice(order.total_amount)}.` })} className="btn-secondary px-3 py-1.5 text-xs rounded-lg"><Eye className="h-3 w-3" /> Details</button>
+                          <Link to={`/orders/${order.id}`} className="btn-secondary px-3 py-1.5 text-xs rounded-lg"><Eye className="h-3 w-3" /> Track order</Link>
                           <button onClick={() => toast({ title: "Invoice", description: "Your invoice will be emailed shortly." })} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><FileText className="h-3 w-3" /> Invoice</button>
                           <button onClick={() => reorder(order)} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><ShoppingCart className="h-3 w-3" /> Reorder</button>
                           <button onClick={() => requestReturn(order.id)} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><RotateCcw className="h-3 w-3" /> Request return</button>

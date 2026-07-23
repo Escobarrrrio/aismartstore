@@ -2,7 +2,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { CheckCircle, XCircle, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -376,6 +376,9 @@ const Checkout = () => {
               <span>{t("checkout.total")}</span>
               <span>{formatPrice(grandTotal)}</span>
             </div>
+            <p className="text-xs text-muted-foreground text-center pt-1">
+              <Link to="/shipping-returns" className="underline hover:text-foreground transition-colors">Shipping & returns policy</Link>
+            </p>
           </div>
         </div>
       </div>

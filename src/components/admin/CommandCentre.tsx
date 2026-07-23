@@ -130,7 +130,7 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
 
   const handleSaveAll = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "telnyx_api_key", "daily_budget", "monthly_budget", "openai_budget"];
+    const keys = ["yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "telnyx_api_key", "daily_budget", "monthly_budget", "openai_budget"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "All settings saved", description: "Configuration updated across all modules." });
     setSaving(false);
@@ -312,7 +312,6 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
           <SectionCard title="Credential Vault" icon={<Key className="h-4 w-4" />} actions={<span className="badge-info text-[10px]">Production</span>}>
             <div className="space-y-3">
               {[
-                { name: "Yoco Public Key", key: "yoco_public_key", placeholder: "pk_live_..." },
                 { name: "Yoco Secret Key", key: "yoco_secret_key", placeholder: "sk_live_...", sensitive: true },
                 { name: "OpenAI API Key", key: "openai_api_key", placeholder: "sk-...", sensitive: true },
                 { name: "Make Pro Webhook", key: "make_webhook_url", placeholder: "https://hook.eu1.make.com/..." },

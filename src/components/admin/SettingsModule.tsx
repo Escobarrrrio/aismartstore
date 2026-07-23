@@ -117,7 +117,7 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const keys = ["yoco_public_key", "yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "dispatch_city", "email_from_address", "courier_guy_api_key", "courier_guy_api_base", "stock_sanity_thresholds"];
+    const keys = ["yoco_secret_key", "stripe_public_key", "stripe_secret_key", "stripe_webhook_secret", "paypal_client_id", "paypal_client_secret", "wise_account_details", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "shipping_flat_rate", "shipping_rate_table", "dispatch_city", "email_from_address", "courier_guy_api_key", "courier_guy_api_base", "stock_sanity_thresholds"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "Settings saved", description: "All configuration updated successfully." });
     setSaving(false);
@@ -129,11 +129,8 @@ const SettingsModule = ({ settings, setSettings }: SettingsModuleProps) => {
 
   return (
     <div className="max-w-2xl space-y-5">
-      <SettingsSection icon={<Key className="h-4 w-4" />} title="Yoco Payment Gateway" description="Accept card payments via Yoco. Used for ZAR (South African) checkouts.">
-        <div className="space-y-3">
-          <SettingsInput label="Public Key" value={settings.yoco_public_key || ""} onChange={(v) => update("yoco_public_key", v)} placeholder="pk_live_..." mono />
-          <SettingsInput label="Secret Key" type="password" value={settings.yoco_secret_key || ""} onChange={(v) => update("yoco_secret_key", v)} placeholder="sk_live_..." mono />
-        </div>
+      <SettingsSection icon={<Key className="h-4 w-4" />} title="Yoco Payment Gateway" description="Accept card payments via Yoco. Used for ZAR (South African) checkouts. Only the secret key is needed -- checkout creates a hosted payment link server-side, there's no client-side widget that needs a public key.">
+        <SettingsInput label="Secret Key" type="password" value={settings.yoco_secret_key || ""} onChange={(v) => update("yoco_secret_key", v)} placeholder="sk_live_..." mono />
       </SettingsSection>
 
       <SettingsSection icon={<Key className="h-4 w-4" />} title="PayPal — International Payments (Active)" description="Used automatically when a customer's selected currency isn't ZAR. PayPal directly supports South African merchant accounts, unlike Stripe. Get keys at developer.paypal.com/dashboard/applications, under your app's API credentials.">

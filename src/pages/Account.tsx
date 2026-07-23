@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, ShoppingCart, RotateCcw, User, MapPin, Bell,
-  Heart, Settings, LogOut, Menu, Package, Clock, ChevronRight,
-  Mail, Phone, Shield, Download, MessageSquare, Truck, Star,
-  Eye, CreditCard, FileText, ArrowRight, Bot, Search, X, ShieldCheck
+  Heart, Settings, LogOut, Menu, Package, ChevronRight,
+  Mail, Phone, Shield, Download, MessageSquare, Truck,
+  Eye, CreditCard, ArrowRight, Bot, X, ShieldCheck,
+  Plus, Trash2, Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -32,7 +33,19 @@ const Account = () => {
   const [activeTab, setActiveTab] = useState<AccountTab>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
+  const [returnsCount, setReturnsCount] = useState(0);
   const [profile, setProfile] = useState<any>(null);
+  const [profileForm, setProfileForm] = useState({ name: "", phone: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ password: "", confirm: "" });
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const emptyAddressForm = { label: "Home", recipient_name: "", line1: "", line2: "", city: "", province: "", postal_code: "", phone: "", is_default: false };
+  const [addressForm, setAddressForm] = useState(emptyAddressForm);
+  const [notifPrefs, setNotifPrefs] = useState({ order_updates: true, delivery_alerts: true, promotional_emails: false, sms_notifications: false });
+  const [savingNotifKey, setSavingNotifKey] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -119,11 +132,135 @@ const Account = () => {
     const loadData = async () => {
       const { data: profileData } = await supabase.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle();
       setProfile(profileData);
+      setProfileForm({ name: profileData?.name || "", phone: profileData?.phone || "" });
+
       const { data: orderData } = await supabase.from("orders").select("*, order_items(*, products(name, images))").eq("user_id", session.user.id).order("created_at", { ascending: false });
       setOrders(orderData || []);
+
+      const { count: returnsTotal } = await supabase.from("returns").select("id", { count: "exact", head: true }).eq("user_id", session.user.id);
+      setReturnsCount(returnsTotal ?? 0);
+
+      const { data: addressData } = await supabase.from("addresses").select("*").eq("user_id", session.user.id).order("is_default", { ascending: false }).order("created_at", { ascending: false });
+      setAddresses(addressData || []);
+
+      const { data: notifData } = await supabase.from("notification_preferences").select("*").eq("user_id", session.user.id).maybeSingle();
+      if (notifData) {
+        setNotifPrefs({
+          order_updates: notifData.order_updates,
+          delivery_alerts: notifData.delivery_alerts,
+          promotional_emails: notifData.promotional_emails,
+          sms_notifications: notifData.sms_notifications,
+        });
+      }
     };
     loadData();
   }, [session]);
+
+  const saveProfile = async () => {
+    if (!session) return;
+    setSavingProfile(true);
+    const { error } = await supabase.from("profiles").upsert(
+      { user_id: session.user.id, name: profileForm.name.trim(), phone: profileForm.phone.trim() || null, email: session.user.email },
+      { onConflict: "user_id" }
+    );
+    setSavingProfile(false);
+    if (error) {
+      toast({ title: "Couldn't save profile", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Profile updated" });
+    }
+  };
+
+  const updatePassword = async () => {
+    if (passwordForm.password.length < 8) {
+      toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
+      return;
+    }
+    if (passwordForm.password !== passwordForm.confirm) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    setSavingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: passwordForm.password });
+    setSavingPassword(false);
+    if (error) {
+      toast({ title: "Couldn't update password", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Password updated" });
+      setPasswordForm({ password: "", confirm: "" });
+    }
+  };
+
+  const addAddress = async () => {
+    if (!session) return;
+    if (!addressForm.line1.trim() || !addressForm.city.trim()) {
+      toast({ title: "Missing details", description: "At least a street address and city are required.", variant: "destructive" });
+      return;
+    }
+    setSavingAddress(true);
+    if (addressForm.is_default) {
+      await supabase.from("addresses").update({ is_default: false }).eq("user_id", session.user.id);
+    }
+    const { error } = await supabase.from("addresses").insert({
+      user_id: session.user.id,
+      label: addressForm.label.trim() || "Home",
+      recipient_name: addressForm.recipient_name.trim() || null,
+      line1: addressForm.line1.trim(),
+      line2: addressForm.line2.trim() || null,
+      city: addressForm.city.trim(),
+      province: addressForm.province.trim() || null,
+      postal_code: addressForm.postal_code.trim() || null,
+      phone: addressForm.phone.trim() || null,
+      is_default: addressForm.is_default,
+    });
+    setSavingAddress(false);
+    if (error) {
+      toast({ title: "Couldn't save address", description: error.message, variant: "destructive" });
+      return;
+    }
+    const { data: addressData } = await supabase.from("addresses").select("*").eq("user_id", session.user.id).order("is_default", { ascending: false }).order("created_at", { ascending: false });
+    setAddresses(addressData || []);
+    setAddressForm(emptyAddressForm);
+    setShowAddressForm(false);
+    toast({ title: "Address saved" });
+  };
+
+  const deleteAddress = async (addressId: string) => {
+    const { error } = await supabase.from("addresses").delete().eq("id", addressId);
+    if (error) {
+      toast({ title: "Couldn't remove address", description: error.message, variant: "destructive" });
+    } else {
+      setAddresses((prev) => prev.filter((a) => a.id !== addressId));
+      toast({ title: "Address removed" });
+    }
+  };
+
+  const setDefaultAddress = async (addressId: string) => {
+    if (!session) return;
+    await supabase.from("addresses").update({ is_default: false }).eq("user_id", session.user.id);
+    const { error } = await supabase.from("addresses").update({ is_default: true }).eq("id", addressId);
+    if (error) {
+      toast({ title: "Couldn't update default address", description: error.message, variant: "destructive" });
+    } else {
+      setAddresses((prev) => prev.map((a) => ({ ...a, is_default: a.id === addressId })));
+    }
+  };
+
+  const toggleNotifPref = async (key: keyof typeof notifPrefs) => {
+    if (!session) return;
+    const next = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(next);
+    setSavingNotifKey(key);
+    const { error } = await supabase.from("notification_preferences").upsert(
+      { user_id: session.user.id, ...next },
+      { onConflict: "user_id" }
+    );
+    setSavingNotifKey(null);
+    if (error) {
+      setNotifPrefs(notifPrefs);
+      toast({ title: "Couldn't save preference", description: error.message, variant: "destructive" });
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -235,12 +372,12 @@ const Account = () => {
                   </div>
                   <div className="card-flat p-4 text-center">
                     <RotateCcw className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-                    <p className="font-display font-extrabold text-2xl">0</p>
+                    <p className="font-display font-extrabold text-2xl">{returnsCount}</p>
                     <p className="text-[11px] text-muted-foreground font-medium">Returns</p>
                   </div>
                   <div className="card-flat p-4 text-center">
                     <Heart className="h-5 w-5 mx-auto mb-2 text-red-400" />
-                    <p className="font-display font-extrabold text-2xl">0</p>
+                    <p className="font-display font-extrabold text-2xl">—</p>
                     <p className="text-[11px] text-muted-foreground font-medium">Wishlist</p>
                   </div>
                 </div>
@@ -327,8 +464,7 @@ const Account = () => {
                           </div>
                         )}
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Link to={`/orders/${order.id}`} className="btn-secondary px-3 py-1.5 text-xs rounded-lg"><Eye className="h-3 w-3" /> Track order</Link>
-                          <button onClick={() => toast({ title: "Invoice", description: "Your invoice will be emailed shortly." })} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><FileText className="h-3 w-3" /> Invoice</button>
+                          <Link to={`/orders/${order.id}`} className="btn-secondary px-3 py-1.5 text-xs rounded-lg"><Eye className="h-3 w-3" /> Track order / invoice</Link>
                           <button onClick={() => reorder(order)} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><ShoppingCart className="h-3 w-3" /> Reorder</button>
                           <button onClick={() => requestReturn(order.id)} className="btn-ghost px-3 py-1.5 text-xs rounded-lg"><RotateCcw className="h-3 w-3" /> Request return</button>
                         </div>
@@ -367,7 +503,13 @@ const Account = () => {
                 <div className="card-flat p-6 space-y-4">
                   <div>
                     <label className="block text-xs font-semibold mb-1.5">Full Name</label>
-                    <input type="text" defaultValue={profile?.name || ""} className="input-premium" placeholder="Your name" />
+                    <input
+                      type="text"
+                      value={profileForm.name}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, name: e.target.value }))}
+                      className="input-premium"
+                      placeholder="Your name"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1.5">Email</label>
@@ -375,21 +517,43 @@ const Account = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1.5">Phone</label>
-                    <input type="tel" defaultValue={profile?.phone || ""} className="input-premium" placeholder="+27..." />
+                    <input
+                      type="tel"
+                      value={profileForm.phone}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
+                      className="input-premium"
+                      placeholder="+27..."
+                    />
                   </div>
-                  <button className="btn-primary px-5 py-2.5 text-sm w-full">Save Profile</button>
+                  <button onClick={saveProfile} disabled={savingProfile} className="btn-primary px-5 py-2.5 text-sm w-full disabled:opacity-60">
+                    {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Save Profile
+                  </button>
                 </div>
                 <div className="card-flat p-6 space-y-4">
                   <h3 className="font-display font-bold text-sm">Change Password</h3>
                   <div>
                     <label className="block text-xs font-semibold mb-1.5">New Password</label>
-                    <input type="password" className="input-premium" placeholder="Enter new password" />
+                    <input
+                      type="password"
+                      value={passwordForm.password}
+                      onChange={(e) => setPasswordForm((f) => ({ ...f, password: e.target.value }))}
+                      className="input-premium"
+                      placeholder="At least 8 characters"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1.5">Confirm Password</label>
-                    <input type="password" className="input-premium" placeholder="Confirm new password" />
+                    <input
+                      type="password"
+                      value={passwordForm.confirm}
+                      onChange={(e) => setPasswordForm((f) => ({ ...f, confirm: e.target.value }))}
+                      className="input-premium"
+                      placeholder="Confirm new password"
+                    />
                   </div>
-                  <button className="btn-secondary px-5 py-2.5 text-sm w-full">Update Password</button>
+                  <button onClick={updatePassword} disabled={savingPassword} className="btn-secondary px-5 py-2.5 text-sm w-full disabled:opacity-60">
+                    {savingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Update Password
+                  </button>
                 </div>
               </div>
             )}
@@ -399,13 +563,92 @@ const Account = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="font-display font-extrabold text-xl">Address Book</h2>
-                  <button className="btn-primary px-4 py-2 text-sm">Add Address</button>
+                  <button onClick={() => setShowAddressForm((v) => !v)} className="btn-primary px-4 py-2 text-sm">
+                    <Plus className="h-4 w-4" /> {showAddressForm ? "Cancel" : "Add Address"}
+                  </button>
                 </div>
-                <div className="card-flat p-12 text-center">
-                  <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="font-display font-bold text-lg mb-1">No saved addresses</p>
-                  <p className="text-sm text-muted-foreground">Add a shipping or billing address for faster checkout</p>
-                </div>
+
+                {showAddressForm && (
+                  <div className="card-flat p-6 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1.5">Label</label>
+                        <input value={addressForm.label} onChange={(e) => setAddressForm((f) => ({ ...f, label: e.target.value }))} className="input-premium" placeholder="Home, Office..." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold mb-1.5">Recipient name</label>
+                        <input value={addressForm.recipient_name} onChange={(e) => setAddressForm((f) => ({ ...f, recipient_name: e.target.value }))} className="input-premium" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1.5">Street address *</label>
+                      <input value={addressForm.line1} onChange={(e) => setAddressForm((f) => ({ ...f, line1: e.target.value }))} className="input-premium" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1.5">Apartment / suite (optional)</label>
+                      <input value={addressForm.line2} onChange={(e) => setAddressForm((f) => ({ ...f, line2: e.target.value }))} className="input-premium" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1.5">City *</label>
+                        <input value={addressForm.city} onChange={(e) => setAddressForm((f) => ({ ...f, city: e.target.value }))} className="input-premium" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold mb-1.5">Province</label>
+                        <input value={addressForm.province} onChange={(e) => setAddressForm((f) => ({ ...f, province: e.target.value }))} className="input-premium" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold mb-1.5">Postal code</label>
+                        <input value={addressForm.postal_code} onChange={(e) => setAddressForm((f) => ({ ...f, postal_code: e.target.value }))} className="input-premium" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1.5">Phone</label>
+                      <input value={addressForm.phone} onChange={(e) => setAddressForm((f) => ({ ...f, phone: e.target.value }))} className="input-premium" placeholder="+27..." />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input type="checkbox" checked={addressForm.is_default} onChange={(e) => setAddressForm((f) => ({ ...f, is_default: e.target.checked }))} />
+                      Set as default address
+                    </label>
+                    <button onClick={addAddress} disabled={savingAddress} className="btn-primary px-5 py-2.5 text-sm w-full disabled:opacity-60">
+                      {savingAddress ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Save Address
+                    </button>
+                  </div>
+                )}
+
+                {addresses.length === 0 && !showAddressForm ? (
+                  <div className="card-flat p-12 text-center">
+                    <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                    <p className="font-display font-bold text-lg mb-1">No saved addresses</p>
+                    <p className="text-sm text-muted-foreground">Add a shipping or billing address for faster checkout</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {addresses.map((addr) => (
+                      <div key={addr.id} className="card-flat p-5 flex items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-display font-bold text-sm">{addr.label}</p>
+                            {addr.is_default && <span className="badge-success text-[10px]">Default</span>}
+                          </div>
+                          {addr.recipient_name && <p className="text-sm">{addr.recipient_name}</p>}
+                          <p className="text-sm text-muted-foreground">
+                            {addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}, {addr.city} {addr.postal_code}{addr.province ? `, ${addr.province}` : ""}
+                          </p>
+                          {addr.phone && <p className="text-xs text-muted-foreground mt-1">{addr.phone}</p>}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {!addr.is_default && (
+                            <button onClick={() => setDefaultAddress(addr.id)} className="btn-ghost px-2.5 py-1.5 text-xs rounded-lg">Set default</button>
+                          )}
+                          <button onClick={() => deleteAddress(addr.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" aria-label="Remove address">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -414,19 +657,25 @@ const Account = () => {
               <div className="space-y-4 max-w-lg">
                 <h2 className="font-display font-extrabold text-xl">Notification Preferences</h2>
                 <div className="card-flat p-6 space-y-4">
-                  {[
-                    { label: "Order updates", desc: "Get notified about order status changes", default: true },
-                    { label: "Delivery alerts", desc: "Tracking and delivery notifications", default: true },
-                    { label: "Promotional emails", desc: "Deals, new products, and offers", default: false },
-                    { label: "SMS notifications", desc: "Receive updates via SMS", default: false },
-                  ].map((pref, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-border">
+                  {([
+                    { key: "order_updates", label: "Order updates", desc: "Get notified about order status changes" },
+                    { key: "delivery_alerts", label: "Delivery alerts", desc: "Tracking and delivery notifications" },
+                    { key: "promotional_emails", label: "Promotional emails", desc: "Deals, new products, and offers" },
+                    { key: "sms_notifications", label: "SMS notifications", desc: "Receive updates via SMS" },
+                  ] as const).map((pref) => (
+                    <div key={pref.key} className="flex items-center justify-between p-3 rounded-xl border border-border">
                       <div>
                         <p className="text-sm font-semibold">{pref.label}</p>
                         <p className="text-[10px] text-muted-foreground">{pref.desc}</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" defaultChecked={pref.default} className="sr-only peer" />
+                        <input
+                          type="checkbox"
+                          checked={notifPrefs[pref.key]}
+                          onChange={() => toggleNotifPref(pref.key)}
+                          disabled={savingNotifKey === pref.key}
+                          className="sr-only peer"
+                        />
                         <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                       </label>
                     </div>

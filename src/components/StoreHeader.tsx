@@ -37,7 +37,7 @@ const StoreHeader = () => {
   if (location.pathname === "/admin") return null;
 
   return (
-    <header className={`sticky top-0 z-50 w-full max-w-full transition-all duration-300 ${scrolled ? 'bg-background/95 backdrop-blur-xl shadow-sm border-b border-border' : 'bg-background border-b border-transparent'}`}>
+    <header className={`sticky top-0 z-50 w-full max-w-full transition-all duration-300 print:hidden ${scrolled ? 'bg-background/95 backdrop-blur-xl shadow-sm border-b border-border' : 'bg-background border-b border-transparent'}`}>
       <div className="container mx-auto flex items-center h-16 px-4 lg:px-6 max-w-full">
         {/* Logo */}
         <div className="flex-shrink-0 mr-4 lg:mr-8 min-w-0">

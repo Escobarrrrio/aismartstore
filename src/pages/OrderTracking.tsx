@@ -5,7 +5,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import SEO from "@/components/SEO";
 import {
   Package, CheckCircle2, Truck, Home, RotateCcw, ExternalLink,
-  MapPin, ArrowLeft, ShieldCheck,
+  MapPin, ArrowLeft, ShieldCheck, Printer,
 } from "lucide-react";
 
 const TRACK_PAGE = "https://portal.thecourierguy.co.za/track-parcel";
@@ -107,9 +107,14 @@ const OrderTracking = () => {
     <div className="container mx-auto px-4 py-10 max-w-3xl">
       <SEO title={`Order #${order.id.slice(0, 8).toUpperCase()}`} description="Track your AI Smart Store order." noindex />
 
-      <Link to="/account" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
-        <ArrowLeft className="h-4 w-4" /> Back to my orders
-      </Link>
+      <div className="flex items-center justify-between mb-6 print:hidden">
+        <Link to="/account" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back to my orders
+        </Link>
+        <button onClick={() => window.print()} className="btn-secondary px-4 py-2 text-xs inline-flex items-center gap-1.5">
+          <Printer className="h-3.5 w-3.5" /> Print / save as PDF
+        </button>
+      </div>
 
       <div className="flex items-start justify-between mb-8 flex-wrap gap-3">
         <div>
@@ -171,7 +176,7 @@ const OrderTracking = () => {
               href={trackUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary px-4 py-2 text-xs inline-flex items-center gap-1.5"
+              className="btn-secondary px-4 py-2 text-xs inline-flex items-center gap-1.5 print:hidden"
             >
               Live scan events <ExternalLink className="h-3.5 w-3.5" />
             </a>

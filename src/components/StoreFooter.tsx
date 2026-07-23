@@ -8,7 +8,7 @@ const StoreFooter = () => {
   if (location.pathname === "/admin") return null;
 
   return (
-    <footer className="bg-foreground text-background/80 mt-auto">
+    <footer className="bg-foreground text-background/80 mt-auto print:hidden">
       {/* Reassurance bar */}
       <div className="border-b border-background/[0.06]">
         <div className="container mx-auto px-4 py-8">

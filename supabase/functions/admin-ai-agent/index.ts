@@ -104,6 +104,28 @@ LIVE DATA SNAPSHOT (as of ${new Date().toISOString()}):
     const data = await response.json();
     const reply = data?.choices?.[0]?.message?.content ?? "No response generated.";
 
+    const usage = data?.usage;
+    if (usage) {
+      const isOpenAi = provider.apiUrl.includes("api.openai.com");
+      // gpt-4o-mini published rates: $0.15 / 1M input tokens, $0.60 / 1M
+      // output tokens. Left null for the AI gateway fallback -- its
+      // per-token markup isn't publicly documented, so we log real tokens
+      // without guessing a dollar figure we can't verify.
+      const estimatedCostUsd = isOpenAi
+        ? (Number(usage.prompt_tokens || 0) * 0.15 + Number(usage.completion_tokens || 0) * 0.60) / 1_000_000
+        : null;
+      await supabase.from("ai_usage_log").insert({
+        source: "admin-ai-agent",
+        provider: isOpenAi ? "openai" : "ai-gateway-fallback",
+        model: provider.model,
+        prompt_tokens: usage.prompt_tokens ?? null,
+        completion_tokens: usage.completion_tokens ?? null,
+        total_tokens: usage.total_tokens ?? null,
+        estimated_cost_usd: estimatedCostUsd,
+        user_id: auth.userId,
+      });
+    }
+
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

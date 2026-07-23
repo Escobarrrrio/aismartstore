@@ -10,7 +10,11 @@ Deno.serve(async (req) => {
 
   const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";
   const providedSecret = req.headers.get("x-internal-secret") ?? "";
-  const isInternal = internalSecret.length > 0 && providedSecret === internalSecret;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const isInternal =
+    (internalSecret.length > 0 && providedSecret === internalSecret) ||
+    (serviceRoleKey.length > 0 && authHeader === `Bearer ${serviceRoleKey}`);
   if (!isInternal) {
     const auth = await getAuthContext(req);
     if (!auth.userId || !auth.isAdmin) {

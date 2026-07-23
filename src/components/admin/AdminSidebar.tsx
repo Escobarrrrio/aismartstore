@@ -12,7 +12,7 @@ export type AdminTab =
   | "settings" | "system-health" | "security" | "cost-usage"
   | "integrations" | "backups" | "catalog-health"
   | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
-  | "compliance-audit" | "business-signups"
+  | "compliance-audit"
   | "order-diagnostics" | "yoco-health" | "email-health" | "ai-agent";
 
 
@@ -41,7 +41,6 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
   { id: "newsletter", label: "Newsletter", icon: <Mail className="h-4 w-4" /> },
   { id: "quotes", label: "Quote Requests", icon: <FileSpreadsheet className="h-4 w-4" /> },
-  { id: "business-signups", label: "Business Signups", icon: <Shield className="h-4 w-4" /> },
   { id: "compliance-audit", label: "Compliance Audit", icon: <Shield className="h-4 w-4" /> },
   { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" />, section: "Operations" },
   { id: "ai-agent", label: "AI Agent", icon: <Bot className="h-4 w-4" /> },

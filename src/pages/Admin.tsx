@@ -15,7 +15,6 @@ import AiAgentModule from "@/components/admin/AiAgentModule";
 
 import CustomersModule from "@/components/admin/CustomersModule";
 import SupportModule from "@/components/admin/SupportModule";
-import SettingsModule from "@/components/admin/SettingsModule";
 import CommandCentre from "@/components/admin/CommandCentre";
 import ReturnsModule from "@/components/admin/ReturnsModule";
 import AILogsModule from "@/components/admin/AILogsModule";
@@ -32,7 +31,6 @@ import NotificationsModule from "@/components/admin/NotificationsModule";
 import EmailPreviewsModule from "@/components/admin/EmailPreviewsModule";
 import CatalogHealthModule from "@/components/admin/CatalogHealthModule";
 import ComplianceAuditModule from "@/components/admin/ComplianceAuditModule";
-import BusinessSignupsModule from "@/components/admin/BusinessSignupsModule";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useToast } from "@/hooks/use-toast";
@@ -179,7 +177,6 @@ const Admin = () => {
           {activeTab === "customers" && (loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />)}
           {activeTab === "newsletter" && <NewsletterModule />}
           {activeTab === "quotes" && <QuotesModule />}
-          {activeTab === "business-signups" && <BusinessSignupsModule />}
           {activeTab === "compliance-audit" && <ComplianceAuditModule />}
           {activeTab === "support" && (loading.tickets ? <LoadingSkeleton /> : <SupportModule tickets={tickets} session={session} onReload={reload.loadTickets} />)}
           {activeTab === "ai-logs" && <AILogsModule />}

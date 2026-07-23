@@ -13,6 +13,9 @@ import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
 import SEO from "@/components/SEO";
 import { useCart } from "@/contexts/CartContext";
+import type { Product } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+import ProductCard from "@/components/ProductCard";
 
 type AccountTab = "overview" | "orders" | "returns" | "profile" | "addresses" | "notifications" | "wishlist" | "settings";
 
@@ -46,11 +49,14 @@ const Account = () => {
   const [addressForm, setAddressForm] = useState(emptyAddressForm);
   const [notifPrefs, setNotifPrefs] = useState({ order_updates: true, delivery_alerts: true, promotional_emails: false, sms_notifications: false });
   const [savingNotifKey, setSavingNotifKey] = useState<string | null>(null);
+  const [savedProducts, setSavedProducts] = useState<Product[]>([]);
+  const [savedProductsLoading, setSavedProductsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
   const { formatPrice } = useLocale();
   const { addToCart } = useCart();
+  const { wishlistCount } = useWishlist();
   const [searchParams] = useSearchParams();
   const isImpersonating = searchParams.get("as") === "customer" && !!localStorage.getItem("ai-smart-store.impersonate");
 
@@ -155,6 +161,41 @@ const Account = () => {
     };
     loadData();
   }, [session]);
+
+  useEffect(() => {
+    if (!session) { setSavedProducts([]); setSavedProductsLoading(false); return; }
+    let cancelled = false;
+    setSavedProductsLoading(true);
+    supabase
+      .from("wishlists")
+      .select("product_id, products(id, name, description, price, category, images, in_stock, stock_quantity, is_ai_product, brand, sku, created_at)")
+      .eq("user_id", session.user.id)
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (!error) {
+          const mapped = (data || [])
+            .map((row: any) => row.products)
+            .filter(Boolean)
+            .map((p: any): Product => ({
+              id: p.id,
+              name: p.name,
+              description: p.description || "",
+              price: Number(p.price),
+              category: p.category || "",
+              brand: p.brand || undefined,
+              sku: p.sku || undefined,
+              images: p.images || [],
+              inStock: p.in_stock,
+              stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
+              isAiProduct: !!p.is_ai_product,
+              createdAt: p.created_at || new Date().toISOString(),
+            }));
+          setSavedProducts(mapped);
+        }
+        setSavedProductsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [session, wishlistCount]);
 
   const saveProfile = async () => {
     if (!session) return;
@@ -377,7 +418,7 @@ const Account = () => {
                   </div>
                   <div className="card-flat p-4 text-center">
                     <Heart className="h-5 w-5 mx-auto mb-2 text-red-400" />
-                    <p className="font-display font-extrabold text-2xl">—</p>
+                    <p className="font-display font-extrabold text-2xl">{wishlistCount}</p>
                     <p className="text-[11px] text-muted-foreground font-medium">Wishlist</p>
                   </div>
                 </div>
@@ -685,17 +726,40 @@ const Account = () => {
             )}
 
             {/* Wishlist */}
-            {activeTab === "wishlist" && (
-              <div className="space-y-4">
-                <h2 className="font-display font-extrabold text-xl">Saved Items</h2>
-                <div className="card-flat p-12 text-center">
-                  <Heart className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="font-display font-bold text-lg mb-1">Your wishlist is empty</p>
-                  <p className="text-sm text-muted-foreground mb-4">Save items you love for later</p>
-                  <Link to="/products" className="btn-primary px-6 py-2.5 text-sm">Explore Products</Link>
+            {activeTab === "wishlist" && (() => {
+              const visibleSaved = savedProducts.filter((p) => isWishlisted(p.id));
+              return (
+                <div className="space-y-4">
+                  <h2 className="font-display font-extrabold text-xl">Saved Items</h2>
+                  {savedProductsLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="card-flat overflow-hidden animate-pulse">
+                          <div className="aspect-square bg-muted" />
+                          <div className="p-4 space-y-3">
+                            <div className="h-4 bg-muted rounded w-3/4" />
+                            <div className="h-3 bg-muted rounded w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : visibleSaved.length === 0 ? (
+                    <div className="card-flat p-12 text-center">
+                      <Heart className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                      <p className="font-display font-bold text-lg mb-1">Your wishlist is empty</p>
+                      <p className="text-sm text-muted-foreground mb-4">Save items you love for later</p>
+                      <Link to="/products" className="btn-primary px-6 py-2.5 text-sm">Explore Products</Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {visibleSaved.map((p) => (
+                        <ProductCard key={p.id} product={p} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Settings */}
             {activeTab === "settings" && (

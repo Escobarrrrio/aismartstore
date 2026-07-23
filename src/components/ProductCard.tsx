@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { ShoppingCart, Heart, Sparkles, Truck, Check, Rocket, PackageCheck } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,9 +24,10 @@ function shipEstimate(stockQuantity?: number): string {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const { t } = useTranslation();
   const { formatPrice } = useLocale();
-  const [wishlisted, setWishlisted] = useState(false);
+  const wishlisted = isWishlisted(product.id);
   const [addedToCart, setAddedToCart] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
   const hasImage = Boolean(product.images?.[0]) && !imgFailed;
@@ -84,8 +86,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
         {/* Wishlist */}
         <button
           type="button"
-          aria-label="Add to wishlist"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setWishlisted(!wishlisted); }}
+          aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+          aria-pressed={wishlisted}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product.id); }}
           className={`absolute top-3 right-3 h-9 w-9 rounded-full bg-background/95 backdrop-blur-sm flex items-center justify-center shadow-sm transition-all ${
             wishlisted ? "text-destructive" : "text-muted-foreground hover:text-foreground"
           }`}

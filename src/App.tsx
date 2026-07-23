@@ -7,6 +7,7 @@ import { Suspense, lazy } from "react";
 import Index from "./pages/Index";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import StoreHeader from "@/components/StoreHeader";
@@ -62,30 +63,32 @@ const App = () => (
         <LocaleProvider>
           <ProductProvider>
             <CartProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <ScrollToTop />
-                <Suspense fallback={<RouteFallback />}>
-                  <Routes>
-                    <Route path="/" element={<StorefrontLayout><Index /></StorefrontLayout>} />
-                    <Route path="/products" element={<StorefrontLayout><Products /></StorefrontLayout>} />
-                    <Route path="/product/:id" element={<StorefrontLayout><ProductDetail /></StorefrontLayout>} />
-                    <Route path="/cart" element={<StorefrontLayout><Cart /></StorefrontLayout>} />
-                    <Route path="/checkout" element={<StorefrontLayout><Checkout /></StorefrontLayout>} />
-                    <Route path="/account" element={<StorefrontLayout><Account /></StorefrontLayout>} />
-                    <Route path="/orders/:id" element={<StorefrontLayout><OrderTracking /></StorefrontLayout>} />
-                    <Route path="/auth" element={<StorefrontLayout><Auth /></StorefrontLayout>} />
-                    <Route path="/reset-password" element={<StorefrontLayout><ResetPassword /></StorefrontLayout>} />
-                    <Route path="/procurement" element={<StorefrontLayout><AudienceGuard allow="business"><Procurement /></AudienceGuard></StorefrontLayout>} />
-                    <Route path="/ai-pulse" element={<StorefrontLayout><AiPulse /></StorefrontLayout>} />
-                    <Route path="/compliance" element={<StorefrontLayout><Compliance /></StorefrontLayout>} />
-                    <Route path="/shipping-returns" element={<StorefrontLayout><ShippingReturns /></StorefrontLayout>} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
+              <WishlistProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <Suspense fallback={<RouteFallback />}>
+                    <Routes>
+                      <Route path="/" element={<StorefrontLayout><Index /></StorefrontLayout>} />
+                      <Route path="/products" element={<StorefrontLayout><Products /></StorefrontLayout>} />
+                      <Route path="/product/:id" element={<StorefrontLayout><ProductDetail /></StorefrontLayout>} />
+                      <Route path="/cart" element={<StorefrontLayout><Cart /></StorefrontLayout>} />
+                      <Route path="/checkout" element={<StorefrontLayout><Checkout /></StorefrontLayout>} />
+                      <Route path="/account" element={<StorefrontLayout><Account /></StorefrontLayout>} />
+                      <Route path="/orders/:id" element={<StorefrontLayout><OrderTracking /></StorefrontLayout>} />
+                      <Route path="/auth" element={<StorefrontLayout><Auth /></StorefrontLayout>} />
+                      <Route path="/reset-password" element={<StorefrontLayout><ResetPassword /></StorefrontLayout>} />
+                      <Route path="/procurement" element={<StorefrontLayout><AudienceGuard allow="business"><Procurement /></AudienceGuard></StorefrontLayout>} />
+                      <Route path="/ai-pulse" element={<StorefrontLayout><AiPulse /></StorefrontLayout>} />
+                      <Route path="/compliance" element={<StorefrontLayout><Compliance /></StorefrontLayout>} />
+                      <Route path="/shipping-returns" element={<StorefrontLayout><ShippingReturns /></StorefrontLayout>} />
+                      <Route path="/admin" element={<Admin />} />
+                      <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
+                    </Routes>
+                  </Suspense>
+                </BrowserRouter>
+              </WishlistProvider>
             </CartProvider>
           </ProductProvider>
         </LocaleProvider>

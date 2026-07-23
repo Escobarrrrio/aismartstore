@@ -3,11 +3,12 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { useProducts } from "@/contexts/ProductContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Product } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw, MapPin,
-  Star, ChevronRight, Package, MessageCircle, Minus, Plus
+  Star, ChevronRight, Package, MessageCircle, Minus, Plus, Heart
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { products, getProduct } = useProducts();
   const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const { formatPrice } = useLocale();
   const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState(0);
@@ -257,6 +259,18 @@ const ProductDetail = () => {
                 ) : (
                   <><ShoppingCart className="h-5 w-5" /> {t("productDetail.addToCart")}</>
                 )}
+              </button>
+              <button
+                onClick={() => toggleWishlist(product.id)}
+                aria-label={isWishlisted(product.id) ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+                aria-pressed={isWishlisted(product.id)}
+                className={`flex items-center justify-center h-[52px] w-[52px] sm:w-auto sm:px-5 rounded-xl border transition-colors ${
+                  isWishlisted(product.id)
+                    ? "border-destructive/30 bg-destructive/5 text-destructive"
+                    : "border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Heart className={`h-5 w-5 ${isWishlisted(product.id) ? "fill-current" : ""}`} />
               </button>
             </div>
 

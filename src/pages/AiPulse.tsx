@@ -4,6 +4,7 @@ import SEO from "@/components/SEO";
 import {
   FlaskConical,
   Newspaper,
+  MapPin,
   ExternalLink,
   Search,
   TrendingUp,
@@ -28,6 +29,8 @@ const PAGE_SIZE = 30;
 const SOURCE_LABELS: Record<string, string> = {
   arxiv: "arXiv",
   hn: "Hacker News",
+  mybroadband: "MyBroadband",
+  businesstech: "BusinessTech",
 };
 
 function timeAgo(iso: string | null): string {
@@ -47,6 +50,10 @@ const CategoryBadge = ({ category }: { category: string }) =>
   category === "research" ? (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[10px] font-display font-bold shrink-0">
       <FlaskConical className="h-3 w-3" /> RESEARCH
+    </span>
+  ) : category === "local" ? (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-display font-bold shrink-0">
+      <MapPin className="h-3 w-3" /> LOCAL
     </span>
   ) : (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-display font-bold shrink-0">
@@ -79,7 +86,7 @@ function pickGradient(id: string): string {
 const PulseThumb = ({ src, alt, category, id, sourceLabel, className }: { src: string | null; alt: string; category: string; id: string; sourceLabel: string; className: string }) => {
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
-    const Icon = category === "research" ? FlaskConical : Newspaper;
+    const Icon = category === "research" ? FlaskConical : category === "local" ? MapPin : Newspaper;
     return (
       <div className={`${className} flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br ${pickGradient(id)}`}>
         <Icon className="h-7 w-7 text-white/80" />
@@ -94,13 +101,13 @@ const PulseThumb = ({ src, alt, category, id, sourceLabel, className }: { src: s
 
 const AiPulse = () => {
   const [items, setItems] = useState<PulseItem[]>([]);
-  const [filter, setFilter] = useState<"all" | "research" | "news">("all");
+  const [filter, setFilter] = useState<"all" | "research" | "news" | "local">("all");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [errored, setErrored] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [counts, setCounts] = useState<{ research: number; news: number } | null>(null);
+  const [counts, setCounts] = useState<{ research: number; news: number; local: number } | null>(null);
 
   const fetchPage = (offset: number) =>
     supabase
@@ -112,10 +119,11 @@ const AiPulse = () => {
   const load = async () => {
     setLoading(true);
     setErrored(false);
-    const [itemsRes, researchRes, newsRes] = await Promise.all([
+    const [itemsRes, researchRes, newsRes, localRes] = await Promise.all([
       fetchPage(0),
       supabase.from("ai_pulse_items").select("id", { count: "exact", head: true }).eq("category", "research"),
       supabase.from("ai_pulse_items").select("id", { count: "exact", head: true }).eq("category", "news"),
+      supabase.from("ai_pulse_items").select("id", { count: "exact", head: true }).eq("category", "local"),
     ]);
     if (itemsRes.error) {
       setErrored(true);
@@ -124,7 +132,7 @@ const AiPulse = () => {
       setItems(itemsRes.data || []);
       setHasMore((itemsRes.data?.length || 0) === PAGE_SIZE);
     }
-    setCounts({ research: researchRes.count ?? 0, news: newsRes.count ?? 0 });
+    setCounts({ research: researchRes.count ?? 0, news: newsRes.count ?? 0, local: localRes.count ?? 0 });
     setLoading(false);
   };
 
@@ -158,7 +166,7 @@ const AiPulse = () => {
   const featured = isBrowsingDefault ? filtered[0] : null;
   const gridItems = featured ? filtered.slice(1) : filtered;
 
-  const totalCount = (counts?.research ?? 0) + (counts?.news ?? 0);
+  const totalCount = (counts?.research ?? 0) + (counts?.news ?? 0) + (counts?.local ?? 0);
   const freshest = items[0]?.published_at ?? null;
 
   return (
@@ -223,6 +231,11 @@ const AiPulse = () => {
                 <div className="font-display font-extrabold text-lg text-primary">{counts.news.toLocaleString("en-ZA")}</div>
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wide">News</div>
               </div>
+              <div className="w-px h-8 bg-border" />
+              <div>
+                <div className="font-display font-extrabold text-lg text-emerald-600">{counts.local.toLocaleString("en-ZA")}</div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Local</div>
+              </div>
             </div>
           )}
         </div>
@@ -236,6 +249,7 @@ const AiPulse = () => {
               { key: "all", label: "All" },
               { key: "research", label: "Research" },
               { key: "news", label: "News" },
+              { key: "local", label: "Local" },
             ] as const).map((f) => (
               <button
                 key={f.key}

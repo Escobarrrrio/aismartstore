@@ -1,18 +1,54 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Pulls real, sourced AI content from two legitimate, no-auth-required
+// Pulls real, sourced AI content from legitimate, no-auth-required
 // feeds -- never fabricated. This deliberately does NOT ask an LLM to
 // "generate the latest AI news" from its own knowledge, since that would
 // risk publishing hallucinated dates/facts as if they were real news.
 //
 // - arXiv cs.AI: actual published research papers ("the creation")
 // - Hacker News: real discussion threads matching AI keywords ("the news")
+// - South African tech press (MyBroadband, BusinessTech): real published
+//   articles matching AI keywords ("the local angle")
 //
 // Runs every 6 hours via pg_cron + pg_net (see migration), fully
 // automated -- no manual refresh needed. Safe to call repeatedly: it
 // upserts by URL so re-running just refreshes existing entries.
 
 const AI_KEYWORDS = ["ai", "llm", "gpt", "claude", "gemini", "openai", "anthropic", "machine learning", "neural network", "artificial intelligence"];
+
+// Real, standard WordPress RSS feeds from established South African tech
+// news publishers. Each is fetched and filtered independently -- if one
+// feed goes away or changes format, it fails into `errors` without taking
+// the other sources down with it (same resilience pattern as arxiv/hn below).
+const LOCAL_FEEDS: { source: string; url: string }[] = [
+  { source: "mybroadband", url: "https://mybroadband.co.za/news/feed" },
+  { source: "businesstech", url: "https://businesstech.co.za/feed/" },
+];
+
+function stripCdata(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  const m = raw.match(/<!\[CDATA\[([\s\S]*?)\]\]>/);
+  return (m ? m[1] : raw).trim().replace(/\s+/g, " ");
+}
+
+function parseRss2(xml: string) {
+  const items: { title: string; url: string; summary: string; published_at: string }[] = [];
+  const itemRe = /<item>([\s\S]*?)<\/item>/g;
+  let m;
+  while ((m = itemRe.exec(xml))) {
+    const block = m[1];
+    const title = stripCdata(block.match(/<title>([\s\S]*?)<\/title>/)?.[1]);
+    const url = stripCdata(block.match(/<link>([\s\S]*?)<\/link>/)?.[1]);
+    const descRaw = stripCdata(block.match(/<description>([\s\S]*?)<\/description>/)?.[1]);
+    const summary = descRaw?.replace(/<[^>]+>/g, "").slice(0, 280);
+    const pubDate = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim();
+    const published_at = pubDate ? new Date(pubDate).toISOString() : undefined;
+    if (title && url && published_at) {
+      items.push({ title, url, summary: summary || "", published_at });
+    }
+  }
+  return items;
+}
 
 function parseArxivRss(xml: string) {
   const items: { title: string; url: string; summary: string; published_at: string }[] = [];
@@ -81,7 +117,7 @@ Deno.serve(async (_req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const results: Record<string, number> = { arxiv: 0, hn: 0 };
+  const results: Record<string, number> = { arxiv: 0, hn: 0, local: 0 };
   const errors: string[] = [];
 
   try {
@@ -145,6 +181,44 @@ Deno.serve(async (_req) => {
     );
   } catch (e) {
     errors.push(`hn: ${e.message}`);
+  }
+
+  for (const feed of LOCAL_FEEDS) {
+    try {
+      const res = await fetch(feed.url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; AISmartStoreBot/1.0; +https://aismartstore.co.za)" },
+      });
+      if (!res.ok) {
+        errors.push(`${feed.source}: HTTP ${res.status}`);
+        continue;
+      }
+      const xml = await res.text();
+      const posts = parseRss2(xml);
+      const aiPosts = posts.filter((p) => {
+        const lower = `${p.title} ${p.summary}`.toLowerCase();
+        return AI_KEYWORDS.some((kw) => lower.includes(kw));
+      });
+      await Promise.all(
+        aiPosts.map(async (p) => {
+          const image_url = await fetchOgImage(p.url);
+          const { error } = await supabase.from("ai_pulse_items").upsert(
+            {
+              title: p.title,
+              url: p.url,
+              source: feed.source,
+              category: "local",
+              summary: p.summary,
+              published_at: p.published_at,
+              image_url,
+            },
+            { onConflict: "url" }
+          );
+          if (!error) results.local++;
+        })
+      );
+    } catch (e) {
+      errors.push(`${feed.source}: ${e.message}`);
+    }
   }
 
   return new Response(JSON.stringify({ results, errors }), {

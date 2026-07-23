@@ -81,12 +81,9 @@ const PulseThumb = ({ src, alt, category, id, sourceLabel, className }: { src: s
   if (!src || failed) {
     const Icon = category === "research" ? FlaskConical : Newspaper;
     return (
-      <div className={`${className} flex flex-col justify-between p-4 bg-gradient-to-br ${pickGradient(id)}`}>
-        <div className="flex items-center gap-1.5 text-white/70">
-          <Icon className="h-3.5 w-3.5" />
-          <span className="text-[10px] font-display font-bold uppercase tracking-widest">{sourceLabel}</span>
-        </div>
-        <p className="font-display font-bold text-white leading-snug line-clamp-3 text-sm md:text-base">{alt}</p>
+      <div className={`${className} flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br ${pickGradient(id)}`}>
+        <Icon className="h-7 w-7 text-white/80" />
+        <span className="text-[10px] font-display font-bold uppercase tracking-widest text-white/60">{sourceLabel}</span>
       </div>
     );
   }

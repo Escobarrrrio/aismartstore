@@ -97,6 +97,8 @@ const ChatWidget = () => {
         upsertAssistant(friendly);
         setLoading(false);
         return;
+      }
+
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();

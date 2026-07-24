@@ -1,6 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Cookie } from "lucide-react";
+
+// The chat widget's launcher FAB is also fixed to the bottom-right corner
+// (see ChatWidget.tsx) -- without this, the banner (full-width, pinned to
+// the very bottom, same z-index) renders on top of it and silently
+// swallows every click on the launcher until the visitor deals with the
+// banner. Publishing the banner's real rendered height as a CSS variable
+// lets the widget push itself up by exactly that much, staying correct
+// across the banner's mobile (stacked) vs desktop (single-row) layouts
+// without either component needing to know about the other's internals.
+export const COOKIE_BANNER_HEIGHT_VAR = "--cookie-banner-h";
 
 const STORAGE_KEY = "ai-smart-store.cookie-consent";
 type Choice = "accepted" | "rejected";
@@ -29,6 +39,27 @@ function pushConsentSignal(command: "default" | "update", granted: boolean) {
 
 const CookieConsentBanner = () => {
   const [visible, setVisible] = useState(false);
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!visible) {
+      root.style.setProperty(COOKIE_BANNER_HEIGHT_VAR, "0px");
+      return;
+    }
+    const el = bannerRef.current;
+    if (!el) return;
+    const update = () => root.style.setProperty(COOKIE_BANNER_HEIGHT_VAR, `${el.offsetHeight}px`);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+      root.style.setProperty(COOKIE_BANNER_HEIGHT_VAR, "0px");
+    };
+  }, [visible]);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Choice | null;
@@ -52,6 +83,7 @@ const CookieConsentBanner = () => {
 
   return (
     <div
+      ref={bannerRef}
       role="region"
       aria-label="Cookie consent"
       className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-card shadow-elevated"

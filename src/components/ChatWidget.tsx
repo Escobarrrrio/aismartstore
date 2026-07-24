@@ -2,6 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { COOKIE_BANNER_HEIGHT_VAR } from "@/components/CookieConsentBanner";
+
+// The cookie consent banner is also fixed to the bottom of the viewport
+// and, unlike this widget, spans full width -- without offsetting by its
+// published height, it renders on top of the launcher and swallows every
+// click on it until the visitor deals with the banner.
+const bottomOffsetStyle = { bottom: `calc(var(${COOKIE_BANNER_HEIGHT_VAR}, 0px) + 1.5rem)` };
 
 interface Message {
   role: "user" | "assistant";
@@ -158,7 +165,8 @@ const ChatWidget = () => {
           ref={openButtonRef}
           onClick={() => setOpen(true)}
           aria-label={t("chat.openLabel")}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full gradient-brand text-white flex items-center justify-center shadow-elevated hover:scale-105 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 print:hidden"
+          style={bottomOffsetStyle}
+          className="fixed right-6 z-50 w-14 h-14 rounded-full gradient-brand text-white flex items-center justify-center shadow-elevated hover:scale-105 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 print:hidden"
         >
           <MessageCircle className="h-6 w-6" aria-hidden="true" />
         </button>
@@ -172,7 +180,8 @@ const ChatWidget = () => {
           aria-modal="true"
           aria-label={t("chat.title")}
           onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
-          className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-4rem)] bg-card border border-border rounded-2xl shadow-elevated flex flex-col overflow-hidden print:hidden"
+          style={bottomOffsetStyle}
+          className="fixed right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-4rem)] bg-card border border-border rounded-2xl shadow-elevated flex flex-col overflow-hidden print:hidden"
         >
           {/* Header */}
           <div className="gradient-brand px-4 py-3 flex items-center justify-between flex-shrink-0">

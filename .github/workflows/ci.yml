@@ -47,3 +47,27 @@ jobs:
         run: |
           echo "### Build output" >> "$GITHUB_STEP_SUMMARY"
           du -h dist/assets/*.js | sort -rh | head -10 >> "$GITHUB_STEP_SUMMARY"
+
+  edge-function-tests:
+    name: Edge function tests (Deno)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # Supabase edge functions run on Deno, not Node, so they're tested
+      # with Deno's own test runner rather than vitest. Scoped to *.test.ts
+      # so it only loads the files that actually have tests -- index.ts
+      # files without a sibling test file (e.g. cleanup-blocked-products,
+      # whose logic is a thin wrapper around the already-tested shared
+      # retry/run-log helpers) are never imported, so their npm:/esm.sh
+      # specifiers don't need resolving here. --allow-net/--allow-env
+      # cover resolving remote imports and the shared alerts helper's
+      # Deno.env.get() calls (RESEND_API_KEY/SLACK_WEBHOOK_URL are unset
+      # in CI, so it exercises the "not configured" path, not a real send).
+      - name: Run edge function tests
+        run: deno test --allow-net --allow-env supabase/functions/**/*.test.ts

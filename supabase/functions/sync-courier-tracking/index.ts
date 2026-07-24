@@ -23,6 +23,25 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
 import { getAuthContext, escapeHtml } from "../_shared/auth-guard.ts";
 import { resolveEmailFromAddress } from "../_shared/email-from.ts";
+import { withRetry } from "../_shared/retry.ts";
+import { startRun, finishRun, deriveRunStatus } from "../_shared/run-log.ts";
+import { checkAndAlertOnFailureStreak } from "../_shared/alerts.ts";
+
+/**
+ * Pulls a tracking reference out of a Shiplogic (The Courier Guy) shipments
+ * API response. The API's own shape varies -- sometimes `{ shipments: [...] }`,
+ * sometimes a bare array, sometimes (unexpectedly) a single object under
+ * `shipments` -- this normalizes all three. Exported for unit testing.
+ */
+export function extractTrackingNumber(body: any): string | null {
+  const shipment = Array.isArray(body?.shipments)
+    ? body.shipments[0]
+    : Array.isArray(body)
+    ? body[0]
+    : body?.shipments ?? null;
+  const tracking = shipment?.short_tracking_reference || shipment?.tracking_reference || null;
+  return tracking ? String(tracking) : null;
+}
 
 const DEFAULT_API_BASE = "https://api.shiplogic.com/v2";
 const TRACK_PAGE = "https://portal.thecourierguy.co.za/track-parcel";
@@ -76,8 +95,18 @@ async function getSetting(supabase: any, key: string): Promise<string> {
   return ((data?.value as string) ?? "").trim();
 }
 
-Deno.serve(async (req) => {
+// Named + assigned and gated behind import.meta.main so test files can
+// `import { extractTrackingNumber } from "./index.ts"` without also
+// starting an HTTP listener.
+const handler = async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Declared outside the try block so the catch handler can still close out
+  // the run row (rather than leaving it stuck at status "running" forever)
+  // if something throws after startRun() but outside Phase A/B's own
+  // per-item try/catches.
+  let run: { id: string } | null = null;
+  let supabaseForCleanup: any = null;
 
   try {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -95,6 +124,8 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+    supabaseForCleanup = supabase;
+    run = await startRun(supabase, "sync-courier-tracking");
 
     const summary = {
       tracking_found: 0,
@@ -103,6 +134,7 @@ Deno.serve(async (req) => {
       emails_failed: 0,
       courier_api_configured: false,
       errors: [] as string[],
+      notices: [] as string[],
     };
 
     // ---------- Phase A: pull tracking numbers from the courier API ----------
@@ -122,9 +154,16 @@ Deno.serve(async (req) => {
       for (const o of awaiting ?? []) {
         summary.tracking_checked++;
         try {
-          const res = await fetch(
-            `${apiBase}/shipments?custom_tracking_reference=${encodeURIComponent(o.id)}`,
-            { headers: { Authorization: `Bearer ${courierKey}` } },
+          // Retry only network-level failures (timeouts, DNS blips) --
+          // an HTTP error status is returned normally and handled below,
+          // since 401/403 (bad key) or 404 (no shipment yet) won't
+          // succeed on retry and shouldn't be retried 3x per order.
+          const res = await withRetry(
+            () => fetch(
+              `${apiBase}/shipments?custom_tracking_reference=${encodeURIComponent(o.id)}`,
+              { headers: { Authorization: `Bearer ${courierKey}` } },
+            ),
+            { retries: 1, onRetry: (n, e) => console.warn(`[sync-courier-tracking] courier fetch retry ${n} for ${o.id}:`, (e as Error).message) },
           );
           const body = await res.json().catch(() => ({}));
           if (!res.ok) {
@@ -139,8 +178,7 @@ Deno.serve(async (req) => {
             if (res.status === 401 || res.status === 403) break;
             continue;
           }
-          const shipment = Array.isArray(body?.shipments) ? body.shipments[0] : Array.isArray(body) ? body[0] : body?.shipments ?? null;
-          const tracking = shipment?.short_tracking_reference || shipment?.tracking_reference || null;
+          const tracking = extractTrackingNumber(body);
           if (tracking) {
             await supabase.from("orders")
               .update({ tracking_number: String(tracking), order_status: "shipped" })
@@ -183,16 +221,19 @@ Deno.serve(async (req) => {
           const messageId = `order-shipped-${order.id}-customer`;
           if (sentSet.has(messageId)) continue;
           try {
-            const res = await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: fromAddress,
-                to: order.customer_email,
-                subject: `Your order is on its way — tracking ${order.tracking_number}`,
-                html: buildShippedHtml(order, order.tracking_number),
+            const res = await withRetry(
+              () => fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  from: fromAddress,
+                  to: order.customer_email,
+                  subject: `Your order is on its way — tracking ${order.tracking_number}`,
+                  html: buildShippedHtml(order, order.tracking_number),
+                }),
               }),
-            });
+              { retries: 1, onRetry: (n, e) => console.warn(`[sync-courier-tracking] shipped-email retry ${n} for ${order.id}:`, (e as Error).message) },
+            );
             const body = await res.json().catch(() => ({}));
             const ok = res.ok && !body?.error;
             await supabase.from("email_send_log").upsert({
@@ -216,7 +257,22 @@ Deno.serve(async (req) => {
         }
       }
     } else {
-      summary.errors.push("RESEND_API_KEY not configured — shipped emails skipped");
+      summary.notices.push("RESEND_API_KEY not configured — shipped emails skipped");
+    }
+
+    const totalSynced = summary.tracking_found + summary.emails_sent;
+    const totalFailed = summary.errors.length;
+    const runStatus = deriveRunStatus(totalSynced, totalFailed);
+    await finishRun(supabase, run, {
+      status: runStatus,
+      items_synced: totalSynced,
+      items_failed: totalFailed,
+      error_details: summary.errors.length ? summary.errors.join("\n") : null,
+    });
+    if (runStatus === "failed") {
+      await checkAndAlertOnFailureStreak(supabase, "sync-courier-tracking").catch((e) =>
+        console.error("[sync-courier-tracking] alert check failed:", (e as Error).message),
+      );
     }
 
     return new Response(JSON.stringify(summary), {
@@ -224,8 +280,21 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("[sync-courier-tracking] failure:", error);
+    if (run && supabaseForCleanup) {
+      await finishRun(supabaseForCleanup, run, {
+        status: "failed",
+        items_synced: 0,
+        items_failed: 1,
+        error_details: (error as Error).message,
+      });
+      await checkAndAlertOnFailureStreak(supabaseForCleanup, "sync-courier-tracking").catch((e) =>
+        console.error("[sync-courier-tracking] alert check failed:", (e as Error).message),
+      );
+    }
     return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+};
+
+if (import.meta.main) Deno.serve(handler);

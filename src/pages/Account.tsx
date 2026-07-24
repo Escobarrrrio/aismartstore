@@ -437,7 +437,7 @@ const Account = () => {
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-semibold">{formatPrice(order.total_amount)}</p>
-                            <span className={`${statusColor(order.status)} text-[10px]`}>{order.status}</span>
+                            <span className={`${statusColor(order.order_status || order.status)} text-[10px]`}>{order.order_status || order.status}</span>
                           </div>
                         </div>
                       ))}
@@ -495,7 +495,7 @@ const Account = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-display font-bold">{formatPrice(order.total_amount)}</p>
-                            <span className={`${statusColor(order.status)} text-[10px]`}>{order.status}</span>
+                            <span className={`${statusColor(order.order_status || order.status)} text-[10px]`}>{order.order_status || order.status}</span>
                           </div>
                         </div>
                         {order.tracking_number && (

@@ -1,4 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { withRetry } from "../_shared/retry.ts";
+import { startRun, finishRun, deriveRunStatus } from "../_shared/run-log.ts";
+import { checkAndAlertOnFailureStreak } from "../_shared/alerts.ts";
 
 // Pulls real, sourced AI content from legitimate, no-auth-required
 // feeds -- never fabricated. This deliberately does NOT ask an LLM to
@@ -14,7 +17,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // automated -- no manual refresh needed. Safe to call repeatedly: it
 // upserts by URL so re-running just refreshes existing entries.
 
-const AI_KEYWORDS = ["ai", "llm", "gpt", "claude", "gemini", "openai", "anthropic", "machine learning", "neural network", "artificial intelligence"]; // lovable-ref-ok: AI-news keyword (the model), unrelated to how this site was built
+export const AI_KEYWORDS = ["ai", "llm", "gpt", "claude", "gemini", "openai", "anthropic", "machine learning", "neural network", "artificial intelligence"]; // lovable-ref-ok: AI-news keyword (the model), unrelated to how this site was built
+
+export function matchesAiKeywords(text: string): boolean {
+  const lower = text.toLowerCase();
+  return AI_KEYWORDS.some((kw) => lower.includes(kw));
+}
 
 // Real, standard WordPress RSS feeds from established South African tech
 // news publishers. Each is fetched and filtered independently -- if one
@@ -25,13 +33,13 @@ const LOCAL_FEEDS: { source: string; url: string }[] = [
   { source: "businesstech", url: "https://businesstech.co.za/feed/" },
 ];
 
-function stripCdata(raw?: string): string | undefined {
+export function stripCdata(raw?: string): string | undefined {
   if (!raw) return undefined;
   const m = raw.match(/<!\[CDATA\[([\s\S]*?)\]\]>/);
   return (m ? m[1] : raw).trim().replace(/\s+/g, " ");
 }
 
-function parseRss2(xml: string) {
+export function parseRss2(xml: string) {
   const items: { title: string; url: string; summary: string; published_at: string }[] = [];
   const itemRe = /<item>([\s\S]*?)<\/item>/g;
   let m;
@@ -50,7 +58,7 @@ function parseRss2(xml: string) {
   return items;
 }
 
-function parseArxivRss(xml: string) {
+export function parseArxivRss(xml: string) {
   const items: { title: string; url: string; summary: string; published_at: string }[] = [];
   const entryRe = /<entry>([\s\S]*?)<\/entry>/g;
   let m;
@@ -111,20 +119,27 @@ async function fetchOgImage(url: string, timeoutMs = 4000): Promise<string | nul
   }
 }
 
-Deno.serve(async (_req) => {
+// Named + assigned (rather than passed inline to Deno.serve) and gated
+// behind import.meta.main so test files can `import { ... } from "./index.ts"`
+// for the pure functions above without also starting an HTTP listener.
+const handler = async (_req: Request) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  const run = await startRun(supabase, "sync-ai-pulse");
   const results: Record<string, number> = { arxiv: 0, hn: 0, local: 0 };
   const errors: string[] = [];
 
   try {
-    const arxivRes = await fetch(
-      "http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=20"
-    );
-    const xml = await arxivRes.text();
+    const xml = await withRetry(async () => {
+      const res = await fetch(
+        "http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=20"
+      );
+      if (!res.ok) throw new Error(`arxiv HTTP ${res.status}`);
+      return res.text();
+    }, { onRetry: (n, e) => console.warn(`[sync-ai-pulse] arxiv retry ${n}:`, (e as Error).message) });
     const papers = parseArxivRss(xml);
     await Promise.all(
       papers.map(async (p) => {
@@ -149,18 +164,23 @@ Deno.serve(async (_req) => {
   }
 
   try {
-    const topIdsRes = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
-    const topIds: number[] = (await topIdsRes.json()).slice(0, 60);
-    const stories = await Promise.all(
-      topIds.map((id) =>
-        fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then((r) => r.json())
-      )
+    const topIds: number[] = await withRetry(async () => {
+      const res = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
+      if (!res.ok) throw new Error(`HN topstories HTTP ${res.status}`);
+      return (await res.json()).slice(0, 60);
+    }, { onRetry: (n, e) => console.warn(`[sync-ai-pulse] hn topstories retry ${n}:`, (e as Error).message) });
+
+    // A single bad item id (deleted/dead story) must not cost the whole
+    // batch -- Promise.all would reject entirely on one failure; allSettled
+    // keeps every story that did resolve.
+    const settled = await Promise.allSettled(
+      topIds.map((id) => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then((r) => r.json())),
     );
-    const aiStories = stories.filter((s) => {
-      if (!s?.title || !s?.url) return false;
-      const lower = s.title.toLowerCase();
-      return AI_KEYWORDS.some((kw) => lower.includes(kw));
-    });
+    const stories = settled.filter((r): r is PromiseFulfilledResult<any> => r.status === "fulfilled").map((r) => r.value);
+    const itemFailures = settled.length - stories.length;
+    if (itemFailures > 0) errors.push(`hn: ${itemFailures} item fetch(es) failed`);
+
+    const aiStories = stories.filter((s) => s?.title && s?.url && matchesAiKeywords(s.title));
     await Promise.all(
       aiStories.map(async (s) => {
         const image_url = await fetchOgImage(s.url);
@@ -185,19 +205,15 @@ Deno.serve(async (_req) => {
 
   for (const feed of LOCAL_FEEDS) {
     try {
-      const res = await fetch(feed.url, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; AISmartStoreBot/1.0; +https://aismartstore.co.za)" },
-      });
-      if (!res.ok) {
-        errors.push(`${feed.source}: HTTP ${res.status}`);
-        continue;
-      }
-      const xml = await res.text();
+      const xml = await withRetry(async () => {
+        const res = await fetch(feed.url, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; AISmartStoreBot/1.0; +https://aismartstore.co.za)" },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      }, { onRetry: (n, e) => console.warn(`[sync-ai-pulse] ${feed.source} retry ${n}:`, (e as Error).message) });
       const posts = parseRss2(xml);
-      const aiPosts = posts.filter((p) => {
-        const lower = `${p.title} ${p.summary}`.toLowerCase();
-        return AI_KEYWORDS.some((kw) => lower.includes(kw));
-      });
+      const aiPosts = posts.filter((p) => matchesAiKeywords(`${p.title} ${p.summary}`));
       await Promise.all(
         aiPosts.map(async (p) => {
           const image_url = await fetchOgImage(p.url);
@@ -221,7 +237,23 @@ Deno.serve(async (_req) => {
     }
   }
 
+  const totalSynced = results.arxiv + results.hn + results.local;
+  const runStatus = deriveRunStatus(totalSynced, errors.length);
+  await finishRun(supabase, run, {
+    status: runStatus,
+    items_synced: totalSynced,
+    items_failed: errors.length,
+    error_details: errors.length ? errors.join("\n") : null,
+  });
+  if (runStatus !== "success") {
+    await checkAndAlertOnFailureStreak(supabase, "sync-ai-pulse").catch((e) =>
+      console.error("[sync-ai-pulse] alert check failed:", (e as Error).message),
+    );
+  }
+
   return new Response(JSON.stringify({ results, errors }), {
     headers: { "Content-Type": "application/json" },
   });
-});
+};
+
+if (import.meta.main) Deno.serve(handler);

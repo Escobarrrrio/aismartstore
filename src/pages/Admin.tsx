@@ -20,6 +20,7 @@ import ReturnsModule from "@/components/admin/ReturnsModule";
 import AILogsModule from "@/components/admin/AILogsModule";
 import SyncLogsModule from "@/components/admin/SyncLogsModule";
 import AutomationsModule from "@/components/admin/AutomationsModule";
+import EdgeFunctionHealthModule from "@/components/admin/EdgeFunctionHealthModule";
 import SystemHealthModule from "@/components/admin/SystemHealthModule";
 import SecurityModule from "@/components/admin/SecurityModule";
 import NewsletterModule from "@/components/admin/NewsletterModule";
@@ -182,6 +183,7 @@ const Admin = () => {
           {activeTab === "ai-logs" && <AILogsModule />}
           {activeTab === "sync-logs" && <SyncLogsModule />}
           {activeTab === "automations" && <AutomationsModule />}
+          {activeTab === "edge-function-health" && <EdgeFunctionHealthModule />}
           {activeTab === "settings" && <CommandCentre settings={settings} setSettings={setSettings} />}
           {activeTab === "system-health" && <SystemHealthModule />}
           {activeTab === "security" && <SecurityModule />}

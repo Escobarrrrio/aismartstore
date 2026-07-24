@@ -9,6 +9,7 @@ import Logo from "@/components/Logo";
 export type AdminTab =
   | "dashboard" | "products" | "import" | "orders" | "customers"
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
+  | "edge-function-health"
   | "settings" | "system-health" | "security" | "cost-usage"
   | "integrations" | "backups" | "catalog-health"
   | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
@@ -53,6 +54,7 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "backups", label: "Backups", icon: <HardDrive className="h-4 w-4" /> },
   { id: "sync-logs", label: "Sync Logs", icon: <RefreshCw className="h-4 w-4" /> },
   { id: "automations", label: "Automations", icon: <Zap className="h-4 w-4" /> },
+  { id: "edge-function-health", label: "Edge Function Health", icon: <Stethoscope className="h-4 w-4" /> },
   { id: "settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
 ];
 

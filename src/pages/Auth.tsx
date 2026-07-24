@@ -194,9 +194,14 @@ const Auth = () => {
     if (!name.trim()) errs.name = "Full name is required.";
     if (!phone.trim()) errs.phone = "Phone number is required.";
     else if (!isValidPhone(phone)) errs.phone = "Enter a valid South African phone (e.g. +27 82 123 4567 or 082 123 4567).";
-    if (!idNumber.trim()) errs.idNumber = "SA ID number is required.";
-    else if (!isValidSaId(idNumber)) errs.idNumber = `ID number must be exactly 13 digits (you entered ${idNumber.trim().length}).`;
     if (accountType === "business") {
+      // A South African ID number is sensitive personal information --
+      // reserved for entities of private or public interest (business,
+      // government, NGO, institutional accounts), where identifying the
+      // accountable individual behind the account is warranted. Not
+      // collected from ordinary residential shoppers at all.
+      if (!idNumber.trim()) errs.idNumber = "SA ID number is required.";
+      else if (!isValidSaId(idNumber)) errs.idNumber = `ID number must be exactly 13 digits (you entered ${idNumber.trim().length}).`;
       if (!companyName.trim()) errs.companyName = "Registered company / entity name is required.";
       if (!vatNotRegistered) {
         if (!vatNumber.trim()) errs.vatNumber = "Enter your VAT number, or tick 'not yet registered'.";
@@ -238,9 +243,14 @@ const Auth = () => {
         customer_type: accountType,
         name: name.trim(),
         phone: phone.trim(),
-        id_number: idNumber.trim(),
       };
       if (accountType === "business") {
+        // ID number is only ever collected for business/government accounts
+        // -- sending an empty string for residential signups (rather than
+        // omitting the key) would store "" instead of NULL, which would
+        // then falsely collide under the id_number uniqueness constraint
+        // the moment a second residential shopper also left it blank.
+        profilePayload.id_number = idNumber.trim();
         profilePayload.company_name = companyName.trim();
         profilePayload.vat_number = vatNotRegistered ? null : vatNumber.trim();
       }
@@ -499,13 +509,13 @@ const Auth = () => {
                         Not yet registered for VAT
                       </label>
                     </div>
+                    <FieldWithIcon icon={IdCard} label="South African ID number (13 digits)" value={idNumber} onChange={(v) => setIdNumber(v.replace(/\D/g, "").slice(0, 13))} placeholder="0000000000000" required error={fieldErrors.idNumber} testId="signup-id" />
+                    {idNumber.length > 0 && idNumber.length < 13 && !fieldErrors.idNumber && (
+                      <p className="text-[11px] text-muted-foreground -mt-2">{13 - idNumber.length} more digit{13 - idNumber.length === 1 ? "" : "s"} to go.</p>
+                    )}
                   </>
                 )}
                 <FieldWithIcon icon={Phone} label="Phone number" value={phone} onChange={setPhone} placeholder="+27 82 123 4567" type="tel" required error={fieldErrors.phone} testId="signup-phone" />
-                <FieldWithIcon icon={IdCard} label="South African ID number (13 digits)" value={idNumber} onChange={(v) => setIdNumber(v.replace(/\D/g, "").slice(0, 13))} placeholder="0000000000000" required error={fieldErrors.idNumber} testId="signup-id" />
-                {idNumber.length > 0 && idNumber.length < 13 && !fieldErrors.idNumber && (
-                  <p className="text-[11px] text-muted-foreground -mt-2">{13 - idNumber.length} more digit{13 - idNumber.length === 1 ? "" : "s"} to go.</p>
-                )}
               </>
             )}
 

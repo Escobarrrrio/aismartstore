@@ -27,25 +27,30 @@ test.describe("Signup validation gate", () => {
     await expect(page.getByTestId("signup-phone")).toHaveCount(0);
   });
 
-  test("Residential path reveals the standard fields", async ({ page }) => {
+  test("Residential path reveals the standard fields, no ID number", async ({ page }) => {
     await page.getByTestId("account-type-residential").click();
     await expect(page.getByTestId("signup-name")).toBeVisible();
     await expect(page.getByTestId("signup-phone")).toBeVisible();
-    await expect(page.getByTestId("signup-id")).toBeVisible();
+    // SA ID number is reserved for business/government accounts -- ordinary
+    // residential shoppers are never asked for it.
+    await expect(page.getByTestId("signup-id")).toHaveCount(0);
     // Business-only fields must be hidden.
     await expect(page.getByTestId("signup-company")).toHaveCount(0);
     await expect(page.getByTestId("signup-vat")).toHaveCount(0);
   });
 
-  test("Business path adds company + VAT fields", async ({ page }) => {
+  test("Business path adds company + VAT + ID number fields", async ({ page }) => {
     await page.getByTestId("account-type-business").click();
     await expect(page.getByTestId("signup-company")).toBeVisible();
     await expect(page.getByTestId("signup-vat")).toBeVisible();
+    await expect(page.getByTestId("signup-id")).toBeVisible();
   });
 
   test("Invalid SA ID (< 13 digits) shows an inline field error", async ({ page }) => {
-    await page.getByTestId("account-type-residential").click();
+    await page.getByTestId("account-type-business").click();
     await page.getByTestId("signup-name").fill("Test User");
+    await page.getByTestId("signup-company").fill("Acme (Pty) Ltd");
+    await page.getByTestId("signup-vat").fill("4123456789");
     await page.getByTestId("signup-phone").fill("+27821234567");
     await page.getByTestId("signup-id").fill("123456");
     await page.locator('input[type="email"]').fill("test-invalid-id@example.com");
@@ -69,10 +74,8 @@ test.describe("Signup validation gate", () => {
   });
 
   test("Duplicate ID number surfaces the friendly one-account message", async ({ page }) => {
-    // Intercept the profile update PATCH and simulate a 23505 unique_violation
-    // response on id_number. We don't need a real DB row for the E2E to be
-    // meaningful — the UX contract is: users see the friendly message, not
-    // "duplicate key value violates unique constraint".
+    // ID number is only ever collected/sent for business accounts now, so
+    // this duplicate-key scenario is exercised on the business path.
     await page.route("**/rest/v1/profiles**", async (route) => {
       if (route.request().method() === "PATCH") {
         return route.fulfill({
@@ -99,8 +102,10 @@ test.describe("Signup validation gate", () => {
       })
     );
 
-    await page.getByTestId("account-type-residential").click();
+    await page.getByTestId("account-type-business").click();
     await page.getByTestId("signup-name").fill("Dup User");
+    await page.getByTestId("signup-company").fill("Acme (Pty) Ltd");
+    await page.getByTestId("signup-vat").fill("4123456789");
     await page.getByTestId("signup-phone").fill("+27821234567");
     await page.getByTestId("signup-id").fill("9001015800086");
     await page.locator('input[type="email"]').fill("dup@example.com");

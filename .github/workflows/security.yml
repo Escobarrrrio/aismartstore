@@ -16,7 +16,12 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
       - name: Dependency audit (high+ severity fails the build)
-        run: bun audit --prod --severity high || (echo "::error::High-severity vulnerabilities detected" && exit 1)
+        # `--severity` is not a real bun-audit flag -- it's silently ignored,
+        # so this always fell back to failing on ANY vulnerability of ANY
+        # severity (moderate/low included), not just high+ as the step name
+        # promised. The flag that actually gates by threshold is
+        # `--audit-level`.
+        run: bun audit --prod --audit-level=high || (echo "::error::High-severity vulnerabilities detected" && exit 1)
       - name: Test suite
         run: bunx vitest run
       - name: Lint

@@ -26,6 +26,21 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://aismartstore.co.za/shipping-returns</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://aismartstore.co.za/terms</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://aismartstore.co.za/cookies</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
     <loc>https://aismartstore.co.za/product/59b26c46-b865-454c-848f-bdcc64ac6f81</loc>
     <lastmod>2026-07-21</lastmod>
     <changefreq>weekly</changefreq>

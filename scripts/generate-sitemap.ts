@@ -22,6 +22,9 @@ const staticEntries: Entry[] = [
   { path: "/ai-pulse", changefreq: "weekly", priority: "0.7" },
   { path: "/procurement", changefreq: "monthly", priority: "0.6" },
   { path: "/compliance", changefreq: "monthly", priority: "0.3" },
+  { path: "/shipping-returns", changefreq: "monthly", priority: "0.4" },
+  { path: "/terms", changefreq: "monthly", priority: "0.2" },
+  { path: "/cookies", changefreq: "monthly", priority: "0.2" },
 ]
 
 const escape = (s: string) =>

@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
 import { useProducts } from "@/contexts/ProductContext";
-import * as XLSX from "xlsx";
+// @e965/xlsx republishes the SheetJS parser with security patches applied --
+// the upstream "xlsx" npm package has known high-severity prototype
+// pollution / ReDoS advisories with no fix ever published to npm. Same API.
+import * as XLSX from "@e965/xlsx";
 
 const ImportModule = () => {
   const { addProducts } = useProducts();

@@ -64,6 +64,8 @@ const StoreFooter = () => {
               <Link to="/shipping-returns" className="text-sm hover:text-background/80 transition-colors">Shipping & Returns</Link>
               <Link to="/compliance" className="text-sm hover:text-background/80 transition-colors">Privacy (POPIA)</Link>
               <Link to="/compliance" className="text-sm hover:text-background/80 transition-colors">PAIA Manual</Link>
+              <Link to="/terms" className="text-sm hover:text-background/80 transition-colors">Terms of Service</Link>
+              <Link to="/cookies" className="text-sm hover:text-background/80 transition-colors">Cookie Policy</Link>
             </nav>
           </div>
 

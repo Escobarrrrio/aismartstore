@@ -27,7 +27,11 @@ type AnyRecord = Record<string, unknown>;
 
 declare global {
   interface Window {
-    dataLayer?: AnyRecord[];
+    // unknown[] rather than AnyRecord[]: most pushes here are plain event
+    // objects, but CookieConsentBanner.tsx also pushes gtag.js-style
+    // ["consent", command, params] tuples for Google Consent Mode v2 --
+    // both need to fit the same global dataLayer type.
+    dataLayer?: unknown[];
   }
 }
 

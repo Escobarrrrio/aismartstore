@@ -15,6 +15,7 @@ import StoreFooter from "@/components/StoreFooter";
 import ChatWidget from "@/components/ChatWidget";
 import AudienceGuard from "@/components/AudienceGuard";
 import ScrollToTop from "@/components/ScrollToTop";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
 
 // Route-level code splitting: the Admin panel alone pulls in dozens of
 // modules (products, orders, customers, support, sync logs, automations,
@@ -33,6 +34,8 @@ const Procurement = lazy(() => import("./pages/Procurement"));
 const AiPulse = lazy(() => import("./pages/AiPulse"));
 const Compliance = lazy(() => import("./pages/Compliance"));
 const ShippingReturns = lazy(() => import("./pages/ShippingReturns"));
+const Terms = lazy(() => import("./pages/Terms"));
+const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -53,6 +56,7 @@ const StorefrontLayout = ({ children }: { children: React.ReactNode }) => (
     <main className="flex-1">{children}</main>
     <StoreFooter />
     <ChatWidget />
+    <CookieConsentBanner />
   </div>
 );
 
@@ -83,6 +87,8 @@ const App = () => (
                       <Route path="/ai-pulse" element={<StorefrontLayout><AiPulse /></StorefrontLayout>} />
                       <Route path="/compliance" element={<StorefrontLayout><Compliance /></StorefrontLayout>} />
                       <Route path="/shipping-returns" element={<StorefrontLayout><ShippingReturns /></StorefrontLayout>} />
+                      <Route path="/terms" element={<StorefrontLayout><Terms /></StorefrontLayout>} />
+                      <Route path="/cookies" element={<StorefrontLayout><CookiePolicy /></StorefrontLayout>} />
                       <Route path="/admin" element={<Admin />} />
                       <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
                     </Routes>

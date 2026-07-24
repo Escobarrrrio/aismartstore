@@ -91,6 +91,10 @@ describe("Auth page", () => {
   it("switches to the sign-up tab and shows the create-account action", () => {
     renderAuth();
     fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+    // Signup is gated behind an account-type pick (residential vs
+    // business/government) -- the form, and its submit button, only
+    // render once a type is chosen.
+    fireEvent.click(screen.getByTestId("account-type-residential"));
     expect(screen.getByRole("button", { name: /create account/i })).toBeInTheDocument();
   });
 

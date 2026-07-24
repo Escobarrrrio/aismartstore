@@ -1,0 +1,1 @@
+GRANT SELECT ON public.order_audit_log TO authenticated;

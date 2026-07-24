@@ -131,6 +131,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_log: {
+        Row: {
+          completion_tokens: number | null
+          created_at: string
+          estimated_cost_usd: number | null
+          id: string
+          model: string
+          prompt_tokens: number | null
+          provider: string
+          source: string
+          total_tokens: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          created_at?: string
+          estimated_cost_usd?: number | null
+          id?: string
+          model: string
+          prompt_tokens?: number | null
+          provider: string
+          source: string
+          total_tokens?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          created_at?: string
+          estimated_cost_usd?: number | null
+          id?: string
+          model?: string
+          prompt_tokens?: number | null
+          provider?: string
+          source?: string
+          total_tokens?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       automation_events: {
         Row: {
           created_at: string
@@ -194,99 +233,6 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      business_signups: {
-        Row: {
-          address_line: string | null
-          city: string | null
-          contact_full_name: string
-          contact_phone: string | null
-          contact_position: string | null
-          country: string | null
-          created_at: string
-          entity_type: string
-          expected_monthly_spend: number | null
-          honeypot_flag: boolean
-          id: string
-          ip_address: string | null
-          legal_entity_name: string
-          notes: string | null
-          postal_code: string | null
-          province: string | null
-          registration_number: string
-          reviewed_at: string | null
-          reviewer_id: string | null
-          sector: string | null
-          status: string
-          trading_name: string | null
-          updated_at: string
-          user_agent: string | null
-          vat_number: string | null
-          website: string | null
-          work_email: string
-          work_email_domain: string
-        }
-        Insert: {
-          address_line?: string | null
-          city?: string | null
-          contact_full_name: string
-          contact_phone?: string | null
-          contact_position?: string | null
-          country?: string | null
-          created_at?: string
-          entity_type: string
-          expected_monthly_spend?: number | null
-          honeypot_flag?: boolean
-          id?: string
-          ip_address?: string | null
-          legal_entity_name: string
-          notes?: string | null
-          postal_code?: string | null
-          province?: string | null
-          registration_number: string
-          reviewed_at?: string | null
-          reviewer_id?: string | null
-          sector?: string | null
-          status?: string
-          trading_name?: string | null
-          updated_at?: string
-          user_agent?: string | null
-          vat_number?: string | null
-          website?: string | null
-          work_email: string
-          work_email_domain: string
-        }
-        Update: {
-          address_line?: string | null
-          city?: string | null
-          contact_full_name?: string
-          contact_phone?: string | null
-          contact_position?: string | null
-          country?: string | null
-          created_at?: string
-          entity_type?: string
-          expected_monthly_spend?: number | null
-          honeypot_flag?: boolean
-          id?: string
-          ip_address?: string | null
-          legal_entity_name?: string
-          notes?: string | null
-          postal_code?: string | null
-          province?: string | null
-          registration_number?: string
-          reviewed_at?: string | null
-          reviewer_id?: string | null
-          sector?: string | null
-          status?: string
-          trading_name?: string | null
-          updated_at?: string
-          user_agent?: string | null
-          vat_number?: string | null
-          website?: string | null
-          work_email?: string
-          work_email_domain?: string
         }
         Relationships: []
       }
@@ -1316,7 +1262,7 @@ export type Database = {
         }
         Relationships: []
       }
-      wishlist_items: {
+      wishlists: {
         Row: {
           created_at: string
           id: string
@@ -1337,7 +1283,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "wishlist_items_product_id_fkey"
+            foreignKeyName: "wishlists_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"

@@ -93,6 +93,10 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-6px)" },
         },
+        "ticker-scroll": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -101,6 +105,7 @@ export default {
         "slide-in": "slide-in 0.5s ease-out forwards",
         shimmer: "shimmer 2s linear infinite",
         float: "float 4s ease-in-out infinite",
+        ticker: "ticker-scroll 50s linear infinite",
       },
     },
   },

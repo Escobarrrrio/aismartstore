@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import SEO from "@/components/SEO";
 import {
   FlaskConical,
   Newspaper,
-  MapPin,
+  Radio,
   ExternalLink,
   Search,
-  TrendingUp,
   AlertTriangle,
   RotateCw,
   X,
+  Clock,
 } from "lucide-react";
 
 interface PulseItem {
@@ -31,11 +31,48 @@ const SOURCE_LABELS: Record<string, string> = {
   hn: "Hacker News",
   mybroadband: "MyBroadband",
   businesstech: "BusinessTech",
+  techcentral: "TechCentral",
+  ventureburn: "Ventureburn",
+  techcabal: "TechCabal",
+  techpoint: "Techpoint Africa",
+  disruptafrica: "Disrupt Africa",
+  itnewsafrica: "IT News Africa",
 };
 
-function timeAgo(iso: string | null): string {
+// Purely cosmetic context for the "Africa" category cards -- which country
+// desk each publisher writes from. Not stored in the DB (it's a static
+// property of the source, not per-article data); this is the single
+// source of truth for it.
+const SOURCE_COUNTRY: Record<string, string> = {
+  mybroadband: "South Africa",
+  businesstech: "South Africa",
+  techcentral: "South Africa",
+  ventureburn: "South Africa",
+  techcabal: "Nigeria",
+  techpoint: "Nigeria",
+  disruptafrica: "Pan-African",
+  itnewsafrica: "Pan-African",
+};
+
+const CATEGORY_META: Record<string, { label: string; short: string; icon: typeof FlaskConical; accent: string }> = {
+  research: { label: "Research", short: "RESEARCH", icon: FlaskConical, accent: "hsl(var(--secondary))" },
+  news: { label: "News", short: "NEWS", icon: Newspaper, accent: "hsl(var(--primary))" },
+  local: { label: "Africa", short: "AFRICA", icon: Radio, accent: "hsl(160 84% 39%)" },
+};
+
+// Common English words to exclude from the trending-keyword extraction --
+// without this, "the", "for", "with" would dominate every run since
+// they're frequent in headlines regardless of subject.
+const STOPWORDS = new Set([
+  "the", "a", "an", "and", "or", "but", "of", "to", "in", "on", "for", "with", "is", "are", "was",
+  "were", "be", "been", "at", "by", "from", "as", "it", "its", "this", "that", "new", "how", "why",
+  "what", "into", "your", "you", "we", "will", "can", "not", "no", "than", "more", "most", "up",
+  "out", "about", "after", "over", "just", "now", "says", "show", "hn", "ai",
+]);
+
+function timeAgo(iso: string | null, now: number): string {
   if (!iso) return "";
-  const diffMs = Date.now() - new Date(iso).getTime();
+  const diffMs = now - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -46,51 +83,73 @@ function timeAgo(iso: string | null): string {
   return new Date(iso).toLocaleDateString("en-ZA", { day: "numeric", month: "short" });
 }
 
-const CategoryBadge = ({ category }: { category: string }) =>
-  category === "research" ? (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[10px] font-display font-bold shrink-0">
-      <FlaskConical className="h-3 w-3" /> RESEARCH
-    </span>
-  ) : category === "local" ? (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-display font-bold shrink-0">
-      <MapPin className="h-3 w-3" /> LOCAL
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-display font-bold shrink-0">
-      <Newspaper className="h-3 w-3" /> NEWS
-    </span>
-  );
-
-// A handful of distinct gradients, deterministically picked per item (by
-// id hash) so a page full of image-less cards doesn't read as N copies of
-// the same broken placeholder.
-const FALLBACK_GRADIENTS = [
-  "from-cyan-500 via-blue-600 to-indigo-700",
-  "from-fuchsia-600 via-purple-600 to-indigo-600",
-  "from-emerald-500 via-teal-600 to-cyan-700",
-  "from-amber-500 via-orange-600 to-rose-600",
-  "from-violet-600 via-fuchsia-600 to-pink-600",
-];
-
-function pickGradient(id: string): string {
-  const sum = id.split("").reduce((s, c) => s + c.charCodeAt(0), 0);
-  return FALLBACK_GRADIENTS[sum % FALLBACK_GRADIENTS.length];
+/** Rough reading time from real content length -- never a fabricated
+ *  number, just word-count-at-200wpm over the title + summary we actually
+ *  have on file for this item. */
+function readingTime(title: string, summary: string | null): string {
+  const words = (title.length + (summary?.length ?? 0)) / 5;
+  const mins = Math.max(1, Math.round(words / 200));
+  return `${mins} min read`;
 }
 
+function extractTrending(items: PulseItem[], limit = 8): { word: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const words = item.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 2 && !STOPWORDS.has(w) && !/^\d+$/.test(w));
+    const seen = new Set<string>();
+    for (const w of words) {
+      if (seen.has(w)) continue; // count each word once per headline, not once per occurrence
+      seen.add(w);
+      counts.set(w, (counts.get(w) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .filter(([, c]) => c >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([word, count]) => ({ word, count }));
+}
+
+// Text stays on the theme's high-contrast foreground token rather than the
+// raw accent hue -- primary and secondary both fall short of WCAG AA's
+// 4.5:1 for text this small against the dark masthead background (checked:
+// 4.02:1 and 3.53:1 respectively). The accent color still carries the
+// category coding via the icon (icons only need 3:1, which both clear)
+// and the background tint.
+const CategoryTag = ({ category, className = "" }: { category: string; className?: string }) => {
+  const meta = CATEGORY_META[category] ?? CATEGORY_META.news;
+  const Icon = meta.icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-display font-bold tracking-wide shrink-0 text-foreground ${className}`}
+      style={{ backgroundColor: `color-mix(in srgb, ${meta.accent} 18%, transparent)` }}
+    >
+      <Icon className="h-3 w-3" style={{ color: meta.accent }} /> {meta.short}
+    </span>
+  );
+};
+
 /** Real per-story preview image scraped from the article's own page at
- *  sync time -- never a stock photo. Falls back to a themed gradient
- *  card (not a blank gap) if no image was found at sync time, or if it
- *  404s by the time a visitor loads the page. Real images crop from the
- *  top since these are page screenshots/banners with their headline near
- *  the top, not center-weighted stock photos. */
-const PulseThumb = ({ src, alt, category, id, sourceLabel, className }: { src: string | null; alt: string; category: string; id: string; sourceLabel: string; className: string }) => {
+ *  sync time -- never a stock photo. Falls back to a plain, solid
+ *  category-accented "no photo on file" block (not a rainbow gradient,
+ *  not a fake image) when none was found, or if it 404s by the time a
+ *  visitor loads the page. */
+const PulseThumb = ({ src, alt, category, sourceLabel, className }: { src: string | null; alt: string; category: string; sourceLabel: string; className: string }) => {
   const [failed, setFailed] = useState(false);
+  const meta = CATEGORY_META[category] ?? CATEGORY_META.news;
+  const Icon = meta.icon;
   if (!src || failed) {
-    const Icon = category === "research" ? FlaskConical : category === "local" ? MapPin : Newspaper;
     return (
-      <div className={`${className} flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br ${pickGradient(id)}`}>
-        <Icon className="h-7 w-7 text-white/80" />
-        <span className="text-[10px] font-display font-bold uppercase tracking-widest text-white/60">{sourceLabel}</span>
+      <div
+        className={`${className} flex flex-col items-center justify-center gap-1.5 bg-muted relative overflow-hidden`}
+      >
+        <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundColor: meta.accent }} />
+        <Icon className="h-6 w-6 relative" style={{ color: meta.accent }} />
+        <span className="text-[10px] font-display font-bold uppercase tracking-widest text-muted-foreground relative">{sourceLabel}</span>
       </div>
     );
   }
@@ -108,6 +167,15 @@ const AiPulse = () => {
   const [errored, setErrored] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [counts, setCounts] = useState<{ research: number; news: number; local: number } | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Ticks the masthead clock and every relative "Xm ago" timestamp on the
+  // page -- a real live clock, not a static render-time snapshot.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const fetchPage = (offset: number) =>
     supabase
@@ -141,6 +209,26 @@ const AiPulse = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 1/2/3/4 jump between category filters, "/" jumps to search -- same
+  // convention as most real newsroom/reader products (Gmail, Superhuman,
+  // HN itself). Ignored while typing in a field so it never hijacks input.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const typing = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
+      if (typing) return;
+      if (e.key === "/") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === "1") setFilter("all");
+      else if (e.key === "2") setFilter("research");
+      else if (e.key === "3") setFilter("news");
+      else if (e.key === "4") setFilter("local");
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   const loadMore = async () => {
     setLoadingMore(true);
     const { data, error } = await fetchPage(items.length);
@@ -162,6 +250,9 @@ const AiPulse = () => {
     return list;
   }, [items, filter, query]);
 
+  const trending = useMemo(() => extractTrending(items), [items]);
+  const ticker = useMemo(() => items.slice(0, 10), [items]);
+
   const isBrowsingDefault = filter === "all" && !query.trim();
   const featured = isBrowsingDefault ? filtered[0] : null;
   const gridItems = featured ? filtered.slice(1) : filtered;
@@ -169,11 +260,14 @@ const AiPulse = () => {
   const totalCount = (counts?.research ?? 0) + (counts?.news ?? 0) + (counts?.local ?? 0);
   const freshest = items[0]?.published_at ?? null;
 
+  const clockStr = new Date(now).toLocaleTimeString("en-ZA", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const dateStr = new Date(now).toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
   return (
-    <div className="min-h-screen">
+    <div className="dark min-h-screen bg-background text-foreground">
       <SEO
         title="AI Pulse"
-        description="The latest in artificial intelligence -- real research papers and news, updated automatically. From the announcement to the creation."
+        description="The AI Pulse wire -- real research papers and news from arXiv, Hacker News and African tech press, updated automatically. Nothing fabricated."
         path="/ai-pulse"
         ogType="article"
         jsonLd={{
@@ -193,55 +287,107 @@ const AiPulse = () => {
         }}
       />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-secondary/[0.05]" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/[0.08] to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-secondary/[0.06] to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
-
-        <div className="container mx-auto px-4 py-12 md:py-16 text-center max-w-2xl relative">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-display font-semibold mb-5">
+      {/* Masthead */}
+      <header className="border-b border-border">
+        <div className="container mx-auto px-4 py-2.5 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+          <div className="flex items-center gap-2">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 motion-reduce:animate-none" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
             </span>
-            Live &middot; synced every 6 hours{freshest ? ` · updated ${timeAgo(freshest)}` : ""}
-          </span>
-          <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-3">
-            AI <span className="gradient-brand-text">Pulse</span>
-          </h1>
-          <p className="text-muted-foreground mb-7">
-            The latest in artificial intelligence — from the newsroom to the research lab.
-            Real papers, real discussions, no fabricated headlines.
+            <span className="uppercase tracking-widest font-semibold text-foreground/80">Live wire</span>
+            <span className="hidden sm:inline">· synced every 6h{freshest ? ` · last item ${timeAgo(freshest, now)}` : ""}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden md:inline">{dateStr}</span>
+            <span className="tabular-nums" aria-label="Current time">{clockStr}</span>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8 md:py-10 border-t border-border/60">
+          <h1 className="text-4xl md:text-6xl font-display font-black tracking-tight mb-3">AI Pulse</h1>
+          <p className="text-muted-foreground max-w-2xl mb-6">
+            Research papers, product news and the African tech desk — pulled straight from the source,
+            every six hours. Real bylines, real timestamps, nothing generated.
           </p>
 
           {!loading && counts && (
-            <div className="flex items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-6 text-sm border-t border-border/60 pt-5 flex-wrap">
               <div>
-                <div className="font-display font-extrabold text-lg">{totalCount.toLocaleString("en-ZA")}</div>
+                <div className="font-display font-extrabold text-lg tabular-nums">{totalCount.toLocaleString("en-ZA")}</div>
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Tracked</div>
               </div>
               <div className="w-px h-8 bg-border" />
               <div>
-                <div className="font-display font-extrabold text-lg text-secondary">{counts.research.toLocaleString("en-ZA")}</div>
+                <div className="font-display font-extrabold text-lg tabular-nums" style={{ color: CATEGORY_META.research.accent }}>
+                  {counts.research.toLocaleString("en-ZA")}
+                </div>
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Research</div>
               </div>
               <div className="w-px h-8 bg-border" />
               <div>
-                <div className="font-display font-extrabold text-lg text-primary">{counts.news.toLocaleString("en-ZA")}</div>
+                <div className="font-display font-extrabold text-lg tabular-nums" style={{ color: CATEGORY_META.news.accent }}>
+                  {counts.news.toLocaleString("en-ZA")}
+                </div>
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wide">News</div>
               </div>
               <div className="w-px h-8 bg-border" />
               <div>
-                <div className="font-display font-extrabold text-lg text-emerald-600">{counts.local.toLocaleString("en-ZA")}</div>
-                <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Local</div>
+                <div className="font-display font-extrabold text-lg tabular-nums" style={{ color: CATEGORY_META.local.accent }}>
+                  {counts.local.toLocaleString("en-ZA")}
+                </div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Africa</div>
               </div>
             </div>
           )}
         </div>
-      </section>
+      </header>
 
-      <div className="container mx-auto px-4 py-10">
+      {/* Breaking ticker -- the freshest headlines, auto-scrolling, real data */}
+      {ticker.length > 0 && (
+        <div className="border-b border-border bg-muted/30 overflow-hidden group" role="marquee" aria-label="Latest headlines">
+          <div className="flex items-stretch">
+            <span className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-foreground text-background text-[11px] font-display font-bold uppercase tracking-widest z-10">
+              Latest
+            </span>
+            <div className="overflow-hidden flex-1">
+              <div className="flex items-center gap-10 py-2.5 pl-6 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:overflow-x-auto">
+                {[...ticker, ...ticker].map((item, i) => (
+                  <a
+                    key={`${item.id}-${i}`}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-foreground/80 hover:text-primary transition-colors inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                  >
+                    <span className="font-mono text-muted-foreground">{timeAgo(item.published_at, now)}</span>
+                    {item.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Trending keywords -- computed live from the headlines actually on screen */}
+        {trending.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap mb-6 pb-6 border-b border-border/60">
+            <span className="text-[11px] font-display font-bold uppercase tracking-widest text-muted-foreground shrink-0">Trending</span>
+            {trending.map(({ word, count }) => (
+              <button
+                key={word}
+                type="button"
+                onClick={() => setQuery(word)}
+                className="px-2.5 py-1 rounded-full border border-border text-xs font-medium text-foreground/80 hover:border-primary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {word} <span className="text-muted-foreground">({count})</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Controls */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8 items-stretch sm:items-center sm:justify-between">
           <div className="flex gap-2 justify-center sm:justify-start" aria-label="Filter AI Pulse by category">
@@ -249,7 +395,7 @@ const AiPulse = () => {
               { key: "all", label: "All" },
               { key: "research", label: "Research" },
               { key: "news", label: "News" },
-              { key: "local", label: "Local" },
+              { key: "local", label: "Africa" },
             ] as const).map((f) => (
               <button
                 key={f.key}
@@ -257,7 +403,7 @@ const AiPulse = () => {
                 aria-pressed={filter === f.key}
                 onClick={() => setFilter(f.key)}
                 className={`px-4 py-2 rounded-full text-sm font-display font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  filter === f.key ? "gradient-brand text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"
+                  filter === f.key ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/70"
                 }`}
               >
                 {f.label}
@@ -268,10 +414,11 @@ const AiPulse = () => {
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
+              ref={searchRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search headlines and papers…"
+              placeholder="Search headlines and papers… (press /)"
               aria-label="Search AI Pulse"
               className="input-premium pl-10 pr-9 py-2.5 text-sm"
             />
@@ -320,28 +467,27 @@ const AiPulse = () => {
                 href={featured.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative block card-flat overflow-hidden mb-6 hover:shadow-elevated transition-shadow"
+                className="group relative block border border-border overflow-hidden mb-6 hover:border-foreground/30 transition-colors"
               >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/[0.07] to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
                 <div className="relative flex flex-col md:flex-row">
                   <div className="md:w-2/5 shrink-0 bg-muted">
                     <PulseThumb
                       src={featured.image_url}
                       alt={featured.title}
                       category={featured.category}
-                      id={featured.id}
                       sourceLabel={SOURCE_LABELS[featured.source] ?? featured.source}
                       className="w-full h-48 md:h-full object-cover"
                     />
                   </div>
                   <div className="p-6 md:p-8 flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-foreground text-background text-[10px] font-display font-bold tracking-wide">
-                        <TrendingUp className="h-3 w-3" /> LATEST
+                      <span className="inline-flex items-center px-2 py-0.5 border border-foreground text-foreground text-[10px] font-display font-bold tracking-widest">
+                        LATEST
                       </span>
-                      <CategoryBadge category={featured.category} />
-                      <span className="text-[11px] text-muted-foreground">
-                        {SOURCE_LABELS[featured.source] ?? featured.source} · {timeAgo(featured.published_at)}
+                      <CategoryTag category={featured.category} />
+                      <span className="text-[11px] text-muted-foreground font-mono">
+                        {SOURCE_LABELS[featured.source] ?? featured.source}
+                        {SOURCE_COUNTRY[featured.source] ? ` · ${SOURCE_COUNTRY[featured.source]}` : ""} · {timeAgo(featured.published_at, now)}
                       </span>
                     </div>
                     <h2 className="font-display font-extrabold text-xl md:text-2xl leading-snug mb-2 group-hover:text-primary transition-colors">
@@ -361,43 +507,49 @@ const AiPulse = () => {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {gridItems.map((item) => (
-                <a
-                  key={item.id}
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="card-flat overflow-hidden hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-200 group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <div className="bg-muted">
-                    <PulseThumb
-                      src={item.image_url}
-                      alt={item.title}
-                      category={item.category}
-                      id={item.id}
-                      sourceLabel={SOURCE_LABELS[item.source] ?? item.source}
-                      className="w-full h-36 object-cover"
-                    />
-                  </div>
-                  <div className="p-5 flex flex-col flex-1">
-                    <div className="flex items-center gap-2 mb-2.5">
-                      <CategoryBadge category={item.category} />
+              {gridItems.map((item) => {
+                const meta = CATEGORY_META[item.category] ?? CATEGORY_META.news;
+                return (
+                  <a
+                    key={item.id}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border border-border overflow-hidden hover:border-foreground/30 transition-colors group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    style={{ borderLeftWidth: "3px", borderLeftColor: meta.accent }}
+                  >
+                    <div className="bg-muted">
+                      <PulseThumb
+                        src={item.image_url}
+                        alt={item.title}
+                        category={item.category}
+                        sourceLabel={SOURCE_LABELS[item.source] ?? item.source}
+                        className="w-full h-36 object-cover"
+                      />
                     </div>
-                    <h3 className="font-display font-bold text-sm leading-snug mb-1.5 group-hover:text-primary transition-colors line-clamp-2">
-                      {item.title}
-                    </h3>
-                    {item.summary && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{item.summary}</p>
-                    )}
-                    <div className="mt-auto flex items-center justify-between pt-3 border-t border-border/60">
-                      <span className="text-[11px] text-muted-foreground">
-                        {SOURCE_LABELS[item.source] ?? item.source} · {timeAgo(item.published_at)}
-                      </span>
-                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <div className="p-5 flex flex-col flex-1">
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <CategoryTag category={item.category} />
+                      </div>
+                      <h3 className="font-display font-bold text-sm leading-snug mb-1.5 group-hover:text-primary transition-colors line-clamp-2">
+                        {item.title}
+                      </h3>
+                      {item.summary && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{item.summary}</p>
+                      )}
+                      <div className="mt-auto flex items-center justify-between gap-2 pt-3 border-t border-border/60">
+                        <span className="text-[11px] text-muted-foreground font-mono truncate">
+                          {SOURCE_LABELS[item.source] ?? item.source}
+                          {SOURCE_COUNTRY[item.source] ? ` · ${SOURCE_COUNTRY[item.source]}` : ""} · {timeAgo(item.published_at, now)}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground shrink-0">
+                          <Clock className="h-3 w-3" /> {readingTime(item.title, item.summary)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                );
+              })}
             </div>
 
             {hasMore && isBrowsingDefault && (
@@ -415,8 +567,9 @@ const AiPulse = () => {
         )}
 
         <p className="text-center text-[11px] text-muted-foreground mt-12 max-w-lg mx-auto">
-          Sourced automatically from arXiv (cs.AI) and Hacker News — real papers and real discussions only.
-          Nothing on this page is AI-generated or fabricated.
+          Sourced automatically from arXiv (cs.AI), Hacker News, and South African and pan-African tech
+          press. Nothing on this page is AI-generated or fabricated — every headline links to its
+          original source.
         </p>
       </div>
     </div>

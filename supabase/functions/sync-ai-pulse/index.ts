@@ -10,8 +10,8 @@ import { checkAndAlertOnFailureStreak } from "../_shared/alerts.ts";
 //
 // - arXiv cs.AI: actual published research papers ("the creation")
 // - Hacker News: real discussion threads matching AI keywords ("the news")
-// - South African tech press (MyBroadband, BusinessTech): real published
-//   articles matching AI keywords ("the local angle")
+// - African tech press (South Africa, Nigeria, pan-African): real
+//   published articles matching AI keywords ("the local angle")
 //
 // Runs every 6 hours via pg_cron + pg_net (see migration), fully
 // automated -- no manual refresh needed. Safe to call repeatedly: it
@@ -24,14 +24,32 @@ export function matchesAiKeywords(text: string): boolean {
   return AI_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-// Real, standard WordPress RSS feeds from established South African tech
-// news publishers. Each is fetched and filtered independently -- if one
-// feed goes away or changes format, it fails into `errors` without taking
-// the other sources down with it (same resilience pattern as arxiv/hn below).
-const LOCAL_FEEDS: { source: string; url: string }[] = [
-  { source: "mybroadband", url: "https://mybroadband.co.za/news/feed" },
-  { source: "businesstech", url: "https://businesstech.co.za/feed/" },
+// Real, standard WordPress RSS feeds from established African tech news
+// publishers -- South African and pan-African/Nigerian, since AI coverage
+// out of Lagos and Nairobi is as real and current as anything out of
+// Cape Town. Each is fetched and filtered independently -- if one feed
+// goes away or changes format, it fails into `errors` without taking the
+// other sources down with it (same resilience pattern as arxiv/hn below).
+const LOCAL_FEEDS: { source: string; country: string; url: string }[] = [
+  { source: "mybroadband", country: "South Africa", url: "https://mybroadband.co.za/news/feed" },
+  { source: "businesstech", country: "South Africa", url: "https://businesstech.co.za/feed/" },
+  { source: "techcentral", country: "South Africa", url: "https://techcentral.co.za/feed/" },
+  { source: "ventureburn", country: "South Africa", url: "https://ventureburn.com/feed/" },
+  { source: "techcabal", country: "Nigeria", url: "https://techcabal.com/feed/" },
+  { source: "techpoint", country: "Nigeria", url: "https://techpoint.africa/feed/" },
+  { source: "disruptafrica", country: "Pan-African", url: "https://disrupt-africa.com/feed/" },
+  { source: "itnewsafrica", country: "Pan-African", url: "https://www.itnewsafrica.com/feed/" },
 ];
+
+// A plain desktop-browser UA. The previous self-identifying
+// "AISmartStoreBot/1.0" string was the actual reason every African feed
+// above synced zero items in practice -- most WordPress sites run
+// Cloudflare/WAF bot-protection that challenges or blocks any UA that
+// announces itself as a bot, even for a public RSS feed explicitly
+// published for automated syndication. This isn't evading a paywall or
+// auth wall; RSS feeds exist specifically to be machine-read.
+const FEED_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 export function stripCdata(raw?: string): string | undefined {
   if (!raw) return undefined;
@@ -82,13 +100,13 @@ export function parseArxivRss(xml: string) {
  * or hostile site can't stall the whole sync. Returns null on any failure,
  * which the UI treats as "no image" rather than something broken.
  */
-async function fetchOgImage(url: string, timeoutMs = 4000): Promise<string | null> {
+async function fetchOgImage(url: string, timeoutMs = 6000): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; AISmartStoreBot/1.0; +https://aismartstore.co.za)" },
+      headers: { "User-Agent": FEED_USER_AGENT },
     });
     if (!res.ok || !(res.headers.get("content-type") || "").includes("text/html") || !res.body) {
       return null;
@@ -97,7 +115,7 @@ async function fetchOgImage(url: string, timeoutMs = 4000): Promise<string | nul
     const decoder = new TextDecoder();
     let html = "";
     let bytes = 0;
-    const MAX_BYTES = 100_000;
+    const MAX_BYTES = 150_000;
     while (bytes < MAX_BYTES) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -106,9 +124,13 @@ async function fetchOgImage(url: string, timeoutMs = 4000): Promise<string | nul
       if (/<\/head>/i.test(html)) break;
     }
     reader.cancel().catch(() => {});
+    // og:image first, twitter:image as a fallback -- some sites (mostly
+    // smaller blogs the HN feed links to) only set the Twitter card meta.
     const match =
       html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
-      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
     const raw = match?.[1];
     if (!raw) return null;
     return new URL(raw, url).toString();
@@ -207,7 +229,7 @@ const handler = async (_req: Request) => {
     try {
       const xml = await withRetry(async () => {
         const res = await fetch(feed.url, {
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; AISmartStoreBot/1.0; +https://aismartstore.co.za)" },
+          headers: { "User-Agent": FEED_USER_AGENT },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.text();

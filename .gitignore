@@ -26,3 +26,6 @@ bun.lock*
 
 # Platform-internal planning scratch files -- not meant for the repo
 .lovable/
+
+# tsc --build incremental cache
+*.tsbuildinfo

@@ -22,8 +22,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The root tsconfig.json is solution-style ("files": [], only
+      # "references") -- `tsc --noEmit` against it checks zero files and
+      # always exits 0, silently skipping every type error in the repo.
+      # `--build` is the mode that actually traverses tsconfig.app.json and
+      # tsconfig.node.json and checks their contents.
       - name: Type-check
-        run: npx tsc --noEmit
+        run: npx tsc --build --force
 
       - name: No stray platform/assistant-name references
         run: npm run check:no-platform-refs

@@ -56,7 +56,7 @@ const Account = () => {
   const { t } = useTranslation();
   const { formatPrice } = useLocale();
   const { addToCart } = useCart();
-  const { wishlistCount } = useWishlist();
+  const { wishlistCount, isWishlisted } = useWishlist();
   const [searchParams] = useSearchParams();
   const isImpersonating = searchParams.get("as") === "customer" && !!localStorage.getItem("ai-smart-store.impersonate");
 

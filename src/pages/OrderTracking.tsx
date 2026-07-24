@@ -87,7 +87,7 @@ const OrderTracking = () => {
   if (notFound || !order) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
-        <Package className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+        <Package className="h-12 w-12 text-muted-foreground/60 mx-auto mb-4" />
         <h1 className="font-display font-bold text-xl mb-2">Order not found</h1>
         <p className="text-sm text-muted-foreground mb-6">
           This order doesn't exist, or isn't associated with your account.

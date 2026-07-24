@@ -296,7 +296,7 @@ const AiPulse = () => {
           </div>
         ) : errored ? (
           <div className="text-center py-16">
-            <AlertTriangle className="h-10 w-10 text-muted-foreground/40 mx-auto mb-4" />
+            <AlertTriangle className="h-10 w-10 text-muted-foreground/60 mx-auto mb-4" />
             <p className="font-display font-semibold mb-1">Couldn't load AI Pulse right now</p>
             <p className="text-sm text-muted-foreground mb-5">Something went wrong fetching the latest research and news.</p>
             <button onClick={load} className="btn-secondary px-5 py-2.5 text-sm font-semibold mx-auto">

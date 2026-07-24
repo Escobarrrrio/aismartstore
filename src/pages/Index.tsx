@@ -235,7 +235,7 @@ const Index = () => {
             </div>
           ) : featured.length === 0 ? (
             <div className="text-center py-20 card-flat">
-              <Package className="h-14 w-14 text-muted-foreground/30 mx-auto mb-4" />
+              <Package className="h-14 w-14 text-muted-foreground/60 mx-auto mb-4" />
               <p className="text-muted-foreground text-lg font-display font-semibold mb-1">{t("home.noProducts")}</p>
               <p className="text-sm text-muted-foreground">
                 {t("home.noProductsHint")}

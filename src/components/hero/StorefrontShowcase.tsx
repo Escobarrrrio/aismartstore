@@ -59,7 +59,7 @@ const StorefrontShowcase = () => {
 
       <div className="space-y-2.5 mb-5">
         {products.length > 0 ? (
-          products.map((p) => (
+          products.map((p, i) => (
             <Link
               key={p.id}
               to={`/product/${p.id}`}
@@ -69,7 +69,16 @@ const StorefrontShowcase = () => {
                 <img
                   src={p.image!}
                   alt={p.name}
-                  loading="lazy"
+                  width={56}
+                  height={56}
+                  // All three rows sit in the fold-visible hero panel, so
+                  // none should be lazy-loaded (that would deprioritize
+                  // whichever one Lighthouse picks as the LCP candidate).
+                  // Only the first gets fetchpriority="high" -- marking
+                  // all three "high" would just have them compete for the
+                  // same priority budget.
+                  loading="eager"
+                  fetchPriority={i === 0 ? "high" : "auto"}
                   className="h-full w-full object-contain p-1.5 group-hover:scale-105 transition-transform"
                 />
               </div>

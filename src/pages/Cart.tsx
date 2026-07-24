@@ -37,7 +37,7 @@ const Cart = () => {
                 {product.images[0] ? (
                   <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground/60">
                     <ShoppingBag className="h-6 w-6" />
                   </div>
                 )}

@@ -370,7 +370,7 @@ const Account = () => {
                       : "text-muted-foreground hover:text-foreground hover:bg-muted border-l-2 border-l-transparent"
                   }`}
                 >
-                  <span className={activeTab === tab.id ? "text-primary" : "text-muted-foreground/50"}>{tab.icon}</span>
+                  <span className={activeTab === tab.id ? "text-primary" : "text-muted-foreground"}>{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
@@ -479,7 +479,7 @@ const Account = () => {
                 </div>
                 {orders.length === 0 ? (
                   <div className="card-flat p-12 text-center">
-                    <Package className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                    <Package className="h-10 w-10 mx-auto mb-3 text-muted-foreground/60" />
                     <p className="font-display font-bold text-lg mb-1">No orders yet</p>
                     <p className="text-sm text-muted-foreground mb-4">Start shopping to see your orders here</p>
                     <Link to="/products" className="btn-primary px-6 py-2.5 text-sm">Browse Products</Link>
@@ -659,7 +659,7 @@ const Account = () => {
 
                 {addresses.length === 0 && !showAddressForm ? (
                   <div className="card-flat p-12 text-center">
-                    <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                    <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground/60" />
                     <p className="font-display font-bold text-lg mb-1">No saved addresses</p>
                     <p className="text-sm text-muted-foreground">Add a shipping or billing address for faster checkout</p>
                   </div>
@@ -745,7 +745,7 @@ const Account = () => {
                     </div>
                   ) : visibleSaved.length === 0 ? (
                     <div className="card-flat p-12 text-center">
-                      <Heart className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                      <Heart className="h-10 w-10 mx-auto mb-3 text-muted-foreground/60" />
                       <p className="font-display font-bold text-lg mb-1">Your wishlist is empty</p>
                       <p className="text-sm text-muted-foreground mb-4">Save items you love for later</p>
                       <Link to="/products" className="btn-primary px-6 py-2.5 text-sm">Explore Products</Link>

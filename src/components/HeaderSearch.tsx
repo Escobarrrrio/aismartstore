@@ -209,7 +209,7 @@ const HeaderSearch = ({ className = "", autoFocus, onClose, fullWidth }: Props) 
                         {r.images && r.images[0] ? (
                           <img src={r.images[0]} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <Package className="h-4 w-4 text-muted-foreground/50" />
+                          <Package className="h-4 w-4 text-muted-foreground" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

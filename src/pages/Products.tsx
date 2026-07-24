@@ -663,7 +663,7 @@ const Products = () => {
             </div>
           ) : rows.length === 0 ? (
             <div className="text-center py-20 card-flat">
-              <Package className="h-14 w-14 text-muted-foreground/30 mx-auto mb-4" />
+              <Package className="h-14 w-14 text-muted-foreground/60 mx-auto mb-4" />
               <p className="text-muted-foreground font-display font-semibold text-lg mb-1">No products found</p>
               <p className="text-sm text-muted-foreground mb-4">
                 Try adjusting your filters or search terms.

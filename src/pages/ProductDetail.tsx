@@ -58,7 +58,7 @@ const ProductDetail = () => {
   if (!resolved) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
-        <Package className="h-14 w-14 text-muted-foreground/30 mx-auto mb-4 animate-pulse" />
+        <Package className="h-14 w-14 text-muted-foreground/60 mx-auto mb-4 animate-pulse" />
         <p className="text-muted-foreground">{t("productDetail.home")}…</p>
       </div>
     );
@@ -70,7 +70,7 @@ const ProductDetail = () => {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <SEO title={t("productDetail.notFoundTitle")} description={t("productDetail.notFoundDesc")} noindex />
-        <Package className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+        <Package className="h-16 w-16 text-muted-foreground/60 mx-auto mb-4" />
         <h1 className="font-display font-bold text-2xl mb-2">{t("productDetail.notFoundTitle")}</h1>
         <p className="text-muted-foreground mb-6">{t("productDetail.notFoundDesc")}</p>
         <button onClick={() => navigate("/products")} className="btn-primary px-6 py-3 text-sm">
@@ -152,7 +152,7 @@ const ProductDetail = () => {
                   onError={() => setFailedImages((f) => ({ ...f, [selectedImage]: true }))}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/30">
+                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/60">
                   <Package className="h-20 w-20" />
                 </div>
               )}
@@ -180,7 +180,7 @@ const ProductDetail = () => {
                         onError={() => setFailedImages((f) => ({ ...f, [i]: true }))}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/30">
+                      <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/60">
                         <Package className="h-6 w-6" />
                       </div>
                     )}
@@ -321,7 +321,7 @@ const ProductDetail = () => {
                     {p.images[0] ? (
                       <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground/60">
                         <Package className="h-8 w-8" />
                       </div>
                     )}

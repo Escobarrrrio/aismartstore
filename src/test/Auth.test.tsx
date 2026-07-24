@@ -7,6 +7,7 @@ import Auth from "@/pages/Auth";
 const signInWithPassword = vi.fn();
 const signUp = vi.fn();
 const resetPasswordForEmail = vi.fn();
+const signInWithOAuth = vi.fn();
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
@@ -14,6 +15,11 @@ vi.mock("@/integrations/supabase/client", () => ({
       signInWithPassword: (...args: unknown[]) => signInWithPassword(...args),
       signUp: (...args: unknown[]) => signUp(...args),
       resetPasswordForEmail: (...args: unknown[]) => resetPasswordForEmail(...args),
+      signInWithOAuth: (...args: unknown[]) => signInWithOAuth(...args),
+      // Auth.tsx subscribes to this on mount to catch Google sign-ins
+      // completing; no test here drives a real OAuth round-trip, so it
+      // just needs a stable no-op subscription.
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
     },
   },
 }));
@@ -37,6 +43,7 @@ describe("Auth page", () => {
     signInWithPassword.mockReset();
     signUp.mockReset();
     resetPasswordForEmail.mockReset();
+    signInWithOAuth.mockReset();
   });
 
   it("renders the sign-in form by default with email and password fields", () => {

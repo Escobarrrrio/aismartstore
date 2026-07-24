@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +7,18 @@ import Logo from "@/components/Logo";
 import PasswordToggleButton from "@/components/PasswordToggleButton";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
+
+// Google's official four-color "G" mark. Not in lucide-react (icons only,
+// no brand logos), so inlined here as the standard SVG paths Google
+// publishes for this exact purpose.
+const GoogleGlyph = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.9-2.26 5.36-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+    <path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.94 23.94 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78l7.97-6.19z" />
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.82l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.97 6.19C6.51 42.62 14.62 48 24 48z" />
+  </svg>
+);
 
 type AccountType = "residential" | "business";
 
@@ -61,6 +73,13 @@ const Auth = () => {
 
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [googleLoading, setGoogleLoading] = useState(false);
+  // Set once a Google sign-in lands and their profile has no confirmed
+  // audience yet (a brand-new OAuth signup, or one that never finished this
+  // step). Manual email/password signups already enforce "no default, no
+  // skip" for account type -- this extends the same rule to OAuth, since
+  // profiles.customer_type otherwise silently defaults to 'individual'.
+  const [oauthAccountTypeGate, setOauthAccountTypeGate] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -86,6 +105,64 @@ const Auth = () => {
       toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
       navigate(redirectTo);
     }
+  };
+
+  // Only reacts to Google sign-ins (checked via app_metadata.provider) so
+  // the existing, already-tested email/password flows above are completely
+  // untouched by this.
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event !== "SIGNED_IN") return;
+      const provider = session?.user?.app_metadata?.provider;
+      if (provider !== "google" || !session?.user?.id) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("customer_type")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (profile?.customer_type === "residential" || profile?.customer_type === "business") {
+        toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
+        navigate(redirectTo);
+      } else {
+        setOauthAccountTypeGate(true);
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth${rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? `?redirect=${encodeURIComponent(rawRedirect)}` : ""}`,
+      },
+    });
+    if (error) {
+      toast({ title: t("auth.loginFailedTitle"), description: error.message, variant: "destructive" });
+      setGoogleLoading(false);
+    }
+    // On success the browser navigates away to Google, so no further local
+    // state update is needed here.
+  };
+
+  const handleOauthAccountType = async (type: AccountType) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+    setLoading(true);
+    const { error } = await supabase.from("profiles").update({ customer_type: type }).eq("user_id", userId);
+    setLoading(false);
+    if (error) {
+      toast({ title: t("auth.errorTitle"), description: error.message, variant: "destructive" });
+      return;
+    }
+    setOauthAccountTypeGate(false);
+    toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
+    navigate(redirectTo);
   };
 
   const handleForgot = async () => {
@@ -216,6 +293,58 @@ const Auth = () => {
       : accountType === "residential" ? "Create a residential account"
       : "Register a business or government entity";
 
+  // Signed in via Google, but their account has no confirmed audience yet --
+  // same "no default, no skip" gate manual signup enforces, applied once.
+  if (oauthAccountTypeGate) {
+    return (
+      <div
+        className="min-h-[80vh] flex items-center justify-center px-4 py-10"
+        style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}
+      >
+        <SEO title="Choose your account type" description="One last step to finish signing in." noindex />
+        <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-elevated p-8">
+          <div className="flex justify-center mb-7">
+            <Logo size={48} asLink={false} />
+          </div>
+          <h2 className="font-display font-extrabold text-2xl text-center mb-1">One last step</h2>
+          <p className="text-muted-foreground text-sm text-center mb-6">
+            Pick the account type that describes you. This can't be changed later without contacting support.
+          </p>
+          <div className="space-y-3" data-testid="oauth-account-type-gate">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleOauthAccountType("residential")}
+              className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left disabled:opacity-50"
+            >
+              <HomeIcon className="h-8 w-8 text-primary flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-display font-bold text-base">Residential</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  I'm shopping for my home, family, or personal use.
+                </p>
+              </div>
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleOauthAccountType("business")}
+              className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left disabled:opacity-50"
+            >
+              <Building2 className="h-8 w-8 text-primary flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-display font-bold text-base">Business / Government</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  I'm procuring for a company, government department, NGO or institution.
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-[80vh] flex items-center justify-center px-4 py-10"
@@ -239,6 +368,27 @@ const Auth = () => {
             ? "For households, students and personal shoppers."
             : "For companies, government departments, NGOs and institutions."}
         </p>
+
+        {/* Google sign-in — same button for both sign in and sign up; Google
+            tells us which one it actually is. */}
+        {mode !== "forgot" && (
+          <>
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading}
+              className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/60 transition-colors text-sm font-semibold disabled:opacity-50 mb-4"
+            >
+              <GoogleGlyph className="h-4 w-4" />
+              {googleLoading ? "Redirecting…" : "Continue with Google"}
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide">or</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        )}
 
         {/* Sign in / Sign up tabs */}
         {mode !== "forgot" && (

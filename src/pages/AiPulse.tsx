@@ -57,7 +57,10 @@ const SOURCE_COUNTRY: Record<string, string> = {
 const CATEGORY_META: Record<string, { label: string; short: string; icon: typeof FlaskConical; accent: string }> = {
   research: { label: "Research", short: "RESEARCH", icon: FlaskConical, accent: "hsl(var(--secondary))" },
   news: { label: "News", short: "NEWS", icon: Newspaper, accent: "hsl(var(--primary))" },
-  local: { label: "Africa", short: "AFRICA", icon: Radio, accent: "hsl(160 84% 39%)" },
+  // Darker than the site's --success token (160 84% 39%, ~2.6:1 on white --
+  // fine as a badge fill but not as standalone text/icon color) so it
+  // clears WCAG AA on its own here.
+  local: { label: "Africa", short: "AFRICA", icon: Radio, accent: "hsl(160 84% 28%)" },
 };
 
 // Common English words to exclude from the trending-keyword extraction --
@@ -115,11 +118,10 @@ function extractTrending(items: PulseItem[], limit = 8): { word: string; count: 
 }
 
 // Text stays on the theme's high-contrast foreground token rather than the
-// raw accent hue -- primary and secondary both fall short of WCAG AA's
-// 4.5:1 for text this small against the dark masthead background (checked:
-// 4.02:1 and 3.53:1 respectively). The accent color still carries the
-// category coding via the icon (icons only need 3:1, which both clear)
-// and the background tint.
+// raw accent hue, which doesn't reliably clear WCAG AA's 4.5:1 for text
+// this small against a light background either. The accent color still
+// carries the category coding via the icon (icons only need 3:1) and the
+// background tint.
 const CategoryTag = ({ category, className = "" }: { category: string; className?: string }) => {
   const meta = CATEGORY_META[category] ?? CATEGORY_META.news;
   const Icon = meta.icon;
@@ -264,7 +266,7 @@ const AiPulse = () => {
   const dateStr = new Date(now).toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   return (
-    <div className="dark min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <SEO
         title="AI Pulse"
         description="The AI Pulse wire -- real research papers and news from arXiv, Hacker News and African tech press, updated automatically. Nothing fabricated."
@@ -411,26 +413,30 @@ const AiPulse = () => {
             ))}
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
               ref={searchRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search headlines and papers… (press /)"
+              placeholder="Search headlines and papers…"
               aria-label="Search AI Pulse"
-              className="input-premium pl-10 pr-9 py-2.5 text-sm"
+              className="w-full pl-10 pr-16 py-2.5 rounded-full border border-input bg-muted/60 text-foreground text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary focus:bg-background placeholder:text-muted-foreground"
             />
-            {query && (
+            {query ? (
               <button
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
               >
                 <X className="h-4 w-4" />
               </button>
+            ) : (
+              <kbd className="absolute right-3.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border border-border bg-background text-[10px] font-mono text-muted-foreground pointer-events-none">
+                /
+              </kbd>
             )}
           </div>
         </div>

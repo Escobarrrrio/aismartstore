@@ -80,6 +80,13 @@ const Auth = () => {
   // skip" for account type -- this extends the same rule to OAuth, since
   // profiles.customer_type otherwise silently defaults to 'individual'.
   const [oauthAccountTypeGate, setOauthAccountTypeGate] = useState(false);
+  // Two-step OAuth completion: pick account type, then supply the phone
+  // number manual signup already requires. Google never gives us a phone,
+  // and orders/couriers need one to reach the customer, so this closes the
+  // gap where a Google sign-up could otherwise finish with phone = NULL.
+  const [oauthType, setOauthType] = useState<AccountType | null>(null);
+  const [oauthPhone, setOauthPhone] = useState("");
+  const [oauthPhoneError, setOauthPhoneError] = useState("");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -149,18 +156,45 @@ const Auth = () => {
     // state update is needed here.
   };
 
-  const handleOauthAccountType = async (type: AccountType) => {
+  const handleOauthPhoneSubmit = async () => {
+    if (!oauthType) return;
+    if (!oauthPhone.trim()) {
+      setOauthPhoneError("Phone number is required.");
+      return;
+    }
+    if (!isValidPhone(oauthPhone)) {
+      setOauthPhoneError("Enter a valid South African phone (e.g. +27 82 123 4567 or 082 123 4567).");
+      return;
+    }
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId) return;
     setLoading(true);
-    const { error } = await supabase.from("profiles").update({ customer_type: type }).eq("user_id", userId);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ customer_type: oauthType, phone: oauthPhone.trim() })
+      .eq("user_id", userId);
     setLoading(false);
     if (error) {
+      const dup = isUniqueConstraint(error);
+      if (dup) {
+        toast({
+          title: "Account already exists",
+          description: `This ${dup.field} is already registered to an account. Each person may only hold one account. Please log in instead, or contact support if you believe this is an error.`,
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        setOauthAccountTypeGate(false);
+        setOauthType(null);
+        setOauthPhone("");
+        return;
+      }
       toast({ title: t("auth.errorTitle"), description: error.message, variant: "destructive" });
       return;
     }
     setOauthAccountTypeGate(false);
+    setOauthType(null);
+    setOauthPhone("");
     toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
     navigate(redirectTo);
   };
@@ -318,38 +352,74 @@ const Auth = () => {
           </div>
           <h2 className="font-display font-extrabold text-2xl text-center mb-1">One last step</h2>
           <p className="text-muted-foreground text-sm text-center mb-6">
-            Pick the account type that describes you. This can't be changed later without contacting support.
+            {oauthType === null
+              ? "Pick the account type that describes you. This can't be changed later without contacting support."
+              : "We need a phone number to reach you about your orders."}
           </p>
-          <div className="space-y-3" data-testid="oauth-account-type-gate">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => handleOauthAccountType("residential")}
-              className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left disabled:opacity-50"
+          {oauthType === null ? (
+            <div className="space-y-3" data-testid="oauth-account-type-gate">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => setOauthType("residential")}
+                className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left disabled:opacity-50"
+              >
+                <HomeIcon className="h-8 w-8 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-display font-bold text-base">Residential</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    I'm shopping for my home, family, or personal use.
+                  </p>
+                </div>
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => setOauthType("business")}
+                className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left disabled:opacity-50"
+              >
+                <Building2 className="h-8 w-8 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-display font-bold text-base">Business / Government</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    I'm procuring for a company, government department, NGO or institution.
+                  </p>
+                </div>
+              </button>
+            </div>
+          ) : (
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleOauthPhoneSubmit(); }}
+              className="space-y-4"
+              data-testid="oauth-phone-gate"
             >
-              <HomeIcon className="h-8 w-8 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-display font-bold text-base">Residential</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  I'm shopping for my home, family, or personal use.
-                </p>
-              </div>
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => handleOauthAccountType("business")}
-              className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/[0.03] transition text-left disabled:opacity-50"
-            >
-              <Building2 className="h-8 w-8 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-display font-bold text-base">Business / Government</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  I'm procuring for a company, government department, NGO or institution.
-                </p>
-              </div>
-            </button>
-          </div>
+              <FieldWithIcon
+                icon={Phone}
+                label="Phone number"
+                value={oauthPhone}
+                onChange={(v) => { setOauthPhone(v); setOauthPhoneError(""); }}
+                placeholder="+27 82 123 4567"
+                type="tel"
+                required
+                error={oauthPhoneError}
+                testId="oauth-phone"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {loading ? t("auth.pleaseWait") : "Continue"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setOauthType(null); setOauthPhone(""); setOauthPhoneError(""); }}
+                className="w-full text-center text-xs text-muted-foreground hover:underline"
+              >
+                Change account type
+              </button>
+            </form>
+          )}
         </div>
       </div>
     );

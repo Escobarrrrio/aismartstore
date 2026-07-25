@@ -102,6 +102,17 @@ const Auth = () => {
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpAfterVerifySession, setOtpAfterVerifySession] = useState(false);
+  // SMS OTP is SA-only (+27) to protect the Telnyx promo balance -- other
+  // numbers land on a fallback screen instead of ever hitting Telnyx.
+  const [otpNotSaNumber, setOtpNotSaNumber] = useState(false);
+  // Mirrors the server-side 60s cooldown in send-phone-otp so the resend
+  // button can't be spammed client-side either; ticks down once a second.
+  const [otpResendCooldown, setOtpResendCooldown] = useState(0);
+  useEffect(() => {
+    if (otpResendCooldown <= 0) return;
+    const id = setInterval(() => setOtpResendCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(id);
+  }, [otpResendCooldown]);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -226,44 +237,49 @@ const Auth = () => {
     await startPhoneVerification(userId, oauthE164, "oauth");
   };
 
-  /** Sends a fresh SMS OTP for `phoneE164` and opens the code-entry gate.
-   *  `context` decides what handleVerifyOtp does once the code is accepted. */
+  /** Sends a fresh SMS OTP for `phoneE164` and opens the code-entry gate --
+   *  unless the number isn't South African, in which case Telnyx is never
+   *  called at all and the email-fallback screen opens instead (protects
+   *  the Telnyx promo balance from international SMS pricing).
+   *  `context` decides what completeOtpGate does once this step clears. */
   const startPhoneVerification = async (userId: string, phoneE164: string, context: "signup" | "oauth") => {
     setOtpUserId(userId);
     setOtpPhoneE164(phoneE164);
     setOtpCode("");
     setOtpError("");
-    setOtpSending(true);
-    const { error } = await supabase.functions.invoke("send-phone-otp", { body: { user_id: userId, phone: phoneE164 } });
-    setOtpSending(false);
-    if (error) {
-      toast({
-        title: "Couldn't send verification code",
-        description: "Please check the number and try again, or contact support if this keeps happening.",
-        variant: "destructive",
-      });
+
+    if (!phoneE164.startsWith("+27")) {
+      setOtpNotSaNumber(true);
+      setOtpGate(context);
       return;
     }
+    setOtpNotSaNumber(false);
+
+    setOtpSending(true);
+    const { data, error } = await supabase.functions.invoke("send-phone-otp", { body: { user_id: userId, phone: phoneE164 } });
+    setOtpSending(false);
+    if (error) {
+      const retryAfterSecs = (data as { retryAfterSecs?: number } | null)?.retryAfterSecs;
+      toast({
+        title: "Couldn't send verification code",
+        description: retryAfterSecs
+          ? `Please wait ${retryAfterSecs}s before requesting another code.`
+          : "Please check the number and try again, or contact support if this keeps happening.",
+        variant: "destructive",
+      });
+      if (retryAfterSecs) setOtpResendCooldown(retryAfterSecs);
+      return;
+    }
+    setOtpResendCooldown(60);
     setOtpGate(context);
   };
 
-  const handleVerifyOtp = async () => {
-    if (!otpCode.trim()) {
-      setOtpError("Enter the code you received by SMS.");
-      return;
-    }
-    setOtpVerifying(true);
-    const { data, error } = await supabase.functions.invoke("verify-phone-otp", {
-      body: { user_id: otpUserId, phone: otpPhoneE164, code: otpCode.trim() },
-    });
-    setOtpVerifying(false);
-    if (error || !(data as { success?: boolean } | null)?.success) {
-      setOtpError("That code is incorrect or has expired. Request a new one and try again.");
-      return;
-    }
-
+  /** Shared completion for both signup paths, whether the phone was
+   *  actually SMS-verified or waved through via the SA-only fallback. */
+  const completeOtpGate = () => {
     const finishedGate = otpGate;
     setOtpGate(null);
+    setOtpNotSaNumber(false);
     setOtpCode("");
 
     if (finishedGate === "oauth") {
@@ -282,6 +298,23 @@ const Auth = () => {
         setMode("signin");
       }
     }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim()) {
+      setOtpError("Enter the code you received by SMS.");
+      return;
+    }
+    setOtpVerifying(true);
+    const { data, error } = await supabase.functions.invoke("verify-phone-otp", {
+      body: { user_id: otpUserId, phone: otpPhoneE164, code: otpCode.trim() },
+    });
+    setOtpVerifying(false);
+    if (error || !(data as { success?: boolean } | null)?.success) {
+      setOtpError("That code is incorrect or has expired. Request a new one and try again.");
+      return;
+    }
+    completeOtpGate();
   };
 
   const handleForgot = async () => {
@@ -443,48 +476,72 @@ const Auth = () => {
           <div className="flex justify-center mb-7">
             <Logo size={48} asLink={false} />
           </div>
-          <h2 className="font-display font-extrabold text-2xl text-center mb-1">Verify your phone</h2>
-          <p className="text-muted-foreground text-sm text-center mb-6">
-            We sent a 6-digit code by SMS to <span className="font-semibold text-foreground">{otpPhoneE164}</span>.
-            Enter it below to finish creating your account.
-          </p>
-          <form onSubmit={(e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-4" data-testid="phone-otp-gate">
-            <div>
-              <label className="block text-xs font-semibold mb-1.5">Verification code</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={otpCode}
-                onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 8)); setOtpError(""); }}
-                placeholder="123456"
-                autoFocus
-                aria-invalid={!!otpError}
-                data-testid="phone-otp-code"
-                className={`w-full px-4 py-3 rounded-lg border bg-muted text-foreground text-center text-2xl font-display font-bold tracking-[0.3em] focus:bg-card focus:ring-2 outline-none transition ${
-                  otpError
-                    ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                    : "border-input focus:border-secondary focus:ring-secondary/10"
-                }`}
-              />
-              {otpError && <p role="alert" className="text-[11px] text-destructive mt-1">{otpError}</p>}
-            </div>
-            <button
-              type="submit"
-              disabled={otpVerifying}
-              className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
-              {otpVerifying ? t("auth.pleaseWait") : "Verify and continue"}
-            </button>
-            <button
-              type="button"
-              disabled={otpSending}
-              onClick={() => startPhoneVerification(otpUserId, otpPhoneE164, otpGate)}
-              className="w-full text-center text-xs text-muted-foreground hover:underline disabled:opacity-50"
-            >
-              {otpSending ? "Sending…" : "Didn't get it? Resend code"}
-            </button>
-          </form>
+          {otpNotSaNumber ? (
+            <>
+              <h2 className="font-display font-extrabold text-2xl text-center mb-1">SMS verification unavailable</h2>
+              <p className="text-muted-foreground text-sm text-center mb-6">
+                SMS verification is currently restricted to South African (+27) numbers. Please verify your
+                account via email instead — we'll email you a confirmation link the moment you continue.
+              </p>
+              <button
+                type="button"
+                onClick={completeOtpGate}
+                data-testid="otp-fallback-continue"
+                className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity"
+              >
+                Continue with email verification
+              </button>
+            </>
+          ) : (
+            <>
+              <h2 className="font-display font-extrabold text-2xl text-center mb-1">Verify your phone</h2>
+              <p className="text-muted-foreground text-sm text-center mb-6">
+                We sent a 6-digit code by SMS to <span className="font-semibold text-foreground">{otpPhoneE164}</span>.
+                Enter it below to finish creating your account.
+              </p>
+              <form onSubmit={(e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-4" data-testid="phone-otp-gate">
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5">Verification code</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={otpCode}
+                    onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 8)); setOtpError(""); }}
+                    placeholder="123456"
+                    autoFocus
+                    aria-invalid={!!otpError}
+                    data-testid="phone-otp-code"
+                    className={`w-full px-4 py-3 rounded-lg border bg-muted text-foreground text-center text-2xl font-display font-bold tracking-[0.3em] focus:bg-card focus:ring-2 outline-none transition ${
+                      otpError
+                        ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+                        : "border-input focus:border-secondary focus:ring-secondary/10"
+                    }`}
+                  />
+                  {otpError && <p role="alert" className="text-[11px] text-destructive mt-1">{otpError}</p>}
+                </div>
+                <button
+                  type="submit"
+                  disabled={otpVerifying}
+                  className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {otpVerifying ? t("auth.pleaseWait") : "Verify and continue"}
+                </button>
+                <button
+                  type="button"
+                  disabled={otpSending || otpResendCooldown > 0}
+                  onClick={() => startPhoneVerification(otpUserId, otpPhoneE164, otpGate)}
+                  className="w-full text-center text-xs text-muted-foreground hover:underline disabled:opacity-50 disabled:no-underline"
+                >
+                  {otpSending
+                    ? "Sending…"
+                    : otpResendCooldown > 0
+                    ? `Resend code in ${otpResendCooldown}s`
+                    : "Didn't get it? Resend code"}
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     );

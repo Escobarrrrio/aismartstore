@@ -1,5 +1,5 @@
 // Verifies the code sent by send-phone-otp against Telnyx's Verify API,
-// and on acceptance marks that account's profile as phone_verified.
+// and on acceptance marks that account's profile as is_phone_verified.
 //
 // Auth note: same reasoning as send-phone-otp -- a live session isn't
 // guaranteed to exist yet at this point in signup, so `user_id` comes from
@@ -16,15 +16,19 @@ import { getAuthContext } from "../_shared/auth-guard.ts";
 const TELNYX_API_KEY = Deno.env.get("TELNYX_API_KEY");
 const VERIFY_PROFILE_ID = "4900019f-99f4-36c7-4ce3-e2051cafb332";
 
+function jsonResponse(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   if (!TELNYX_API_KEY) {
     console.error("TELNYX_API_KEY not configured");
-    return new Response(JSON.stringify({ error: "Phone verification is not configured yet" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Phone verification is not configured yet" }, 500);
   }
 
   let phoneNumber: string;
@@ -36,81 +40,77 @@ Deno.serve(async (req) => {
     code = String(body.code ?? "").trim();
     userId = String(body.user_id ?? "");
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid request body" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Invalid request body" }, 400);
   }
 
-  if (!userId) {
-    return new Response(JSON.stringify({ error: "Missing user_id" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (!userId) return jsonResponse({ error: "Missing user_id" }, 400);
 
   const { userId: sessionUserId } = await getAuthContext(req);
-  if (sessionUserId && sessionUserId !== userId) {
-    return new Response(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (sessionUserId && sessionUserId !== userId) return jsonResponse({ error: "Forbidden" }, 403);
 
   if (!/^\d{4,8}$/.test(code)) {
-    return new Response(JSON.stringify({ error: "Enter the code you received by SMS." }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Enter the code you received by SMS." }, 400);
   }
 
-  const telnyxRes = await fetch(
-    `https://api.telnyx.com/v2/verifications/by_phone_number/${encodeURIComponent(phoneNumber)}/actions/verify`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${TELNYX_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ code, verify_profile_id: VERIFY_PROFILE_ID }),
-    }
-  );
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  let telnyxRes: Response;
+  try {
+    telnyxRes = await fetch(
+      `https://api.telnyx.com/v2/verifications/by_phone_number/${encodeURIComponent(phoneNumber)}/actions/verify`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${TELNYX_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code, verify_profile_id: VERIFY_PROFILE_ID }),
+      }
+    );
+  } catch (networkError) {
+    await admin.from("sms_send_log").insert({
+      user_id: userId,
+      phone: phoneNumber,
+      purpose: "phone_verification_check",
+      status: "failed",
+      error_message: String(networkError),
+    });
+    console.error("Telnyx verify request failed (network)", { error: networkError, userId });
+    return jsonResponse({ error: "Service temporarily busy, please try again." }, 502);
+  }
 
   if (!telnyxRes.ok) {
     const detail = await telnyxRes.text();
-    console.error("Telnyx verify failed", { status: telnyxRes.status, detail, userId });
-    return new Response(JSON.stringify({ error: "Couldn't verify that code. Please try again." }), {
-      status: 502,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    await admin.from("sms_send_log").insert({
+      user_id: userId,
+      phone: phoneNumber,
+      purpose: "phone_verification_check",
+      status: "failed",
+      telnyx_status_code: telnyxRes.status,
+      error_message: detail.slice(0, 2000),
     });
+    console.error("Telnyx verify failed", { status: telnyxRes.status, detail, userId });
+    // 401 = bad/missing API key, 422 = malformed request -- neither is the
+    // user's fault, so the message stays generic rather than leaking why.
+    return jsonResponse({ error: "Service temporarily busy, please try again." }, 502);
   }
 
   const result = await telnyxRes.json();
   const accepted = result?.data?.response_code === "accepted";
   if (!accepted) {
-    return new Response(JSON.stringify({ error: "That code is incorrect or has expired." }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "That code is incorrect or has expired." }, 400);
   }
 
-  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { error: updateError } = await admin
     .from("profiles")
-    .update({ phone_verified: true })
+    .update({ is_phone_verified: true })
     .eq("user_id", userId)
     .eq("phone", phoneNumber);
 
   if (updateError) {
     console.error("Failed to mark phone verified", { error: updateError, userId });
-    return new Response(JSON.stringify({ error: "Verified, but saving failed. Please contact support." }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Verified, but saving failed. Please contact support." }, 500);
   }
 
-  return new Response(JSON.stringify({ success: true }), {
-    status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return jsonResponse({ success: true }, 200);
 });

@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, Building2, User, Home as HomeIcon, IdCard, Phone } from "lucide-react";
+import { Lock, Mail, Building2, User, Home as HomeIcon, IdCard, Wand2 } from "lucide-react";
+import { isValidPhoneNumber, type CountryCode } from "libphonenumber-js";
 import Logo from "@/components/Logo";
 import PasswordToggleButton from "@/components/PasswordToggleButton";
+import PhoneInput, { detectDefaultCountry, toE164 } from "@/components/PhoneInput";
+import { generateStrongPassword, estimatePasswordStrength } from "@/lib/password";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
 
@@ -32,13 +35,6 @@ export const isValidSaId = (id: string) => /^\d{13}$/.test(id.trim());
 // but validate the stripped digits.
 export const isValidVat = (vat: string) => /^4\d{9}$/.test(vat.replace(/[\s-]/g, ""));
 
-// SA phone: allow +27… or 0… with 9 subscriber digits. Kept intentionally
-// permissive — the DB unique constraint is the source of truth for dedupe.
-export const isValidPhone = (phone: string) => {
-  const digits = phone.replace(/[^\d+]/g, "");
-  return /^(\+27\d{9}|0\d{9})$/.test(digits);
-};
-
 // Detect the "one account per person" unique constraint violations coming back
 // from Postgres so we can show a friendly, actionable message instead of a
 // raw error like `duplicate key value violates unique constraint ...`.
@@ -65,7 +61,11 @@ const Auth = () => {
 
   // Signup-only fields
   const [name, setName] = useState("");
+  // `phone` holds the national-format number as typed; the country selector
+  // is tracked separately so it works for any country, not just SA -- see
+  // PhoneInput/toE164 for the conversion to a storable E.164 string.
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode>(() => detectDefaultCountry());
   const [idNumber, setIdNumber] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [vatNumber, setVatNumber] = useState("");
@@ -86,6 +86,7 @@ const Auth = () => {
   // gap where a Google sign-up could otherwise finish with phone = NULL.
   const [oauthType, setOauthType] = useState<AccountType | null>(null);
   const [oauthPhone, setOauthPhone] = useState("");
+  const [oauthPhoneCountry, setOauthPhoneCountry] = useState<CountryCode>(() => detectDefaultCountry());
   const [oauthPhoneError, setOauthPhoneError] = useState("");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -107,6 +108,20 @@ const Auth = () => {
   const handleSignIn = async () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      // Supabase blocks sign-in with this exact message when the account's
+      // email hasn't been confirmed yet -- rather than leaving the person
+      // stuck (their original confirmation link may have expired, or never
+      // arrived), fire a fresh one immediately so "resend" isn't a dead end
+      // buried behind a support request.
+      if (error.message === "Email not confirmed") {
+        await supabase.auth.resend({ type: "signup", email });
+        toast({
+          title: "Confirm your email to sign in",
+          description: `We've sent a fresh confirmation link to ${email}. Please check your inbox (and spam folder).`,
+          variant: "destructive",
+        });
+        return;
+      }
       toast({ title: t("auth.loginFailedTitle"), description: error.message, variant: "destructive" });
     } else {
       toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
@@ -162,8 +177,9 @@ const Auth = () => {
       setOauthPhoneError("Phone number is required.");
       return;
     }
-    if (!isValidPhone(oauthPhone)) {
-      setOauthPhoneError("Enter a valid South African phone (e.g. +27 82 123 4567 or 082 123 4567).");
+    const oauthE164 = toE164(oauthPhoneCountry, oauthPhone);
+    if (!oauthE164) {
+      setOauthPhoneError("Enter a valid, complete phone number.");
       return;
     }
     const { data: { session } } = await supabase.auth.getSession();
@@ -172,7 +188,7 @@ const Auth = () => {
     setLoading(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ customer_type: oauthType, phone: oauthPhone.trim() })
+      .update({ customer_type: oauthType, phone: oauthE164 })
       .eq("user_id", userId);
     setLoading(false);
     if (error) {
@@ -227,7 +243,7 @@ const Auth = () => {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = "Full name is required.";
     if (!phone.trim()) errs.phone = "Phone number is required.";
-    else if (!isValidPhone(phone)) errs.phone = "Enter a valid South African phone (e.g. +27 82 123 4567 or 082 123 4567).";
+    else if (!isValidPhoneNumber(phone, phoneCountry)) errs.phone = "Enter a valid, complete phone number.";
     if (accountType === "business") {
       // A South African ID number is sensitive personal information --
       // reserved for entities of private or public interest (business,
@@ -276,7 +292,7 @@ const Auth = () => {
       const profilePayload: Record<string, unknown> = {
         customer_type: accountType,
         name: name.trim(),
-        phone: phone.trim(),
+        phone: toE164(phoneCountry, phone) ?? phone.trim(),
       };
       if (accountType === "business") {
         // ID number is only ever collected for business/government accounts
@@ -313,9 +329,20 @@ const Auth = () => {
       }
     }
 
-    toast({ title: t("auth.checkEmailTitle"), description: t("auth.confirmEmailSent") });
-    setMode("signin");
-    resetSignupFields();
+    // Whether email confirmation is actually required is a Supabase Auth
+    // project setting, not something this form controls -- signUp() returns
+    // a live session immediately when it's off, and null when a confirm
+    // link was sent first. Reflect whichever is really true instead of
+    // always claiming "check your email".
+    if (data.session) {
+      toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
+      resetSignupFields();
+      navigate(redirectTo);
+    } else {
+      toast({ title: t("auth.checkEmailTitle"), description: t("auth.confirmEmailSent") });
+      setMode("signin");
+      resetSignupFields();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -393,14 +420,11 @@ const Auth = () => {
               className="space-y-4"
               data-testid="oauth-phone-gate"
             >
-              <FieldWithIcon
-                icon={Phone}
-                label="Phone number"
-                value={oauthPhone}
-                onChange={(v) => { setOauthPhone(v); setOauthPhoneError(""); }}
-                placeholder="+27 82 123 4567"
-                type="tel"
-                required
+              <PhoneInput
+                country={oauthPhoneCountry}
+                onCountryChange={setOauthPhoneCountry}
+                nationalNumber={oauthPhone}
+                onNationalNumberChange={(v) => { setOauthPhone(v); setOauthPhoneError(""); }}
                 error={oauthPhoneError}
                 testId="oauth-phone"
               />
@@ -585,14 +609,34 @@ const Auth = () => {
                     )}
                   </>
                 )}
-                <FieldWithIcon icon={Phone} label="Phone number" value={phone} onChange={setPhone} placeholder="+27 82 123 4567" type="tel" required error={fieldErrors.phone} testId="signup-phone" />
+                <PhoneInput
+                  country={phoneCountry}
+                  onCountryChange={setPhoneCountry}
+                  nationalNumber={phone}
+                  onNationalNumberChange={setPhone}
+                  error={fieldErrors.phone}
+                  testId="signup-phone"
+                />
               </>
             )}
 
             <FieldWithIcon icon={Mail} label={t("auth.email")} value={email} onChange={setEmail} placeholder="you@example.com" type="email" required />
 
             {mode !== "forgot" && (
-              <FieldWithIcon icon={Lock} label={t("auth.password")} value={password} onChange={setPassword} placeholder="••••••••" type="password" required minLength={6} />
+              <div>
+                <FieldWithIcon
+                  icon={Lock}
+                  label={t("auth.password")}
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="••••••••"
+                  type="password"
+                  required
+                  minLength={6}
+                  onGenerate={mode === "signup" ? () => setPassword(generateStrongPassword()) : undefined}
+                />
+                {mode === "signup" && password && <PasswordStrengthMeter password={password} />}
+              </div>
             )}
 
             <button
@@ -633,7 +677,7 @@ const Auth = () => {
 
 // Small helper to keep the form JSX flat & consistent.
 const FieldWithIcon = ({
-  icon: Icon, label, value, onChange, placeholder, type = "text", required, minLength, error, testId,
+  icon: Icon, label, value, onChange, placeholder, type = "text", required, minLength, error, testId, onGenerate,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -645,12 +689,27 @@ const FieldWithIcon = ({
   minLength?: number;
   error?: string;
   testId?: string;
+  /** When set, renders a "generate" button (password fields only) that fills
+   *  the field with a strong random value -- most people don't have a good
+   *  one memorized on the spot, and typing your own weak one is the default. */
+  onGenerate?: () => void;
 }) => {
   const isPassword = type === "password";
   const [visible, setVisible] = useState(false);
   return (
     <div>
-      <label className="block text-xs font-semibold mb-1.5">{label}</label>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="block text-xs font-semibold">{label}</label>
+        {onGenerate && (
+          <button
+            type="button"
+            onClick={() => { onGenerate(); setVisible(true); }}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-secondary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          >
+            <Wand2 className="h-3 w-3" /> Generate strong password
+          </button>
+        )}
+      </div>
       <div className="relative">
         <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <input
@@ -673,6 +732,22 @@ const FieldWithIcon = ({
         {isPassword && <PasswordToggleButton visible={visible} onToggle={() => setVisible((v) => !v)} />}
       </div>
       {error && <p role="alert" className="text-[11px] text-destructive mt-1">{error}</p>}
+    </div>
+  );
+};
+
+const STRENGTH_COLORS = ["bg-destructive", "bg-destructive", "bg-amber-500", "bg-lime-500", "bg-emerald-500"];
+
+const PasswordStrengthMeter = ({ password }: { password: string }) => {
+  const { score, label } = useMemo(() => estimatePasswordStrength(password), [password]);
+  return (
+    <div className="mt-1.5">
+      <div className="flex gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < score ? STRENGTH_COLORS[score] : "bg-muted"}`} />
+        ))}
+      </div>
+      <p className="text-[11px] text-muted-foreground mt-1">{label}</p>
     </div>
   );
 };

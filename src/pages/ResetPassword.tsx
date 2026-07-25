@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Lock } from "lucide-react";
+import { Lock, Wand2 } from "lucide-react";
 import Logo from "@/components/Logo";
 import PasswordToggleButton from "@/components/PasswordToggleButton";
+import { generateStrongPassword, estimatePasswordStrength } from "@/lib/password";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
+
+const STRENGTH_COLORS = ["bg-destructive", "bg-destructive", "bg-amber-500", "bg-lime-500", "bg-emerald-500"];
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -78,7 +81,16 @@ const ResetPassword = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold mb-1.5">{t("resetPassword.newPassword")}</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold">{t("resetPassword.newPassword")}</label>
+              <button
+                type="button"
+                onClick={() => { setPassword(generateStrongPassword()); setShowPassword(true); }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-secondary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              >
+                <Wand2 className="h-3 w-3" /> Generate strong password
+              </button>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input
@@ -92,6 +104,19 @@ const ResetPassword = () => {
               />
               <PasswordToggleButton visible={showPassword} onToggle={() => setShowPassword((v) => !v)} />
             </div>
+            {password && (() => {
+              const { score, label } = estimatePasswordStrength(password);
+              return (
+                <div className="mt-1.5">
+                  <div className="flex gap-1">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < score ? STRENGTH_COLORS[score] : "bg-muted"}`} />
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">{label}</p>
+                </div>
+              );
+            })()}
           </div>
           <div>
             <label className="block text-xs font-semibold mb-1.5">{t("resetPassword.confirmPassword")}</label>

@@ -25,13 +25,12 @@ const staticEntries: Entry[] = [
   { path: "/shipping-returns", changefreq: "monthly", priority: "0.4" },
   { path: "/terms", changefreq: "monthly", priority: "0.2" },
   { path: "/cookies", changefreq: "monthly", priority: "0.2" },
-  // Transactional/account routes: low priority, but included so crawlers
-  // discover the URLs exist. Per-user detail pages like /orders/:id are
-  // intentionally omitted — they require auth and have no public content.
-  { path: "/auth", changefreq: "monthly", priority: "0.3" },
-  { path: "/cart", changefreq: "monthly", priority: "0.2" },
-  { path: "/checkout", changefreq: "monthly", priority: "0.2" },
-  { path: "/account", changefreq: "monthly", priority: "0.2" },
+  // /auth, /cart, /checkout, /account are deliberately NOT listed here --
+  // they're private, auth-gated, per-user pages, and robots.txt already
+  // Disallow's crawlers from all of them. Listing them in the sitemap
+  // while blocking them in robots.txt would be a self-contradictory
+  // signal (sitemaps are meant to be a subset of what's actually
+  // crawlable), not a fix for anything.
 ]
 
 const escape = (s: string) =>

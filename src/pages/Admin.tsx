@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { Menu, Search, Shield } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Menu, Search, Shield, Home } from "lucide-react";
 import AdminSidebar, { type AdminTab, tabs } from "@/components/admin/AdminSidebar";
 import CommandPalette from "@/components/admin/CommandPalette";
 import DashboardModule from "@/components/admin/DashboardModule";
@@ -150,6 +150,13 @@ const Admin = () => {
             <button onClick={() => setCommandOpen(true)} className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted transition-colors whitespace-nowrap">
               <Search className="h-3.5 w-3.5" /> Search... <kbd className="text-[9px] border border-border rounded px-1 py-0.5 ml-2">Ctrl+K</kbd>
             </button>
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors whitespace-nowrap"
+              title="Leave the Control Centre and browse the site normally"
+            >
+              <Home className="h-3.5 w-3.5" /> <span className="hidden sm:inline">View site</span>
+            </Link>
             <button
               onClick={() => { localStorage.setItem("ai-smart-store.impersonate", session?.user?.email || "admin"); navigate("/account?as=customer"); }}
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg gradient-brand text-white text-xs font-semibold hover:opacity-90 transition-opacity whitespace-nowrap"

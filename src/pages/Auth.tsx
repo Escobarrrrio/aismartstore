@@ -256,7 +256,7 @@ const Auth = () => {
       }
       const { error: profileErr } = await supabase
         .from("profiles")
-        .update(profilePayload)
+        .update(profilePayload as never)
         .eq("user_id", userId);
       if (profileErr) {
         const dup = isUniqueConstraint(profileErr);

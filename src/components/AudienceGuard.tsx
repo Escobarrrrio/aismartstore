@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ShieldAlert, ArrowRight } from "lucide-react";
+import { ShieldAlert, ArrowRight, Send, CheckCircle2 } from "lucide-react";
 import { useCustomerType } from "@/hooks/useCustomerType";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
+import { useToast } from "@/hooks/use-toast";
 
 type Audience = "residential" | "business";
 
@@ -40,6 +41,60 @@ const AudienceGuard = ({ allow, children }: Props) => {
 
   const isAdmin = useIsAdmin(session);
   const customerType = useCustomerType();
+  const { toast } = useToast();
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [requestReason, setRequestReason] = useState("");
+
+  // Residential shoppers can't flip their own customer_type (there's no
+  // self-service path by design), but the old copy here was a dead end --
+  // "contact support" with no actual way to do that from this screen. This
+  // routes the request through the same support_tickets/ticket_messages
+  // tables the rest of account support already uses, so it shows up in the
+  // existing admin Support queue instead of requiring a new subsystem.
+  const submitUpgradeRequest = async () => {
+    if (!session?.user?.id) return;
+    if (!companyName.trim()) {
+      toast({ title: "Company / entity name required", description: "Tell us who you're procuring for.", variant: "destructive" });
+      return;
+    }
+    setRequestLoading(true);
+    const { data: ticket, error: ticketErr } = await supabase
+      .from("support_tickets")
+      .insert({
+        user_id: session.user.id,
+        subject: "Business / Government account upgrade request",
+        status: "open",
+        type: "inquiry",
+      } as any)
+      .select("id")
+      .single();
+    if (ticketErr || !ticket) {
+      setRequestLoading(false);
+      toast({ title: "Couldn't send request", description: ticketErr?.message ?? "Please try again.", variant: "destructive" });
+      return;
+    }
+    const message = [
+      `Requesting upgrade from Residential to Business / Government.`,
+      `Company / entity: ${companyName.trim()}`,
+      requestReason.trim() ? `Reason: ${requestReason.trim()}` : null,
+    ].filter(Boolean).join("\n");
+    const { error: msgErr } = await supabase.from("ticket_messages").insert({
+      ticket_id: ticket.id,
+      sender_id: session.user.id,
+      message,
+      is_admin: false,
+    } as any);
+    setRequestLoading(false);
+    if (msgErr) {
+      toast({ title: "Couldn't send request", description: msgErr.message, variant: "destructive" });
+      return;
+    }
+    trackEvent({ name: "business_upgrade_requested" });
+    setRequestSent(true);
+  };
 
   // Wait for both checks to resolve before deciding.
   const stillChecking = customerType === undefined || (session && isAdmin === null);
@@ -71,6 +126,11 @@ const AudienceGuard = ({ allow, children }: Props) => {
     const target = allow === "business" ? "Business / Government portal" : "Residential storefront";
     const home = allow === "business" ? "/" : "/procurement";
     const homeLabel = allow === "business" ? "Go to the residential store" : "Go to the Business Portal";
+    // Only the residential-to-business direction gets a self-serve request
+    // path here -- that's the actual case people hit (shopping around,
+    // then realising they need the procurement portal). The reverse
+    // direction is rare enough that "contact support" below still covers it.
+    const canRequestUpgrade = allow === "business" && customerType === "residential";
     return (
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-xl mx-auto text-center card-flat p-10">
@@ -88,9 +148,63 @@ const AudienceGuard = ({ allow, children }: Props) => {
             Account type can't be changed self-service — please contact support if you
             believe this is incorrect.
           </p>
-          <Link to={home} className="btn-primary px-6 py-3 text-sm inline-flex items-center gap-2">
-            {homeLabel} <ArrowRight className="h-4 w-4" />
-          </Link>
+
+          {canRequestUpgrade && requestSent ? (
+            <div className="mb-6 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+              <CheckCircle2 className="h-4 w-4 shrink-0" /> Request sent — our team will review it and email you.
+            </div>
+          ) : canRequestUpgrade && requestOpen ? (
+            <div className="mb-6 text-left space-y-3 bg-muted/40 border border-border rounded-xl p-5">
+              <p className="text-xs font-semibold text-foreground">Apply for Business / Government access</p>
+              <div>
+                <label className="block text-[11px] font-semibold mb-1">Registered company / entity name</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Acme (Pty) Ltd"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-sm outline-none focus:border-primary transition"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold mb-1">What do you need the portal for? (optional)</label>
+                <textarea
+                  value={requestReason}
+                  onChange={(e) => setRequestReason(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. Procuring laptops for our department"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-sm outline-none focus:border-primary transition resize-none"
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={requestLoading}
+                  onClick={submitUpgradeRequest}
+                  className="btn-primary px-4 py-2 text-xs inline-flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <Send className="h-3.5 w-3.5" /> {requestLoading ? "Sending…" : "Send request"}
+                </button>
+                <button type="button" onClick={() => setRequestOpen(false)} className="text-xs text-muted-foreground hover:underline">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : canRequestUpgrade ? (
+            <button
+              type="button"
+              onClick={() => setRequestOpen(true)}
+              className="btn-primary px-6 py-3 text-sm inline-flex items-center gap-2 mb-4"
+            >
+              Apply for Business / Government access <ArrowRight className="h-4 w-4" />
+            </button>
+          ) : null}
+
+          <div>
+            <Link to={home} className={canRequestUpgrade ? "text-sm font-semibold text-primary hover:underline" : "btn-primary px-6 py-3 text-sm inline-flex items-center gap-2"}>
+              {homeLabel} {!canRequestUpgrade && <ArrowRight className="h-4 w-4" />}
+            </Link>
+          </div>
         </div>
       </div>
     );

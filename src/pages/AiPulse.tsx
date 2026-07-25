@@ -306,8 +306,9 @@ const AiPulse = () => {
           </div>
         </div>
 
+        <div className="gradient-subtle">
         <div className="container mx-auto px-4 py-8 md:py-10 border-t border-border/60">
-          <h1 className="text-4xl md:text-6xl font-display font-black tracking-tight mb-3">AI Pulse</h1>
+          <h1 className="text-4xl md:text-6xl font-display font-black tracking-tight mb-3 gradient-brand-text inline-block">AI Pulse</h1>
           <p className="text-muted-foreground max-w-2xl mb-6">
             Research papers, product news and the African tech desk — pulled straight from the source,
             every six hours. Real bylines, real timestamps, nothing generated.
@@ -343,13 +344,14 @@ const AiPulse = () => {
             </div>
           )}
         </div>
+        </div>
       </header>
 
       {/* Breaking ticker -- the freshest headlines, auto-scrolling, real data */}
       {ticker.length > 0 && (
         <div className="border-b border-border bg-muted/30 overflow-hidden group" role="marquee" aria-label="Latest headlines">
           <div className="flex items-stretch">
-            <span className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-foreground text-background text-[11px] font-display font-bold uppercase tracking-widest z-10">
+            <span className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 gradient-brand text-white text-[11px] font-display font-bold uppercase tracking-widest z-10">
               Latest
             </span>
             <div className="overflow-hidden flex-1">
@@ -405,7 +407,7 @@ const AiPulse = () => {
                 aria-pressed={filter === f.key}
                 onClick={() => setFilter(f.key)}
                 className={`px-4 py-2 rounded-full text-sm font-display font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  filter === f.key ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/70"
+                  filter === f.key ? "gradient-brand text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"
                 }`}
               >
                 {f.label}
@@ -487,7 +489,7 @@ const AiPulse = () => {
                   </div>
                   <div className="p-6 md:p-8 flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <span className="inline-flex items-center px-2 py-0.5 border border-foreground text-foreground text-[10px] font-display font-bold tracking-widest">
+                      <span className="inline-flex items-center px-2 py-0.5 gradient-brand text-white text-[10px] font-display font-bold tracking-widest">
                         LATEST
                       </span>
                       <CategoryTag category={featured.category} />

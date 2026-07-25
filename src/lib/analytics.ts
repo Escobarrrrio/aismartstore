@@ -21,7 +21,8 @@ export type AnalyticsEvent =
   // Storefront audience telemetry — proves the residential/business split in prod.
   | { name: "storefront_viewed"; audience: "residential" | "business"; surface: "home" | "products" | "procurement" | "header_search"; query?: string }
   | { name: "product_list_returned"; audience: "residential" | "business"; surface: "home" | "products" | "procurement" | "header_search"; count: number; total?: number; query?: string }
-  | { name: "audience_guard_blocked"; allow: "residential" | "business"; actual: "residential" | "business" | "anonymous" };
+  | { name: "audience_guard_blocked"; allow: "residential" | "business"; actual: "residential" | "business" | "anonymous" }
+  | { name: "business_upgrade_requested" };
 
 type AnyRecord = Record<string, unknown>;
 

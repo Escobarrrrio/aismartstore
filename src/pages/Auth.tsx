@@ -88,6 +88,21 @@ const Auth = () => {
   const [oauthPhone, setOauthPhone] = useState("");
   const [oauthPhoneCountry, setOauthPhoneCountry] = useState<CountryCode>(() => detectDefaultCountry());
   const [oauthPhoneError, setOauthPhoneError] = useState("");
+
+  // Mandatory phone verification (Telnyx SMS OTP) -- the last step of both
+  // signup paths before the account is usable. `otpGate` tracks which flow
+  // to resume once the code is accepted; `otpAfterVerifySession` only
+  // matters for the signup path, where it decides whether the final state
+  // is "signed in" or "check your email" (see handleSignUp).
+  const [otpGate, setOtpGate] = useState<"signup" | "oauth" | null>(null);
+  const [otpUserId, setOtpUserId] = useState("");
+  const [otpPhoneE164, setOtpPhoneE164] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpAfterVerifySession, setOtpAfterVerifySession] = useState(false);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -208,11 +223,65 @@ const Auth = () => {
       toast({ title: t("auth.errorTitle"), description: error.message, variant: "destructive" });
       return;
     }
-    setOauthAccountTypeGate(false);
-    setOauthType(null);
-    setOauthPhone("");
-    toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
-    navigate(redirectTo);
+    await startPhoneVerification(userId, oauthE164, "oauth");
+  };
+
+  /** Sends a fresh SMS OTP for `phoneE164` and opens the code-entry gate.
+   *  `context` decides what handleVerifyOtp does once the code is accepted. */
+  const startPhoneVerification = async (userId: string, phoneE164: string, context: "signup" | "oauth") => {
+    setOtpUserId(userId);
+    setOtpPhoneE164(phoneE164);
+    setOtpCode("");
+    setOtpError("");
+    setOtpSending(true);
+    const { error } = await supabase.functions.invoke("send-phone-otp", { body: { user_id: userId, phone: phoneE164 } });
+    setOtpSending(false);
+    if (error) {
+      toast({
+        title: "Couldn't send verification code",
+        description: "Please check the number and try again, or contact support if this keeps happening.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setOtpGate(context);
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim()) {
+      setOtpError("Enter the code you received by SMS.");
+      return;
+    }
+    setOtpVerifying(true);
+    const { data, error } = await supabase.functions.invoke("verify-phone-otp", {
+      body: { user_id: otpUserId, phone: otpPhoneE164, code: otpCode.trim() },
+    });
+    setOtpVerifying(false);
+    if (error || !(data as { success?: boolean } | null)?.success) {
+      setOtpError("That code is incorrect or has expired. Request a new one and try again.");
+      return;
+    }
+
+    const finishedGate = otpGate;
+    setOtpGate(null);
+    setOtpCode("");
+
+    if (finishedGate === "oauth") {
+      setOauthAccountTypeGate(false);
+      setOauthType(null);
+      setOauthPhone("");
+      toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
+      navigate(redirectTo);
+    } else if (finishedGate === "signup") {
+      resetSignupFields();
+      if (otpAfterVerifySession) {
+        toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
+        navigate(redirectTo);
+      } else {
+        toast({ title: t("auth.checkEmailTitle"), description: t("auth.confirmEmailSent") });
+        setMode("signin");
+      }
+    }
   };
 
   const handleForgot = async () => {
@@ -288,11 +357,12 @@ const Auth = () => {
     // unique constraints on id_number, phone and vat_number that span every
     // profile — surface those as a friendly "one account per person" message.
     const userId = data.user?.id;
+    const phoneE164 = toE164(phoneCountry, phone) ?? phone.trim();
     if (userId) {
       const profilePayload: Record<string, unknown> = {
         customer_type: accountType,
         name: name.trim(),
-        phone: toE164(phoneCountry, phone) ?? phone.trim(),
+        phone: phoneE164,
       };
       if (accountType === "business") {
         // ID number is only ever collected for business/government accounts
@@ -329,20 +399,15 @@ const Auth = () => {
       }
     }
 
+    if (!userId) return;
+
     // Whether email confirmation is actually required is a Supabase Auth
     // project setting, not something this form controls -- signUp() returns
     // a live session immediately when it's off, and null when a confirm
-    // link was sent first. Reflect whichever is really true instead of
-    // always claiming "check your email".
-    if (data.session) {
-      toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
-      resetSignupFields();
-      navigate(redirectTo);
-    } else {
-      toast({ title: t("auth.checkEmailTitle"), description: t("auth.confirmEmailSent") });
-      setMode("signin");
-      resetSignupFields();
-    }
+    // link was sent first. Stashed here so handleVerifyOtp can reflect
+    // whichever is really true once the phone step (below) also clears.
+    setOtpAfterVerifySession(!!data.session);
+    await startPhoneVerification(userId, phoneE164, "signup");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -363,6 +428,67 @@ const Auth = () => {
       : accountType === null ? "Create your account"
       : accountType === "residential" ? "Create a residential account"
       : "Register a business or government entity";
+
+  // Mandatory phone verification -- the last step of both signup paths.
+  // Takes priority over the OAuth account-type gate below since it only
+  // ever opens once that gate (or manual signup) has already run.
+  if (otpGate) {
+    return (
+      <div
+        className="min-h-[80vh] flex items-center justify-center px-4 py-10"
+        style={{ background: "linear-gradient(135deg, hsl(var(--muted)), hsl(270 30% 95%))" }}
+      >
+        <SEO title="Verify your phone" description="One last step to finish creating your account." noindex />
+        <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-elevated p-8">
+          <div className="flex justify-center mb-7">
+            <Logo size={48} asLink={false} />
+          </div>
+          <h2 className="font-display font-extrabold text-2xl text-center mb-1">Verify your phone</h2>
+          <p className="text-muted-foreground text-sm text-center mb-6">
+            We sent a 6-digit code by SMS to <span className="font-semibold text-foreground">{otpPhoneE164}</span>.
+            Enter it below to finish creating your account.
+          </p>
+          <form onSubmit={(e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-4" data-testid="phone-otp-gate">
+            <div>
+              <label className="block text-xs font-semibold mb-1.5">Verification code</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={otpCode}
+                onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 8)); setOtpError(""); }}
+                placeholder="123456"
+                autoFocus
+                aria-invalid={!!otpError}
+                data-testid="phone-otp-code"
+                className={`w-full px-4 py-3 rounded-lg border bg-muted text-foreground text-center text-2xl font-display font-bold tracking-[0.3em] focus:bg-card focus:ring-2 outline-none transition ${
+                  otpError
+                    ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+                    : "border-input focus:border-secondary focus:ring-secondary/10"
+                }`}
+              />
+              {otpError && <p role="alert" className="text-[11px] text-destructive mt-1">{otpError}</p>}
+            </div>
+            <button
+              type="submit"
+              disabled={otpVerifying}
+              className="w-full py-3 rounded-full gradient-brand text-white font-display font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {otpVerifying ? t("auth.pleaseWait") : "Verify and continue"}
+            </button>
+            <button
+              type="button"
+              disabled={otpSending}
+              onClick={() => startPhoneVerification(otpUserId, otpPhoneE164, otpGate)}
+              className="w-full text-center text-xs text-muted-foreground hover:underline disabled:opacity-50"
+            >
+              {otpSending ? "Sending…" : "Didn't get it? Resend code"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   // Signed in via Google, but their account has no confirmed audience yet --
   // same "no default, no skip" gate manual signup enforces, applied once.

@@ -25,6 +25,13 @@ const staticEntries: Entry[] = [
   { path: "/shipping-returns", changefreq: "monthly", priority: "0.4" },
   { path: "/terms", changefreq: "monthly", priority: "0.2" },
   { path: "/cookies", changefreq: "monthly", priority: "0.2" },
+  // Transactional/account routes: low priority, but included so crawlers
+  // discover the URLs exist. Per-user detail pages like /orders/:id are
+  // intentionally omitted — they require auth and have no public content.
+  { path: "/auth", changefreq: "monthly", priority: "0.3" },
+  { path: "/cart", changefreq: "monthly", priority: "0.2" },
+  { path: "/checkout", changefreq: "monthly", priority: "0.2" },
+  { path: "/account", changefreq: "monthly", priority: "0.2" },
 ]
 
 const escape = (s: string) =>

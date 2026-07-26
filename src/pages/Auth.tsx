@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, Building2, User, Home as HomeIcon, IdCard, Wand2 } from "lucide-react";
+import { Lock, Mail, Building2, User, Home as HomeIcon, IdCard, Wand2, MessageCircle } from "lucide-react";
 import { isValidPhoneNumber, type CountryCode } from "libphonenumber-js";
 import Logo from "@/components/Logo";
 import PasswordToggleButton from "@/components/PasswordToggleButton";
@@ -24,6 +24,11 @@ const GoogleGlyph = ({ className }: { className?: string }) => (
 );
 
 type AccountType = "residential" | "business";
+
+// WhatsApp Business fallback for phone verification when SMS isn't
+// available (non-+27 numbers -- see the otpNotSaNumber gate). wa.me wants
+// digits only, no "+".
+const WHATSAPP_BUSINESS_NUMBER = "27630939881";
 
 // SA ID validation: exactly 13 digits. The database also enforces uniqueness
 // across all profiles regardless of customer_type, so someone can't hold both
@@ -491,6 +496,17 @@ const Auth = () => {
               >
                 Continue with email verification
               </button>
+              <a
+                href={`https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent(
+                  `Hi, I'd like to verify my phone number for my AI Smart Store account.\nPhone: ${otpPhoneE164}${email ? `\nAccount email: ${email}` : ""}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="otp-fallback-whatsapp"
+                className="mt-3 w-full py-3 rounded-full border border-border text-sm font-display font-semibold flex items-center justify-center gap-2 hover:bg-muted transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" /> Verify via WhatsApp instead
+              </a>
             </>
           ) : (
             <>

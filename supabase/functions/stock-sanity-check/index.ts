@@ -78,10 +78,19 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Auth: internal cron secret OR admin JWT.
+  // Auth: internal cron secret OR service-role bearer (what pg_cron
+  // actually sends -- see the stock-sanity-check-hourly cron job) OR admin
+  // JWT. The Bearer branch was missing entirely, and the cron job's
+  // x-internal-secret was a literal NULL placeholder that was never wired
+  // up to a real value -- both meant every cron-triggered run hit the
+  // admin-JWT fallback with no session and got rejected with 403.
   const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";
   const providedSecret = req.headers.get("x-internal-secret") ?? "";
-  const isInternal = internalSecret.length > 0 && providedSecret === internalSecret;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const isInternal =
+    (internalSecret.length > 0 && providedSecret === internalSecret) ||
+    (serviceRoleKey.length > 0 && authHeader === `Bearer ${serviceRoleKey}`);
 
   if (!isInternal) {
     const ctx = await getAuthContext(req);

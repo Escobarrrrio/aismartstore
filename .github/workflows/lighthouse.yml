@@ -17,7 +17,6 @@ jobs:
             https://aismartstore.co.za/
             https://aismartstore.co.za/products
             https://aismartstore.co.za/ai-pulse
-          uploadArtifacts: true
           temporaryPublicStorage: true
           runs: 2
 
@@ -28,5 +27,4 @@ jobs:
             echo "## Lighthouse results"
             echo ""
             echo "Median scores per URL, plus a temporary public report link, are in the step output above."
-            echo "Full HTML/JSON reports are attached as the **lighthouse-results** artifact."
           } >> "$GITHUB_STEP_SUMMARY"

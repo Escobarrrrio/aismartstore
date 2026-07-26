@@ -57,7 +57,7 @@ const StoreHeader = () => {
               to={link.to}
               className={`px-3 lg:px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                 isActive(link.to)
-                  ? 'text-primary bg-primary/[0.06]'
+                  ? 'text-primary bg-primary/[0.04]'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
@@ -171,7 +171,7 @@ const StoreHeader = () => {
                 to={link.to}
                 onClick={() => setMenuOpen(false)}
                 className={`py-3 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(link.to) ? 'text-primary bg-primary/[0.06]' : 'text-foreground hover:bg-muted'
+                  isActive(link.to) ? 'text-primary bg-primary/[0.04]' : 'text-foreground hover:bg-muted'
                 }`}
               >
                 {link.label}

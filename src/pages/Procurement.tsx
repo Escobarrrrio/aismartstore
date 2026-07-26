@@ -154,7 +154,7 @@ const ProcurementPage = () => {
       {/* Hero */}
       <div className="bg-muted/50 border-b border-border">
         <div className="container mx-auto px-4 py-14 md:py-20 text-center max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-display font-semibold mb-5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/[0.04] text-primary text-xs font-display font-semibold mb-5">
             <ShieldCheck className="h-3.5 w-3.5" /> Verified South African Supplier
           </span>
           <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-4">
@@ -189,7 +189,7 @@ const ProcurementPage = () => {
           <section className="mb-16">
             <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold mb-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/[0.04] text-primary px-3 py-1 text-xs font-semibold mb-3">
                   <Sparkles className="h-3.5 w-3.5" />
                   Enterprise AI Hardware
                 </div>

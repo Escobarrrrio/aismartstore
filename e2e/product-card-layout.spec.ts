@@ -14,9 +14,17 @@ async function gotoProducts(page: Page) {
   await page.waitForLoadState("networkidle").catch(() => {});
 }
 
-function rectsOverlap(a: DOMRect | null, b: DOMRect | null) {
+type Box = { x: number; y: number; width: number; height: number };
+
+// Playwright's boundingBox() only returns {x, y, width, height} -- unlike a
+// native DOMRect it has no .right/.bottom/.left/.top, so those must be derived.
+function rectsOverlap(a: Box | null, b: Box | null) {
   if (!a || !b) return false;
-  return !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top);
+  const aRight = a.x + a.width;
+  const bRight = b.x + b.width;
+  const aBottom = a.y + a.height;
+  const bBottom = b.y + b.height;
+  return !(aRight <= b.x || bRight <= a.x || aBottom <= b.y || bBottom <= a.y);
 }
 
 test.describe("ProductCard — price & Add-to-Cart never overlap", () => {
@@ -59,10 +67,11 @@ test.describe("ProductCard — price & Add-to-Cart never overlap", () => {
 
     expect(cardBox && priceBox && ctaBox).toBeTruthy();
     // No horizontal overflow
-    expect((priceBox as any).right).toBeLessThanOrEqual((cardBox as any).right + 1);
-    expect((ctaBox as any).right).toBeLessThanOrEqual((cardBox as any).right + 1);
+    const cardRight = (cardBox as Box).x + (cardBox as Box).width;
+    expect((priceBox as Box).x + (priceBox as Box).width).toBeLessThanOrEqual(cardRight + 1);
+    expect((ctaBox as Box).x + (ctaBox as Box).width).toBeLessThanOrEqual(cardRight + 1);
     // Still no overlap after content stretch
-    expect(rectsOverlap(priceBox as any, ctaBox as any)).toBe(false);
+    expect(rectsOverlap(priceBox as Box, ctaBox as Box)).toBe(false);
   });
 });
 

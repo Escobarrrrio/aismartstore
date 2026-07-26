@@ -78,13 +78,22 @@ jobs:
 
       - name: Run E2E tests
         id: e2e
+        # pipefail: without it, `tee`'s exit code (always 0) masks real
+        # Playwright test failures, so the step -- and the whole job --
+        # reports success even when tests actually fail.
+        shell: bash --noprofile --norc -eo pipefail {0}
         run: npm run test:e2e 2>&1 | tee playwright-output.log
         env:
           CI: true
           E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
 
+      # continue-on-error: the account's Actions artifact-storage quota is
+      # currently exhausted, which makes upload-artifact fail outright.
+      # These uploads are for human debugging convenience only -- they must
+      # never be what turns a real test pass/fail into a false CI result.
       - name: Upload Playwright HTML report
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -93,6 +102,7 @@ jobs:
 
       - name: Upload test results (traces, screenshots, videos)
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results
@@ -101,6 +111,7 @@ jobs:
 
       - name: Upload run log
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: playwright-run-log

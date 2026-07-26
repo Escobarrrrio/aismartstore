@@ -35,7 +35,7 @@ const ShippingReturns = () => (
     />
 
     <div className="mb-10 text-center">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-display font-bold border border-primary/20 mb-4">
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/[0.04] text-primary text-xs font-display font-bold border border-primary/20 mb-4">
         <Truck className="h-3.5 w-3.5" /> Shipping & Returns Policy
       </div>
       <h1 className="text-4xl font-display font-extrabold tracking-tight mb-3">Delivery, Tracking & Returns</h1>

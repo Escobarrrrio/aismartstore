@@ -144,7 +144,7 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold mb-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/[0.04] text-primary px-3 py-1 text-xs font-semibold mb-3">
                   <Sparkles className="h-3.5 w-3.5" />
                   AI for Home
                 </div>

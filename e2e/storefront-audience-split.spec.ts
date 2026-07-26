@@ -71,6 +71,14 @@ test.describe("Residential vs Business storefront split", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
+    // On mobile the search input lives behind a toggle button (StoreHeader's
+    // "hidden lg:block" desktop search vs. mobile expandable panel) -- open
+    // it first so the input actually exists before typing into it.
+    const mobileToggle = page.getByRole("button", { name: "Search" });
+    if (await mobileToggle.isVisible().catch(() => false)) {
+      await mobileToggle.click();
+    }
+
     // Type a common query into the header search input (SEO title/placeholder targets it).
     const search = page.locator('input[type="search"], input[placeholder*="Search"]').first();
     await search.fill("laptop");

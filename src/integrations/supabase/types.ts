@@ -944,6 +944,7 @@ export type Database = {
           email: string | null
           id: string
           id_number: string | null
+          is_phone_verified: boolean
           last_login_at: string | null
           marketing_opt_in: boolean
           name: string | null
@@ -967,6 +968,7 @@ export type Database = {
           email?: string | null
           id?: string
           id_number?: string | null
+          is_phone_verified?: boolean
           last_login_at?: string | null
           marketing_opt_in?: boolean
           name?: string | null
@@ -990,6 +992,7 @@ export type Database = {
           email?: string | null
           id?: string
           id_number?: string | null
+          is_phone_verified?: boolean
           last_login_at?: string | null
           marketing_opt_in?: boolean
           name?: string | null
@@ -1081,6 +1084,39 @@ export type Database = {
           status?: Database["public"]["Enums"]["return_status"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sms_send_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          phone: string
+          purpose: string
+          status: string
+          telnyx_status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          phone: string
+          purpose?: string
+          status: string
+          telnyx_status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          phone?: string
+          purpose?: string
+          status?: string
+          telnyx_status_code?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }

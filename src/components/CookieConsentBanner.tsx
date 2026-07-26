@@ -62,7 +62,12 @@ const CookieConsentBanner = () => {
   }, [visible]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Choice | null;
+    let stored: Choice | null = null;
+    try {
+      stored = (typeof window !== "undefined" && typeof window.localStorage?.getItem === "function"
+        ? window.localStorage.getItem(STORAGE_KEY)
+        : null) as Choice | null;
+    } catch { /* ignore storage errors */ }
     if (stored === "accepted" || stored === "rejected") {
       pushConsentSignal("default", stored === "accepted");
       return;
@@ -74,7 +79,11 @@ const CookieConsentBanner = () => {
   }, []);
 
   const choose = (choice: Choice) => {
-    localStorage.setItem(STORAGE_KEY, choice);
+    try {
+      if (typeof window !== "undefined" && typeof window.localStorage?.setItem === "function") {
+        window.localStorage.setItem(STORAGE_KEY, choice);
+      }
+    } catch { /* ignore storage errors */ }
     pushConsentSignal("update", choice === "accepted");
     setVisible(false);
   };

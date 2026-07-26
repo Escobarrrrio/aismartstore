@@ -14,9 +14,10 @@
 // Everything else containing either word fails the check.
 
 import { readFileSync, readdirSync, statSync } from "fs";
-import { join, relative } from "path";
+import { dirname, join, relative } from "path";
+import { fileURLToPath } from "url";
 
-const ROOT = join(new URL(".", import.meta.url).pathname, "..");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const SCAN_EXTENSIONS = [".ts", ".tsx", ".md", ".json", ".html", ".toml", ".yml", ".yaml"];
 

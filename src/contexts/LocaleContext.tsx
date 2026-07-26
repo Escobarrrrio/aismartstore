@@ -21,13 +21,26 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   const { i18n } = useTranslation();
   const { convert } = useExchangeRates();
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
-    const stored = (typeof window !== "undefined" && localStorage.getItem(CURRENCY_KEY)) as CurrencyCode | null;
-    return stored || "ZAR";
+    try {
+      if (typeof window !== "undefined" && typeof window.localStorage?.getItem === "function") {
+        const stored = window.localStorage.getItem(CURRENCY_KEY) as CurrencyCode | null;
+        return stored || "ZAR";
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    return "ZAR";
   });
 
   const setCurrency = (c: CurrencyCode) => {
     setCurrencyState(c);
-    localStorage.setItem(CURRENCY_KEY, c);
+    try {
+      if (typeof window !== "undefined" && typeof window.localStorage?.setItem === "function") {
+        window.localStorage.setItem(CURRENCY_KEY, c);
+      }
+    } catch {
+      // Ignore storage errors
+    }
   };
 
   const formatPrice = (zarAmount: number | string | null | undefined) => {

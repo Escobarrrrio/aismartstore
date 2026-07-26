@@ -170,6 +170,15 @@ Deno.serve(async (req) => {
           const sellingPrice = Math.round(cost * (1 + markupPct / 100) * 100) / 100;
           const imgs = normalizeImages(item.imageGallery);
           const publishable = cost > 0 && imgs.length > 0;
+          // Laptops get a higher residential cutoff than the R15k store-wide
+          // default: this distributor's laptop range is almost entirely
+          // corporate Dell models (3Y onsite warranties etc.), and today's
+          // realistic consumer laptop price floor sits well above R15k --
+          // a flat R15k rule was routing nearly the whole category to the
+          // Business Portal regardless of whether it's actually enterprise
+          // gear. Every other category keeps the original R15k line.
+          const isLaptop = /laptop/i.test(item.productCategory ?? "");
+          const residentialCutoff = isLaptop ? 25000 : 15000;
           return {
             sku: String(item.productCode),
             slug: slugify(name, String(item.productCode)),
@@ -186,7 +195,7 @@ Deno.serve(async (req) => {
             images: imgs,
             is_active: publishable,
             is_ai_product: ai,
-            audience: sellingPrice <= 15000 ? "residential" : "business",
+            audience: sellingPrice <= residentialCutoff ? "residential" : "business",
             last_synced_at: now,
             _cost: cost,
             _axiz_id: String(item.productCode),

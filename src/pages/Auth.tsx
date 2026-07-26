@@ -375,68 +375,57 @@ const Auth = () => {
       return;
     }
 
+    // Everything the signup form collects goes into signUp()'s own metadata
+    // rather than a separate post-signup `.from("profiles").update()` --
+    // handle_new_user() (a SECURITY DEFINER trigger) writes it straight into
+    // profiles from here, which works with or without an active session.
+    // That matters because signUp() no longer returns one immediately when
+    // "Confirm email required" is on: a follow-up client-side update would
+    // run as the `anon` role, which has no UPDATE policy on profiles at all.
+    const phoneE164 = toE164(phoneCountry, phone) ?? phone.trim();
+    const metadata: Record<string, unknown> = {
+      full_name: name.trim(),
+      customer_type: accountType,
+      phone: phoneE164,
+    };
+    if (accountType === "business") {
+      // ID number is only ever collected for business/government accounts
+      // -- sending an empty string for residential signups (rather than
+      // omitting the key) would store "" instead of NULL, which would
+      // then falsely collide under the id_number uniqueness constraint
+      // the moment a second residential shopper also left it blank.
+      metadata.id_number = idNumber.trim();
+      metadata.company_name = companyName.trim();
+      metadata.vat_number = vatNotRegistered ? null : vatNumber.trim();
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth${rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? `?redirect=${encodeURIComponent(rawRedirect)}` : ""}`,
-        data: {
-          full_name: name.trim(),
-          customer_type: accountType,
-        },
+        data: metadata,
       },
     });
     if (error) {
-      toast({ title: t("auth.signUpFailedTitle"), description: error.message, variant: "destructive" });
-      return;
-    }
-
-    // Populate profile fields not covered by the auth trigger. The DB has
-    // unique constraints on id_number, phone and vat_number that span every
-    // profile — surface those as a friendly "one account per person" message.
-    const userId = data.user?.id;
-    const phoneE164 = toE164(phoneCountry, phone) ?? phone.trim();
-    if (userId) {
-      const profilePayload: Record<string, unknown> = {
-        customer_type: accountType,
-        name: name.trim(),
-        phone: phoneE164,
-      };
-      if (accountType === "business") {
-        // ID number is only ever collected for business/government accounts
-        // -- sending an empty string for residential signups (rather than
-        // omitting the key) would store "" instead of NULL, which would
-        // then falsely collide under the id_number uniqueness constraint
-        // the moment a second residential shopper also left it blank.
-        profilePayload.id_number = idNumber.trim();
-        profilePayload.company_name = companyName.trim();
-        profilePayload.vat_number = vatNotRegistered ? null : vatNumber.trim();
-      }
-      const { error: profileErr } = await supabase
-        .from("profiles")
-        .update(profilePayload as never)
-        .eq("user_id", userId);
-      if (profileErr) {
-        const dup = isUniqueConstraint(profileErr);
-        if (dup) {
-          toast({
-            title: "Account already exists",
-            description: `This ${dup.field} is already registered to an account. Each person or business may only hold one account. Please log in instead, or contact support if you believe this is an error.`,
-            variant: "destructive",
-          });
-          // Roll back the auth session so they aren't left half-signed-up.
-          await supabase.auth.signOut();
-          return;
-        }
+      // The id_number/phone/vat_number uniqueness constraints live on
+      // profiles, which handle_new_user() writes to inside the same
+      // transaction as the auth.users insert -- a violation there surfaces
+      // here as signUp()'s own error instead of a separate follow-up call.
+      const dup = isUniqueConstraint(error);
+      if (dup) {
         toast({
-          title: "Signup partially completed",
-          description: profileErr.message,
+          title: "Account already exists",
+          description: `This ${dup.field} is already registered to an account. Each person or business may only hold one account. Please log in instead, or contact support if you believe this is an error.`,
           variant: "destructive",
         });
         return;
       }
+      toast({ title: t("auth.signUpFailedTitle"), description: error.message, variant: "destructive" });
+      return;
     }
 
+    const userId = data.user?.id;
     if (!userId) return;
 
     // Whether email confirmation is actually required is a Supabase Auth

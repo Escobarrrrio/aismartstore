@@ -111,9 +111,20 @@ const handler = async (req: Request) => {
   try {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Auth: pg_cron calls with the service-role key; humans must be admins.
+    // Auth: pg_cron calls with either the pre-shared internal secret (what
+    // its cron job actually sends -- see sync-courier-tracking's job
+    // definition) or the raw service-role key; humans must be admins.
+    // The service-role branch alone turned out to be unreliable in
+    // practice -- the Vault copy of that key silently drifted from the
+    // live one at some point, so every cron-triggered run was failing with
+    // no code-level indication why. The internal-secret branch doesn't
+    // depend on keeping a copy of a rotatable platform key in sync.
+    const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";
+    const providedSecret = req.headers.get("x-internal-secret") ?? "";
     const authHeader = req.headers.get("Authorization") ?? "";
-    const isInternal = authHeader === `Bearer ${serviceKey}`;
+    const isInternal =
+      (internalSecret.length > 0 && providedSecret === internalSecret) ||
+      authHeader === `Bearer ${serviceKey}`;
     if (!isInternal) {
       const auth = await getAuthContext(req);
       if (!auth.userId || !auth.isAdmin) {

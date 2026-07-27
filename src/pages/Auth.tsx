@@ -171,11 +171,19 @@ const Auth = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("customer_type")
+        .select("customer_type, phone")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
-      if (profile?.customer_type === "residential" || profile?.customer_type === "business") {
+      // A brand-new Google sign-up gets a profile row from the handle_new_user
+      // trigger with customer_type defaulted to 'residential' and phone = NULL
+      // (Google never gives us either). We must not let that silent default
+      // stand -- gate on missing phone too, so business/government users can
+      // correct the audience and everyone confirms a reachable phone number.
+      const hasConfirmedAudience =
+        (profile?.customer_type === "residential" || profile?.customer_type === "business") &&
+        !!profile?.phone;
+      if (hasConfirmedAudience) {
         toast({ title: t("auth.welcomeBackToast"), description: t("auth.signedInToast") });
         navigate(redirectTo);
       } else {

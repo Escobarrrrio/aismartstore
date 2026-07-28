@@ -38,6 +38,7 @@ const Checkout = () => {
   const [retrying, setRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
+  const [paymentMethod, setPaymentMethod] = useState<"yoco" | "payfast">("yoco");
   const [capturingPaypal, setCapturingPaypal] = useState(searchParams.get("status") === "paypal_return");
   const failedOrderId = searchParams.get("orderId");
   const [userId, setUserId] = useState<string | null>(null);
@@ -232,56 +233,85 @@ const Checkout = () => {
       const baseUrl = window.location.origin;
       const isInternational = currency !== "ZAR";
       const chargeAmount = isInternational ? convert(grandTotal, currency) : grandTotal;
+      const usePayFast = !isInternational && paymentMethod === "payfast";
+
+      const gatewayFn = isInternational
+        ? "create-paypal-order"
+        : usePayFast
+          ? "create-payfast-checkout"
+          : "create-yoco-checkout";
+
+      const gatewayBody = isInternational
+        ? {
+            orderId: order.id, amount: chargeAmount, currency,
+            description: `AI Smart Store Order #${order.id.slice(0, 8)}`,
+            successUrl: `${baseUrl}/checkout?status=paypal_return&orderId=${order.id}`,
+            cancelUrl: `${baseUrl}/cart`,
+          }
+        : usePayFast
+          ? {
+              orderId: order.id,
+              successUrl: `${baseUrl}/checkout?status=success`,
+              cancelUrl: `${baseUrl}/cart`,
+            }
+          : {
+              orderId: order.id, amount: chargeAmount, currency: "ZAR",
+              successUrl: `${baseUrl}/checkout?status=success`,
+              failureUrl: `${baseUrl}/checkout?status=failed&orderId=${order.id}`,
+              cancelUrl: `${baseUrl}/cart`,
+            };
 
       const { data: checkoutData, error: fnError } = await supabase.functions.invoke(
-        isInternational ? "create-paypal-order" : "create-yoco-checkout",
-        {
-          body: isInternational
-            ? {
-                orderId: order.id, amount: chargeAmount, currency,
-                description: `AI Smart Store Order #${order.id.slice(0, 8)}`,
-                successUrl: `${baseUrl}/checkout?status=paypal_return&orderId=${order.id}`,
-                cancelUrl: `${baseUrl}/cart`,
-              }
-            : {
-                orderId: order.id, amount: chargeAmount, currency: "ZAR",
-                successUrl: `${baseUrl}/checkout?status=success`,
-                failureUrl: `${baseUrl}/checkout?status=failed&orderId=${order.id}`,
-                cancelUrl: `${baseUrl}/cart`,
-              },
-        }
+        gatewayFn, { body: gatewayBody },
       );
 
-      if (fnError || !checkoutData?.redirectUrl) {
-        // supabase-js only puts the parsed JSON body in `data` on success --
-        // on a non-2xx response it's on error.context instead, which is
-        // where our structured price-changed/diagnostic payloads live.
-        const errorBody = fnError && "context" in fnError
-          ? await (fnError as any).context?.json?.().catch(() => null)
-          : checkoutData;
+      const errorBody = fnError && "context" in fnError
+        ? await (fnError as any).context?.json?.().catch(() => null)
+        : (!fnError ? null : checkoutData);
 
-        if (errorBody?.priceChanged) {
-          toast({
-            title: "Your order total changed",
-            description: `The price is now ${formatPrice(errorBody.newTotal)} (was ${formatPrice(errorBody.previousTotal)}). Please review your order and pay again.`,
-            variant: "destructive",
-          });
-          setProcessing(false);
-          return;
+      if (errorBody?.priceChanged) {
+        toast({
+          title: "Your order total changed",
+          description: `The price is now ${formatPrice(errorBody.newTotal)} (was ${formatPrice(errorBody.previousTotal)}). Please review your order and pay again.`,
+          variant: "destructive",
+        });
+        setProcessing(false);
+        return;
+      }
+      if (errorBody?.outOfStock) {
+        toast({
+          title: "Some items are out of stock",
+          description: errorBody.error,
+          variant: "destructive",
+        });
+        setProcessing(false);
+        return;
+      }
+
+      if (usePayFast && checkoutData?.actionUrl && checkoutData?.formData) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = checkoutData.actionUrl;
+        for (const [k, v] of Object.entries(checkoutData.formData as Record<string, string>)) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = k;
+          input.value = v;
+          form.appendChild(input);
         }
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
 
+      if (fnError || !checkoutData?.redirectUrl) {
         capturePaymentError(fnError || new Error(errorBody?.error || "No redirect URL from gateway"), {
-          provider: isInternational ? "paypal" : "yoco", orderId: order.id, amount: chargeAmount, currency,
+          provider: isInternational ? "paypal" : paymentMethod, orderId: order.id, amount: chargeAmount, currency,
         });
         throw new Error(errorBody?.error || fnError?.message || "Payment gateway error.");
       }
-      if (!isInternational) {
-        // Yoco confirms via redirect status. PayPal confirms via the
-        // capture step on return instead (see the paypal_return handler
-        // above), which is where notify-order fires for PayPal orders.
-        const { error: notifyError } = await supabase.functions.invoke("notify-order", { body: { orderId: order.id } });
-        if (notifyError) captureOrderError(notifyError, { stage: "notify-order", orderId: order.id });
-      }
+      // Yoco/PayPal: webhook fires notify-order after payment confirmation.
+      // No client-side notify-order call.
       window.location.href = checkoutData.redirectUrl;
     } catch (err: any) {
       captureCheckoutError(err, { email: form.email, total: grandTotal, currency });
@@ -339,17 +369,43 @@ const Checkout = () => {
           <p className="text-[11px] text-muted-foreground -mt-1">
             Shipping is calculated from our Gqeberha (NMBM) warehouse using a benchmark zone × weight rate table. Weight above 5&nbsp;kg is an estimate.
           </p>
+
+          {currency === "ZAR" && (
+            <fieldset className="border border-border rounded-xl p-4 mt-2 space-y-2">
+              <legend className="text-xs font-semibold px-1">Payment method</legend>
+              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentMethod === "yoco" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"}`}>
+                <input type="radio" name="paymentMethod" value="yoco" checked={paymentMethod === "yoco"} onChange={() => setPaymentMethod("yoco")} className="accent-primary" />
+                <div>
+                  <span className="text-sm font-semibold">Card payment</span>
+                  <span className="block text-xs text-muted-foreground">Visa, Mastercard via Yoco</span>
+                </div>
+              </label>
+              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentMethod === "payfast" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"}`}>
+                <input type="radio" name="paymentMethod" value="payfast" checked={paymentMethod === "payfast"} onChange={() => setPaymentMethod("payfast")} className="accent-primary" />
+                <div>
+                  <span className="text-sm font-semibold">Capitec Pay / Instant EFT</span>
+                  <span className="block text-xs text-muted-foreground">Pay from your bank app via PayFast</span>
+                </div>
+              </label>
+            </fieldset>
+          )}
+
           <button
             type="submit"
             disabled={processing}
             className="w-full btn-primary py-3.5 text-sm shadow-elevated disabled:opacity-50 mt-4"
           >
             <Lock className="h-4 w-4" />
-            {processing ? t("checkout.processing") : t("checkout.payWith", { amount: formatPrice(grandTotal), gateway: currency === "ZAR" ? "Yoco" : "PayPal" })}
+            {processing ? t("checkout.processing") : t("checkout.payWith", {
+              amount: formatPrice(grandTotal),
+              gateway: currency !== "ZAR" ? "PayPal" : paymentMethod === "payfast" ? "PayFast" : "Yoco",
+            })}
           </button>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
-            {t("checkout.securePayment", { gateway: currency === "ZAR" ? "Yoco" : "PayPal" })}
+            {t("checkout.securePayment", {
+              gateway: currency !== "ZAR" ? "PayPal" : paymentMethod === "payfast" ? "PayFast" : "Yoco",
+            })}
           </div>
         </form>
 

@@ -51,6 +51,8 @@ const Account = () => {
   const [savingNotifKey, setSavingNotifKey] = useState<string | null>(null);
   const [savedProducts, setSavedProducts] = useState<Product[]>([]);
   const [savedProductsLoading, setSavedProductsLoading] = useState(true);
+  const [deletionRequested, setDeletionRequested] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -762,103 +764,99 @@ const Account = () => {
             })()}
 
             {/* Settings */}
-            {activeTab === "settings" && (() => {
-              const [deletionRequested, setDeletionRequested] = useState(false);
-              const [exporting, setExporting] = useState(false);
-
-              const handleDataExport = async () => {
-                setExporting(true);
-                try {
-                  const { data: { session } } = await supabase.auth.getSession();
-                  if (!session) return;
-                  const uid = session.user.id;
-                  const [profile, orders, wishlist] = await Promise.all([
-                    supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-                    supabase.from("orders").select("*, order_items(*)").eq("user_id", uid),
-                    supabase.from("wishlist_items").select("*, products(name, sku)").eq("user_id", uid),
-                  ]);
-                  const exportData = {
-                    exported_at: new Date().toISOString(),
-                    profile: profile.data,
-                    orders: orders.data,
-                    wishlist: wishlist.data,
-                  };
-                  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `aismartstore-data-export-${new Date().toISOString().slice(0, 10)}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  toast({ title: "Data exported", description: "Your data download has started." });
-                } catch {
-                  toast({ title: "Export failed", description: "Please try again or contact support.", variant: "destructive" });
-                } finally {
-                  setExporting(false);
-                }
-              };
-
-              const handleDeleteRequest = async () => {
-                if (!confirm("Are you sure you want to request account deletion? This action cannot be undone. Our team will process your request within 5 business days.")) return;
-                try {
-                  const { data: { session } } = await supabase.auth.getSession();
-                  if (!session) return;
-                  await supabase.from("support_tickets").insert({
-                    user_id: session.user.id,
-                    subject: "Account deletion request",
-                    message: `User ${session.user.email} has requested their account and all associated data to be permanently deleted per POPIA.`,
-                    status: "open",
-                    priority: "high",
-                  });
-                  setDeletionRequested(true);
-                  toast({ title: "Deletion request submitted", description: "We'll process your request within 5 business days and email you a confirmation." });
-                } catch {
-                  toast({ title: "Request failed", description: "Please email support@aismartstore.co.za directly.", variant: "destructive" });
-                }
-              };
-
-              return (
-                <div className="space-y-4 max-w-lg">
-                  <h2 className="font-display font-extrabold text-xl">Account Settings</h2>
-                  <div className="space-y-3">
-                    <Link to="/compliance" className="w-full card-flat p-4 flex items-center gap-4 text-left hover:shadow-md transition-all">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-primary/[0.06] text-primary"><Shield className="h-4 w-4" /></div>
+            {activeTab === "settings" && (
+              <div className="space-y-4 max-w-lg">
+                <h2 className="font-display font-extrabold text-xl">Account Settings</h2>
+                <div className="space-y-3">
+                  <Link to="/compliance" className="w-full card-flat p-4 flex items-center gap-4 text-left hover:shadow-md transition-all">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-primary/[0.06] text-primary"><Shield className="h-4 w-4" /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold">Privacy controls</p>
+                      <p className="text-[10px] text-muted-foreground">Manage how your data is used</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      setExporting(true);
+                      try {
+                        if (!session) return;
+                        const uid = session.user.id;
+                        const [profileRes, ordersRes, wishlistRes] = await Promise.all([
+                          supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
+                          supabase.from("orders").select("*, order_items(*)").eq("user_id", uid),
+                          supabase.from("wishlists").select("*, products(name, sku)").eq("user_id", uid),
+                        ]);
+                        const exportData = {
+                          exported_at: new Date().toISOString(),
+                          profile: profileRes.data,
+                          orders: ordersRes.data,
+                          wishlist: wishlistRes.data,
+                        };
+                        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `aismartstore-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        toast({ title: "Data exported", description: "Your data download has started." });
+                      } catch {
+                        toast({ title: "Export failed", description: "Please try again or contact support.", variant: "destructive" });
+                      } finally {
+                        setExporting(false);
+                      }
+                    }}
+                    disabled={exporting}
+                    className="w-full card-flat p-4 flex items-center gap-4 text-left hover:shadow-md transition-all disabled:opacity-50"
+                  >
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-primary/[0.06] text-primary"><Download className="h-4 w-4" /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold">{exporting ? "Exporting..." : "Data export"}</p>
+                      <p className="text-[10px] text-muted-foreground">Download a copy of your data</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </button>
+                  {deletionRequested ? (
+                    <div className="w-full card-flat p-4 flex items-center gap-4 text-left border-destructive/30">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-destructive/10 text-destructive"><X className="h-4 w-4" /></div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold">Privacy controls</p>
-                        <p className="text-[10px] text-muted-foreground">Manage how your data is used</p>
+                        <p className="text-sm font-semibold text-destructive">Deletion requested</p>
+                        <p className="text-[10px] text-muted-foreground">We'll email you when processing is complete (up to 5 business days).</p>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    </Link>
-                    <button onClick={handleDataExport} disabled={exporting} className="w-full card-flat p-4 flex items-center gap-4 text-left hover:shadow-md transition-all disabled:opacity-50">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-primary/[0.06] text-primary"><Download className="h-4 w-4" /></div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Are you sure you want to request account deletion? This action cannot be undone. Our team will process your request within 5 business days.")) return;
+                        try {
+                          if (!session) return;
+                          await supabase.from("support_tickets").insert({
+                            user_id: session.user.id,
+                            subject: "Account deletion request",
+                            message: `User ${session.user.email} has requested their account and all associated data to be permanently deleted per POPIA.`,
+                            status: "open",
+                            priority: "high",
+                          });
+                          setDeletionRequested(true);
+                          toast({ title: "Deletion request submitted", description: "We'll process your request within 5 business days and email you a confirmation." });
+                        } catch {
+                          toast({ title: "Request failed", description: "Please email support@aismartstore.co.za directly.", variant: "destructive" });
+                        }
+                      }}
+                      className="w-full card-flat p-4 flex items-center gap-4 text-left hover:shadow-md transition-all hover:border-destructive/30"
+                    >
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-destructive/10 text-destructive"><X className="h-4 w-4" /></div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold">{exporting ? "Exporting..." : "Data export"}</p>
-                        <p className="text-[10px] text-muted-foreground">Download a copy of your data</p>
+                        <p className="text-sm font-semibold text-destructive">Account deletion</p>
+                        <p className="text-[10px] text-muted-foreground">Permanently delete your account</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     </button>
-                    {deletionRequested ? (
-                      <div className="w-full card-flat p-4 flex items-center gap-4 text-left border-destructive/30">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-destructive/10 text-destructive"><X className="h-4 w-4" /></div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-destructive">Deletion requested</p>
-                          <p className="text-[10px] text-muted-foreground">We'll email you when processing is complete (up to 5 business days).</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <button onClick={handleDeleteRequest} className="w-full card-flat p-4 flex items-center gap-4 text-left hover:shadow-md transition-all hover:border-destructive/30">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-destructive/10 text-destructive"><X className="h-4 w-4" /></div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-destructive">Account deletion</p>
-                          <p className="text-[10px] text-muted-foreground">Permanently delete your account</p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
-              );
-            })()}
+              </div>
+            )}
           </div>
         </div>
       </div>

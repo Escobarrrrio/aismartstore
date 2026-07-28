@@ -63,7 +63,7 @@ const ProcurementPage = () => {
       trackEvent({ name: "storefront_viewed", audience: "business", surface: "procurement" });
       const { data } = await supabase.rpc("search_products", {
         search_query: "",
-        filter_ai_only: true,
+        filter_ai_only: false,
         sort_by: "price_desc",
         page_number: 0,
         page_size: 24,

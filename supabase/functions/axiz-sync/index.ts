@@ -21,6 +21,8 @@ function isAiRelated(s: string): boolean {
   if (/artificial intelligence/i.test(s)) return true;
   if (/\b(machine learning|neural|edge ai|genai|deep learning)\b/i.test(s)) return true;
   if (/\b(copilot|co-pilot|NPU|smart camera|ai speaker|smart home|smart speaker|smart display|smart hub|voice assistant|alexa|google assistant)\b/i.test(s)) return true;
+  if (/\b(GPU|GPGPU|accelerat|inference|tensor|CUDA|ROCm|NVIDIA|GeForce|Quadro|RTX|Radeon\s*Pro)\b/i.test(s)) return true;
+  if (/\b(workstation|data\s*cent|HPC|compute\s*node|rack\s*server)\b/i.test(s)) return true;
   return false;
 }
 

@@ -39,6 +39,19 @@ const Checkout = () => {
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
   const [paymentMethod, setPaymentMethod] = useState<"yoco" | "payfast">("yoco");
+  // Capitec Pay / Instant EFT stays hidden until PayFast credentials are
+  // actually configured -- offering it without them sends shoppers to a
+  // "PayFast not configured" error from create-payfast-checkout.
+  const [payfastEnabled, setPayfastEnabled] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("store_settings")
+      .select("value")
+      .eq("key", "payfast_enabled")
+      .maybeSingle()
+      .then(({ data }) => setPayfastEnabled(data?.value === "true"));
+  }, []);
   const [capturingPaypal, setCapturingPaypal] = useState(searchParams.get("status") === "paypal_return");
   const failedOrderId = searchParams.get("orderId");
   const [userId, setUserId] = useState<string | null>(null);
@@ -233,7 +246,7 @@ const Checkout = () => {
       const baseUrl = window.location.origin;
       const isInternational = currency !== "ZAR";
       const chargeAmount = isInternational ? convert(grandTotal, currency) : grandTotal;
-      const usePayFast = !isInternational && paymentMethod === "payfast";
+      const usePayFast = !isInternational && paymentMethod === "payfast" && payfastEnabled;
 
       const gatewayFn = isInternational
         ? "create-paypal-order"
@@ -370,7 +383,7 @@ const Checkout = () => {
             Shipping is calculated from our Gqeberha (NMBM) warehouse using a benchmark zone × weight rate table. Weight above 5&nbsp;kg is an estimate.
           </p>
 
-          {currency === "ZAR" && (
+          {currency === "ZAR" && payfastEnabled && (
             <fieldset className="border border-border rounded-xl p-4 mt-2 space-y-2">
               <legend className="text-xs font-semibold px-1">Payment method</legend>
               <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentMethod === "yoco" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"}`}>
@@ -398,13 +411,13 @@ const Checkout = () => {
             <Lock className="h-4 w-4" />
             {processing ? t("checkout.processing") : t("checkout.payWith", {
               amount: formatPrice(grandTotal),
-              gateway: currency !== "ZAR" ? "PayPal" : paymentMethod === "payfast" ? "PayFast" : "Yoco",
+              gateway: currency !== "ZAR" ? "PayPal" : (payfastEnabled && paymentMethod === "payfast") ? "PayFast" : "Yoco",
             })}
           </button>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
             {t("checkout.securePayment", {
-              gateway: currency !== "ZAR" ? "PayPal" : paymentMethod === "payfast" ? "PayFast" : "Yoco",
+              gateway: currency !== "ZAR" ? "PayPal" : (payfastEnabled && paymentMethod === "payfast") ? "PayFast" : "Yoco",
             })}
           </div>
         </form>

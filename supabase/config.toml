@@ -17,5 +17,9 @@ project_id = "xwiqubcilptxzvdigsmp"
     verify_jwt = false
   [functions.unsubscribe]
     verify_jwt = false
+  [functions.create-payfast-checkout]
+    verify_jwt = true
+  [functions.payfast-webhook]
+    verify_jwt = false
   [functions.yoco-webhook]
     verify_jwt = false

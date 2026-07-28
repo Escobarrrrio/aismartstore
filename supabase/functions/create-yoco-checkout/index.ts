@@ -62,10 +62,22 @@ Deno.serve(async (req) => {
     // anything -- order.total_amount was written by the browser, not by us.
     const { data: orderItems } = await supabase
       .from("order_items")
-      .select("quantity, products(price)")
+      .select("quantity, products(price, name, in_stock, stock_quantity)")
       .eq("order_id", orderId);
 
     const items = orderItems ?? [];
+
+    const unavailable = items.filter((i: any) => i.products?.in_stock === false);
+    if (unavailable.length > 0) {
+      const names = unavailable.map((i: any) => i.products?.name ?? "Unknown").join(", ");
+      return new Response(JSON.stringify({
+        error: `Out of stock: ${names}. Please remove these items and try again.`,
+        outOfStock: true,
+        items: unavailable.map((i: any) => i.products?.name),
+      }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const subtotal = items.reduce(
       (sum: number, i: any) => sum + Number(i.products?.price ?? 0) * Number(i.quantity ?? 0),
       0,

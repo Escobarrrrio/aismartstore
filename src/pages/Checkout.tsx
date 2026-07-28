@@ -269,19 +269,24 @@ const Checkout = () => {
           setProcessing(false);
           return;
         }
+        if (errorBody?.outOfStock) {
+          toast({
+            title: "Some items are out of stock",
+            description: errorBody.error,
+            variant: "destructive",
+          });
+          setProcessing(false);
+          return;
+        }
 
         capturePaymentError(fnError || new Error(errorBody?.error || "No redirect URL from gateway"), {
           provider: isInternational ? "paypal" : "yoco", orderId: order.id, amount: chargeAmount, currency,
         });
         throw new Error(errorBody?.error || fnError?.message || "Payment gateway error.");
       }
-      if (!isInternational) {
-        // Yoco confirms via redirect status. PayPal confirms via the
-        // capture step on return instead (see the paypal_return handler
-        // above), which is where notify-order fires for PayPal orders.
-        const { error: notifyError } = await supabase.functions.invoke("notify-order", { body: { orderId: order.id } });
-        if (notifyError) captureOrderError(notifyError, { stage: "notify-order", orderId: order.id });
-      }
+      // Yoco: webhook fires notify-order after payment.succeeded confirmation.
+      // PayPal: capture-paypal-order fires notify-order after capture.
+      // No client-side notify-order call — it ran before payment was confirmed.
       window.location.href = checkoutData.redirectUrl;
     } catch (err: any) {
       captureCheckoutError(err, { email: form.email, total: grandTotal, currency });

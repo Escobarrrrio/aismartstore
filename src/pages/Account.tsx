@@ -831,13 +831,18 @@ const Account = () => {
                         if (!confirm("Are you sure you want to request account deletion? This action cannot be undone. Our team will process your request within 5 business days.")) return;
                         try {
                           if (!session) return;
-                          await supabase.from("support_tickets").insert({
+                          // support_tickets has no `message`/`priority` column, so the
+                          // previous insert was rejected by PostgREST every time. Because
+                          // supabase-js resolves (rather than throws) on error, the catch
+                          // never ran and the shopper was told their POPIA deletion request
+                          // had been submitted when nothing was ever recorded.
+                          const { error } = await supabase.from("support_tickets").insert({
                             user_id: session.user.id,
-                            subject: "Account deletion request",
-                            message: `User ${session.user.email} has requested their account and all associated data to be permanently deleted per POPIA.`,
+                            type: "inquiry",
                             status: "open",
-                            priority: "high",
+                            subject: `POPIA account deletion request — ${session.user.email}: permanently delete this account and all associated data.`,
                           });
+                          if (error) throw error;
                           setDeletionRequested(true);
                           toast({ title: "Deletion request submitted", description: "We'll process your request within 5 business days and email you a confirmation." });
                         } catch {

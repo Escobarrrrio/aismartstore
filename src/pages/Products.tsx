@@ -10,14 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { formatMoney } from "@/lib/currency";
 import { trackEvent } from "@/lib/analytics";
+import { AUDIENCES, facetLabel, parseAudience, priceChipsFor, type Audience } from "@/lib/facets";
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
 const PAGE_SIZE = 48;
-// Enterprise / procurement-tier items (workstations, GPUs, rack gear) live on
-// the /procurement page. The consumer catalogue defaults to items priced below
-// this threshold; users can opt in via the "Include business items" toggle.
-const BUSINESS_PRICE_THRESHOLD = 15000;
 
 interface Row {
   id: string;
@@ -50,9 +47,24 @@ const toProduct = (r: Row): Product => ({
   createdAt: new Date().toISOString(),
 });
 
-// Simple module-level cache for distinct categories/brands.
 type FacetOption = { value: string; count: number };
-let facetCache: { categories: FacetOption[]; brands: FacetOption[] } | null = null;
+
+// Everything the sidebar needs, all counted in the CURRENT filter context by
+// `search_product_facets` so no number on screen can disagree with the grid.
+type Facets = {
+  categories: FacetOption[];
+  brands: FacetOption[];
+  aiReady: number;
+  inStock: number;
+  priceMin: number;
+  priceMax: number;
+};
+
+const EMPTY_FACETS: Facets = {
+  categories: [], brands: [], aiReady: 0, inStock: 0, priceMin: 0, priceMax: 0,
+};
+
+type FacetRow = { facet_type: string; facet_value: string; product_count: number | string };
 
 const fmtCount = (n: number) => n.toLocaleString("en-ZA").replace(/,/g, " ");
 
@@ -70,7 +82,7 @@ const Products = () => {
   const urlBrand = searchParams.get("brand") || "";
   const urlAiOnly = searchParams.get("ai") === "1";
   const urlInStockOnly = searchParams.get("stock") === "1";
-  const urlIncludeBusiness = searchParams.get("biz") === "1";
+  const urlAudience = parseAudience(searchParams.get("audience"));
   const urlMinPrice = searchParams.get("min") || "";
   const urlMaxPrice = searchParams.get("max") || "";
   const urlSort = (searchParams.get("sort") || "relevance") as SortOption;
@@ -82,7 +94,7 @@ const Products = () => {
   const [brand, setBrand] = useState(urlBrand);
   const [aiOnly, setAiOnly] = useState(urlAiOnly);
   const [inStockOnly, setInStockOnly] = useState(urlInStockOnly);
-  const [includeBusiness, setIncludeBusiness] = useState(urlIncludeBusiness);
+  const [audience, setAudience] = useState<Audience>(urlAudience);
   const [minPrice, setMinPrice] = useState<string>(urlMinPrice);
   const [maxPrice, setMaxPrice] = useState<string>(urlMaxPrice);
   const [sort, setSort] = useState<SortOption>(urlSort);
@@ -90,20 +102,20 @@ const Products = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   // Fire storefront_viewed once per mount so audience split can be validated
-  // in prod analytics (residential storefront = /products).
+  // in prod analytics.
   useEffect(() => {
-    trackEvent({ name: "storefront_viewed", audience: "residential", surface: "products", query: urlQ || undefined });
+    trackEvent({ name: "storefront_viewed", audience: urlAudience, surface: "products", query: urlQ || undefined });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [rows, setRows] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [facets, setFacets] = useState<{ categories: FacetOption[]; brands: FacetOption[] }>(
-    facetCache || { categories: [], brands: [] }
-  );
-  const [facetsLoading, setFacetsLoading] = useState(!facetCache);
+  const [facets, setFacets] = useState<Facets>(EMPTY_FACETS);
+  const [facetsLoading, setFacetsLoading] = useState(true);
   const [facetsError, setFacetsError] = useState(false);
+  // Bumped by the retry button to re-run the facet query without a page reload.
+  const [facetNonce, setFacetNonce] = useState(0);
 
   // Re-hydrate local state from URL on browser Back/Forward (popstate). The
   // router re-invokes this component with fresh `searchParams`; syncing here
@@ -115,13 +127,12 @@ const Products = () => {
     setBrand(urlBrand);
     setAiOnly(urlAiOnly);
     setInStockOnly(urlInStockOnly);
-    setIncludeBusiness(urlIncludeBusiness);
+    setAudience(urlAudience);
     setMinPrice(urlMinPrice);
     setMaxPrice(urlMaxPrice);
     setSort(urlSort);
     setPage(urlPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlQ, urlCategory, urlBrand, urlAiOnly, urlInStockOnly, urlIncludeBusiness, urlMinPrice, urlMaxPrice, urlSort, urlPage]);
+  }, [urlQ, urlCategory, urlBrand, urlAiOnly, urlInStockOnly, urlAudience, urlMinPrice, urlMaxPrice, urlSort, urlPage]);
 
   // Serialize state → URL. `replace: true` avoids polluting history on every
   // keystroke; a full push only happens on hard navigations elsewhere.
@@ -132,7 +143,7 @@ const Products = () => {
     if (brand) params.set("brand", brand);
     if (aiOnly) params.set("ai", "1");
     if (inStockOnly) params.set("stock", "1");
-    if (includeBusiness) params.set("biz", "1");
+    if (audience !== "residential") params.set("audience", audience);
     if (minPrice) params.set("min", minPrice);
     if (maxPrice) params.set("max", maxPrice);
     if (sort && sort !== "relevance") params.set("sort", sort);
@@ -142,99 +153,64 @@ const Products = () => {
     const current = searchParams.toString();
     if (next !== current) setSearchParams(params, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort, page]);
+  }, [query, category, brand, aiOnly, inStockOnly, audience, minPrice, maxPrice, sort, page]);
 
-  // Load facets via cached RPC. Falls back to (1) the cache table, then (2) a
-  // lightweight distinct query on products, so the dropdowns are never empty.
+  // ── Live facet counts ────────────────────────────────────────────────────
+  // Counted by `search_product_facets` against the exact same predicates as the
+  // grid, so every number in the sidebar is precisely what you get by clicking
+  // it. Each facet relaxes its own selection server-side, which is what lets a
+  // shopper switch from "Servers" to "Cables" without the list collapsing.
+  const facetArgs = useMemo(() => ({
+    search_query: query,
+    filter_category: category || null,
+    filter_brand: brand || null,
+    filter_ai_only: aiOnly,
+    filter_in_stock_only: inStockOnly,
+    min_price: minPrice ? Number(minPrice) : null,
+    max_price: maxPrice ? Number(maxPrice) : null,
+    filter_audience: audience,
+  }), [query, category, brand, aiOnly, inStockOnly, minPrice, maxPrice, audience]);
+
   useEffect(() => {
     let cancelled = false;
-
-    const setFromRows = (rows: Array<{ facet_type: string; facet_value: string; product_count: number | string }>) => {
-      const categories: FacetOption[] = [];
-      const brands: FacetOption[] = [];
-      for (const r of rows) {
+    (async () => {
+      setFacetsLoading(true);
+      const { data, error } = await supabase.rpc("search_product_facets", facetArgs);
+      if (cancelled) return;
+      if (error || !Array.isArray(data)) {
+        setFacetsError(true);
+        setFacetsLoading(false);
+        return;
+      }
+      const next: Facets = { ...EMPTY_FACETS, categories: [], brands: [] };
+      for (const r of data as FacetRow[]) {
         if (!r?.facet_value) continue;
-        const opt = { value: r.facet_value, count: Number(r.product_count) || 0 };
-        if (r.facet_type === "category") categories.push(opt);
-        else if (r.facet_type === "brand") brands.push(opt);
+        const count = Number(r.product_count) || 0;
+        if (r.facet_type === "category") next.categories.push({ value: r.facet_value, count });
+        else if (r.facet_type === "brand") next.brands.push({ value: r.facet_value, count });
+        else if (r.facet_type === "toggle") {
+          if (r.facet_value === "ai_ready") next.aiReady = count;
+          else if (r.facet_value === "in_stock") next.inStock = count;
+        } else if (r.facet_type === "meta") {
+          if (r.facet_value === "price_min") next.priceMin = count;
+          else if (r.facet_value === "price_max") next.priceMax = count;
+        }
       }
-      categories.sort((a, b) => b.count - a.count);
-      brands.sort((a, b) => b.count - a.count);
-      facetCache = { categories, brands };
-      setFacets(facetCache);
+      const byCount = (a: FacetOption, b: FacetOption) =>
+        b.count - a.count || a.value.localeCompare(b.value);
+      next.categories.sort(byCount);
+      next.brands.sort(byCount);
+      setFacets(next);
       setFacetsError(false);
-    };
-
-    const load = async (attempt = 0): Promise<void> => {
-      try {
-        // 1) Fast cached RPC.
-        const { data, error } = await supabase.rpc("get_product_facets");
-        if (cancelled) return;
-        if (!error && Array.isArray(data) && data.length > 0) {
-          setFromRows(data as any);
-          setFacetsLoading(false);
-          return;
-        }
-        // 2) Direct cache table read.
-        const { data: cacheRows, error: cacheErr } = await supabase
-          .from("product_facets_cache")
-          .select("facet_type, facet_value, product_count")
-          .order("product_count", { ascending: false });
-        if (cancelled) return;
-        if (!cacheErr && cacheRows && cacheRows.length > 0) {
-          setFromRows(cacheRows as any);
-          setFacetsLoading(false);
-          return;
-        }
-        // 3) Distinct sample from products so dropdowns still have something.
-        const { data: sampleRows } = await supabase
-          .from("products")
-          .select("category, brand")
-          .eq("is_active", true)
-          .not("category", "is", null)
-          .limit(500);
-        if (cancelled) return;
-        if (sampleRows && sampleRows.length > 0) {
-          const catMap = new Map<string, number>();
-          const brandMap = new Map<string, number>();
-          for (const r of sampleRows as Array<{ category: string | null; brand: string | null }>) {
-            if (r.category) catMap.set(r.category, (catMap.get(r.category) || 0) + 1);
-            if (r.brand) brandMap.set(r.brand, (brandMap.get(r.brand) || 0) + 1);
-          }
-          const toOpts = (m: Map<string, number>) =>
-            Array.from(m.entries())
-              .map(([value, count]) => ({ value, count }))
-              .sort((a, b) => b.count - a.count);
-          facetCache = { categories: toOpts(catMap), brands: toOpts(brandMap) };
-          setFacets(facetCache);
-          setFacetsError(false);
-          setFacetsLoading(false);
-          return;
-        }
-        // Retry once for transient issues.
-        if (attempt < 1) {
-          await new Promise((r) => setTimeout(r, 800));
-          if (!cancelled) return load(attempt + 1);
-        }
-        if (!cancelled) {
-          setFacetsError(true);
-          setFacetsLoading(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setFacetsError(true);
-          setFacetsLoading(false);
-        }
-      }
-    };
-
-    if (facetCache) {
-      setFacets(facetCache);
       setFacetsLoading(false);
-    }
-    load();
+    })();
     return () => { cancelled = true; };
-  }, []);
+  }, [facetArgs, facetNonce]);
+
+  const priceChips = useMemo(
+    () => priceChipsFor(facets.priceMin, facets.priceMax),
+    [facets.priceMin, facets.priceMax],
+  );
 
 
 
@@ -260,11 +236,12 @@ const Products = () => {
       sort_by: sort,
       page_number: pageIndex,
       page_size: PAGE_SIZE,
-      // Residential storefront only. The Business/Government portal
-      // (/procurement) explicitly requests filter_audience: 'business'.
-      filter_audience: "residential",
+      // Catalogue scope is a real, URL-addressable filter: /products defaults to
+      // the consumer storefront, ?audience=business is the enterprise catalogue
+      // the Business Portal links into, ?audience=all spans both.
+      filter_audience: audience,
     };
-  }, [query, category, brand, aiOnly, inStockOnly, minPrice, maxPrice, sort]);
+  }, [query, category, brand, aiOnly, inStockOnly, minPrice, maxPrice, sort, audience]);
 
   const cacheKey = useCallback((pageIndex: number) =>
     JSON.stringify(buildRpcArgs(pageIndex)), [buildRpcArgs]);
@@ -317,7 +294,7 @@ const Products = () => {
         prefetchCache.current.set(key, { rows: rowsOut, total: totalOut });
         trackEvent({
           name: "product_list_returned",
-          audience: "residential",
+          audience,
           surface: "products",
           count: rowsOut.length,
           total: totalOut,
@@ -334,7 +311,7 @@ const Products = () => {
       // Fire and forget — errors don't affect the visible page.
       void prefetchPage(page + 1);
     }
-  }, [page, buildRpcArgs, cacheKey, prefetchPage]);
+  }, [page, buildRpcArgs, cacheKey, prefetchPage, audience, query]);
 
   useEffect(() => { runSearch(); }, [runSearch]);
 
@@ -343,11 +320,13 @@ const Products = () => {
   useEffect(() => {
     prefetchCache.current.clear();
     inflightPrefetch.current.clear();
-  }, [query, category, brand, aiOnly, inStockOnly, includeBusiness, minPrice, maxPrice, sort]);
+  }, [query, category, brand, aiOnly, inStockOnly, audience, minPrice, maxPrice, sort]);
 
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const activeFilters = [category, brand, aiOnly ? "ai" : "", inStockOnly ? "stock" : "", includeBusiness ? "biz" : "", minPrice, maxPrice].filter(Boolean).length;
+  // Catalogue scope is deliberately NOT counted here: it's which shop you're
+  // standing in, not a refinement you'd expect "Reset all filters" to undo.
+  const activeFilters = [category, brand, aiOnly ? "ai" : "", inStockOnly ? "stock" : "", minPrice, maxPrice].filter(Boolean).length;
 
   const applySearch = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -359,7 +338,7 @@ const Products = () => {
 
   const clearFilters = () => {
     setCategory(""); setBrand(""); setAiOnly(false); setInStockOnly(false);
-    setIncludeBusiness(false); setMinPrice(""); setMaxPrice(""); setPage(0);
+    setMinPrice(""); setMaxPrice(""); setPage(0);
     trackEvent({ name: "filters_cleared_all", page: "/products" });
   };
 
@@ -372,7 +351,22 @@ const Products = () => {
     return nums;
   }, [page, totalPages]);
 
-  const onRetryFacets = () => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); };
+  const onRetryFacets = useCallback(() => {
+    setFacetsError(false);
+    setFacetNonce((n) => n + 1);
+  }, []);
+
+  // Switching catalogue scope resets the refinements below it. Category, brand
+  // and price ranges are scope-specific taxonomies — carrying "Smart Home" or
+  // "under R2 000" into a catalogue whose cheapest line is R15 029 would strand
+  // the shopper on an empty grid. The search term is kept, since that's the one
+  // thing they clearly still want.
+  const onAudienceChange = useCallback((next: Audience) => {
+    setAudience(next);
+    setCategory(""); setBrand(""); setMinPrice(""); setMaxPrice("");
+    setPage(0);
+    trackEvent({ name: "audience_changed", value: next, page: "/products" });
+  }, []);
 
   // Facet setters with analytics tracking. Selecting a value fires
   // "facet_selected"; clearing (empty string) fires "facet_cleared".
@@ -412,8 +406,8 @@ const Products = () => {
   });
   const activeChips: Chip[] = [];
   if (query) activeChips.push(chip("q", `“${query}”`, () => { setSearchInput(""); setQuery(""); setPage(0); }));
-  if (category) activeChips.push(chip("cat", category, () => { setCategory(""); setPage(0); }));
-  if (brand) activeChips.push(chip("brand", brand, () => { setBrand(""); setPage(0); }));
+  if (category) activeChips.push(chip("cat", facetLabel(category), () => { setCategory(""); setPage(0); }));
+  if (brand) activeChips.push(chip("brand", facetLabel(brand), () => { setBrand(""); setPage(0); }));
   if (aiOnly) activeChips.push(chip("ai", "AI ready", () => { setAiOnly(false); setPage(0); }));
   if (inStockOnly) activeChips.push(chip("stock", "In stock", () => { setInStockOnly(false); setPage(0); }));
   
@@ -446,12 +440,17 @@ const Products = () => {
       <div className="bg-muted/50 border-b border-border">
         <div className="container mx-auto px-4 py-8 md:py-12">
           <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">{t("products.catalogueHeading")}</h1>
-          <p className="text-muted-foreground" data-testid="results-count" data-total={total} data-loading={loading}>
+          <p className="text-muted-foreground" data-testid="results-count" data-total={total} data-loading={loading} data-audience={audience}>
             {loading
               ? "Searching…"
               : query
                 ? `${total.toLocaleString("en-ZA")} results for "${query}"`
                 : `${total.toLocaleString("en-ZA")} products`}
+            {!loading && audience !== "residential" && (
+              <span className="ml-1">
+                · {audience === "business" ? "Business & government catalogue" : "Full catalogue"}
+              </span>
+            )}
           </p>
         </div>
       </div>
@@ -460,6 +459,33 @@ const Products = () => {
         {/* Filter sidebar (desktop) */}
         <aside className="hidden lg:block">
           <div className="card-flat p-5 sticky top-24 space-y-5 max-h-[calc(100vh-7rem)] overflow-y-auto">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Catalogue
+              </label>
+              <div role="radiogroup" aria-label="Catalogue scope" data-testid="catalogue-scope" className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-muted">
+                {AUDIENCES.map((a) => {
+                  const active = audience === a.value;
+                  return (
+                    <button
+                      key={a.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      title={a.hint}
+                      data-testid={`scope-${a.value}`}
+                      onClick={() => onAudienceChange(a.value)}
+                      className={`rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+                        active ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {a.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <FacetList
               label="Category"
               options={facets.categories}
@@ -491,31 +517,50 @@ const Products = () => {
                   onChange={(e) => { setMaxPrice(e.target.value); setPage(0); }}
                   className="input-premium" aria-label="Maximum price" />
               </div>
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {[500, 2000, 5000, 10000].map((p) => (
-                  <button key={p} type="button"
-                    onClick={() => { setMaxPrice(String(p)); setPage(0); }}
-                    className="text-[11px] px-2 py-1 rounded-full border border-input hover:border-primary hover:text-primary transition-colors">
-                    Under R{p.toLocaleString("en-ZA")}
-                  </button>
-                ))}
-              </div>
+              {/* Chips derived from the real price spread of the current result
+                  set — a fixed "Under R500" is noise in the enterprise catalogue. */}
+              {priceChips.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {priceChips.map((p) => (
+                    <button key={p} type="button"
+                      onClick={() => { setMaxPrice(String(p)); setPage(0); }}
+                      className="text-[11px] px-2 py-1 rounded-full border border-input hover:border-primary hover:text-primary transition-colors">
+                      Under {formatMoney(p)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {facets.priceMax > 0 && (
+                <p className="text-[11px] text-muted-foreground mt-2">
+                  Available range: {formatMoney(facets.priceMin)} – {formatMoney(facets.priceMax)}
+                </p>
+              )}
             </div>
 
             <div className="border-t border-border pt-4 space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer text-sm">
-                <input type="checkbox" checked={aiOnly} onChange={(e) => { setAiOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
-                <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> AI products only</span>
+              {/* Counts come from the same query as the grid, so the number
+                  beside a toggle is exactly what flipping it will show. */}
+              <label className={`flex items-center gap-3 text-sm ${facets.aiReady === 0 && !aiOnly ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}>
+                <input type="checkbox" checked={aiOnly}
+                  disabled={facets.aiReady === 0 && !aiOnly}
+                  onChange={(e) => { setAiOnly(e.target.checked); setPage(0); }}
+                  className="w-4 h-4 accent-primary" />
+                <span className="inline-flex items-center gap-1.5 flex-1"><Sparkles className="h-3.5 w-3.5 text-primary" /> AI products only</span>
+                <span className="text-[11px] tabular-nums text-muted-foreground">{fmtCount(facets.aiReady)}</span>
               </label>
-              <label className="flex items-center gap-3 cursor-pointer text-sm">
-                <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }} className="w-4 h-4 accent-primary" />
-                In stock only
+              <label className={`flex items-center gap-3 text-sm ${facets.inStock === 0 && !inStockOnly ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}>
+                <input type="checkbox" checked={inStockOnly}
+                  disabled={facets.inStock === 0 && !inStockOnly}
+                  onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }}
+                  className="w-4 h-4 accent-primary" />
+                <span className="flex-1">In stock only</span>
+                <span className="text-[11px] tabular-nums text-muted-foreground">{fmtCount(facets.inStock)}</span>
               </label>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 <PackageCheck className="h-3.5 w-3.5 inline mr-1" />
-                Shopping for your business or a government department?
-                Enterprise gear (servers, warranty, licensing, rack-scale AI)
-                lives on our <a href="/procurement" className="text-primary font-semibold hover:underline">Business Portal</a>.
+                Need a formal quote, tender response or the full compliance pack?
+                Our <a href="/procurement" className="text-primary font-semibold hover:underline">Business Portal</a> handles
+                government and enterprise procurement.
               </p>
             </div>
 
@@ -594,14 +639,20 @@ const Products = () => {
             brands={facets.brands}
             facetsLoading={facetsLoading}
             facetsError={facetsError}
-            onRetryFacets={() => { facetCache = null; setFacetsLoading(true); setFacetsError(false); location.reload(); }}
+            onRetryFacets={onRetryFacets}
             category={category}
             brand={brand}
             minPrice={minPrice}
             maxPrice={maxPrice}
             aiOnly={aiOnly}
             inStockOnly={inStockOnly}
-            includeBusiness={includeBusiness}
+            aiReadyCount={facets.aiReady}
+            inStockCount={facets.inStock}
+            priceChips={priceChips}
+            priceMin={facets.priceMin}
+            priceMax={facets.priceMax}
+            audience={audience}
+            setAudience={onAudienceChange}
             sort={sort}
             setCategory={onCategoryChange}
             setBrand={onBrandChange}
@@ -609,7 +660,6 @@ const Products = () => {
             setMaxPrice={(v) => { setMaxPrice(v); setPage(0); }}
             setAiOnly={(v) => { setAiOnly(v); setPage(0); }}
             setInStockOnly={(v) => { setInStockOnly(v); setPage(0); }}
-            setIncludeBusiness={(v) => { setIncludeBusiness(v); setPage(0); }}
             setSort={onSortChange}
             resultCount={total}
             activeFilters={activeFilters}

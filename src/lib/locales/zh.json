@@ -229,7 +229,35 @@
     "nextImage": "下一张",
     "goToImage": "跳到第 {{index}} 张",
     "enlargeImage": "放大图片",
-    "clickToEnlarge": "点击放大"
+    "clickToEnlarge": "点击放大",
+    "specSource": "规格信息来自供应商的产品数据。如需完整数据表，请在下单前联系我们。",
+    "specGroup": {
+      "details": "产品信息",
+      "technical": "技术规格"
+    },
+    "spec": {
+      "Brand": "品牌",
+      "Product code": "产品编号",
+      "Category": "类别",
+      "Availability": "库存状态",
+      "Capacity": "容量",
+      "Processor": "处理器",
+      "Memory": "内存",
+      "Memory type": "内存类型",
+      "Memory speed": "内存频率",
+      "Drive type": "硬盘类型",
+      "Interface": "接口",
+      "Rotational speed": "转速",
+      "Form factor": "规格尺寸",
+      "Rack height": "机架高度",
+      "Display": "显示屏",
+      "Network speed": "网络速率",
+      "Power supply": "电源",
+      "Cable length": "线缆长度",
+      "Operating system": "操作系统",
+      "Warranty": "保修",
+      "Supplier": "供应商"
+    }
   },
   "notFound": {
     "message": "哎呀！页面未找到",

@@ -229,7 +229,35 @@
     "nextImage": "Next image",
     "goToImage": "Go to image {{index}}",
     "enlargeImage": "Enlarge image",
-    "clickToEnlarge": "Click to enlarge"
+    "clickToEnlarge": "Click to enlarge",
+    "specSource": "Specifications are derived from the supplier's product data. Contact us if you need a full datasheet before ordering.",
+    "specGroup": {
+      "details": "Product details",
+      "technical": "Technical specifications"
+    },
+    "spec": {
+      "Brand": "Brand",
+      "Product code": "Product code",
+      "Category": "Category",
+      "Availability": "Availability",
+      "Capacity": "Capacity",
+      "Processor": "Processor",
+      "Memory": "Memory",
+      "Memory type": "Memory type",
+      "Memory speed": "Memory speed",
+      "Drive type": "Drive type",
+      "Interface": "Interface",
+      "Rotational speed": "Rotational speed",
+      "Form factor": "Form factor",
+      "Rack height": "Rack height",
+      "Display": "Display",
+      "Network speed": "Network speed",
+      "Power supply": "Power supply",
+      "Cable length": "Cable length",
+      "Operating system": "Operating system",
+      "Warranty": "Warranty",
+      "Supplier": "Supplier"
+    }
   },
   "notFound": {
     "message": "Oops! Page not found",

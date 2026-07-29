@@ -229,7 +229,35 @@
     "nextImage": "Nächstes Bild",
     "goToImage": "Zu Bild {{index}}",
     "enlargeImage": "Bild vergrößern",
-    "clickToEnlarge": "Zum Vergrößern klicken"
+    "clickToEnlarge": "Zum Vergrößern klicken",
+    "specSource": "Die Spezifikationen stammen aus den Produktdaten des Lieferanten. Kontaktieren Sie uns, wenn Sie vor der Bestellung ein vollständiges Datenblatt benötigen.",
+    "specGroup": {
+      "details": "Produktdetails",
+      "technical": "Technische Daten"
+    },
+    "spec": {
+      "Brand": "Marke",
+      "Product code": "Artikelnummer",
+      "Category": "Kategorie",
+      "Availability": "Verfügbarkeit",
+      "Capacity": "Kapazität",
+      "Processor": "Prozessor",
+      "Memory": "Arbeitsspeicher",
+      "Memory type": "Speichertyp",
+      "Memory speed": "Speichertakt",
+      "Drive type": "Laufwerkstyp",
+      "Interface": "Schnittstelle",
+      "Rotational speed": "Drehzahl",
+      "Form factor": "Formfaktor",
+      "Rack height": "Höheneinheiten",
+      "Display": "Display",
+      "Network speed": "Netzwerkgeschwindigkeit",
+      "Power supply": "Netzteil",
+      "Cable length": "Kabellänge",
+      "Operating system": "Betriebssystem",
+      "Warranty": "Garantie",
+      "Supplier": "Lieferant"
+    }
   },
   "notFound": {
     "message": "Hoppla! Seite nicht gefunden",

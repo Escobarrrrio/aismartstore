@@ -229,7 +229,35 @@
     "nextImage": "अगली छवि",
     "goToImage": "छवि {{index}} पर जाएँ",
     "enlargeImage": "छवि बड़ी करें",
-    "clickToEnlarge": "बड़ा करने के लिए क्लिक करें"
+    "clickToEnlarge": "बड़ा करने के लिए क्लिक करें",
+    "specSource": "विनिर्देश आपूर्तिकर्ता के उत्पाद डेटा से लिए गए हैं। ऑर्डर करने से पहले पूरी डेटाशीट चाहिए तो हमसे संपर्क करें।",
+    "specGroup": {
+      "details": "उत्पाद विवरण",
+      "technical": "तकनीकी विनिर्देश"
+    },
+    "spec": {
+      "Brand": "ब्रांड",
+      "Product code": "उत्पाद कोड",
+      "Category": "श्रेणी",
+      "Availability": "उपलब्धता",
+      "Capacity": "क्षमता",
+      "Processor": "प्रोसेसर",
+      "Memory": "मेमोरी",
+      "Memory type": "मेमोरी प्रकार",
+      "Memory speed": "मेमोरी स्पीड",
+      "Drive type": "ड्राइव प्रकार",
+      "Interface": "इंटरफ़ेस",
+      "Rotational speed": "घूर्णन गति",
+      "Form factor": "फॉर्म फैक्टर",
+      "Rack height": "रैक ऊंचाई",
+      "Display": "डिस्प्ले",
+      "Network speed": "नेटवर्क गति",
+      "Power supply": "पावर सप्लाई",
+      "Cable length": "केबल लंबाई",
+      "Operating system": "ऑपरेटिंग सिस्टम",
+      "Warranty": "वारंटी",
+      "Supplier": "आपूर्तिकर्ता"
+    }
   },
   "notFound": {
     "message": "उफ़! पेज नहीं मिला",

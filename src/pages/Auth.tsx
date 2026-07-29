@@ -10,6 +10,7 @@ import PhoneInput, { detectDefaultCountry, toE164 } from "@/components/PhoneInpu
 import { generateStrongPassword, estimatePasswordStrength } from "@/lib/password";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 // Google's official four-color "G" mark. Not in lucide-react (icons only,
 // no brand logos), so inlined here as the standard SVG paths Google
@@ -124,12 +125,12 @@ const Auth = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  // Safe redirect target — only allow internal same-origin paths so this can't
-  // be abused as an open redirect. Falls back to "/" when missing/invalid.
+  // Safe redirect target — only internal same-origin paths, so `?redirect=`
+  // can't be turned into an open redirect. Validation lives in safeRedirectPath
+  // because the obvious inline version (startsWith("/") && !startsWith("//"))
+  // accepts "/\evil.com", which browsers normalise to "//evil.com".
   const rawRedirect = searchParams.get("redirect");
-  const redirectTo = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
-    ? rawRedirect
-    : "/";
+  const redirectTo = safeRedirectPath(rawRedirect);
 
   const resetSignupFields = () => {
     setName(""); setPhone(""); setIdNumber("");
@@ -199,7 +200,9 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth${rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? `?redirect=${encodeURIComponent(rawRedirect)}` : ""}`,
+        // Round-trip only the already-validated path, never the raw parameter,
+        // so a hostile value can't survive the OAuth hop back to /auth.
+        redirectTo: `${window.location.origin}/auth${redirectTo !== "/" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`,
       },
     });
     if (error) {

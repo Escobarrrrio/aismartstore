@@ -229,7 +229,35 @@
     "nextImage": "الصورة التالية",
     "goToImage": "الانتقال إلى الصورة {{index}}",
     "enlargeImage": "تكبير الصورة",
-    "clickToEnlarge": "انقر للتكبير"
+    "clickToEnlarge": "انقر للتكبير",
+    "specSource": "المواصفات مستمدة من بيانات المورّد. تواصل معنا إذا كنت بحاجة إلى ورقة بيانات كاملة قبل الطلب.",
+    "specGroup": {
+      "details": "تفاصيل المنتج",
+      "technical": "المواصفات التقنية"
+    },
+    "spec": {
+      "Brand": "العلامة التجارية",
+      "Product code": "رمز المنتج",
+      "Category": "الفئة",
+      "Availability": "التوفر",
+      "Capacity": "السعة",
+      "Processor": "المعالج",
+      "Memory": "الذاكرة",
+      "Memory type": "نوع الذاكرة",
+      "Memory speed": "سرعة الذاكرة",
+      "Drive type": "نوع القرص",
+      "Interface": "الواجهة",
+      "Rotational speed": "سرعة الدوران",
+      "Form factor": "عامل الشكل",
+      "Rack height": "ارتفاع الrack",
+      "Display": "الشاشة",
+      "Network speed": "سرعة الشبكة",
+      "Power supply": "مزود الطاقة",
+      "Cable length": "طول الكابل",
+      "Operating system": "نظام التشغيل",
+      "Warranty": "الضمان",
+      "Supplier": "المورّد"
+    }
   },
   "notFound": {
     "message": "عذرًا! الصفحة غير موجودة",

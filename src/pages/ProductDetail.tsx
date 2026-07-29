@@ -6,9 +6,11 @@ import type { Product } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
+import ImageLightbox from "@/components/ImageLightbox";
 import {
   ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw, MapPin,
-  Star, ChevronRight, Package, MessageCircle, Minus, Plus, Heart
+  Star, ChevronLeft, ChevronRight, Package, MessageCircle, Minus, Plus, Heart,
+  Maximize2
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,6 +31,7 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [resolved, setResolved] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [dispatchCity, setDispatchCity] = useState(DEFAULT_DISPATCH_CITY);
 
   useEffect(() => {
@@ -143,23 +146,60 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Images */}
           <div className="space-y-4">
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border border-border">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-white border border-border">
               {product.images[selectedImage] && !failedImages[selectedImage] ? (
-                <img
-                  src={product.images[selectedImage]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                  onError={() => setFailedImages((f) => ({ ...f, [selectedImage]: true }))}
-                />
+                <button
+                  type="button"
+                  onClick={() => setLightboxOpen(true)}
+                  aria-label={t("productDetail.enlargeImage")}
+                  className="group h-full w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  {/* object-contain, not object-cover: cover was cropping the
+                      edges off every product shot -- on a wide rack photo you
+                      were seeing the middle third of the product only. */}
+                  <img
+                    src={product.images[selectedImage]}
+                    alt={product.name}
+                    className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-[1.03]"
+                    onError={() => setFailedImages((f) => ({ ...f, [selectedImage]: true }))}
+                  />
+                  <span className="absolute bottom-3 right-3 rounded-full bg-foreground/75 text-background text-[11px] font-semibold px-2.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Maximize2 className="h-3 w-3 inline mr-1" aria-hidden="true" />
+                    {t("productDetail.clickToEnlarge")}
+                  </span>
+                </button>
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground/60">
                   <Package className="h-20 w-20" />
                 </div>
               )}
               {product.isAiProduct && (
-                <span className="absolute top-3 left-3 gradient-brand text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md tracking-wide">
+                <span className="absolute top-3 left-3 gradient-brand text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md tracking-wide pointer-events-none">
                   AI
                 </span>
+              )}
+
+              {/* Sideways navigation on the main image itself, so browsing the
+                  other photos doesn't depend on hitting a 20px thumbnail. */}
+              {product.images.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImage((i) => (i - 1 + product.images.length) % product.images.length)}
+                    aria-label={t("productDetail.previousImage")}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 flex items-center justify-center rounded-full bg-background/85 border border-border shadow-sm hover:bg-background transition-colors"
+                  >
+                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImage((i) => (i + 1) % product.images.length)}
+                    aria-label={t("productDetail.nextImage")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 flex items-center justify-center rounded-full bg-background/85 border border-border shadow-sm hover:bg-background transition-colors"
+                  >
+                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                </>
               )}
             </div>
             {product.images.length > 1 && (
@@ -176,7 +216,7 @@ const ProductDetail = () => {
                       <img
                         src={img}
                         alt=""
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-white p-1"
                         onError={() => setFailedImages((f) => ({ ...f, [i]: true }))}
                       />
                     ) : (
@@ -188,6 +228,17 @@ const ProductDetail = () => {
                 ))}
               </div>
             )}
+
+            <ImageLightbox
+              images={product.images}
+              index={selectedImage}
+              onIndexChange={setSelectedImage}
+              open={lightboxOpen}
+              onClose={() => setLightboxOpen(false)}
+              alt={product.name}
+              failed={failedImages}
+              onImageError={(i) => setFailedImages((f) => ({ ...f, [i]: true }))}
+            />
           </div>
 
           {/* Details */}

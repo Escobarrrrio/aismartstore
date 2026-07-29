@@ -151,7 +151,8 @@
     "cancel": "Kanselleer",
     "loading": "Laai tans...",
     "language": "Taal",
-    "currency": "Geldeenheid"
+    "currency": "Geldeenheid",
+    "close": "Maak toe"
   },
   "checkout": {
     "title": "Uitbetaling",
@@ -220,7 +221,15 @@
     "specPlaceholder": "Detailspesifikasies sal beskikbaar wees sodra produkdata vanaf die verskaffer gesinchroniseer is.",
     "relatedProducts": "Verwante Produkte",
     "viewAll": "Bekyk Alles",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "{{name}} beeldgalery",
+    "imageOf": "{{name}}, beeld {{index}} van {{total}}",
+    "imageUnavailable": "Beeld nie beskikbaar nie",
+    "previousImage": "Vorige beeld",
+    "nextImage": "Volgende beeld",
+    "goToImage": "Gaan na beeld {{index}}",
+    "enlargeImage": "Vergroot beeld",
+    "clickToEnlarge": "Klik om te vergroot"
   },
   "notFound": {
     "message": "Oeps! Bladsy nie gevind nie",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Wees eerste om te weet",
+    "blurb": "Nuwe KI-hardeware, prysveranderinge en vroeë toegang tot beperkte voorraad — voordat dit die katalogus tref.",
+    "joinCount": "Sluit aan by {{count}} intekenare.",
+    "emailPlaceholder": "jy@voorbeeld.com",
+    "emailLabel": "E-posadres",
+    "subscribe": "Teken in",
+    "subscribing": "Teken in…",
+    "confirmed": "Jy's ingeteken.",
+    "confirmedMore": "Jy's ingeteken. Nog een ding —",
+    "topicsPrompt": "Waaroor moet ons jou eerste vertel? (opsioneel, neem 5 sekondes)",
+    "preferencesSaved": "Voorkeure gestoor.",
+    "alreadyTitle": "Reeds ingeteken",
+    "alreadyBody": "Daardie e-pos is reeds op die lys.",
+    "errorTitle": "Iets het verkeerd geloop",
+    "saveFailedTitle": "Kon dit nie stoor nie",
+    "saveFailedBody": "Jou voorkeur is nie gestoor nie. Probeer asseblief weer.",
+    "topics": {
+      "ai": "KI en Masjienleer",
+      "networking": "Netwerke",
+      "computing": "Rekenaars",
+      "software": "Sagteware en Lisensies"
+    }
   }
 }

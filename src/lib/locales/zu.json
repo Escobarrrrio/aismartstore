@@ -151,7 +151,8 @@
     "cancel": "Khansela",
     "loading": "Iyalayisha...",
     "language": "Ulimi",
-    "currency": "Imali"
+    "currency": "Imali",
+    "close": "Vala"
   },
   "checkout": {
     "title": "Ukukhokha",
@@ -220,7 +221,15 @@
     "specPlaceholder": "Imininingwane eningiliziwe izotholakala uma idatha yomkhiqizo isivunyelaniswe isuselwe kumhlinzeki.",
     "relatedProducts": "Imikhiqizo Ehlobene",
     "viewAll": "Buka Konke",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "Igalari yezithombe ze-{{name}}",
+    "imageOf": "{{name}}, isithombe {{index}} kwangu-{{total}}",
+    "imageUnavailable": "Isithombe asitholakali",
+    "previousImage": "Isithombe esedlule",
+    "nextImage": "Isithombe esilandelayo",
+    "goToImage": "Yiya esithombeni {{index}}",
+    "enlargeImage": "Khulisa isithombe",
+    "clickToEnlarge": "Chofoza ukukhulisa"
   },
   "notFound": {
     "message": "Maa! Ikhasi alitholakali",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Yiba ngowokuqala ukwazi",
+    "blurb": "Izingxenyekazi ezintsha ze-AI, izinguquko zamanani, nokufinyelela kuqala esitokweni esilinganiselwe — ngaphambi kokuba kufike ekhathalogi.",
+    "joinCount": "Joyina ababhalise abangu-{{count}}.",
+    "emailPlaceholder": "wena@isibonelo.com",
+    "emailLabel": "Ikheli le-imeyili",
+    "subscribe": "Bhalisa",
+    "subscribing": "Kuyabhaliswa…",
+    "confirmed": "Usungenile.",
+    "confirmedMore": "Usungenile. Into eyodwa futhi —",
+    "topicsPrompt": "Yini okufanele sikutshele yona kuqala? (kuyazikhethela, kuthatha imizuzwana emi-5)",
+    "preferencesSaved": "Okuthandayo kulondoloziwe.",
+    "alreadyTitle": "Usubhalisile",
+    "alreadyBody": "Leyo imeyili isivele isohlwini.",
+    "errorTitle": "Kukhona okungahambanga kahle",
+    "saveFailedTitle": "Asikwazanga ukukulondoloza",
+    "saveFailedBody": "Okuthandayo akulondolozwanga. Sicela uzame futhi.",
+    "topics": {
+      "ai": "I-AI Nokufunda Komshini",
+      "networking": "Amanethiwekhi",
+      "computing": "Amakhompyutha",
+      "software": "Isofthiwe Namalayisensi"
+    }
   }
 }

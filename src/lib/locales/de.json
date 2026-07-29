@@ -151,7 +151,8 @@
     "cancel": "Abbrechen",
     "loading": "Lädt...",
     "language": "Sprache",
-    "currency": "Währung"
+    "currency": "Währung",
+    "close": "Schließen"
   },
   "checkout": {
     "title": "Kasse",
@@ -220,7 +221,15 @@
     "specPlaceholder": "Detaillierte Spezifikationen sind verfügbar, sobald die Produktdaten mit dem Lieferanten synchronisiert wurden.",
     "relatedProducts": "Ähnliche Produkte",
     "viewAll": "Alle Anzeigen",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "Bildergalerie von {{name}}",
+    "imageOf": "{{name}}, Bild {{index}} von {{total}}",
+    "imageUnavailable": "Bild nicht verfügbar",
+    "previousImage": "Vorheriges Bild",
+    "nextImage": "Nächstes Bild",
+    "goToImage": "Zu Bild {{index}}",
+    "enlargeImage": "Bild vergrößern",
+    "clickToEnlarge": "Zum Vergrößern klicken"
   },
   "notFound": {
     "message": "Hoppla! Seite nicht gefunden",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Erfahren Sie es zuerst",
+    "blurb": "Neue KI-Hardware, Preisänderungen und früher Zugang zu limitierten Beständen — bevor sie im Katalog erscheinen.",
+    "joinCount": "Schließen Sie sich {{count}} Abonnenten an.",
+    "emailPlaceholder": "sie@beispiel.com",
+    "emailLabel": "E-Mail-Adresse",
+    "subscribe": "Abonnieren",
+    "subscribing": "Wird abonniert…",
+    "confirmed": "Sie sind dabei.",
+    "confirmedMore": "Sie sind dabei. Noch eine Sache —",
+    "topicsPrompt": "Worüber sollen wir Sie zuerst informieren? (optional, dauert 5 Sekunden)",
+    "preferencesSaved": "Einstellungen gespeichert.",
+    "alreadyTitle": "Bereits abonniert",
+    "alreadyBody": "Diese E-Mail steht bereits auf der Liste.",
+    "errorTitle": "Etwas ist schiefgelaufen",
+    "saveFailedTitle": "Speichern fehlgeschlagen",
+    "saveFailedBody": "Ihre Einstellung wurde nicht gespeichert. Bitte erneut versuchen.",
+    "topics": {
+      "ai": "KI & maschinelles Lernen",
+      "networking": "Netzwerke",
+      "computing": "Computer",
+      "software": "Software & Lizenzen"
+    }
   }
 }

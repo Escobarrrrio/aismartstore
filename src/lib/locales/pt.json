@@ -151,7 +151,8 @@
     "cancel": "Cancelar",
     "loading": "A carregar...",
     "language": "Idioma",
-    "currency": "Moeda"
+    "currency": "Moeda",
+    "close": "Fechar"
   },
   "checkout": {
     "title": "Finalizar Compra",
@@ -220,7 +221,15 @@
     "specPlaceholder": "As especificações detalhadas estarão disponíveis quando os dados do produto forem sincronizados com o fornecedor.",
     "relatedProducts": "Produtos Relacionados",
     "viewAll": "Ver Tudo",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "Galeria de imagens de {{name}}",
+    "imageOf": "{{name}}, imagem {{index}} de {{total}}",
+    "imageUnavailable": "Imagem indisponível",
+    "previousImage": "Imagem anterior",
+    "nextImage": "Imagem seguinte",
+    "goToImage": "Ir para a imagem {{index}}",
+    "enlargeImage": "Ampliar imagem",
+    "clickToEnlarge": "Clique para ampliar"
   },
   "notFound": {
     "message": "Ops! Página não encontrada",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Saiba em primeira mão",
+    "blurb": "Novo hardware de IA, alterações de preço e acesso antecipado a stock limitado — antes de chegarem ao catálogo.",
+    "joinCount": "Junte-se a {{count}} subscritores.",
+    "emailPlaceholder": "voce@exemplo.com",
+    "emailLabel": "Endereço de e-mail",
+    "subscribe": "Subscrever",
+    "subscribing": "A subscrever…",
+    "confirmed": "Está inscrito.",
+    "confirmedMore": "Está inscrito. Mais uma coisa —",
+    "topicsPrompt": "Sobre o que devemos falar primeiro? (opcional, 5 segundos)",
+    "preferencesSaved": "Preferências guardadas.",
+    "alreadyTitle": "Já subscrito",
+    "alreadyBody": "Esse e-mail já está na lista.",
+    "errorTitle": "Algo correu mal",
+    "saveFailedTitle": "Não foi possível guardar",
+    "saveFailedBody": "A sua preferência não foi guardada. Tente novamente.",
+    "topics": {
+      "ai": "IA e aprendizagem automática",
+      "networking": "Redes",
+      "computing": "Informática",
+      "software": "Software e licenças"
+    }
   }
 }

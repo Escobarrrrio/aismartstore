@@ -1536,6 +1536,14 @@ export type Database = {
         }[]
       }
       refresh_product_facets_cache: { Args: never; Returns: number }
+      set_newsletter_interests: {
+        Args: {
+          _categories: string[]
+          _email: string
+          _subscriber_id: string
+        }
+        Returns: boolean
+      }
       search_product_facets: {
         Args: {
           filter_ai_only?: boolean

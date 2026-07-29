@@ -109,7 +109,8 @@
       "desc": "Mothusi oa rona oa AI a ka u thusa ho bapisa lihlahisoa, ho sheba litlhaloso, ho fumana boitsebiso ba ts'ebelisano, le ho araba lipotso tsa hau tsa theknoloji — hang-hang.",
       "hint": "Tobetsa setšoantšo sa puisano ka tlase ho le letona ho qala"
     },
-    "brandsLabel": "Mabitso a Tšepahalang a Theknoloji"
+    "brandsLabel": "Mabitso a Tšepahalang a Theknoloji",
+    "catCount": "lihlahisoa tse {{count}}"
   },
   "product": {
     "inStock": "E Teng",
@@ -354,5 +355,14 @@
     "idleTitle": "O sa teng?",
     "idleBody": "O tla tsoa ka mora metsotsoana e {{seconds}} ka lebaka la ho se sebetse.",
     "staySignedIn": "Nkame ke kene"
+  },
+  "delivery": {
+    "inStockDispatch": "E teng · E rometsoe {{date}}",
+    "backorderDispatch": "Odara e emetseng · E romelloa ka {{date}}",
+    "arriveBy": "Ho hakanyetsoa ho fihla {{window}}",
+    "dispatchOn": "E tsoa polokelong ea rona {{date}}",
+    "afterCutoff": "nako ea kajeno e fetile",
+    "chooseProvince": "Profinse ea thomello",
+    "businessDaysNote": "Matsatsi a khoebo feela. Mafelo-beke le matsatsi a phomolo a Afrika Boroa ha a kenyelletsoe."
   }
 }

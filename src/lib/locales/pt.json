@@ -109,7 +109,8 @@
       "desc": "O nosso assistente de IA pode ajudá-lo a comparar produtos, verificar especificações, encontrar informações de compatibilidade e responder às suas perguntas técnicas — instantaneamente.",
       "hint": "Clique no ícone de chat no canto inferior direito para começar"
     },
-    "brandsLabel": "Marcas Tecnológicas de Confiança"
+    "brandsLabel": "Marcas Tecnológicas de Confiança",
+    "catCount": "{{count}} produtos"
   },
   "product": {
     "inStock": "Em Stock",
@@ -354,5 +355,14 @@
     "idleTitle": "Ainda aí?",
     "idleBody": "A sua sessão será encerrada em {{seconds}} segundos por inatividade.",
     "staySignedIn": "Manter sessão ativa"
+  },
+  "delivery": {
+    "inStockDispatch": "Em stock · Expedido a {{date}}",
+    "backorderDispatch": "Sob encomenda · Expedido até {{date}}",
+    "arriveBy": "Chegada estimada {{window}}",
+    "dispatchOn": "Sai do nosso armazém a {{date}}",
+    "afterCutoff": "o corte de hoje já passou",
+    "chooseProvince": "Província de entrega",
+    "businessDaysNote": "Apenas dias úteis. Fins de semana e feriados sul-africanos excluídos."
   }
 }

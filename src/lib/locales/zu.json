@@ -109,7 +109,8 @@
       "desc": "Umsizi wethu we-AI angakusiza uqhathanise imikhiqizo, uhlole imininingwane, uthole ulwazi lokuhambisana, futhi uphendule imibuzo yakho yobuchwepheshe — ngokushesha.",
       "hint": "Chofoza isithonjana sengxoxo phansi ngakwesokudla ukuze uqale"
     },
-    "brandsLabel": "Amabhrendi Obuchwepheshe Athembekile"
+    "brandsLabel": "Amabhrendi Obuchwepheshe Athembekile",
+    "catCount": "imikhiqizo engu-{{count}}"
   },
   "product": {
     "inStock": "Iyatholakala",
@@ -354,5 +355,14 @@
     "idleTitle": "Usalapho?",
     "idleBody": "Uzophuma ngemuva kwamasekhondi angu-{{seconds}} ngenxa yokungasebenzi.",
     "staySignedIn": "Ngigcine ngingene"
+  },
+  "delivery": {
+    "inStockDispatch": "Kukhona · Kuthunyelwe {{date}}",
+    "backorderDispatch": "I-oda elilindile · Kuthunyelwa ngo-{{date}}",
+    "arriveBy": "Kulinganiselwa ukufika {{window}}",
+    "dispatchOn": "Kushiya inqolobane yethu {{date}}",
+    "afterCutoff": "isikhathi sanamuhla sesiphelile",
+    "chooseProvince": "Isifundazwe sokulethwa",
+    "businessDaysNote": "Izinsuku zomsebenzi kuphela. Impelasonto namaholide omphakathi aseNingizimu Afrika akubalwa."
   }
 }

@@ -8,6 +8,7 @@ import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from "@/components/ImageLightbox";
 import { buildSpecifications } from "@/lib/specifications";
+import { estimateDelivery, formatArrivalWindow, PROVINCE_ZONES } from "@/lib/delivery";
 import {
   ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw, MapPin,
   Star, ChevronLeft, ChevronRight, Package, MessageCircle, Minus, Plus, Heart,
@@ -35,6 +36,9 @@ const ProductDetail = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [storedSpecs, setStoredSpecs] = useState<Record<string, unknown> | null>(null);
   const [dispatchCity, setDispatchCity] = useState(DEFAULT_DISPATCH_CITY);
+  // Defaults to the province the store dispatches from; the shopper can change
+  // it to see a realistic window for where the parcel is actually going.
+  const [province, setProvince] = useState("Eastern Cape");
 
   useEffect(() => {
     supabase.from("store_settings").select("value").eq("key", "dispatch_city").maybeSingle()
@@ -73,6 +77,11 @@ const ProductDetail = () => {
       });
     return () => { cancelled = true; };
   }, [id]);
+
+  const delivery = useMemo(
+    () => estimateDelivery({ inStock: product?.inStock ?? false, province }),
+    [product?.inStock, province],
+  );
 
   const specGroups = useMemo(
     () => (product ? buildSpecifications(product, storedSpecs) : []),
@@ -349,6 +358,46 @@ const ProductDetail = () => {
               >
                 <Heart className={`h-5 w-5 ${isWishlisted(product.id) ? "fill-current" : ""}`} />
               </button>
+            </div>
+
+            {/* Delivery estimate — real dates, not "3–7 days". Arrival depends on
+                the destination, so the shopper picks a province; until they do we
+                show only the dispatch date, which is ours to promise. */}
+            <div className="rounded-xl border border-border bg-muted/40 p-4 mb-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Truck className="h-4 w-4 text-primary flex-shrink-0" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {t("delivery.arriveBy", { window: formatArrivalWindow(delivery) })}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t("delivery.dispatchOn", {
+                        date: new Intl.DateTimeFormat("en-ZA", {
+                          weekday: "long", day: "numeric", month: "short", timeZone: "UTC",
+                        }).format(delivery.dispatchOn),
+                      })}
+                      {delivery.missedCutoff ? ` · ${t("delivery.afterCutoff")}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <label className="text-xs">
+                  <span className="sr-only">{t("delivery.chooseProvince")}</span>
+                  <select
+                    value={province}
+                    onChange={(e) => setProvince(e.target.value)}
+                    className="input-premium py-1.5 text-xs min-w-[10rem]"
+                    aria-label={t("delivery.chooseProvince")}
+                  >
+                    {Object.keys(PROVINCE_ZONES).map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                {t("delivery.businessDaysNote")}
+              </p>
             </div>
 
             {/* Reassurance */}

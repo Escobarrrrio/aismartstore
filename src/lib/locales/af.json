@@ -109,7 +109,8 @@
       "desc": "Ons KI-assistent kan jou help om produkte te vergelyk, spesifikasies na te gaan, versoenbaarheidsinligting te kry en jou tegniese vrae onmiddellik te beantwoord.",
       "hint": "Klik op die kletsikoon onder regs om te begin"
     },
-    "brandsLabel": "Vertroude Tegnologie-handelsmerke"
+    "brandsLabel": "Vertroude Tegnologie-handelsmerke",
+    "catCount": "{{count}} produkte"
   },
   "product": {
     "inStock": "In Voorraad",
@@ -354,5 +355,14 @@
     "idleTitle": "Nog daar?",
     "idleBody": "Jy sal in {{seconds}} sekondes afgemeld word weens onaktiwiteit.",
     "staySignedIn": "Hou my aangemeld"
+  },
+  "delivery": {
+    "inStockDispatch": "In voorraad · Versend {{date}}",
+    "backorderDispatch": "Terugbestelling · Versend teen {{date}}",
+    "arriveBy": "Geskatte aankoms {{window}}",
+    "dispatchOn": "Verlaat ons pakhuis {{date}}",
+    "afterCutoff": "vandag se afsnytyd is verby",
+    "chooseProvince": "Afleweringsprovinsie",
+    "businessDaysNote": "Slegs werksdae. Naweke en Suid-Afrikaanse openbare vakansiedae uitgesluit."
   }
 }

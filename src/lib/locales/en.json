@@ -109,7 +109,8 @@
       "desc": "Our AI assistant can help you compare products, check specifications, find compatibility info, and answer your tech questions — instantly.",
       "hint": "Click the chat icon in the bottom right to get started"
     },
-    "brandsLabel": "Trusted Technology Brands"
+    "brandsLabel": "Trusted Technology Brands",
+    "catCount": "{{count}} products"
   },
   "product": {
     "inStock": "In Stock",
@@ -354,5 +355,14 @@
     "idleTitle": "Still there?",
     "idleBody": "You'll be signed out in {{seconds}} seconds because of inactivity.",
     "staySignedIn": "Keep me signed in"
+  },
+  "delivery": {
+    "inStockDispatch": "In stock · Dispatched {{date}}",
+    "backorderDispatch": "Backorder · Dispatched by {{date}}",
+    "arriveBy": "Estimated arrival {{window}}",
+    "dispatchOn": "Leaves our warehouse {{date}}",
+    "afterCutoff": "today's cut-off has passed",
+    "chooseProvince": "Delivery province",
+    "businessDaysNote": "Business days only. Weekends and South African public holidays are excluded."
   }
 }

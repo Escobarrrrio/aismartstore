@@ -349,5 +349,10 @@
       "computing": "Likhomphutha",
       "software": "Software le Mangolo"
     }
+  },
+  "session": {
+    "idleTitle": "O sa teng?",
+    "idleBody": "O tla tsoa ka mora metsotsoana e {{seconds}} ka lebaka la ho se sebetse.",
+    "staySignedIn": "Nkame ke kene"
   }
 }

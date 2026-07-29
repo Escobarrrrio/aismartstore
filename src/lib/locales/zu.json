@@ -349,5 +349,10 @@
       "computing": "Amakhompyutha",
       "software": "Isofthiwe Namalayisensi"
     }
+  },
+  "session": {
+    "idleTitle": "Usalapho?",
+    "idleBody": "Uzophuma ngemuva kwamasekhondi angu-{{seconds}} ngenxa yokungasebenzi.",
+    "staySignedIn": "Ngigcine ngingene"
   }
 }

@@ -15,6 +15,7 @@ import StoreFooter from "@/components/StoreFooter";
 import ChatWidget from "@/components/ChatWidget";
 import AudienceGuard from "@/components/AudienceGuard";
 import ScrollToTop from "@/components/ScrollToTop";
+import IdleSessionGuard from "@/components/IdleSessionGuard";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 
 // Route-level code splitting: the Admin panel alone pulls in dozens of
@@ -72,6 +73,8 @@ const App = () => (
                 <Sonner />
                 <BrowserRouter>
                   <ScrollToTop />
+                  {/* Ends abandoned sessions; inert for anonymous visitors. */}
+                  <IdleSessionGuard />
                   <Suspense fallback={<RouteFallback />}>
                     <Routes>
                       <Route path="/" element={<StorefrontLayout><Index /></StorefrontLayout>} />

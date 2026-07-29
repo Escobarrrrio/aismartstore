@@ -349,5 +349,10 @@
       "computing": "计算设备",
       "software": "软件与许可证"
     }
+  },
+  "session": {
+    "idleTitle": "您还在吗？",
+    "idleBody": "由于长时间未操作，将在 {{seconds}} 秒后退出登录。",
+    "staySignedIn": "保持登录"
   }
 }

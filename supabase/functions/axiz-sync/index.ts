@@ -14,7 +14,16 @@ const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
 const AXIZ_API_BASE = "https://api.goaxiz.co.za";
 const PAGE_SIZE = 1000;
 const PAGES_PER_RUN = 8;
-const UPSERT_BATCH_SIZE = 500;
+// 500-row upserts were exceeding the statement timeout: 121 of 194 runs over two
+// days ended "partial" with "canceling statement due to statement timeout", and
+// because a failed batch was simply skipped while the page cursor still advanced,
+// those product updates were silently lost until the cursor wrapped the whole
+// catalogue again. `products` carries several indexes plus the category-classifier
+// and image-blocklist triggers, so each row costs more than the original size
+// assumed.
+const UPSERT_BATCH_SIZE = 150;
+/** Don't subdivide below this — past it the timeout isn't about batch size. */
+const MIN_UPSERT_BATCH_SIZE = 20;
 
 function isAiRelated(s: string): boolean {
   if (/\bAI\b/i.test(s)) return true;
@@ -214,27 +223,56 @@ Deno.serve(async (req) => {
         });
 
         // Write THIS page immediately -- progress persists even if killed.
-        for (const batch of chunk(rows, UPSERT_BATCH_SIZE)) {
+        /**
+         * Upsert a batch, and on a timeout split it in half and retry each side
+         * rather than discarding the whole thing. A transient slow statement
+         * then costs a little extra latency instead of silently dropping every
+         * product in the batch. Returns the rows the database actually wrote.
+         */
+        const upsertWithSplit = async (
+          batch: typeof rows,
+        ): Promise<Array<{ id: string; sku: string; price: number }>> => {
           const productRows = batch.map(({ _cost, _axiz_id, ...r }) => r);
-          const { data: upserted, error } = await supabase
+          const { data, error } = await supabase
             .from("products")
             .upsert(productRows, { onConflict: "sku" })
             .select("id, sku, price");
-          if (error) { totalFailed += batch.length; notes.push(`upsert: ${error.message}`); continue; }
-          totalSynced += batch.length;
 
-          // Write cost/margin rows keyed by product id
+          if (!error) return (data ?? []) as Array<{ id: string; sku: string; price: number }>;
+
+          const isTimeout = /statement timeout|canceling statement/i.test(error.message);
+          if (isTimeout && batch.length > MIN_UPSERT_BATCH_SIZE) {
+            const mid = Math.ceil(batch.length / 2);
+            const left = await upsertWithSplit(batch.slice(0, mid));
+            const right = await upsertWithSplit(batch.slice(mid));
+            return [...left, ...right];
+          }
+
+          totalFailed += batch.length;
+          notes.push(`upsert(${batch.length}): ${error.message}`);
+          return [];
+        };
+
+        for (const batch of chunk(rows, UPSERT_BATCH_SIZE)) {
+          const upserted = await upsertWithSplit(batch);
+          if (upserted.length === 0) continue;
+          totalSynced += upserted.length;
+
+          // Write cost/margin rows keyed by product id. Skip any returned row we
+          // can't match back to a source SKU rather than asserting non-null --
+          // one unexpected row would otherwise throw and abort the whole page.
           const bySku = new Map(batch.map((b) => [b.sku, b]));
-          const costRows = (upserted ?? []).map((p: any) => {
-            const src = bySku.get(p.sku)!;
-            return {
+          const costRows = upserted.flatMap((p) => {
+            const src = bySku.get(p.sku);
+            if (!src) return [];
+            return [{
               product_id: p.id,
               cost_price: src._cost,
               selling_price: src.price,
               margin_percentage: markupPct,
               axiz_product_id: src._axiz_id,
               updated_at: now,
-            };
+            }];
           });
           if (costRows.length) {
             const { error: cErr } = await supabase.from("product_costs").upsert(costRows, { onConflict: "product_id" });

@@ -349,5 +349,10 @@
       "computing": "Rekenaars",
       "software": "Sagteware en Lisensies"
     }
+  },
+  "session": {
+    "idleTitle": "Nog daar?",
+    "idleBody": "Jy sal in {{seconds}} sekondes afgemeld word weens onaktiwiteit.",
+    "staySignedIn": "Hou my aangemeld"
   }
 }

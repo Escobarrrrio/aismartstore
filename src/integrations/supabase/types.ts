@@ -622,6 +622,74 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_events: {
+        Row: {
+          amount_fee: number | null
+          amount_gross: number | null
+          amount_net: number | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          notified: boolean
+          order_id: string | null
+          outcome: string
+          payment_status: string | null
+          provider: string
+          provider_payment_id: string | null
+          raw_payload: Json | null
+          sandbox: boolean
+          signature_valid: boolean | null
+          source_ip: string | null
+        }
+        Insert: {
+          amount_fee?: number | null
+          amount_gross?: number | null
+          amount_net?: number | null
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          notified?: boolean
+          order_id?: string | null
+          outcome: string
+          payment_status?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          raw_payload?: Json | null
+          sandbox?: boolean
+          signature_valid?: boolean | null
+          source_ip?: string | null
+        }
+        Update: {
+          amount_fee?: number | null
+          amount_gross?: number | null
+          amount_net?: number | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          notified?: boolean
+          order_id?: string | null
+          outcome?: string
+          payment_status?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          raw_payload?: Json | null
+          sandbox?: boolean
+          signature_valid?: boolean | null
+          source_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_audit_log: {
         Row: {
           actor_email: string | null

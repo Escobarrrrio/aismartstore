@@ -10,6 +10,7 @@ import ImportModule from "@/components/admin/ImportModule";
 import OrdersModule from "@/components/admin/OrdersModule";
 import OrderDiagnosticsModule from "@/components/admin/OrderDiagnosticsModule";
 import YocoHealthModule from "@/components/admin/YocoHealthModule";
+import PaymentEventsModule from "@/components/admin/PaymentEventsModule";
 import EmailHealthModule from "@/components/admin/EmailHealthModule";
 import AiAgentModule from "@/components/admin/AiAgentModule";
 
@@ -178,6 +179,7 @@ const Admin = () => {
           {activeTab === "orders" && (loading.orders ? <LoadingSkeleton /> : <OrdersModule orders={orders} onReload={reload.loadOrders} />)}
           {activeTab === "order-diagnostics" && <OrderDiagnosticsModule />}
           {activeTab === "yoco-health" && <YocoHealthModule />}
+          {activeTab === "payment-events" && <PaymentEventsModule />}
           {activeTab === "email-health" && <EmailHealthModule />}
           {activeTab === "ai-agent" && <AiAgentModule />}
 

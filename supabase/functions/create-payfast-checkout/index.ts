@@ -2,11 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
 import { getAuthContext, unauthorized, forbidden } from "../_shared/auth-guard.ts";
 import { computeAuthoritativeShippingFee } from "../_shared/shipping.ts";
+import { payfastCredentials, payfastProcessUrl } from "../_shared/payfast-env.ts";
 
 const RECONCILE_TOLERANCE = 2;
-
-const PAYFAST_LIVE_URL = "https://www.payfast.co.za/eng/process";
-const PAYFAST_SANDBOX_URL = "https://sandbox.payfast.co.za/eng/process";
 
 function generateSignature(
   params: Record<string, string>,
@@ -155,10 +153,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    let merchantId = Deno.env.get("PAYFAST_MERCHANT_ID") ?? "";
-    let merchantKey = Deno.env.get("PAYFAST_MERCHANT_KEY") ?? "";
-    const passphrase = Deno.env.get("PAYFAST_PASSPHRASE") ?? "";
-    const sandbox = Deno.env.get("PAYFAST_SANDBOX") === "true";
+    // Read through the shared helper so checkout and payfast-webhook can never
+    // disagree about which PayFast environment is active. A mismatch would send
+    // the shopper to one host and validate the callback against the other, and
+    // every payment would look unconfirmed.
+    const creds = payfastCredentials();
+    let merchantId = creds.merchantId;
+    let merchantKey = creds.merchantKey;
+    const passphrase = creds.passphrase;
+    const sandbox = creds.sandbox;
 
     if (!merchantId || !merchantKey) {
       const [{ data: idSetting }, { data: keySetting }] = await Promise.all([
@@ -198,7 +201,7 @@ Deno.serve(async (req) => {
 
     pfParams.signature = generateSignature(pfParams, passphrase || undefined);
 
-    const actionUrl = sandbox ? PAYFAST_SANDBOX_URL : PAYFAST_LIVE_URL;
+    const actionUrl = payfastProcessUrl(sandbox);
 
     await supabase.from("orders").update({ payment_id: `pf_${orderId.slice(0, 8)}` }).eq("id", orderId);
     await supabase.from("order_audit_log").insert({

@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { captureEdgeError } from "../_shared/sentry.ts";
+import { alertWebhookFailure, type WebhookAlertKind } from "../_shared/webhook-alerts.ts";
+import { isSandbox, payfastHost } from "../_shared/payfast-env.ts";
 
 const PAYFAST_VALID_IPS = [
   "197.97.145.144", "197.97.145.145", "197.97.145.146", "197.97.145.147",
@@ -81,7 +83,7 @@ function verifySignature(params: Record<string, string>, passphrase?: string): b
 }
 
 async function validateWithPayFast(params: Record<string, string>, sandbox: boolean): Promise<boolean> {
-  const host = sandbox ? "sandbox.payfast.co.za" : "www.payfast.co.za";
+  const host = payfastHost(sandbox);
   const body = Object.keys(params)
     .filter((k) => k !== "signature")
     .sort()
@@ -108,36 +110,60 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  try {
-    const sourceIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
-    const sandbox = Deno.env.get("PAYFAST_SANDBOX") === "true";
+  const sandbox = isSandbox();
+  const sourceIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  let params: Record<string, string> = {};
 
+  /**
+   * Every terminal path goes through here: one audit row in payment_events,
+   * one alert (deduped), one HTTP response. Rejections are recorded with a
+   * non-"processed" outcome so they never consume the idempotency slot — a
+   * genuine retry after a transient failure must still be able to succeed.
+   */
+  const reject = async (
+    outcome: string,
+    kind: WebhookAlertKind,
+    detail: string,
+    status: number,
+    body: string,
+    signatureValid: boolean | null = null,
+  ): Promise<Response> => {
+    await supabase.rpc("record_payment_event", {
+      p_provider: "payfast",
+      p_provider_payment_id: params.pf_payment_id ?? null,
+      p_order_id: params.custom_str1 || null,
+      p_event_type: `itn.${kind}`,
+      p_payment_status: params.payment_status ?? null,
+      p_outcome: outcome,
+      p_amount_gross: params.amount_gross ? Number(params.amount_gross) : null,
+      p_amount_fee: params.amount_fee ? Number(params.amount_fee) : null,
+      p_amount_net: params.amount_net ? Number(params.amount_net) : null,
+      p_sandbox: sandbox,
+      p_source_ip: sourceIp || null,
+      p_signature_valid: signatureValid,
+      p_raw: params,
+      p_error: detail,
+    });
+    await alertWebhookFailure(supabase, "payfast-webhook", kind, detail, {
+      pf_payment_id: params.pf_payment_id, order_id: params.custom_str1,
+      payment_status: params.payment_status, amount_gross: params.amount_gross,
+      source_ip: sourceIp, sandbox,
+    });
+    return new Response(body, { status });
+  };
+
+  try {
+    // IP allow-listing is meaningless against sandbox, which calls back from
+    // whatever address PayFast's test harness happens to use.
     if (!sandbox && sourceIp && !PAYFAST_VALID_IPS.includes(sourceIp)) {
-      await supabase.from("automation_events").insert({
-        source: "payfast", event_type: "webhook.ip_rejected", status: "failed",
-        error_message: `Untrusted IP: ${sourceIp}`,
-        payload: { ip: sourceIp },
-      });
-      return new Response("Forbidden", { status: 403 });
+      return await reject("rejected_ip", "ip_rejected", `Untrusted source IP: ${sourceIp}`, 403, "Forbidden");
     }
 
     const rawBody = await req.text();
-    const params: Record<string, string> = {};
     for (const pair of rawBody.split("&")) {
       const [k, ...v] = pair.split("=");
       params[decodeURIComponent(k)] = decodeURIComponent(v.join("="));
     }
-
-    await supabase.from("automation_events").insert({
-      source: "payfast", event_type: `webhook.${params.payment_status ?? "unknown"}`, status: "received",
-      payload: {
-        pf_payment_id: params.pf_payment_id,
-        payment_status: params.payment_status,
-        amount_gross: params.amount_gross,
-        orderId: params.custom_str1,
-        item_name: params.item_name,
-      },
-    });
 
     const passphrase = Deno.env.get("PAYFAST_PASSPHRASE") ?? "";
     if (!verifySignature(params, passphrase || undefined)) {
@@ -147,31 +173,60 @@ Deno.serve(async (req) => {
         extra: { pf_payment_id: params.pf_payment_id, orderId: params.custom_str1 },
         fingerprint: ["payfast-webhook", "signature_mismatch"],
       });
-      await supabase.from("automation_events").insert({
-        source: "payfast", event_type: "webhook.signature_failed", status: "failed",
-        error_message: "Signature mismatch",
-        payload: { pf_payment_id: params.pf_payment_id },
-      });
-      return new Response("Invalid signature", { status: 401 });
+      return await reject(
+        "rejected_signature", "signature_invalid",
+        "ITN signature did not match. If PayFast's 'require signature' setting or the passphrase was changed, PAYFAST_PASSPHRASE must be updated to match.",
+        401, "Invalid signature", false,
+      );
     }
 
-    const valid = await validateWithPayFast(params, sandbox);
-    if (!valid) {
-      await supabase.from("automation_events").insert({
-        source: "payfast", event_type: "webhook.validation_failed", status: "failed",
-        error_message: "PayFast server validation rejected",
-        payload: { pf_payment_id: params.pf_payment_id },
-      });
-      return new Response("Validation failed", { status: 400 });
+    if (!(await validateWithPayFast(params, sandbox))) {
+      return await reject(
+        "rejected_validation", "server_validation_failed",
+        `PayFast (${payfastHost(sandbox)}) did not confirm this notification. A live/sandbox mismatch between checkout and webhook is the usual cause.`,
+        400, "Validation failed", true,
+      );
     }
 
     const orderId = params.custom_str1;
+    const paymentStatus = params.payment_status ?? "";
+
     if (!orderId) {
-      console.warn("[payfast-webhook] no orderId in custom_str1");
-      return new Response("OK", { status: 200 });
+      return await reject(
+        "unknown_order", "unknown_order",
+        "ITN verified but carried no order id in custom_str1, so no order could be updated.",
+        // 200: the notification is authentic and retrying cannot help.
+        200, "OK", true,
+      );
     }
 
-    const paymentStatus = params.payment_status;
+    // Claim the right to act on this notification. Concurrent or repeated
+    // deliveries of the same pf_payment_id + status lose the claim, and must
+    // not touch the order or send a second confirmation email.
+    const { data: claim, error: claimErr } = await supabase.rpc("record_payment_event", {
+      p_provider: "payfast",
+      p_provider_payment_id: params.pf_payment_id ?? null,
+      p_order_id: orderId,
+      p_event_type: `itn.${paymentStatus.toLowerCase() || "unknown"}`,
+      p_payment_status: paymentStatus,
+      p_outcome: "processed",
+      p_amount_gross: params.amount_gross ? Number(params.amount_gross) : null,
+      p_amount_fee: params.amount_fee ? Number(params.amount_fee) : null,
+      p_amount_net: params.amount_net ? Number(params.amount_net) : null,
+      p_sandbox: sandbox,
+      p_source_ip: sourceIp || null,
+      p_signature_valid: true,
+      p_raw: params,
+      p_error: null,
+    });
+    if (claimErr) throw new Error(`record_payment_event failed: ${claimErr.message}`);
+
+    const row = Array.isArray(claim) ? claim[0] : claim;
+    if (!row?.is_first) {
+      console.log(`[payfast-webhook] duplicate ${paymentStatus} for ${params.pf_payment_id}; already processed`);
+      return new Response("OK (duplicate ignored)", { status: 200 });
+    }
+    const eventId: string = row.event_id;
 
     if (paymentStatus === "COMPLETE") {
       const { data: order } = await supabase
@@ -185,10 +240,21 @@ Deno.serve(async (req) => {
           tags: { function: "payfast-webhook", failure: "amount_mismatch" },
           extra: { orderId, expectedAmount, paidAmount, pf_payment_id: params.pf_payment_id },
         });
+        // Downgrade the claim so this transaction is not recorded as a
+        // successful payment, and so a corrected retry can still be processed.
+        await supabase.from("payment_events").update({
+          outcome: "amount_mismatch",
+          error_message: `Expected R${expectedAmount} but PayFast reported R${paidAmount}`,
+        }).eq("id", eventId);
         await supabase.from("order_audit_log").insert({
           order_id: orderId, event_type: "payfast.amount_mismatch", actor_email: "payfast-webhook",
           metadata: { expectedAmount, paidAmount, pf_payment_id: params.pf_payment_id },
         });
+        await alertWebhookFailure(
+          supabase, "payfast-webhook", "amount_mismatch",
+          `Order ${orderId} expected R${expectedAmount} but PayFast reported R${paidAmount}. The order has NOT been marked paid.`,
+          { orderId, expectedAmount, paidAmount, pf_payment_id: params.pf_payment_id },
+        );
         return new Response("Amount mismatch", { status: 400 });
       }
 
@@ -203,10 +269,28 @@ Deno.serve(async (req) => {
         metadata: { pf_payment_id: params.pf_payment_id, amount_gross: paidAmount, payment_status: paymentStatus },
       });
 
-      await supabase.functions.invoke("notify-order", {
+      // Exactly once per payment: only the claim winner reaches this line.
+      // notify-order sends the customer confirmation and the owner email (which
+      // carries the customer's phone number for follow-up).
+      const { error: notifyErr } = await supabase.functions.invoke("notify-order", {
         body: { orderId },
         headers: { "x-internal-secret": Deno.env.get("INTERNAL_CRON_SECRET") ?? "" },
       });
+      await supabase.from("payment_events").update({
+        notified: !notifyErr,
+        error_message: notifyErr ? `notify-order failed: ${notifyErr.message}` : null,
+      }).eq("id", eventId);
+
+      if (notifyErr) {
+        // The money is in and the order is correct -- only the email failed, so
+        // this must not 500 (PayFast would retry a payment that already
+        // succeeded). Alert instead, and leave notified=false to find later.
+        await alertWebhookFailure(
+          supabase, "payfast-webhook", "handler_error",
+          `Payment for order ${orderId} was recorded, but the confirmation email failed: ${notifyErr.message}`,
+          { orderId, pf_payment_id: params.pf_payment_id },
+        );
+      }
     } else if (paymentStatus === "FAILED" || paymentStatus === "CANCELLED") {
       await supabase.from("orders").update({ payment_status: "unpaid" }).eq("id", orderId);
       await supabase.from("order_audit_log").insert({
@@ -221,6 +305,30 @@ Deno.serve(async (req) => {
       level: "error",
       tags: { function: "payfast-webhook", failure: "handler_crash" },
     });
+    // Best-effort audit: if the DB itself is the problem this will also fail,
+    // which is why it cannot be allowed to mask the original error.
+    try {
+      await supabase.rpc("record_payment_event", {
+        p_provider: "payfast",
+        p_provider_payment_id: params.pf_payment_id ?? null,
+        p_order_id: params.custom_str1 || null,
+        p_event_type: "itn.error",
+        p_payment_status: params.payment_status ?? null,
+        p_outcome: "error",
+        p_sandbox: sandbox,
+        p_source_ip: sourceIp || null,
+        p_raw: params,
+        p_error: (error as Error).message,
+      });
+      await alertWebhookFailure(
+        supabase, "payfast-webhook", "handler_error",
+        `payfast-webhook threw: ${(error as Error).message}`,
+        { pf_payment_id: params.pf_payment_id, order_id: params.custom_str1 },
+      );
+    } catch (e) {
+      console.error("[payfast-webhook] failed to record error event:", (e as Error).message);
+    }
+    // 500 so PayFast retries -- the idempotency claim makes that safe.
     return new Response("Internal error", { status: 500 });
   }
 });

@@ -151,7 +151,8 @@
     "cancel": "Annuler",
     "loading": "Chargement...",
     "language": "Langue",
-    "currency": "Devise"
+    "currency": "Devise",
+    "close": "Fermer"
   },
   "checkout": {
     "title": "Paiement",
@@ -220,7 +221,15 @@
     "specPlaceholder": "Les spécifications détaillées seront disponibles une fois les données du produit synchronisées avec le fournisseur.",
     "relatedProducts": "Produits Similaires",
     "viewAll": "Voir Tout",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "Galerie d'images de {{name}}",
+    "imageOf": "{{name}}, image {{index}} sur {{total}}",
+    "imageUnavailable": "Image indisponible",
+    "previousImage": "Image précédente",
+    "nextImage": "Image suivante",
+    "goToImage": "Aller à l'image {{index}}",
+    "enlargeImage": "Agrandir l'image",
+    "clickToEnlarge": "Cliquez pour agrandir"
   },
   "notFound": {
     "message": "Oups ! Page introuvable",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Soyez informé en premier",
+    "blurb": "Nouveau matériel IA, changements de prix et accès anticipé aux stocks limités — avant leur mise en catalogue.",
+    "joinCount": "Rejoignez {{count}} abonnés.",
+    "emailPlaceholder": "vous@exemple.com",
+    "emailLabel": "Adresse e-mail",
+    "subscribe": "S'abonner",
+    "subscribing": "Abonnement…",
+    "confirmed": "C'est fait.",
+    "confirmedMore": "C'est fait. Encore une chose —",
+    "topicsPrompt": "De quoi devons-nous vous parler en premier ? (facultatif, 5 secondes)",
+    "preferencesSaved": "Préférences enregistrées.",
+    "alreadyTitle": "Déjà abonné",
+    "alreadyBody": "Cet e-mail figure déjà sur la liste.",
+    "errorTitle": "Une erreur s'est produite",
+    "saveFailedTitle": "Enregistrement impossible",
+    "saveFailedBody": "Votre préférence n'a pas été enregistrée. Veuillez réessayer.",
+    "topics": {
+      "ai": "IA et apprentissage automatique",
+      "networking": "Réseaux",
+      "computing": "Informatique",
+      "software": "Logiciels et licences"
+    }
   }
 }

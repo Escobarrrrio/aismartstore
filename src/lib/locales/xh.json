@@ -151,7 +151,8 @@
     "cancel": "Rhoxisa",
     "loading": "Iyalayisha...",
     "language": "Ulwimi",
-    "currency": "Imali"
+    "currency": "Imali",
+    "close": "Vala"
   },
   "checkout": {
     "title": "Ukuhlawula",
@@ -220,7 +221,15 @@
     "specPlaceholder": "Iinkcukacha ezithe vetshe ziya kufumaneka xa idatha yemveliso isalathiswe ivela kumboneleli.",
     "relatedProducts": "Iimveliso Ezinxulumeneyo",
     "viewAll": "Jonga Zonke",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "Igalari yemifanekiso ye-{{name}}",
+    "imageOf": "{{name}}, umfanekiso {{index}} kwe-{{total}}",
+    "imageUnavailable": "Umfanekiso awufumaneki",
+    "previousImage": "Umfanekiso odlulileyo",
+    "nextImage": "Umfanekiso olandelayo",
+    "goToImage": "Yiya kumfanekiso {{index}}",
+    "enlargeImage": "Yandisa umfanekiso",
+    "clickToEnlarge": "Cofa ukwandisa"
   },
   "notFound": {
     "message": "Yhini! Iphepha alifumaneki",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Yiba ngowokuqala ukwazi",
+    "blurb": "Izixhobo ezitsha ze-AI, utshintsho lwamaxabiso, nofikelelo lwangaphambili kwimveliso enqunyelweyo — ngaphambi kokuba ifike kwikhathalogu.",
+    "joinCount": "Joyina ababhalisi abangu-{{count}}.",
+    "emailPlaceholder": "wena@umzekelo.com",
+    "emailLabel": "Idilesi ye-imeyile",
+    "subscribe": "Bhalisa",
+    "subscribing": "Kuyabhaliswa…",
+    "confirmed": "Ungenile.",
+    "confirmedMore": "Ungenile. Into enye kwakhona —",
+    "topicsPrompt": "Yintoni ekufuneka sikuxelele yona kuqala? (akunyanzelekanga, kuthatha imizuzwana emi-5)",
+    "preferencesSaved": "Ukhetho lugciniwe.",
+    "alreadyTitle": "Sele ubhalisile",
+    "alreadyBody": "Loo imeyile sele ikuluhlu.",
+    "errorTitle": "Kukho into engahambanga kakuhle",
+    "saveFailedTitle": "Asikwazanga ukuyigcina",
+    "saveFailedBody": "Ukhetho lwakho alugcinwanga. Nceda uzame kwakhona.",
+    "topics": {
+      "ai": "I-AI Nokufunda Komatshini",
+      "networking": "Uthungelwano",
+      "computing": "Ikhompyutha",
+      "software": "Isoftwe Neelayisenisi"
+    }
   }
 }

@@ -151,7 +151,8 @@
     "cancel": "إلغاء",
     "loading": "جارٍ التحميل...",
     "language": "اللغة",
-    "currency": "العملة"
+    "currency": "العملة",
+    "close": "إغلاق"
   },
   "checkout": {
     "title": "الدفع",
@@ -220,7 +221,15 @@
     "specPlaceholder": "ستكون المواصفات التفصيلية متاحة بعد مزامنة بيانات المنتج مع المورد.",
     "relatedProducts": "منتجات ذات صلة",
     "viewAll": "عرض الكل",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "معرض صور {{name}}",
+    "imageOf": "{{name}}، الصورة {{index}} من {{total}}",
+    "imageUnavailable": "الصورة غير متاحة",
+    "previousImage": "الصورة السابقة",
+    "nextImage": "الصورة التالية",
+    "goToImage": "الانتقال إلى الصورة {{index}}",
+    "enlargeImage": "تكبير الصورة",
+    "clickToEnlarge": "انقر للتكبير"
   },
   "notFound": {
     "message": "عذرًا! الصفحة غير موجودة",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "كن أول من يعرف",
+    "blurb": "أحدث عتاد الذكاء الاصطناعي وتغيّرات الأسعار والوصول المبكر للكميات المحدودة — قبل ظهورها في الكتالوج.",
+    "joinCount": "انضم إلى {{count}} مشترك.",
+    "emailPlaceholder": "you@example.com",
+    "emailLabel": "عنوان البريد الإلكتروني",
+    "subscribe": "اشترك",
+    "subscribing": "جارٍ الاشتراك…",
+    "confirmed": "تم اشتراكك.",
+    "confirmedMore": "تم اشتراكك. أمر أخير —",
+    "topicsPrompt": "بماذا نبدأ في إخبارك؟ (اختياري، يستغرق ٥ ثوانٍ)",
+    "preferencesSaved": "تم حفظ التفضيلات.",
+    "alreadyTitle": "مشترك بالفعل",
+    "alreadyBody": "هذا البريد موجود بالفعل في القائمة.",
+    "errorTitle": "حدث خطأ ما",
+    "saveFailedTitle": "تعذّر الحفظ",
+    "saveFailedBody": "لم يتم حفظ تفضيلك. يرجى المحاولة مرة أخرى.",
+    "topics": {
+      "ai": "الذكاء الاصطناعي وتعلّم الآلة",
+      "networking": "الشبكات",
+      "computing": "الحوسبة",
+      "software": "البرمجيات والتراخيص"
+    }
   }
 }

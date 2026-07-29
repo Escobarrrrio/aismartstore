@@ -151,7 +151,8 @@
     "cancel": "Cancel",
     "loading": "Loading...",
     "language": "Language",
-    "currency": "Currency"
+    "currency": "Currency",
+    "close": "Close"
   },
   "checkout": {
     "title": "Checkout",
@@ -220,7 +221,15 @@
     "specPlaceholder": "Detailed specifications will be available once product data is synced from the supplier.",
     "relatedProducts": "Related Products",
     "viewAll": "View All",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "{{name}} image gallery",
+    "imageOf": "{{name}}, image {{index}} of {{total}}",
+    "imageUnavailable": "Image unavailable",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "goToImage": "Go to image {{index}}",
+    "enlargeImage": "Enlarge image",
+    "clickToEnlarge": "Click to enlarge"
   },
   "notFound": {
     "message": "Oops! Page not found",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Be first to know",
+    "blurb": "New AI hardware drops, price changes, and early access to limited stock — before they hit the catalogue page.",
+    "joinCount": "Join {{count}} subscribers.",
+    "emailPlaceholder": "you@example.com",
+    "emailLabel": "Email address",
+    "subscribe": "Subscribe",
+    "subscribing": "Subscribing…",
+    "confirmed": "You're in.",
+    "confirmedMore": "You're in. One more thing —",
+    "topicsPrompt": "What should we tell you about first? (optional, takes 5 seconds)",
+    "preferencesSaved": "Preferences saved.",
+    "alreadyTitle": "Already subscribed",
+    "alreadyBody": "That email's already on the list.",
+    "errorTitle": "Something went wrong",
+    "saveFailedTitle": "Couldn't save that",
+    "saveFailedBody": "Your preference wasn't saved. Please try again.",
+    "topics": {
+      "ai": "AI & Machine Learning",
+      "networking": "Networking",
+      "computing": "Computing",
+      "software": "Software & Licences"
+    }
   }
 }

@@ -151,7 +151,8 @@
     "cancel": "取消",
     "loading": "加载中...",
     "language": "语言",
-    "currency": "货币"
+    "currency": "货币",
+    "close": "关闭"
   },
   "checkout": {
     "title": "结账",
@@ -220,7 +221,15 @@
     "specPlaceholder": "产品数据与供应商同步后，详细规格将可用。",
     "relatedProducts": "相关产品",
     "viewAll": "查看全部",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "{{name}} 图片库",
+    "imageOf": "{{name}}，第 {{index}} 张，共 {{total}} 张",
+    "imageUnavailable": "图片不可用",
+    "previousImage": "上一张",
+    "nextImage": "下一张",
+    "goToImage": "跳到第 {{index}} 张",
+    "enlargeImage": "放大图片",
+    "clickToEnlarge": "点击放大"
   },
   "notFound": {
     "message": "哎呀！页面未找到",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "抢先了解",
+    "blurb": "新的 AI 硬件、价格变动和限量库存的优先购买权——先于商品目录上线。",
+    "joinCount": "加入 {{count}} 位订阅者。",
+    "emailPlaceholder": "you@example.com",
+    "emailLabel": "电子邮箱地址",
+    "subscribe": "订阅",
+    "subscribing": "订阅中…",
+    "confirmed": "订阅成功。",
+    "confirmedMore": "订阅成功。还有一件事 —",
+    "topicsPrompt": "您希望我们优先告知哪方面的信息？（可选，只需 5 秒）",
+    "preferencesSaved": "偏好已保存。",
+    "alreadyTitle": "已订阅",
+    "alreadyBody": "该邮箱已在订阅列表中。",
+    "errorTitle": "出错了",
+    "saveFailedTitle": "保存失败",
+    "saveFailedBody": "您的偏好未能保存，请重试。",
+    "topics": {
+      "ai": "人工智能与机器学习",
+      "networking": "网络设备",
+      "computing": "计算设备",
+      "software": "软件与许可证"
+    }
   }
 }

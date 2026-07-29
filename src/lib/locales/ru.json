@@ -151,7 +151,8 @@
     "cancel": "Отмена",
     "loading": "Загрузка...",
     "language": "Язык",
-    "currency": "Валюта"
+    "currency": "Валюта",
+    "close": "Закрыть"
   },
   "checkout": {
     "title": "Оформление Заказа",
@@ -220,7 +221,15 @@
     "specPlaceholder": "Подробные характеристики будут доступны после синхронизации данных о товаре с поставщиком.",
     "relatedProducts": "Похожие Товары",
     "viewAll": "Посмотреть Все",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "Галерея изображений {{name}}",
+    "imageOf": "{{name}}, изображение {{index}} из {{total}}",
+    "imageUnavailable": "Изображение недоступно",
+    "previousImage": "Предыдущее изображение",
+    "nextImage": "Следующее изображение",
+    "goToImage": "Перейти к изображению {{index}}",
+    "enlargeImage": "Увеличить изображение",
+    "clickToEnlarge": "Нажмите, чтобы увеличить"
   },
   "notFound": {
     "message": "Упс! Страница не найдена",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Узнайте первыми",
+    "blurb": "Новое оборудование для ИИ, изменения цен и ранний доступ к ограниченным партиям — до появления в каталоге.",
+    "joinCount": "Присоединяйтесь к {{count}} подписчикам.",
+    "emailPlaceholder": "vy@primer.com",
+    "emailLabel": "Адрес электронной почты",
+    "subscribe": "Подписаться",
+    "subscribing": "Подписка…",
+    "confirmed": "Вы подписаны.",
+    "confirmedMore": "Вы подписаны. Ещё одно —",
+    "topicsPrompt": "О чём рассказать вам в первую очередь? (необязательно, 5 секунд)",
+    "preferencesSaved": "Настройки сохранены.",
+    "alreadyTitle": "Уже подписаны",
+    "alreadyBody": "Эта почта уже есть в списке.",
+    "errorTitle": "Что-то пошло не так",
+    "saveFailedTitle": "Не удалось сохранить",
+    "saveFailedBody": "Ваш выбор не сохранён. Попробуйте ещё раз.",
+    "topics": {
+      "ai": "ИИ и машинное обучение",
+      "networking": "Сетевое оборудование",
+      "computing": "Вычислительная техника",
+      "software": "ПО и лицензии"
+    }
   }
 }

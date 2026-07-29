@@ -151,7 +151,8 @@
     "cancel": "रद्द करें",
     "loading": "लोड हो रहा है...",
     "language": "भाषा",
-    "currency": "मुद्रा"
+    "currency": "मुद्रा",
+    "close": "बंद करें"
   },
   "checkout": {
     "title": "चेकआउट",
@@ -220,7 +221,15 @@
     "specPlaceholder": "सप्लायर से उत्पाद डेटा सिंक होने के बाद विस्तृत विशेषताएं उपलब्ध होंगी।",
     "relatedProducts": "संबंधित उत्पाद",
     "viewAll": "सभी देखें",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "{{name}} छवि गैलरी",
+    "imageOf": "{{name}}, छवि {{index}} / {{total}}",
+    "imageUnavailable": "छवि उपलब्ध नहीं",
+    "previousImage": "पिछली छवि",
+    "nextImage": "अगली छवि",
+    "goToImage": "छवि {{index}} पर जाएँ",
+    "enlargeImage": "छवि बड़ी करें",
+    "clickToEnlarge": "बड़ा करने के लिए क्लिक करें"
   },
   "notFound": {
     "message": "उफ़! पेज नहीं मिला",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "सबसे पहले जानें",
+    "blurb": "नए AI हार्डवेयर, कीमतों में बदलाव और सीमित स्टॉक तक जल्दी पहुँच — कैटलॉग पर आने से पहले।",
+    "joinCount": "{{count}} सदस्यों से जुड़ें।",
+    "emailPlaceholder": "aap@udaharan.com",
+    "emailLabel": "ईमेल पता",
+    "subscribe": "सदस्यता लें",
+    "subscribing": "सदस्यता ली जा रही है…",
+    "confirmed": "आप जुड़ गए हैं।",
+    "confirmedMore": "आप जुड़ गए हैं। एक और बात —",
+    "topicsPrompt": "हम आपको सबसे पहले किस बारे में बताएँ? (वैकल्पिक, 5 सेकंड)",
+    "preferencesSaved": "प्राथमिकताएँ सहेजी गईं।",
+    "alreadyTitle": "पहले से सदस्य",
+    "alreadyBody": "यह ईमेल पहले से सूची में है।",
+    "errorTitle": "कुछ गलत हो गया",
+    "saveFailedTitle": "सहेजा नहीं जा सका",
+    "saveFailedBody": "आपकी पसंद सहेजी नहीं गई। कृपया फिर से प्रयास करें।",
+    "topics": {
+      "ai": "AI और मशीन लर्निंग",
+      "networking": "नेटवर्किंग",
+      "computing": "कंप्यूटिंग",
+      "software": "सॉफ़्टवेयर और लाइसेंस"
+    }
   }
 }

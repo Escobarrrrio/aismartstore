@@ -151,7 +151,8 @@
     "cancel": "Hlakola",
     "loading": "Ea jaroa...",
     "language": "Puo",
-    "currency": "Chelete"
+    "currency": "Chelete",
+    "close": "Koala"
   },
   "checkout": {
     "title": "Tefo",
@@ -220,7 +221,15 @@
     "specPlaceholder": "Lintlha tse qaqileng li tla fumaneha ha boitsebiso ba sehlahisoa bo se bo lumellanngwa ho tswa ho mofani.",
     "relatedProducts": "Lihlahisoa tse Amanang",
     "viewAll": "Sheba Tsohle",
-    "dispatchedFrom": "Dispatched from {{city}}"
+    "dispatchedFrom": "Dispatched from {{city}}",
+    "galleryLabel": "Pontsho ea litšoantšo tsa {{name}}",
+    "imageOf": "{{name}}, setšoantšo {{index}} ho {{total}}",
+    "imageUnavailable": "Setšoantšo ha se fumanehe",
+    "previousImage": "Setšoantšo se fetileng",
+    "nextImage": "Setšoantšo se latelang",
+    "goToImage": "Ea setšoantšong {{index}}",
+    "enlargeImage": "Hōlisa setšoantšo",
+    "clickToEnlarge": "Tobetsa ho hōlisa"
   },
   "notFound": {
     "message": "Joo! Leqephe ha le fumanwe",
@@ -288,5 +297,29 @@
     "serverError": "Our AI service hit a snag. Please try again in a moment.",
     "genericError": "Sorry, something went wrong. Please try again.",
     "unexpectedError": "Sorry, I'm having trouble connecting. Please try again later."
+  },
+  "newsletter": {
+    "heading": "Eba wa pele ho tseba",
+    "blurb": "Lisebelisoa tse ncha tsa AI, liphetoho tsa litheko, le phihlello ea pele ho thepa e fokolang — pele li fihla khathaloko.",
+    "joinCount": "Kena le ba ngolisitseng ba {{count}}.",
+    "emailPlaceholder": "uena@mohlala.com",
+    "emailLabel": "Aterese ea lengolo-tsoibila",
+    "subscribe": "Ngolisa",
+    "subscribing": "Ea ngolisa…",
+    "confirmed": "U kenelletse.",
+    "confirmedMore": "U kenelletse. Ntho e 'ngoe hape —",
+    "topicsPrompt": "Ke eng eo re lokelang ho u bolella eona pele? (ha ho tlamo, ho nka metsotsoana e 5)",
+    "preferencesSaved": "Likhetho li bolokiloe.",
+    "alreadyTitle": "U se u ngolisitse",
+    "alreadyBody": "Lengolo-tsoibila leo le se le le lethathamong.",
+    "errorTitle": "Ho na le se sa tsamaeang hantle",
+    "saveFailedTitle": "Ha rea khona ho e boloka",
+    "saveFailedBody": "Khetho ea hau ha ea bolokoa. Ka kopo leka hape.",
+    "topics": {
+      "ai": "AI le Ho Ithuta ha Mochine",
+      "networking": "Marang-rang",
+      "computing": "Likhomphutha",
+      "software": "Software le Mangolo"
+    }
   }
 }

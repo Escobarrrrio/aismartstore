@@ -11,6 +11,12 @@
  *   window.addEventListener("analytics", (e) => console.log(e.detail));
  */
 
+/**
+ * Which slice of the catalogue an event refers to. "all" is the combined
+ * Home + Business view offered by the scope control on /products.
+ */
+export type StorefrontAudience = "residential" | "business" | "all";
+
 export type AnalyticsEvent =
   | { name: "facet_selected"; facet: "category" | "brand"; value: string; page: string }
   | { name: "facet_cleared"; facet: "category" | "brand" | "ai" | "stock" | "business" | "min_price" | "max_price" | "search"; value?: string; page: string }
@@ -18,9 +24,11 @@ export type AnalyticsEvent =
   | { name: "sort_changed"; value: string; page: string }
   | { name: "page_changed"; value: number; page: string }
   | { name: "filters_cleared_all"; page: string }
+  // Catalogue scope switch on /products ("Home" / "Business" / "Everything").
+  | { name: "audience_changed"; value: StorefrontAudience; page: string }
   // Storefront audience telemetry — proves the residential/business split in prod.
-  | { name: "storefront_viewed"; audience: "residential" | "business"; surface: "home" | "products" | "procurement" | "header_search"; query?: string }
-  | { name: "product_list_returned"; audience: "residential" | "business"; surface: "home" | "products" | "procurement" | "header_search"; count: number; total?: number; query?: string }
+  | { name: "storefront_viewed"; audience: StorefrontAudience; surface: "home" | "products" | "procurement" | "header_search"; query?: string }
+  | { name: "product_list_returned"; audience: StorefrontAudience; surface: "home" | "products" | "procurement" | "header_search"; count: number; total?: number; query?: string }
   | { name: "audience_guard_blocked"; allow: "residential" | "business"; actual: "residential" | "business" | "anonymous" }
   | { name: "business_upgrade_requested" };
 

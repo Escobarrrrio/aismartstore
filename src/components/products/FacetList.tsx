@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Check, Search } from "lucide-react";
+import { facetLabel } from "@/lib/facets";
 
 export type FacetOption = { value: string; count: number };
 
@@ -38,9 +39,16 @@ const FacetList = ({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter((o) => o.value.toLowerCase().includes(q));
-  }, [options, query]);
+    const list = q
+      ? options.filter((o) => o.value.toLowerCase().includes(q))
+      : options.slice();
+    // The active value must always stay visible and dismissible, even if the
+    // current filter combination means it no longer appears in the counts.
+    if (selected && !list.some((o) => o.value.toLowerCase() === selected.toLowerCase())) {
+      list.unshift({ value: selected, count: 0 });
+    }
+    return list;
+  }, [options, query, selected]);
 
   const visible = expanded ? filtered : filtered.slice(0, initialVisible);
   const hidden = Math.max(0, filtered.length - initialVisible);
@@ -85,16 +93,23 @@ const FacetList = ({
           )}
           <ul className="space-y-0.5 max-h-64 overflow-y-auto -mx-1 px-1">
             {visible.map((o) => {
-              const active = o.value === selected;
+              const active = o.value.toLowerCase() === selected.toLowerCase();
+              // A zero-count option can only ever produce an empty grid, so it
+              // is not offered as a destination — the counts and what you can
+              // click stay in agreement.
+              const unavailable = o.count === 0 && !active;
               return (
                 <li key={o.value}>
                   <button
                     type="button"
+                    disabled={unavailable}
                     onClick={() => onSelect(active ? "" : o.value)}
                     className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-left transition-colors ${
                       active
                         ? "bg-primary/10 text-primary font-semibold"
-                        : "hover:bg-muted text-foreground"
+                        : unavailable
+                          ? "text-muted-foreground/50 cursor-not-allowed"
+                          : "hover:bg-muted text-foreground"
                     }`}
                     aria-pressed={active}
                   >
@@ -106,7 +121,7 @@ const FacetList = ({
                     >
                       {active && <Check className="h-3 w-3" />}
                     </span>
-                    <span className="flex-1 truncate">{o.value}</span>
+                    <span className="flex-1 truncate">{facetLabel(o.value)}</span>
                     <span className={`text-[11px] tabular-nums ${active ? "text-primary" : "text-muted-foreground"}`}>
                       {fmt(o.count)}
                     </span>

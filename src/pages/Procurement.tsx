@@ -29,6 +29,22 @@ const ENTITY_TYPES = [
   { value: "other", label: "Other", icon: Building2 },
 ];
 
+/** Row shape returned by the `search_products` RPC. */
+type SearchRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | string;
+  category: string | null;
+  brand: string | null;
+  sku: string | null;
+  images: string[] | null;
+  in_stock: boolean;
+  stock_quantity: number | null;
+  is_ai_product: boolean | null;
+  total_count: number | string;
+};
+
 type CompliancePack = {
   entity_legal_name: string;
   cipc_registration_number: string | null;
@@ -51,6 +67,7 @@ const ProcurementPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [compliancePack, setCompliancePack] = useState<CompliancePack | null>(null);
   const [enterpriseAi, setEnterpriseAi] = useState<Product[]>([]);
+  const [enterpriseTotal, setEnterpriseTotal] = useState(0);
   const [form, setForm] = useState({
     organisation_name: "", entity_type: "private", contact_name: "",
     email: "", phone: "", requirements: "", estimated_value: "",
@@ -69,13 +86,18 @@ const ProcurementPage = () => {
         page_size: 24,
         filter_audience: "business",
       });
-      const list = ((data as any[]) || []).filter((p) => Array.isArray(p.images) && p.images[0]);
+      const rows = (data as SearchRow[] | null) ?? [];
+      // total_count is the size of the whole business catalogue, not of this
+      // 24-row page — it's what the "browse everything" link below advertises.
+      const catalogueTotal = rows[0]?.total_count ? Number(rows[0].total_count) : rows.length;
+      setEnterpriseTotal(catalogueTotal);
+      const list = rows.filter((p) => Array.isArray(p.images) && !!p.images[0]);
       trackEvent({
         name: "product_list_returned",
         audience: "business",
         surface: "procurement",
         count: list.length,
-        total: list[0]?.total_count ? Number(list[0].total_count) : list.length,
+        total: catalogueTotal,
       });
       setEnterpriseAi(
         list.slice(0, 8).map((p) => ({
@@ -202,8 +224,18 @@ const ProcurementPage = () => {
                   code (SKU) suitable for tender line-items and CSD/BAS capture.
                 </p>
               </div>
-              <Link to="/products?ai=1" className="text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1">
-                Full AI catalogue <ArrowRight className="h-4 w-4" />
+              {/* Must land in the BUSINESS catalogue. The old target
+                  (/products?ai=1) dropped procurement officers into the
+                  consumer storefront filtered to AI-flagged items — six
+                  smart-home products, none of them tender-relevant. */}
+              <Link
+                to="/products?audience=business&sort=price_desc"
+                className="text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1 whitespace-nowrap"
+              >
+                {enterpriseTotal > 0
+                  ? `Browse all ${enterpriseTotal.toLocaleString("en-ZA")} enterprise products`
+                  : "Browse the enterprise catalogue"}
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">

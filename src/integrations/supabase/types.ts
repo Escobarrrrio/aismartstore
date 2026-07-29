@@ -1431,6 +1431,23 @@ export type Database = {
       }
       recategorize_batch: { Args: { batch_size?: number }; Returns: number }
       refresh_product_facets_cache: { Args: never; Returns: number }
+      search_product_facets: {
+        Args: {
+          filter_ai_only?: boolean
+          filter_audience?: string
+          filter_brand?: string
+          filter_category?: string
+          filter_in_stock_only?: boolean
+          max_price?: number
+          min_price?: number
+          search_query?: string
+        }
+        Returns: {
+          facet_type: string
+          facet_value: string
+          product_count: number
+        }[]
+      }
       search_products:
         | {
             Args: {

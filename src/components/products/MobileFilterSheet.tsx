@@ -8,6 +8,8 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AUDIENCES, facetLabel, type Audience } from "@/lib/facets";
+import { formatMoney } from "@/lib/currency";
 
 export type FacetOption = { value: string; count: number };
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
@@ -27,8 +29,17 @@ interface MobileFilterSheetProps {
   maxPrice: string;
   aiOnly: boolean;
   inStockOnly: boolean;
-  includeBusiness: boolean;
   sort: SortOption;
+
+  /** Live counts for the two toggles, in the current filter context. */
+  aiReadyCount: number;
+  inStockCount: number;
+  /** Price shortcuts + bounds derived from the current result set. */
+  priceChips: number[];
+  priceMin: number;
+  priceMax: number;
+  audience: Audience;
+  setAudience: (v: Audience) => void;
 
   setCategory: (v: string) => void;
   setBrand: (v: string) => void;
@@ -36,7 +47,6 @@ interface MobileFilterSheetProps {
   setMaxPrice: (v: string) => void;
   setAiOnly: (v: boolean) => void;
   setInStockOnly: (v: boolean) => void;
-  setIncludeBusiness: (v: boolean) => void;
   setSort: (v: SortOption) => void;
 
   resultCount: number;
@@ -58,8 +68,9 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
   const {
     open, onOpenChange,
     categories, brands, facetsLoading, facetsError, onRetryFacets,
-    category, brand, minPrice, maxPrice, aiOnly, inStockOnly, includeBusiness, sort,
-    setCategory, setBrand, setMinPrice, setMaxPrice, setAiOnly, setInStockOnly, setIncludeBusiness, setSort,
+    category, brand, minPrice, maxPrice, aiOnly, inStockOnly, sort,
+    aiReadyCount, inStockCount, priceChips, priceMin, priceMax, audience, setAudience,
+    setCategory, setBrand, setMinPrice, setMaxPrice, setAiOnly, setInStockOnly, setSort,
     resultCount, activeFilters, onClearAll,
   } = props;
 
@@ -92,7 +103,7 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
       ? opts.filter((o) => o.value.toLowerCase().includes(needle))
       : opts.slice();
     // Pin the currently-selected value to the top if it isn't shown.
-    if (current && !filtered.some((o) => o.value === current)) {
+    if (current && !filtered.some((o) => o.value.toLowerCase() === current.toLowerCase())) {
       filtered.unshift({ value: current, count: 0 });
     }
     return filtered;
@@ -156,19 +167,25 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
           </button>
         </li>
         {opts.map((o) => {
-          const isSelected = o.value === selected;
+          const isSelected = o.value.toLowerCase() === selected.toLowerCase();
+          const unavailable = o.count === 0 && !isSelected;
           return (
             <li key={o.value}>
               <button
                 type="button"
                 role="radio"
                 aria-checked={isSelected}
+                disabled={unavailable}
                 onClick={() => onSelect(o.value)}
                 className={`w-full min-h-11 flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                  isSelected ? "bg-primary/[0.08] text-foreground font-semibold" : "hover:bg-muted"
+                  isSelected
+                    ? "bg-primary/[0.08] text-foreground font-semibold"
+                    : unavailable
+                      ? "text-muted-foreground/50 cursor-not-allowed"
+                      : "hover:bg-muted"
                 }`}
               >
-                <span className="truncate">{o.value}</span>
+                <span className="truncate">{facetLabel(o.value)}</span>
                 <span className="flex items-center gap-2 shrink-0">
                   {o.count > 0 && (
                     <span className="text-xs tabular-nums text-muted-foreground">{fmtCount(o.count)}</span>
@@ -236,7 +253,7 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
               Brand{brand && <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary inline-block" aria-hidden="true" />}
             </TabsTrigger>
             <TabsTrigger value="more" className="text-xs">
-              More{(minPrice || maxPrice || aiOnly || inStockOnly) && (
+              More{(minPrice || maxPrice || aiOnly || inStockOnly || audience !== "residential") && (
                 <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary inline-block" aria-hidden="true" />
               )}
             </TabsTrigger>
@@ -312,6 +329,35 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
           <TabsContent value="more" className="flex-1 min-h-0 overflow-y-auto mt-3 mx-0 px-4 space-y-6 pb-4">
             <fieldset>
               <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                Catalogue
+              </legend>
+              <div role="radiogroup" aria-label="Catalogue scope" data-testid="mobile-catalogue-scope" className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-muted">
+                {AUDIENCES.map((a) => {
+                  const active = audience === a.value;
+                  return (
+                    <button
+                      key={a.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      data-testid={`mobile-scope-${a.value}`}
+                      onClick={() => setAudience(a.value)}
+                      className={`min-h-11 rounded-md px-2 text-xs font-semibold transition-colors ${
+                        active ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+                      }`}
+                    >
+                      {a.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                {AUDIENCES.find((a) => a.value === audience)?.hint}
+              </p>
+            </fieldset>
+
+            <fieldset>
+              <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                 Price (ZAR)
               </legend>
               <div className="flex gap-2">
@@ -340,36 +386,68 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
                   />
                 </label>
               </div>
+              {priceChips.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {priceChips.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setMaxPrice(String(p))}
+                      className="min-h-9 px-3 rounded-full border border-input text-xs hover:border-primary hover:text-primary transition-colors"
+                    >
+                      Under {formatMoney(p)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {priceMax > 0 && (
+                <p className="text-[11px] text-muted-foreground mt-2">
+                  Available range: {formatMoney(priceMin)} – {formatMoney(priceMax)}
+                </p>
+              )}
             </fieldset>
 
             <fieldset className="space-y-1">
               <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                 Availability
               </legend>
-              <label className="flex items-center justify-between min-h-12 gap-3 rounded-lg px-3 -mx-3 hover:bg-muted cursor-pointer">
+              <label className={`flex items-center justify-between min-h-12 gap-3 rounded-lg px-3 -mx-3 ${
+                aiReadyCount === 0 && !aiOnly ? "opacity-40" : "hover:bg-muted cursor-pointer"
+              }`}>
                 <span className="text-sm">AI products only</span>
-                <input
-                  type="checkbox"
-                  checked={aiOnly}
-                  onChange={(e) => setAiOnly(e.target.checked)}
-                  className="w-5 h-5 accent-primary"
-                />
+                <span className="flex items-center gap-3">
+                  <span className="text-xs tabular-nums text-muted-foreground">{fmtCount(aiReadyCount)}</span>
+                  <input
+                    type="checkbox"
+                    checked={aiOnly}
+                    disabled={aiReadyCount === 0 && !aiOnly}
+                    onChange={(e) => setAiOnly(e.target.checked)}
+                    className="w-5 h-5 accent-primary"
+                  />
+                </span>
               </label>
-              <label className="flex items-center justify-between min-h-12 gap-3 rounded-lg px-3 -mx-3 hover:bg-muted cursor-pointer">
+              <label className={`flex items-center justify-between min-h-12 gap-3 rounded-lg px-3 -mx-3 ${
+                inStockCount === 0 && !inStockOnly ? "opacity-40" : "hover:bg-muted cursor-pointer"
+              }`}>
                 <span className="text-sm">In stock only</span>
-                <input
-                  type="checkbox"
-                  checked={inStockOnly}
-                  onChange={(e) => setInStockOnly(e.target.checked)}
-                  className="w-5 h-5 accent-primary"
-                />
+                <span className="flex items-center gap-3">
+                  <span className="text-xs tabular-nums text-muted-foreground">{fmtCount(inStockCount)}</span>
+                  <input
+                    type="checkbox"
+                    checked={inStockOnly}
+                    disabled={inStockCount === 0 && !inStockOnly}
+                    onChange={(e) => setInStockOnly(e.target.checked)}
+                    className="w-5 h-5 accent-primary"
+                  />
+                </span>
               </label>
               <p className="text-[11px] text-muted-foreground border-t border-border pt-3 mt-2 leading-relaxed">
-                Shopping for a business or government department? Enterprise
-                gear lives on our{" "}
+                Need a formal quote, tender response or the full compliance pack?
+                Our{" "}
                 <a href="/procurement" className="text-primary font-semibold underline">
                   Business Portal
-                </a>.
+                </a>{" "}
+                handles government and enterprise procurement.
               </p>
             </fieldset>
 

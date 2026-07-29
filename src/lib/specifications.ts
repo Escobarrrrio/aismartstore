@@ -33,12 +33,17 @@ const TECHNICAL_RULES: Rule[] = [
   {
     label: "Capacity",
     // 960GB, 1.92TB, 15.36TB, and the distributor's clipped "1.92T" form.
-    re: /\b(\d+(?:\.\d+)?)\s?(TB|GB|T)\b(?!\/?s)/i,
-    format: (m) => `${m[1]}${m[2].toUpperCase() === "T" ? "TB" : m[2].toUpperCase()}`,
+    // Deliberately case-SENSITIVE: "GB" is gigabytes, "Gb" is gigabits. Matching
+    // case-insensitively reported "HPE 100Gb QSFP28 ... XCVR" -- a 100 gigabit
+    // transceiver -- as having 100GB of storage capacity.
+    re: /\b(\d+(?:\.\d+)?)\s?(TB|GB|T)\b(?!\/?s)/,
+    format: (m) => `${m[1]}${m[2] === "T" ? "TB" : m[2]}`,
   },
   {
     label: "Processor",
-    re: /\b((?:Core\s+)?i[3579][\s-]?\d{4,5}[A-Z]{0,2}|Xeon(?:-[A-Z])?\s+\d{4}[A-Z+]*|Ryzen\s+\d\s+\w+|EPYC\s+\d{4}[A-Z]*)\b/i,
+    // EPYC part numbers aren't all four digits — "EPYC 73F3" embeds a letter,
+    // so a plain \d{4} missed a whole family of CPUs in the feed.
+    re: /\b((?:Core\s+)?i[3579][\s-]?\d{4,5}[A-Z]{0,2}|Xeon(?:-[A-Z])?\s+\d{4}[A-Z+]*|Ryzen\s+\d\s+\w+|EPYC\s+\d{2,4}[A-Z]?\d?[A-Z]*)\b/i,
     format: (m) => m[1].replace(/\s+/g, " ").trim(),
   },
   {
@@ -88,7 +93,10 @@ const TECHNICAL_RULES: Rule[] = [
   },
   {
     label: "Network speed",
-    re: /\b(\d{1,3})\s?Gb(?:E|it)?\b/i,
+    // Also case-SENSITIVE, for the same reason in reverse: with /i this matched
+    // the "960GB" in "HPE 960GB SATA ... SSD" and reported a storage drive as
+    // having a 960GbE network link.
+    re: /\b(\d{1,3})\s?Gb(?:E|it)?\b/,
     format: (m) => `${m[1]}GbE`,
   },
   {

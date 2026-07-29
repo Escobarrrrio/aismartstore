@@ -229,7 +229,35 @@
     "nextImage": "Isithombe esilandelayo",
     "goToImage": "Yiya esithombeni {{index}}",
     "enlargeImage": "Khulisa isithombe",
-    "clickToEnlarge": "Chofoza ukukhulisa"
+    "clickToEnlarge": "Chofoza ukukhulisa",
+    "specSource": "Imininingwane ithathwe kudatha yomthengisi. Xhumana nathi uma udinga ishidi ledatha eligcwele ngaphambi kokuoda.",
+    "specGroup": {
+      "details": "Imininingwane yomkhiqizo",
+      "technical": "Imininingwane yobuchwepheshe"
+    },
+    "spec": {
+      "Brand": "Umkhiqizi",
+      "Product code": "Ikhodi yomkhiqizo",
+      "Category": "Isigaba",
+      "Availability": "Ukutholakala",
+      "Capacity": "Umthamo",
+      "Processor": "Iprosesa",
+      "Memory": "Inkumbulo",
+      "Memory type": "Uhlobo lwenkumbulo",
+      "Memory speed": "Isivinini senkumbulo",
+      "Drive type": "Uhlobo lwedrayivu",
+      "Interface": "I-interface",
+      "Rotational speed": "Isivinini sokujikeleza",
+      "Form factor": "Usayizi",
+      "Rack height": "Ubude berack",
+      "Display": "Isikrini",
+      "Network speed": "Isivinini senethiwekhi",
+      "Power supply": "Umthombo kagesi",
+      "Cable length": "Ubude bentambo",
+      "Operating system": "Isistimu yokusebenza",
+      "Warranty": "Iwaranti",
+      "Supplier": "Umthengisi"
+    }
   },
   "notFound": {
     "message": "Maa! Ikhasi alitholakali",

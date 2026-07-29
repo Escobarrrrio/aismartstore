@@ -229,7 +229,35 @@
     "nextImage": "Volgende beeld",
     "goToImage": "Gaan na beeld {{index}}",
     "enlargeImage": "Vergroot beeld",
-    "clickToEnlarge": "Klik om te vergroot"
+    "clickToEnlarge": "Klik om te vergroot",
+    "specSource": "Spesifikasies word afgelei uit die verskaffer se produkdata. Kontak ons as jy 'n volledige datablad benodig voor bestelling.",
+    "specGroup": {
+      "details": "Produkbesonderhede",
+      "technical": "Tegniese spesifikasies"
+    },
+    "spec": {
+      "Brand": "Handelsmerk",
+      "Product code": "Produkkode",
+      "Category": "Kategorie",
+      "Availability": "Beskikbaarheid",
+      "Capacity": "Kapasiteit",
+      "Processor": "Verwerker",
+      "Memory": "Geheue",
+      "Memory type": "Geheuetipe",
+      "Memory speed": "Geheuespoed",
+      "Drive type": "Skyftipe",
+      "Interface": "Koppelvlak",
+      "Rotational speed": "Rotasiespoed",
+      "Form factor": "Vormfaktor",
+      "Rack height": "Rakhoogte",
+      "Display": "Skerm",
+      "Network speed": "Netwerkspoed",
+      "Power supply": "Kragtoevoer",
+      "Cable length": "Kabellengte",
+      "Operating system": "Bedryfstelsel",
+      "Warranty": "Waarborg",
+      "Supplier": "Verskaffer"
+    }
   },
   "notFound": {
     "message": "Oeps! Bladsy nie gevind nie",

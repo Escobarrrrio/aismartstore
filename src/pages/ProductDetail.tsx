@@ -7,12 +7,13 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from "@/components/ImageLightbox";
+import { buildSpecifications } from "@/lib/specifications";
 import {
   ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw, MapPin,
   Star, ChevronLeft, ChevronRight, Package, MessageCircle, Minus, Plus, Heart,
   Maximize2
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const DEFAULT_DISPATCH_CITY = "Gqeberha";
@@ -32,6 +33,7 @@ const ProductDetail = () => {
   const [resolved, setResolved] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [storedSpecs, setStoredSpecs] = useState<Record<string, unknown> | null>(null);
   const [dispatchCity, setDispatchCity] = useState(DEFAULT_DISPATCH_CITY);
 
   useEffect(() => {
@@ -52,6 +54,30 @@ const ProductDetail = () => {
     });
     return () => { cancelled = true; };
   }, [id, getProduct]);
+
+  // `specifications` isn't part of the shared Product type (only a handful of
+  // manually-sourced rows carry it), so it's fetched separately and treated as
+  // authoritative over anything derived from the product name.
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setStoredSpecs(null);
+    supabase
+      .from("products").select("specifications").eq("id", id).maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const spec = data?.specifications;
+        setStoredSpecs(spec && typeof spec === "object" && !Array.isArray(spec)
+          ? (spec as Record<string, unknown>)
+          : null);
+      });
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const specGroups = useMemo(
+    () => (product ? buildSpecifications(product, storedSpecs) : []),
+    [product, storedSpecs],
+  );
 
   // Related products (from currently loaded page)
   const related = product
@@ -342,14 +368,36 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* Specifications placeholder */}
+        {/* Specifications — derived from the product name plus known attributes,
+            since the distributor never sends a structured spec sheet. */}
         <div className="mt-16 border-t border-border pt-12">
           <h2 className="font-display font-bold text-xl mb-6">{t("productDetail.specifications")}</h2>
-          <div className="card-flat p-6">
-            <p className="text-sm text-muted-foreground">
-              {t("productDetail.specPlaceholder")}
-            </p>
-          </div>
+          {specGroups.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {specGroups.map((group) => (
+                <div key={group.title} className="card-flat p-6">
+                  <h3 className="font-display font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">
+                    {t(`productDetail.specGroup.${group.title === "Product details" ? "details" : "technical"}`)}
+                  </h3>
+                  <dl className="divide-y divide-border/60">
+                    {group.items.map((item) => (
+                      <div key={item.label} className="flex items-baseline justify-between gap-4 py-2.5">
+                        <dt className="text-sm text-muted-foreground shrink-0">
+                          {t(`productDetail.spec.${item.label}`, { defaultValue: item.label })}
+                        </dt>
+                        <dd className="text-sm font-medium text-right break-words">{item.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="card-flat p-6">
+              <p className="text-sm text-muted-foreground">{t("productDetail.specPlaceholder")}</p>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground mt-4">{t("productDetail.specSource")}</p>
         </div>
 
         {/* Related products */}

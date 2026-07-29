@@ -229,7 +229,35 @@
     "nextImage": "Следующее изображение",
     "goToImage": "Перейти к изображению {{index}}",
     "enlargeImage": "Увеличить изображение",
-    "clickToEnlarge": "Нажмите, чтобы увеличить"
+    "clickToEnlarge": "Нажмите, чтобы увеличить",
+    "specSource": "Характеристики получены из данных поставщика. Свяжитесь с нами, если перед заказом нужна полная спецификация.",
+    "specGroup": {
+      "details": "Сведения о товаре",
+      "technical": "Технические характеристики"
+    },
+    "spec": {
+      "Brand": "Бренд",
+      "Product code": "Код товара",
+      "Category": "Категория",
+      "Availability": "Наличие",
+      "Capacity": "Ёмкость",
+      "Processor": "Процессор",
+      "Memory": "Память",
+      "Memory type": "Тип памяти",
+      "Memory speed": "Частота памяти",
+      "Drive type": "Тип накопителя",
+      "Interface": "Интерфейс",
+      "Rotational speed": "Скорость вращения",
+      "Form factor": "Форм-фактор",
+      "Rack height": "Высота в юнитах",
+      "Display": "Экран",
+      "Network speed": "Скорость сети",
+      "Power supply": "Блок питания",
+      "Cable length": "Длина кабеля",
+      "Operating system": "Операционная система",
+      "Warranty": "Гарантия",
+      "Supplier": "Поставщик"
+    }
   },
   "notFound": {
     "message": "Упс! Страница не найдена",

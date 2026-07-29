@@ -229,7 +229,35 @@
     "nextImage": "Imagem seguinte",
     "goToImage": "Ir para a imagem {{index}}",
     "enlargeImage": "Ampliar imagem",
-    "clickToEnlarge": "Clique para ampliar"
+    "clickToEnlarge": "Clique para ampliar",
+    "specSource": "As especificações derivam dos dados do fornecedor. Contacte-nos se precisar de uma ficha técnica completa antes de encomendar.",
+    "specGroup": {
+      "details": "Detalhes do produto",
+      "technical": "Especificações técnicas"
+    },
+    "spec": {
+      "Brand": "Marca",
+      "Product code": "Código do produto",
+      "Category": "Categoria",
+      "Availability": "Disponibilidade",
+      "Capacity": "Capacidade",
+      "Processor": "Processador",
+      "Memory": "Memória",
+      "Memory type": "Tipo de memória",
+      "Memory speed": "Velocidade da memória",
+      "Drive type": "Tipo de unidade",
+      "Interface": "Interface",
+      "Rotational speed": "Velocidade de rotação",
+      "Form factor": "Formato",
+      "Rack height": "Altura em U",
+      "Display": "Ecrã",
+      "Network speed": "Velocidade de rede",
+      "Power supply": "Fonte de alimentação",
+      "Cable length": "Comprimento do cabo",
+      "Operating system": "Sistema operativo",
+      "Warranty": "Garantia",
+      "Supplier": "Fornecedor"
+    }
   },
   "notFound": {
     "message": "Ops! Página não encontrada",

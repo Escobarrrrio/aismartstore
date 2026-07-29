@@ -229,7 +229,35 @@
     "nextImage": "Image suivante",
     "goToImage": "Aller à l'image {{index}}",
     "enlargeImage": "Agrandir l'image",
-    "clickToEnlarge": "Cliquez pour agrandir"
+    "clickToEnlarge": "Cliquez pour agrandir",
+    "specSource": "Les spécifications sont dérivées des données produit du fournisseur. Contactez-nous si vous avez besoin d'une fiche technique complète avant de commander.",
+    "specGroup": {
+      "details": "Détails du produit",
+      "technical": "Spécifications techniques"
+    },
+    "spec": {
+      "Brand": "Marque",
+      "Product code": "Code produit",
+      "Category": "Catégorie",
+      "Availability": "Disponibilité",
+      "Capacity": "Capacité",
+      "Processor": "Processeur",
+      "Memory": "Mémoire",
+      "Memory type": "Type de mémoire",
+      "Memory speed": "Vitesse mémoire",
+      "Drive type": "Type de disque",
+      "Interface": "Interface",
+      "Rotational speed": "Vitesse de rotation",
+      "Form factor": "Format",
+      "Rack height": "Hauteur en U",
+      "Display": "Écran",
+      "Network speed": "Débit réseau",
+      "Power supply": "Alimentation",
+      "Cable length": "Longueur de câble",
+      "Operating system": "Système d'exploitation",
+      "Warranty": "Garantie",
+      "Supplier": "Fournisseur"
+    }
   },
   "notFound": {
     "message": "Oups ! Page introuvable",

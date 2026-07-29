@@ -229,7 +229,35 @@
     "nextImage": "Setšoantšo se latelang",
     "goToImage": "Ea setšoantšong {{index}}",
     "enlargeImage": "Hōlisa setšoantšo",
-    "clickToEnlarge": "Tobetsa ho hōlisa"
+    "clickToEnlarge": "Tobetsa ho hōlisa",
+    "specSource": "Litlhaloso li nkuoa ho tsoa datheng ea morekisi. Ikopanye le rona haeba u hloka leqephe le felletseng la data pele u odara.",
+    "specGroup": {
+      "details": "Lintlha tsa sehlahisoa",
+      "technical": "Litlhaloso tsa tekheniki"
+    },
+    "spec": {
+      "Brand": "Moetsi",
+      "Product code": "Khoutu ea sehlahisoa",
+      "Category": "Sehlopha",
+      "Availability": "Ho fumaneha",
+      "Capacity": "Bokhoni",
+      "Processor": "Prosesa",
+      "Memory": "Memori",
+      "Memory type": "Mofuta oa memori",
+      "Memory speed": "Lebelo la memori",
+      "Drive type": "Mofuta oa draeve",
+      "Interface": "Interface",
+      "Rotational speed": "Lebelo la ho potoloha",
+      "Form factor": "Boholo",
+      "Rack height": "Bophahamo ba rack",
+      "Display": "Skrine",
+      "Network speed": "Lebelo la marang-rang",
+      "Power supply": "Motlakase",
+      "Cable length": "Bolelele ba thapo",
+      "Operating system": "Sistimi ea ts'ebetso",
+      "Warranty": "Waranti",
+      "Supplier": "Morekisi"
+    }
   },
   "notFound": {
     "message": "Joo! Leqephe ha le fumanwe",

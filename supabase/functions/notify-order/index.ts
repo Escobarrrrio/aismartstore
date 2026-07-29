@@ -123,7 +123,13 @@ Deno.serve(async (req) => {
 
     const [{ data: emailSetting }, { data: order }] = await Promise.all([
       supabase.from("store_settings").select("value").eq("key", "notification_email").maybeSingle(),
-      supabase.from("orders").select("*, order_items(*, products(name, stock_quantity))").eq("id", orderId).maybeSingle(),
+      // `specifications` carries supplier + supplier_sku on manually-sourced
+      // (dropship) products. Those have to be bought in from the supplier the
+      // moment a customer pays, so the data is fetched here to drive the
+      // separate action-required alert below.
+      supabase.from("orders")
+        .select("*, order_items(*, products(name, sku, stock_quantity, specifications))")
+        .eq("id", orderId).maybeSingle(),
     ]);
 
     if (!order) {
@@ -208,6 +214,61 @@ Deno.serve(async (req) => {
         throw e;
       }
     }
+    // Dropship items must be ordered from the supplier straight away, so they
+    // get their own alert rather than being buried in the standard owner email
+    // -- the subject line has to be scannable on a phone lock screen.
+    const dropship = items.filter((i: any) => i.products?.specifications?.supplier);
+    if (dropship.length > 0 && emailSetting?.value) {
+      const rows = dropship.map((i: any) => {
+        const spec = i.products.specifications ?? {};
+        return `<tr>
+          <td style="padding:8px;border-bottom:1px solid #e2e8f0">${escapeHtml(i.products?.name ?? "Unknown")}</td>
+          <td style="padding:8px;border-bottom:1px solid #e2e8f0"><strong>${escapeHtml(String(spec.supplier ?? "—"))}</strong></td>
+          <td style="padding:8px;border-bottom:1px solid #e2e8f0;font-family:monospace">${escapeHtml(String(spec.supplier_sku ?? i.products?.sku ?? "—"))}</td>
+          <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:right">${Number(i.quantity ?? 1)}</td>
+        </tr>`;
+      }).join("");
+
+      const html = `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px">
+          <h1 style="font-size:19px;color:#b45309;margin:0 0 8px">&#128230; Place these supplier orders now</h1>
+          <p style="color:#334155;font-size:14px;line-height:1.6">
+            Order <strong>${escapeHtml(order.id)}</strong> is paid and contains
+            ${dropship.length} item${dropship.length === 1 ? "" : "s"} you source yourself.
+            Buy ${dropship.length === 1 ? "it" : "them"} in, repackage, and dispatch to the customer.
+          </p>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:12px">
+            <tr style="text-align:left;color:#64748b">
+              <th style="padding:8px">Product</th><th style="padding:8px">Supplier</th>
+              <th style="padding:8px">Supplier SKU</th><th style="padding:8px;text-align:right">Qty</th>
+            </tr>
+            ${rows}
+          </table>
+          <p style="color:#334155;font-size:13px;margin-top:16px">
+            Ship to: <strong>${escapeHtml(order.customer_name ?? "—")}</strong><br>
+            ${escapeHtml([order.address, order.city, order.province].filter(Boolean).join(", ") || "—")}<br>
+            ${escapeHtml(order.customer_phone ?? "")}
+          </p>
+        </div>`;
+
+      try {
+        const r = await resend.emails.send({
+          from: FROM_ADDRESS, to: [emailSetting.value],
+          subject: `ACTION: buy ${dropship.length} item${dropship.length === 1 ? "" : "s"} for order ${order.id}`,
+          html,
+        });
+        results.dropship = r;
+        await logSend("owner", emailSetting.value, "dropship-action-required",
+          r?.error ? "failed" : "sent",
+          r?.error ? (r.error.message ?? "resend error") : null,
+          (r as any)?.data?.id);
+      } catch (e) {
+        // Never let this block the customer's confirmation -- they have paid and
+        // must be told so even if the internal alert fails.
+        await logSend("owner", emailSetting.value, "dropship-action-required", "failed", (e as Error).message);
+      }
+    }
+
     if (order.customer_email) {
       try {
         const r = await resend.emails.send({

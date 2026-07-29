@@ -229,7 +229,35 @@
     "nextImage": "Umfanekiso olandelayo",
     "goToImage": "Yiya kumfanekiso {{index}}",
     "enlargeImage": "Yandisa umfanekiso",
-    "clickToEnlarge": "Cofa ukwandisa"
+    "clickToEnlarge": "Cofa ukwandisa",
+    "specSource": "Iinkcukacha zisuselwa kwidatha yomthengisi. Qhagamshelana nathi ukuba ufuna iphepha ledatha elipheleleyo phambi kokuodola.",
+    "specGroup": {
+      "details": "Iinkcukacha zemveliso",
+      "technical": "Iinkcukacha zobuchwepheshe"
+    },
+    "spec": {
+      "Brand": "Umenzi",
+      "Product code": "Ikhowudi yemveliso",
+      "Category": "Udidi",
+      "Availability": "Ukufumaneka",
+      "Capacity": "Umthamo",
+      "Processor": "Iprosesa",
+      "Memory": "Inkumbulo",
+      "Memory type": "Uhlobo lwenkumbulo",
+      "Memory speed": "Isantya senkumbulo",
+      "Drive type": "Uhlobo lwedrayivu",
+      "Interface": "I-interface",
+      "Rotational speed": "Isantya sokujikeleza",
+      "Form factor": "Ubungakanani",
+      "Rack height": "Ubude berack",
+      "Display": "Iskrini",
+      "Network speed": "Isantya seNethiwekhi",
+      "Power supply": "Umbane",
+      "Cable length": "Ubude bentambo",
+      "Operating system": "Inkqubo yokusebenza",
+      "Warranty": "Iwaranti",
+      "Supplier": "Umthengisi"
+    }
   },
   "notFound": {
     "message": "Yhini! Iphepha alifumaneki",

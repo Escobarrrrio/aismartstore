@@ -51,6 +51,25 @@ describe("extractSpecs", () => {
     expect(val(s, "Capacity")).toBeUndefined();
   });
 
+  // Regressions found by running the parser over 25 random live product names
+  // rather than hand-written fixtures. Both were confidently-wrong rows, which
+  // is worse than showing nothing.
+  it("does not read gigabit network speed as storage capacity", () => {
+    const s = extractSpecs("HPE 100Gb QSFP28 MPO SR4 100m XCVR");
+    expect(val(s, "Capacity")).toBeUndefined();
+    expect(val(s, "Network speed")).toBe("100GbE");
+  });
+
+  it("does not read a gigabyte drive as a network link", () => {
+    const s = extractSpecs("HPE 960GB SATA MU SFF SC MV SSD");
+    expect(val(s, "Capacity")).toBe("960GB");
+    expect(val(s, "Network speed")).toBeUndefined();
+  });
+
+  it("recognises EPYC part numbers that embed a letter", () => {
+    expect(val(extractSpecs("AMD EPYC 73F3 CPU for HPE"), "Processor")).toBe("EPYC 73F3");
+  });
+
   it("returns nothing for names that carry no real specs", () => {
     for (const name of ["AFCSJMTM-00 Soft Jumper", "HPE Standard Product Reporting Service", ""]) {
       expect(extractSpecs(name).length).toBe(0);

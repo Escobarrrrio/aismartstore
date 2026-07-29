@@ -47,13 +47,20 @@ const ProductCard = ({ product }: ProductCardProps) => {
         to={`/product/${product.id}`}
         className="relative block aspect-square overflow-hidden bg-white"
       >
+        {/*
+          object-contain, never object-cover: these are distributor product
+          shots on white, and cropping one is worse than letterboxing it.
+          Padding is deliberately small -- much of this catalogue is wide
+          rack/array photography, which at p-6 on a ~250px card rendered as a
+          sliver adrift in whitespace.
+        */}
         {hasImage ? (
           <img
             src={product.images[0]}
             alt={`${product.name}${product.brand ? ` by ${product.brand}` : ""}${product.category ? ` — ${product.category}` : ""}`}
             width={800}
             height={800}
-            className="absolute inset-0 h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-[1.04]"
+            className="absolute inset-0 h-full w-full object-contain p-3 sm:p-4 transition-transform duration-500 group-hover:scale-[1.04]"
             loading="lazy"
             decoding="async"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

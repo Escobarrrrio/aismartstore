@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     const { data: settingsRows } = await supabase
       .from("store_settings")
       .select("key, value")
-      .in("key", ["axiz_markup_pct", "axiz_markets", "axiz_brand_filter", "axiz_sync_cursor"]);
+      .in("key", ["axiz_markup_pct", "axiz_markets", "axiz_brand_filter", "axiz_sync_cursor", "min_sellable_price"]);
     const settings = Object.fromEntries((settingsRows || []).map((r) => [r.key, r.value]));
 
     // Load blocked placeholder image URLs so we never publish products that use them.
@@ -110,6 +110,12 @@ Deno.serve(async (req) => {
     const blockedImages = new Set<string>((blockRows ?? []).map((r: any) => r.url));
 
     const markupPct = Number(settings.axiz_markup_pct || "17");
+    // Floor below which a distributor line is treated as a feed artefact rather
+    // than a sellable product. Axiz ships licence/registration "Trk" SKUs
+    // alongside real stock -- they carried names like "HPE Alletra 6010 AF DC
+    // TR Base Array" at a cost of ~R25, which published a six-figure storage
+    // array to the consumer storefront with a working Add-to-cart button.
+    const minSellablePrice = Number(settings.min_sellable_price || "50");
     const markets = (settings.axiz_markets || "14").split(",").map((m) => Number(m.trim())).filter((n) => !isNaN(n));
     const brandFilter = (settings.axiz_brand_filter || "").split(",").filter(Boolean).map((b) => Number(b.trim()));
 
@@ -139,6 +145,8 @@ Deno.serve(async (req) => {
     let totalSynced = 0;
     let totalFailed = 0;
     let aiFlagged = 0;
+    // Distributor lines withheld for being priced below the sellable floor.
+    let underpriced = 0;
     let pagesDone = 0;
     let catalogComplete = false;
     const notes: string[] = [];
@@ -171,7 +179,8 @@ Deno.serve(async (req) => {
           const cost = Number(item.price ?? 0);
           const sellingPrice = Math.round(cost * (1 + markupPct / 100) * 100) / 100;
           const imgs = normalizeImages(item.imageGallery);
-          const publishable = cost > 0 && imgs.length > 0;
+          const publishable = cost > 0 && imgs.length > 0 && sellingPrice >= minSellablePrice;
+          if (cost > 0 && imgs.length > 0 && sellingPrice < minSellablePrice) underpriced++;
           // Laptops get a higher residential cutoff than the R15k store-wide
           // default: this distributor's laptop range is almost entirely
           // corporate Dell models (3Y onsite warranties etc.), and today's
@@ -251,7 +260,7 @@ Deno.serve(async (req) => {
       { onConflict: "key" }
     );
 
-    const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`} | AI-flagged this run: ${aiFlagged}${notes.length ? " | " + notes.join("; ") : ""}`;
+    const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`} | AI-flagged this run: ${aiFlagged} | withheld (below R${minSellablePrice}): ${underpriced}${notes.length ? " | " + notes.join("; ") : ""}`;
     await supabase.from("sync_logs").update({
       status: totalFailed === 0 ? "success" : "partial",
       items_synced: totalSynced,
@@ -260,7 +269,7 @@ Deno.serve(async (req) => {
       completed_at: new Date().toISOString(),
     }).eq("id", logRow.id);
 
-    return new Response(JSON.stringify({ status: "completed", version: "v3", synced: totalSynced, failed: totalFailed, aiFlagged, catalogComplete, nextCursor }), {
+    return new Response(JSON.stringify({ status: "completed", version: "v3", synced: totalSynced, failed: totalFailed, aiFlagged, underpriced, catalogComplete, nextCursor }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {

@@ -622,74 +622,6 @@ export type Database = {
         }
         Relationships: []
       }
-      payment_events: {
-        Row: {
-          amount_fee: number | null
-          amount_gross: number | null
-          amount_net: number | null
-          created_at: string
-          error_message: string | null
-          event_type: string
-          id: string
-          notified: boolean
-          order_id: string | null
-          outcome: string
-          payment_status: string | null
-          provider: string
-          provider_payment_id: string | null
-          raw_payload: Json | null
-          sandbox: boolean
-          signature_valid: boolean | null
-          source_ip: string | null
-        }
-        Insert: {
-          amount_fee?: number | null
-          amount_gross?: number | null
-          amount_net?: number | null
-          created_at?: string
-          error_message?: string | null
-          event_type: string
-          id?: string
-          notified?: boolean
-          order_id?: string | null
-          outcome: string
-          payment_status?: string | null
-          provider?: string
-          provider_payment_id?: string | null
-          raw_payload?: Json | null
-          sandbox?: boolean
-          signature_valid?: boolean | null
-          source_ip?: string | null
-        }
-        Update: {
-          amount_fee?: number | null
-          amount_gross?: number | null
-          amount_net?: number | null
-          created_at?: string
-          error_message?: string | null
-          event_type?: string
-          id?: string
-          notified?: boolean
-          order_id?: string | null
-          outcome?: string
-          payment_status?: string | null
-          provider?: string
-          provider_payment_id?: string | null
-          raw_payload?: Json | null
-          sandbox?: boolean
-          signature_valid?: boolean | null
-          source_ip?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payment_events_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       order_audit_log: {
         Row: {
           actor_email: string | null
@@ -835,6 +767,74 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      payment_events: {
+        Row: {
+          amount_fee: number | null
+          amount_gross: number | null
+          amount_net: number | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          notified: boolean
+          order_id: string | null
+          outcome: string
+          payment_status: string | null
+          provider: string
+          provider_payment_id: string | null
+          raw_payload: Json | null
+          sandbox: boolean
+          signature_valid: boolean | null
+          source_ip: string | null
+        }
+        Insert: {
+          amount_fee?: number | null
+          amount_gross?: number | null
+          amount_net?: number | null
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          notified?: boolean
+          order_id?: string | null
+          outcome: string
+          payment_status?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          raw_payload?: Json | null
+          sandbox?: boolean
+          signature_valid?: boolean | null
+          source_ip?: string | null
+        }
+        Update: {
+          amount_fee?: number | null
+          amount_gross?: number | null
+          amount_net?: number | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          notified?: boolean
+          order_id?: string | null
+          outcome?: string
+          payment_status?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          raw_payload?: Json | null
+          sandbox?: boolean
+          signature_valid?: boolean | null
+          source_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_costs: {
         Row: {
@@ -1404,6 +1404,10 @@ export type Database = {
         Args: { batch_size?: number; price_cap?: number }
         Returns: number
       }
+      classify_product_category: {
+        Args: { p_category?: string; p_name: string }
+        Returns: string
+      }
       deactivate_blocked_products_batch: {
         Args: { batch_size?: number }
         Returns: number
@@ -1489,6 +1493,17 @@ export type Database = {
         }
         Returns: number
       }
+      quarantine_mispriced_products: {
+        Args: { dry_run?: boolean }
+        Returns: {
+          brand: string
+          category: string
+          name: string
+          price: number
+          product_id: string
+          reason: string
+        }[]
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -1498,6 +1513,28 @@ export type Database = {
         }[]
       }
       recategorize_batch: { Args: { batch_size?: number }; Returns: number }
+      record_payment_event: {
+        Args: {
+          p_amount_fee?: number
+          p_amount_gross?: number
+          p_amount_net?: number
+          p_error?: string
+          p_event_type: string
+          p_order_id: string
+          p_outcome: string
+          p_payment_status: string
+          p_provider: string
+          p_provider_payment_id: string
+          p_raw?: Json
+          p_sandbox?: boolean
+          p_signature_valid?: boolean
+          p_source_ip?: string
+        }
+        Returns: {
+          event_id: string
+          is_first: boolean
+        }[]
+      }
       refresh_product_facets_cache: { Args: never; Returns: number }
       search_product_facets: {
         Args: {

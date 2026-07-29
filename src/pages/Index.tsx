@@ -20,6 +20,7 @@ const Index = () => {
   const aiPickIds = new Set(aiPicks.map((p) => p.id));
   const featured = products.filter((p) => !aiPickIds.has(p.id)).slice(0, 8);
   const [catalogCount, setCatalogCount] = useState<number | null>(null);
+  const [businessCount, setBusinessCount] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -62,6 +63,16 @@ const Index = () => {
         .eq("is_active", true)
         .eq("audience", "residential");
       if (typeof count === "number") setCatalogCount(count);
+
+      // Counted live rather than hardcoded: the banner used to advertise
+      // "86,000+ enterprise SKUs" against 2 405 active business products, so
+      // the promise and the destination disagreed by a factor of 35.
+      const { count: bizCount } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true)
+        .eq("audience", "business");
+      if (typeof bizCount === "number") setBusinessCount(bizCount);
     })();
   }, []);
 
@@ -120,8 +131,14 @@ const Index = () => {
             <span className="font-display font-bold">Shopping for your business or government department?</span>{" "}
             <span className="text-muted-foreground">
               Servers, licensing, warranty, networking and the full compliance pack
-              live on our Business Portal ({catalogCount !== null ? "" : ""}
-              <span className="font-semibold">86,000+ enterprise SKUs</span>).
+              live on our Business Portal
+              {businessCount !== null && (
+                <>
+                  {" "}(<span className="font-semibold">
+                    {businessCount.toLocaleString("en-ZA")} enterprise SKUs
+                  </span>)
+                </>
+              )}.
             </span>
           </p>
           <Link

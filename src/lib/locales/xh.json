@@ -109,7 +109,8 @@
       "desc": "Umncedisi wethu we-AI angakunceda uthelekise iimveliso, ujonge iinkcukacha, ufumane ulwazi lokungqinelana, kwaye uphendule imibuzo yakho yeteknoloji — ngokukhawuleza.",
       "hint": "Cofa kwi-ikhoni yencoko ekwiphaneli yokufikelela ezantsi ekunene ukuze uqalise"
     },
-    "brandsLabel": "Iimpawu zeTeknoloji Ezithenjwayo"
+    "brandsLabel": "Iimpawu zeTeknoloji Ezithenjwayo",
+    "catCount": "iimveliso ezingu-{{count}}"
   },
   "product": {
     "inStock": "Iyafumaneka",
@@ -354,5 +355,14 @@
     "idleTitle": "Usekhona?",
     "idleBody": "Uza kuphuma emva kwemizuzwana engu-{{seconds}} ngenxa yokungasebenzi.",
     "staySignedIn": "Ndigcine ndingene"
+  },
+  "delivery": {
+    "inStockDispatch": "Ikhona · Ithunyelwe {{date}}",
+    "backorderDispatch": "I-odolo elilindileyo · Ithunyelwa ngo-{{date}}",
+    "arriveBy": "Uqikelelo lokufika {{window}}",
+    "dispatchOn": "Ishiya indawo yethu yokugcina {{date}}",
+    "afterCutoff": "ixesha lanamhlanje seliphelile",
+    "chooseProvince": "Iphondo lokuhanjiswa",
+    "businessDaysNote": "Iintsuku zomsebenzi kuphela. Iimpelaveki neeholide zikawonkewonke zoMzantsi Afrika azibalwa."
   }
 }

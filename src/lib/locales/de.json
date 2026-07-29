@@ -109,7 +109,8 @@
       "desc": "Unser KI-Assistent kann Ihnen helfen, Produkte zu vergleichen, Spezifikationen zu prüfen, Kompatibilitätsinformationen zu finden und Ihre technischen Fragen sofort zu beantworten.",
       "hint": "Klicken Sie auf das Chat-Symbol unten rechts, um zu beginnen"
     },
-    "brandsLabel": "Vertrauenswürdige Technologiemarken"
+    "brandsLabel": "Vertrauenswürdige Technologiemarken",
+    "catCount": "{{count}} Produkte"
   },
   "product": {
     "inStock": "Auf Lager",
@@ -354,5 +355,14 @@
     "idleTitle": "Noch da?",
     "idleBody": "Sie werden wegen Inaktivität in {{seconds}} Sekunden abgemeldet.",
     "staySignedIn": "Angemeldet bleiben"
+  },
+  "delivery": {
+    "inStockDispatch": "Auf Lager · Versand am {{date}}",
+    "backorderDispatch": "Nachbestellung · Versand bis {{date}}",
+    "arriveBy": "Voraussichtliche Lieferung {{window}}",
+    "dispatchOn": "Verlässt unser Lager am {{date}}",
+    "afterCutoff": "der heutige Annahmeschluss ist vorbei",
+    "chooseProvince": "Lieferprovinz",
+    "businessDaysNote": "Nur Werktage. Wochenenden und südafrikanische Feiertage ausgenommen."
   }
 }

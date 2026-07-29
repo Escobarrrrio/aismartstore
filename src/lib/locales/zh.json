@@ -109,7 +109,8 @@
       "desc": "我们的 AI 助手可以帮助您比较产品、查看规格、了解兼容性信息并即时解答您的技术问题。",
       "hint": "点击右下角的聊天图标即可开始"
     },
-    "brandsLabel": "值得信赖的科技品牌"
+    "brandsLabel": "值得信赖的科技品牌",
+    "catCount": "{{count}} 件商品"
   },
   "product": {
     "inStock": "有库存",
@@ -354,5 +355,14 @@
     "idleTitle": "您还在吗？",
     "idleBody": "由于长时间未操作，将在 {{seconds}} 秒后退出登录。",
     "staySignedIn": "保持登录"
+  },
+  "delivery": {
+    "inStockDispatch": "有货 · {{date}} 发货",
+    "backorderDispatch": "缺货预订 · 最晚 {{date}} 发货",
+    "arriveBy": "预计送达 {{window}}",
+    "dispatchOn": "{{date}} 离开我们的仓库",
+    "afterCutoff": "已过今日截单时间",
+    "chooseProvince": "配送省份",
+    "businessDaysNote": "仅计工作日，不含周末及南非公共假日。"
   }
 }

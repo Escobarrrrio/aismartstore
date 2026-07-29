@@ -3,9 +3,10 @@ import { Product } from "@/contexts/CartContext";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { ShoppingCart, Heart, Sparkles, Truck, Check, Rocket, PackageCheck } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
+import { estimateDelivery } from "@/lib/delivery";
 
 interface ProductCardProps {
   product: Product;
@@ -13,14 +14,6 @@ interface ProductCardProps {
 }
 
 const RESIDENTIAL_MAX = 15000;
-const SHIPS_FAST_MIN_STOCK = 5;
-
-function shipEstimate(stockQuantity?: number): string {
-  if (typeof stockQuantity !== "number") return "2–4 days";
-  if (stockQuantity >= 20) return "1–2 days";
-  if (stockQuantity >= SHIPS_FAST_MIN_STOCK) return "2–3 days";
-  return "3–5 days";
-}
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
@@ -31,6 +24,15 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const [addedToCart, setAddedToCart] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
   const hasImage = Boolean(product.images?.[0]) && !imgFailed;
+
+  // Dispatch date only -- see the status badge below for why arrival is not
+  // quoted until a destination province is known.
+  const dispatchLabel = useMemo(() => {
+    const { dispatchOn } = estimateDelivery({ inStock: product.inStock });
+    return new Intl.DateTimeFormat("en-ZA", {
+      weekday: "short", day: "numeric", month: "short", timeZone: "UTC",
+    }).format(dispatchOn);
+  }, [product.inStock]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -122,18 +124,22 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
         {/* Live status badge — one line, not a stack: what it is + when it ships */}
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          {/* Promise only what's destination-independent here: the dispatch date
+              is ours to control, whereas an arrival date depends on a province we
+              don't know until checkout. Quoting metro transit to an unknown
+              address is exactly how a delivery promise gets broken. */}
           {product.inStock ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
               </span>
-              In Stock · Ships in {shipEstimate(product.stockQuantity)}
+              {t("delivery.inStockDispatch", { date: dispatchLabel })}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold px-2 py-0.5">
               <Truck className="h-3 w-3" />
-              Backorder · Ships in 3–7 days
+              {t("delivery.backorderDispatch", { date: dispatchLabel })}
             </span>
           )}
           {product.price > 0 && product.price <= RESIDENTIAL_MAX && (

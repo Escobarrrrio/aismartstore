@@ -21,8 +21,10 @@ const Index = () => {
   const featured = products.filter((p) => !aiPickIds.has(p.id)).slice(0, 8);
   const [catalogCount, setCatalogCount] = useState<number | null>(null);
   const [businessCount, setBusinessCount] = useState<number | null>(null);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       // Residential-friendly AI picks: AI-tagged, priced for a household budget
       // (≤ R15,000), image required. Enterprise/high-ticket AI hardware lives
@@ -73,7 +75,27 @@ const Index = () => {
         .eq("is_active", true)
         .eq("audience", "business");
       if (typeof bizCount === "number") setBusinessCount(bizCount);
+
+      // Category-card counts were hardcoded ("50+ products" for AI, against 24
+      // residential AI products in reality). Counted live, and residential-only,
+      // so the home page never advertises the enterprise catalogue.
+      const CARD_CATEGORIES: Record<string, string[]> = {
+        ai: [],
+        networking: ["Networking"],
+        computing: ["Laptops", "Desktops & Workstations", "Memory", "Storage", "Monitors & Displays"],
+        software: ["Software & Licensing"],
+      };
+      const counts: Record<string, number> = {};
+      for (const [key, categories] of Object.entries(CARD_CATEGORIES)) {
+        let q = supabase.from("products").select("id", { count: "exact", head: true })
+          .eq("is_active", true).eq("audience", "residential");
+        q = key === "ai" ? q.eq("is_ai_product", true) : q.in("category", categories);
+        const { count: n } = await q;
+        if (typeof n === "number") counts[key] = n;
+      }
+      if (!cancelled) setCategoryCounts(counts);
     })();
+    return () => { cancelled = true; };
   }, []);
 
   const categoryCards = [

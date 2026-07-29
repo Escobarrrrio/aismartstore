@@ -349,5 +349,10 @@
       "computing": "Informatique",
       "software": "Logiciels et licences"
     }
+  },
+  "session": {
+    "idleTitle": "Toujours là ?",
+    "idleBody": "Vous serez déconnecté dans {{seconds}} secondes pour inactivité.",
+    "staySignedIn": "Rester connecté"
   }
 }

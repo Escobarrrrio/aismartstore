@@ -349,5 +349,10 @@
       "computing": "Computing",
       "software": "Software & Licences"
     }
+  },
+  "session": {
+    "idleTitle": "Still there?",
+    "idleBody": "You'll be signed out in {{seconds}} seconds because of inactivity.",
+    "staySignedIn": "Keep me signed in"
   }
 }

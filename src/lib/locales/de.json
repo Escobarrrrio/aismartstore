@@ -349,5 +349,10 @@
       "computing": "Computer",
       "software": "Software & Lizenzen"
     }
+  },
+  "session": {
+    "idleTitle": "Noch da?",
+    "idleBody": "Sie werden wegen Inaktivität in {{seconds}} Sekunden abgemeldet.",
+    "staySignedIn": "Angemeldet bleiben"
   }
 }

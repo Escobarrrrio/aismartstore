@@ -349,5 +349,10 @@
       "computing": "Informática",
       "software": "Software e licenças"
     }
+  },
+  "session": {
+    "idleTitle": "Ainda aí?",
+    "idleBody": "A sua sessão será encerrada em {{seconds}} segundos por inatividade.",
+    "staySignedIn": "Manter sessão ativa"
   }
 }

@@ -33,6 +33,48 @@ We aim to acknowledge reports within 48 hours.
 - See `CHANGELOG.md` for the dated history of security fixes, including
   the full RLS audit performed on 2026-06-27.
 
+## Accepted dependency advisories
+
+Reviewed rather than silently carried. Each entry says why it is accepted and
+what would change the decision.
+
+### `GHSA-qwww-vcr4-c8h2` — react-router RSC Mode CSRF bypass (high)
+
+Affects `react-router >=7.12.0 <8.3.0`; we run 7.18.2.
+
+**Not applicable.** The advisory requires React Router's **RSC (React Server
+Components) mode**, where an action can execute before a 400 response. This
+storefront is a Vite single-page app using `<BrowserRouter>` with `<Routes>`,
+with no server runtime, no RSC and no router actions, so the vulnerable code
+path does not exist in the shipped bundle.
+
+Staying on 7.18.2 is the deliberate choice:
+
+- 7.18.2 is the current `latest` on npm, and it **fixes** the three advisories
+  that *were* applicable to us — the open-redirect-via-backslash issue
+  (`GHSA-wrjc-x8rr-h8h6`), open redirect leading to XSS
+  (`GHSA-jjmj-jmhj-qwj2`), and `deserializeErrors()` constructor injection.
+- npm's suggested "fix" is a **downgrade** to 7.11.0, which sits inside the
+  vulnerable range of those open-redirect advisories. Trading a theoretical
+  RSC issue for a real one we can be attacked through is the wrong way round.
+- The first version clearing both is 8.3.0, which requires **React >=19.2.7**.
+  We are on React 18.3.1, so that is a full React 19 migration across every
+  component and the UI library — far more risk than the advisory justifies.
+
+**Revisit when** this app moves to React 19, at which point go straight to
+react-router 8.3.0 or later. Also revisit immediately if RSC mode or router
+actions are ever introduced, because that makes the advisory live.
+
+Separately, the open-redirect class was also fixed in our *own* code: the
+`?redirect=` guard in `Auth.tsx` accepted `/\evil.com`, which browsers
+normalise to `//evil.com`. See `src/lib/safe-redirect.ts` and its tests.
+
+### Dev-only advisories
+
+`vite`, `esbuild`, `eslint`, `minimatch` and `brace-expansion` findings affect
+the development server and tooling only. They are not part of the production
+bundle and cannot be reached by a visitor to the live site.
+
 ## Scope
 
 In scope: the storefront, the admin panel, and the database layer

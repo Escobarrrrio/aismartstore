@@ -349,5 +349,10 @@
       "computing": "Ikhompyutha",
       "software": "Isoftwe Neelayisenisi"
     }
+  },
+  "session": {
+    "idleTitle": "Usekhona?",
+    "idleBody": "Uza kuphuma emva kwemizuzwana engu-{{seconds}} ngenxa yokungasebenzi.",
+    "staySignedIn": "Ndigcine ndingene"
   }
 }

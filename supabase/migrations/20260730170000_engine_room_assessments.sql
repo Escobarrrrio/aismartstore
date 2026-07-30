@@ -45,6 +45,11 @@ CREATE POLICY "Admins can view assessments" ON public.engine_room_assessments
 CREATE INDEX IF NOT EXISTS engine_room_assessments_time_idx
   ON public.engine_room_assessments (created_at DESC);
 
+-- Revoke first. This database's default privileges grant every new public table
+-- the full set to anon and authenticated, and TRUNCATE among them is not subject
+-- to RLS -- see the note in 20260730160000. An assessment history that can be
+-- emptied is not a history.
+REVOKE ALL   ON public.engine_room_assessments FROM anon, authenticated;
 GRANT SELECT ON public.engine_room_assessments TO authenticated;
 GRANT ALL    ON public.engine_room_assessments TO service_role;
 GRANT USAGE, SELECT ON SEQUENCE public.engine_room_assessments_id_seq TO service_role;

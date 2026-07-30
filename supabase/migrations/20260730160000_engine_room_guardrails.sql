@@ -621,6 +621,49 @@ COMMENT ON FUNCTION public.engine_room_snapshot() IS
 
 REVOKE ALL ON FUNCTION public.engine_room_snapshot() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.engine_room_snapshot() TO authenticated, service_role;
+
+
+-- ---------------------------------------------------------------------------
+-- 6. Table privileges
+-- ---------------------------------------------------------------------------
+--
+-- Not decoration, and not redundant with the RLS policies above.
+--
+-- This database's default privileges hand every newly created table in `public`
+-- the full set -- SELECT, INSERT, UPDATE, DELETE, TRUNCATE -- to both `anon` and
+-- `authenticated`. RLS then narrows almost all of it back down, which is why
+-- everything above still behaves correctly.
+--
+-- Almost. **TRUNCATE is not subject to row-level security.** A role holding
+-- TRUNCATE can empty a table regardless of how restrictive its policies are.
+-- Left as it was, `anon` held TRUNCATE on `security_events` -- so the comment a
+-- few dozen lines up, promising an audit log nobody can edit or delete, would
+-- have been false in the one way that matters most: the log an attacker most
+-- wants gone is exactly the log recording what they did.
+--
+-- PostgREST does not expose TRUNCATE, so this was latent rather than live. It
+-- is still a privilege that should never have been held, and a claim in a
+-- comment is worth what the grants behind it are worth.
+--
+-- So: revoke everything, then grant back only what each role genuinely needs,
+-- and let RLS narrow that further.
+REVOKE ALL ON public.rate_limit_buckets, public.spend_caps, public.spend_ledger,
+              public.security_events, public.engine_registry
+  FROM anon, authenticated;
+
+-- `authenticated` gets read only -- and RLS narrows that to admins. spend_caps
+-- also gets UPDATE, because the Engine Room's cap dials are a normal PostgREST
+-- update from the browser; the CHECK constraints and the audit trigger are what
+-- bound that, not the absence of the privilege.
+GRANT SELECT ON public.spend_caps, public.spend_ledger, public.security_events,
+                public.engine_registry TO authenticated;
+GRANT UPDATE ON public.spend_caps TO authenticated;
+
+-- `rate_limit_buckets` is granted to nobody but service_role. Nothing reads it
+-- through the API, and its contents are a live map of who is currently being
+-- throttled.
+GRANT ALL ON public.rate_limit_buckets, public.spend_caps, public.spend_ledger,
+             public.security_events, public.engine_registry TO service_role;
 -- SECURITY DEFINER with an explicit has_role() check inside, rather than
 -- SECURITY INVOKER: the function reads sync_logs and cron state that admins
 -- have no direct table grants on. The check is the first statement in the body

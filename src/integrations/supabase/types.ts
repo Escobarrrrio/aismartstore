@@ -95,6 +95,68 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_pulse_feed_requests: {
+        Row: {
+          request_id: number
+          requested_at: string
+          source: string
+        }
+        Insert: {
+          request_id: number
+          requested_at?: string
+          source: string
+        }
+        Update: {
+          request_id?: number
+          requested_at?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_pulse_feed_requests_source_fkey"
+            columns: ["source"]
+            isOneToOne: false
+            referencedRelation: "ai_pulse_feeds"
+            referencedColumns: ["source"]
+          },
+        ]
+      }
+      ai_pulse_feeds: {
+        Row: {
+          consecutive_failures: number
+          country: string
+          enabled: boolean
+          items_last_run: number
+          last_error: string | null
+          last_ok_at: string | null
+          last_status: number | null
+          source: string
+          url: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          country: string
+          enabled?: boolean
+          items_last_run?: number
+          last_error?: string | null
+          last_ok_at?: string | null
+          last_status?: number | null
+          source: string
+          url: string
+        }
+        Update: {
+          consecutive_failures?: number
+          country?: string
+          enabled?: boolean
+          items_last_run?: number
+          last_error?: string | null
+          last_ok_at?: string | null
+          last_status?: number | null
+          source?: string
+          url?: string
+        }
+        Relationships: []
+      }
       ai_pulse_items: {
         Row: {
           category: string
@@ -472,6 +534,51 @@ export type Database = {
         }
         Relationships: []
       }
+      home_showcase: {
+        Row: {
+          components: Json
+          product_id: string
+          rank: number
+          reasons: Json
+          refreshed_at: string
+          score: number
+          slot: string
+        }
+        Insert: {
+          components?: Json
+          product_id: string
+          rank: number
+          reasons?: Json
+          refreshed_at?: string
+          score: number
+          slot: string
+        }
+        Update: {
+          components?: Json
+          product_id?: string
+          rank?: number
+          reasons?: Json
+          refreshed_at?: string
+          score?: number
+          slot?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_showcase_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "home_showcase_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       image_blocklist: {
         Row: {
           created_at: string
@@ -525,6 +632,46 @@ export type Database = {
           subject?: string
         }
         Relationships: []
+      }
+      newsletter_story_sends: {
+        Row: {
+          campaign_id: string | null
+          item_id: string
+          sent_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          item_id: string
+          sent_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          item_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_story_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_story_sends_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: true
+            referencedRelation: "ai_pulse_digest_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_story_sends_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: true
+            referencedRelation: "ai_pulse_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       newsletter_subscribers: {
         Row: {
@@ -703,6 +850,13 @@ export type Database = {
             foreignKeyName: "order_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -862,6 +1016,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "product_costs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_costs_product_id_fkey"
             columns: ["product_id"]
@@ -1390,6 +1551,13 @@ export type Database = {
             foreignKeyName: "wishlists_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -1397,21 +1565,90 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      ai_pulse_digest_candidates: {
+        Row: {
+          category: string | null
+          country: string | null
+          id: string | null
+          published_at: string | null
+          score: number | null
+          source: string | null
+          summary: string | null
+          title: string | null
+          url: string | null
+        }
+        Relationships: []
+      }
+      home_showcase_candidates: {
+        Row: {
+          brand: string | null
+          category: string | null
+          components: Json | null
+          id: string | null
+          in_stock: boolean | null
+          is_ai_product: boolean | null
+          name: string | null
+          price: number | null
+          reasons: Json | null
+          score: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      ai_pulse_enqueue_feeds: { Args: never; Returns: number }
+      ai_pulse_headline_quality: { Args: { p_title: string }; Returns: number }
+      ai_pulse_ingest_feed_responses: {
+        Args: never
+        Returns: {
+          ai_matched: number
+          inserted: number
+          parsed: number
+          source: string
+          status: number
+        }[]
+      }
+      ai_pulse_is_ai_story: { Args: { p_text: string }; Returns: boolean }
+      ai_pulse_story_categories: { Args: { p_text: string }; Returns: string[] }
+      ai_pulse_story_score: {
+        Args: {
+          p_category: string
+          p_country?: string
+          p_published_at: string
+          p_source: string
+          p_summary: string
+          p_title: string
+        }
+        Returns: number
+      }
       backfill_audience_batch: {
         Args: { batch_size?: number; price_cap?: number }
         Returns: number
+      }
+      biz_close_rate: {
+        Args: { p_in_stock: boolean; p_price: number }
+        Returns: number
+      }
+      biz_repeat_factor: { Args: { p_price: number }; Returns: number }
+      build_ai_pulse_digest: {
+        Args: {
+          p_max_per_source?: number
+          p_min_score?: number
+          p_min_stories?: number
+          p_stories?: number
+        }
+        Returns: string
       }
       classify_product_category: {
         Args: { p_category?: string; p_name: string }
         Returns: string
       }
+      clean_feed_text: { Args: { p_text: string }; Returns: string }
       deactivate_blocked_products_batch: {
         Args: { batch_size?: number }
         Returns: number
       }
+      decode_feed_entities: { Args: { p_text: string }; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1420,6 +1657,25 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_business_picks: {
+        Args: { p_limit?: number }
+        Returns: {
+          brand: string
+          category: string
+          created_at: string
+          description: string
+          expected_value: number
+          id: string
+          images: string[]
+          in_stock: boolean
+          is_ai_product: boolean
+          name: string
+          price: number
+          reasons: Json
+          sku: string
+          stock_quantity: number
+        }[]
       }
       get_compliance_pack: {
         Args: { _email: string; _quote_id: string }
@@ -1448,6 +1704,27 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      get_home_showcase: {
+        Args: { p_limit?: number; p_slot: string }
+        Returns: {
+          brand: string
+          category: string
+          created_at: string
+          description: string
+          id: string
+          images: string[]
+          in_stock: boolean
+          is_ai_product: boolean
+          name: string
+          price: number
+          rank: number
+          reasons: Json
+          score: number
+          sku: string
+          specifications: Json
+          stock_quantity: number
+        }[]
       }
       get_newsletter_subscriber_count: { Args: never; Returns: number }
       get_product_admin_view: {
@@ -1483,6 +1760,37 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      merch_availability: {
+        Args: { p_in_stock: boolean; p_stock_quantity: number }
+        Returns: number
+      }
+      merch_brand_trust: { Args: { p_brand: string }; Returns: number }
+      merch_demand_tier: {
+        Args: { p_category: string; p_is_ai?: boolean; p_name: string }
+        Returns: number
+      }
+      merch_is_home_eligible: {
+        Args: {
+          p_category: string
+          p_images: string[]
+          p_is_ai?: boolean
+          p_name: string
+          p_price: number
+        }
+        Returns: boolean
+      }
+      merch_media_quality: { Args: { p_images: string[] }; Returns: number }
+      merch_name_quality: { Args: { p_name: string }; Returns: number }
+      merch_norm: { Args: { p_text: string }; Returns: string }
+      merch_price_fit: { Args: { p_price: number }; Returns: number }
+      merch_setting: {
+        Args: { p_default: number; p_key: string }
+        Returns: number
+      }
+      merch_signal_score: {
+        Args: { p_paid_units: number; p_wishlist_saves: number }
+        Returns: number
       }
       move_to_dlq: {
         Args: {
@@ -1535,7 +1843,39 @@ export type Database = {
           is_first: boolean
         }[]
       }
+      refresh_home_showcase: {
+        Args: never
+        Returns: {
+          filled: number
+          slot: string
+        }[]
+      }
       refresh_product_facets_cache: { Args: never; Returns: number }
+      score_business_product: {
+        Args: {
+          p_brand: string
+          p_category: string
+          p_in_stock: boolean
+          p_margin_pct: number
+          p_name: string
+          p_price: number
+        }
+        Returns: Json
+      }
+      score_home_product: {
+        Args: {
+          p_brand: string
+          p_category: string
+          p_images: string[]
+          p_in_stock: boolean
+          p_is_ai?: boolean
+          p_name: string
+          p_price: number
+          p_signal?: number
+          p_stock_quantity: number
+        }
+        Returns: Json
+      }
       search_product_facets: {
         Args: {
           filter_ai_only?: boolean

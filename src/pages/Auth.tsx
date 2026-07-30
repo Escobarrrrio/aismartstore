@@ -414,7 +414,9 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth${rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? `?redirect=${encodeURIComponent(rawRedirect)}` : ""}`,
+        // Same validated target as sign-in -- the old inline
+        // startsWith("/") check here accepted "/\evil.com".
+        emailRedirectTo: `${window.location.origin}/auth${redirectTo !== "/" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`,
         data: metadata,
       },
     });

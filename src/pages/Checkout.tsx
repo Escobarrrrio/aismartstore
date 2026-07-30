@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useShippingSettings, SA_PROVINCES } from "@/hooks/useShippingSettings";
 import SEO from "@/components/SEO";
 import { captureCheckoutError, capturePaymentError, captureOrderError } from "@/lib/sentry";
+import { safeGatewayUrl } from "@/lib/safe-redirect";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -170,7 +171,9 @@ const Checkout = () => {
         throw new Error(errorBody?.error || error?.message || "Retry failed");
       }
       setRetryCount((c) => c + 1);
-      window.location.href = data.redirectUrl;
+      const retryUrl = safeGatewayUrl(data.redirectUrl);
+      if (!retryUrl) throw new Error("Payment gateway error.");
+      window.location.href = retryUrl;
     } catch (err: any) {
       capturePaymentError(err, { provider: "yoco", flow: "retry", orderId: failedOrderId, attempt: retryCount + 1 });
       toast({ title: "Retry failed", description: err.message, variant: "destructive" });
@@ -302,9 +305,18 @@ const Checkout = () => {
       }
 
       if (usePayFast && checkoutData?.actionUrl && checkoutData?.formData) {
+        // Never POST card-adjacent form data at a host the gateway response
+        // merely claims is PayFast -- validate it against the allowlist first.
+        const action = safeGatewayUrl(checkoutData.actionUrl);
+        if (!action) {
+          capturePaymentError(new Error("Rejected untrusted PayFast action URL"), {
+            provider: "payfast", orderId: order.id, amount: chargeAmount, currency,
+          });
+          throw new Error("Payment gateway error.");
+        }
         const form = document.createElement("form");
         form.method = "POST";
-        form.action = checkoutData.actionUrl;
+        form.action = action;
         for (const [k, v] of Object.entries(checkoutData.formData as Record<string, string>)) {
           const input = document.createElement("input");
           input.type = "hidden";
@@ -325,7 +337,14 @@ const Checkout = () => {
       }
       // Yoco/PayPal: webhook fires notify-order after payment confirmation.
       // No client-side notify-order call.
-      window.location.href = checkoutData.redirectUrl;
+      const gatewayUrl = safeGatewayUrl(checkoutData.redirectUrl);
+      if (!gatewayUrl) {
+        capturePaymentError(new Error("Rejected untrusted gateway redirect URL"), {
+          provider: isInternational ? "paypal" : paymentMethod, orderId: order.id, amount: chargeAmount, currency,
+        });
+        throw new Error("Payment gateway error.");
+      }
+      window.location.href = gatewayUrl;
     } catch (err: any) {
       captureCheckoutError(err, { email: form.email, total: grandTotal, currency });
       toast({ title: t("checkout.errorTitle"), description: err.message, variant: "destructive" });

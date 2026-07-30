@@ -41,26 +41,57 @@ async function fetchProducts(): Promise<Entry[]> {
     console.warn("[sitemap] VITE_SUPABASE_* env vars missing — skipping product entries.")
     return []
   }
-  const url = `${SUPABASE_URL}/rest/v1/products?select=id,updated_at&is_active=eq.true&order=updated_at.desc&limit=${MAX_PRODUCTS}`
+  // Paginated with Range headers, NOT `limit`.
+  //
+  // `limit=45000` looked like it worked and silently produced a 1 000-entry
+  // sitemap against 3 488 active products, because PostgREST clamps every
+  // response to its `db-max-rows` ceiling (1 000 by default) no matter what
+  // `limit` asks for. 2 488 product pages were therefore never submitted to
+  // Google. Ranged requests are the documented way past that ceiling, and the
+  // loop stops as soon as a page comes back short.
+  const PAGE = 1000
+  const rows: Array<{ id: string; updated_at: string }> = []
   try {
-    const res = await fetch(url, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-    })
-    if (!res.ok) {
-      console.warn(`[sitemap] product fetch failed: ${res.status}`)
-      return []
+    for (let from = 0; from < MAX_PRODUCTS; from += PAGE) {
+      const to = Math.min(from + PAGE, MAX_PRODUCTS) - 1
+      const url =
+        `${SUPABASE_URL}/rest/v1/products` +
+        `?select=id,updated_at&is_active=eq.true&order=updated_at.desc,id.asc`
+      const res = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Range: `${from}-${to}`,
+          "Range-Unit": "items",
+        },
+      })
+      if (!res.ok) {
+        console.warn(`[sitemap] product fetch failed at offset ${from}: ${res.status}`)
+        break
+      }
+      const page = (await res.json()) as Array<{ id: string; updated_at: string }>
+      rows.push(...page)
+      // A short page means we've reached the end. Without this the loop would
+      // keep requesting empty ranges up to MAX_PRODUCTS.
+      if (page.length < PAGE) break
     }
-    const rows = (await res.json()) as Array<{ id: string; updated_at: string }>
-    return rows.map((r) => ({
+  } catch (e) {
+    console.warn("[sitemap] product fetch error:", (e as Error).message)
+  }
+
+  // `id.asc` is the tiebreaker above because paging over a non-unique sort key
+  // is not stable: two products sharing an `updated_at` could otherwise appear
+  // on both sides of a page boundary, duplicating one URL and dropping another.
+  // Belt and braces, since a duplicate <loc> is a crawl-budget waste.
+  const seen = new Set<string>()
+  return rows
+    .filter((r) => r.id && !seen.has(r.id) && (seen.add(r.id), true))
+    .map((r) => ({
       path: `/product/${r.id}`,
       lastmod: r.updated_at ? new Date(r.updated_at).toISOString().split("T")[0] : undefined,
       changefreq: "weekly" as const,
       priority: "0.8",
     }))
-  } catch (e) {
-    console.warn("[sitemap] product fetch error:", (e as Error).message)
-    return []
-  }
 }
 
 function xml(entries: Entry[]) {

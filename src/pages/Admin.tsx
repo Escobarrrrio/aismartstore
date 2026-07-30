@@ -24,6 +24,7 @@ import AutomationsModule from "@/components/admin/AutomationsModule";
 import EdgeFunctionHealthModule from "@/components/admin/EdgeFunctionHealthModule";
 import SystemHealthModule from "@/components/admin/SystemHealthModule";
 import SecurityModule from "@/components/admin/SecurityModule";
+import EngineRoomModule from "@/components/admin/EngineRoomModule";
 import NewsletterModule from "@/components/admin/NewsletterModule";
 import QuotesModule from "@/components/admin/QuotesModule";
 import CostUsageModule from "@/components/admin/CostUsageModule";
@@ -197,6 +198,7 @@ const Admin = () => {
           {activeTab === "edge-function-health" && <EdgeFunctionHealthModule />}
           {activeTab === "settings" && <CommandCentre settings={settings} setSettings={setSettings} />}
           {activeTab === "system-health" && <SystemHealthModule />}
+          {activeTab === "engine-room" && <EngineRoomModule />}
           {activeTab === "security" && <SecurityModule />}
           {activeTab === "cost-usage" && <CostUsageModule />}
           {activeTab === "integrations" && <IntegrationsModule />}

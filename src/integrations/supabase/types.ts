@@ -516,6 +516,78 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_registry: {
+        Row: {
+          cadence: string
+          critical: boolean
+          cron_job_name: string | null
+          engine_key: string
+          kind: string
+          label: string
+          log_source: string | null
+          max_silence_minutes: number
+          notes: string | null
+        }
+        Insert: {
+          cadence: string
+          critical?: boolean
+          cron_job_name?: string | null
+          engine_key: string
+          kind: string
+          label: string
+          log_source?: string | null
+          max_silence_minutes: number
+          notes?: string | null
+        }
+        Update: {
+          cadence?: string
+          critical?: boolean
+          cron_job_name?: string | null
+          engine_key?: string
+          kind?: string
+          label?: string
+          log_source?: string | null
+          max_silence_minutes?: number
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      engine_room_assessments: {
+        Row: {
+          ai_model: string | null
+          alert_sent: boolean
+          created_at: string
+          findings: Json
+          headline: string
+          id: number
+          narrative: string | null
+          severity: string
+          snapshot: Json
+        }
+        Insert: {
+          ai_model?: string | null
+          alert_sent?: boolean
+          created_at?: string
+          findings?: Json
+          headline: string
+          id?: number
+          narrative?: string | null
+          severity: string
+          snapshot?: Json
+        }
+        Update: {
+          ai_model?: string | null
+          alert_sent?: boolean
+          created_at?: string
+          findings?: Json
+          headline?: string
+          id?: number
+          narrative?: string | null
+          severity?: string
+          snapshot?: Json
+        }
+        Relationships: []
+      }
       exchange_rates: {
         Row: {
           currency_code: string
@@ -1280,6 +1352,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_buckets: {
+        Row: {
+          bucket_key: string
+          last_refill: string
+          tokens: number
+        }
+        Insert: {
+          bucket_key: string
+          last_refill?: string
+          tokens: number
+        }
+        Update: {
+          bucket_key?: string
+          last_refill?: string
+          tokens?: number
+        }
+        Relationships: []
+      }
       returns: {
         Row: {
           admin_notes: string | null
@@ -1316,6 +1406,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          actor: string | null
+          created_at: string
+          detail: Json
+          id: number
+          kind: string
+          severity: string
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          detail?: Json
+          id?: number
+          kind: string
+          severity?: string
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          detail?: Json
+          id?: number
+          kind?: string
+          severity?: string
+        }
+        Relationships: []
+      }
       sms_send_log: {
         Row: {
           created_at: string
@@ -1346,6 +1463,69 @@ export type Database = {
           status?: string
           telnyx_status_code?: number | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      spend_caps: {
+        Row: {
+          daily_call_cap: number
+          daily_cap_zar: number
+          enabled: boolean
+          hard_stop: boolean
+          label: string
+          monthly_cap_zar: number
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          daily_call_cap: number
+          daily_cap_zar: number
+          enabled?: boolean
+          hard_stop?: boolean
+          label: string
+          monthly_cap_zar: number
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          daily_call_cap?: number
+          daily_cap_zar?: number
+          enabled?: boolean
+          hard_stop?: boolean
+          label?: string
+          monthly_cap_zar?: number
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      spend_ledger: {
+        Row: {
+          cost_zar: number
+          id: number
+          meta: Json
+          occurred_at: string
+          provider: string
+          source: string
+          units: number
+        }
+        Insert: {
+          cost_zar?: number
+          id?: number
+          meta?: Json
+          occurred_at?: string
+          provider: string
+          source: string
+          units?: number
+        }
+        Update: {
+          cost_zar?: number
+          id?: number
+          meta?: Json
+          occurred_at?: string
+          provider?: string
+          source?: string
+          units?: number
         }
         Relationships: []
       }
@@ -1654,6 +1834,7 @@ export type Database = {
         Returns: boolean
       }
       email_queue_dispatch: { Args: never; Returns: undefined }
+      engine_room_snapshot: { Args: never; Returns: Json }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -1851,6 +2032,16 @@ export type Database = {
         }[]
       }
       refresh_product_facets_cache: { Args: never; Returns: number }
+      rl_sweep: { Args: { p_older_than?: string }; Returns: number }
+      rl_take: {
+        Args: {
+          p_capacity: number
+          p_cost?: number
+          p_key: string
+          p_refill_per_min: number
+        }
+        Returns: Json
+      }
       score_business_product: {
         Args: {
           p_brand: string
@@ -1954,9 +2145,32 @@ export type Database = {
               total_count: number
             }[]
           }
+      sec_log: {
+        Args: {
+          p_actor?: string
+          p_detail?: Json
+          p_kind: string
+          p_severity?: string
+        }
+        Returns: undefined
+      }
       set_newsletter_interests: {
         Args: { _categories: string[]; _email: string; _subscriber_id: string }
         Returns: boolean
+      }
+      spend_guard: {
+        Args: { p_estimated_cost_zar?: number; p_provider: string }
+        Returns: Json
+      }
+      spend_record: {
+        Args: {
+          p_cost_zar?: number
+          p_meta?: Json
+          p_provider: string
+          p_source: string
+          p_units?: number
+        }
+        Returns: undefined
       }
     }
     Enums: {

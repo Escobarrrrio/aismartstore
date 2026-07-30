@@ -72,6 +72,23 @@ interface Snapshot {
   security: { last_24h: number; high_24h: number; recent: SecurityEvent[] };
 }
 
+interface Assessment {
+  severity: "ok" | "notice" | "warning" | "critical";
+  headline: string;
+  findings: Array<{ severity: string; area: string; subject: string; detail: string }>;
+  narrative: string | null;
+  ai_model: string | null;
+  alert_sent: boolean;
+  created_at: string;
+}
+
+const ASSESSMENT_STYLE: Record<Assessment["severity"], string> = {
+  critical: "border-destructive/40 bg-destructive/5",
+  warning: "border-amber-500/40 bg-amber-500/5",
+  notice: "border-border bg-muted/30",
+  ok: "border-emerald-500/30 bg-emerald-500/5",
+};
+
 const STATUS_STYLE: Record<EngineStatus, { label: string; cls: string; Icon: typeof CheckCircle2 }> = {
   stalled:  { label: "Stalled",  cls: "bg-destructive/10 text-destructive border-destructive/30", Icon: PauseCircle },
   failing:  { label: "Failing",  cls: "bg-destructive/10 text-destructive border-destructive/30", Icon: AlertTriangle },
@@ -106,22 +123,46 @@ const EngineRoomModule = () => {
   const [error, setError] = useState<string | null>(null);
   const [savingCap, setSavingCap] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error: e } = await supabase.rpc("engine_room_snapshot" as never);
-    if (e) {
+    const [snapRes, assessRes] = await Promise.all([
+      supabase.rpc("engine_room_snapshot" as never),
+      supabase
+        .from("engine_room_assessments" as never)
+        .select("severity, headline, findings, narrative, ai_model, alert_sent, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    if (snapRes.error) {
       // The RPC raises 42501 for non-admins rather than returning an empty
       // shell, so a permission failure reads as a permission failure instead of
       // silently looking like a store with no engines and no spend.
-      setError(e.message);
+      setError(snapRes.error.message);
       setSnap(null);
     } else {
       setError(null);
-      setSnap(data as unknown as Snapshot);
+      setSnap(snapRes.data as unknown as Snapshot);
     }
+    // The assessment is commentary on the snapshot. If it is missing, the live
+    // numbers below still stand on their own -- so its absence is not an error.
+    setAssessment((assessRes.data as unknown as Assessment) ?? null);
     setLoading(false);
   }, []);
+
+  const runCheck = async () => {
+    setChecking(true);
+    const { error: e } = await supabase.functions.invoke("engine-room-analyst", { body: { trigger: "manual" } });
+    setChecking(false);
+    if (e) toast.error(e.message);
+    else {
+      toast.success("Check complete.");
+      load();
+    }
+  };
 
   useEffect(() => {
     load();
@@ -188,10 +229,47 @@ const EngineRoomModule = () => {
             Every automated engine, every rand of external spend, and everything the guardrails refused.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+          <Button size="sm" onClick={runCheck} disabled={checking}>
+            {checking ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldAlert className="h-4 w-4 mr-2" />}
+            Run check now
+          </Button>
+        </div>
       </div>
+
+      {/* The watch's last verdict. Placed above the instruments on purpose: the
+          numbers below say what is true, this says whether it matters. */}
+      {assessment && (
+        <Card className={`p-5 border ${ASSESSMENT_STYLE[assessment.severity]}`}>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <Badge className={`text-[10px] uppercase ${
+              assessment.severity === "critical" ? "bg-destructive text-destructive-foreground"
+              : assessment.severity === "warning" ? "bg-amber-500 text-white"
+              : assessment.severity === "ok" ? "bg-emerald-600 text-white"
+              : "bg-muted text-muted-foreground"}`}>
+              {assessment.severity}
+            </Badge>
+            <p className="font-semibold text-sm">{assessment.headline}</p>
+            {assessment.alert_sent && (
+              <Badge variant="outline" className="text-[10px]">emailed to you</Badge>
+            )}
+          </div>
+          {assessment.narrative && (
+            <p className="text-sm leading-relaxed text-muted-foreground">{assessment.narrative}</p>
+          )}
+          <p className="text-[11px] text-muted-foreground mt-3">
+            {new Date(assessment.created_at).toLocaleString("en-ZA")} ·{" "}
+            {/* Being explicit about which half wrote which part. The severity is
+                never the model's call, and a reader deserves to know that when
+                deciding how much weight to give the paragraph above. */}
+            severity decided by rules
+            {assessment.ai_model ? `, explained by ${assessment.ai_model}` : ", no AI narrative on this run"}
+          </p>
+        </Card>
+      )}
 
       {/* Headline. Deliberately three numbers and no chart: this strip has one
           job, which is to be readable from across a room. */}

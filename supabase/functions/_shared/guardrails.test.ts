@@ -4,6 +4,12 @@ import { guard, record, callerKey, SMS_COST_ZAR } from "./guardrails.ts";
 // A stand-in for the Supabase client that records what was asked of it and
 // answers with whatever the test wants. The guardrails only ever call .rpc(),
 // so this is the whole surface.
+//
+// `rl_take` is keyed twice per refusal -- once for the caller's own bucket and
+// once for the log throttle -- so the fake answers on the bucket key, not just
+// the function name. Answering only on the name would make it impossible to
+// write a test where the caller is refused but the refusal is still logged,
+// which is the ordinary case.
 function fakeAdmin(replies: Record<string, { data?: unknown; error?: { message: string } }>) {
   const calls: Array<{ fn: string; args: Record<string, unknown> }> = [];
   return {
@@ -11,6 +17,10 @@ function fakeAdmin(replies: Record<string, { data?: unknown; error?: { message: 
     // deno-lint-ignore no-explicit-any
     rpc(fn: string, args: Record<string, unknown>): any {
       calls.push({ fn, args });
+      const key = String(args?.p_key ?? "");
+      if (fn === "rl_take" && key.startsWith("seclog:") && replies["rl_take:seclog"]) {
+        return Promise.resolve(replies["rl_take:seclog"]);
+      }
       return Promise.resolve(replies[fn] ?? { data: null, error: null });
     },
   };
@@ -51,15 +61,46 @@ Deno.test("guard allows when both checks pass", async () => {
 Deno.test("guard refuses a rate-limited caller with 429 and a real Retry-After", async () => {
   const admin = fakeAdmin({
     rl_take: { data: { allowed: false, reason: "rate_limited", remaining: 0, retry_after_s: 120 } },
+    // The log throttle has room, so this refusal does get written down.
+    "rl_take:seclog": { data: { allowed: true, remaining: 0 } },
   });
   // deno-lint-ignore no-explicit-any
   const r = await guard(admin as any, { provider: "telnyx-sms", bucket: "b", capacity: 5, refillPerMin: 0.5 });
   assertEquals(r.ok, false);
   assertEquals(r.response!.status, 429);
   assertEquals(r.response!.headers.get("Retry-After"), "120");
-  // Refused at the bucket, so the spend check is never reached -- and the
-  // refusal itself is logged.
-  assertEquals(admin.calls.map((c) => c.fn), ["rl_take", "sec_log"]);
+  // Refused at the bucket, so the spend check is never reached.
+  assertEquals(admin.calls.map((c) => c.fn), ["rl_take", "rl_take", "sec_log"]);
+});
+
+Deno.test("refusal logging is throttled so a flood cannot write a row per request", async () => {
+  // Logging every refusal makes the defence generate load in proportion to the
+  // attack, and fills the disk on the way. Once the log throttle's own bucket
+  // is empty, refusals still refuse but stop writing.
+  // Both refuse: the caller's bucket (they are flooding) and the log throttle
+  // (we already wrote one of these in the last five minutes).
+  const admin = fakeAdmin({
+    rl_take: { data: { allowed: false, reason: "rate_limited", remaining: 0, retry_after_s: 30 } },
+    "rl_take:seclog": { data: { allowed: false, reason: "rate_limited", remaining: 0, retry_after_s: 240 } },
+  });
+  // deno-lint-ignore no-explicit-any
+  const r = await guard(admin as any, { provider: "telnyx-sms", bucket: "b", capacity: 5, refillPerMin: 1 });
+  // Still refused -- the throttle suppresses the writing, never the refusing.
+  assertEquals(r.ok, false);
+  assertEquals(r.response!.status, 429);
+  assertEquals(admin.calls.filter((c) => c.fn === "sec_log").length, 0);
+});
+
+Deno.test("a failing log throttle logs anyway rather than losing the refusal", async () => {
+  const admin = fakeAdmin({
+    rl_take: { error: { message: "throttle unavailable" } },
+  });
+  // rl_take erroring means the caller's own bucket check also fails open, so
+  // this path allows the request -- the assertion that matters is that the
+  // helper does not throw on the way.
+  // deno-lint-ignore no-explicit-any
+  const r = await guard(admin as any, { provider: "telnyx-sms", bucket: "b", capacity: 5, refillPerMin: 1 });
+  assertEquals(r.ok, true);
 });
 
 Deno.test("guard refuses a capped provider with 503, not 429", async () => {

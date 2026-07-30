@@ -83,7 +83,20 @@ export async function guard(
         if (data.reason === "cost_exceeds_capacity") {
           console.error("[guardrails] bucket misconfigured", { bucket: opts.bucket, capacity: opts.capacity });
         }
-        await sec(admin, "rate_limited", "low", source, { bucket: opts.bucket, ...data });
+        // Throttled through the same bucket mechanism, at most one row per
+        // source per five minutes.
+        //
+        // Logging every refusal was the obvious thing and was wrong: under an
+        // actual flood it writes one audit row per attacking request, so the
+        // defence generates load in direct proportion to the attack and fills
+        // the disk on the way. A rate limiter that cannot be triggered cheaply
+        // is not a rate limiter.
+        //
+        // Sampling loses nothing that matters here. The question this log
+        // answers is "is something pushing at us", which one row every five
+        // minutes answers exactly as well as ten thousand -- and the ten
+        // thousandth row is the one that makes the table unreadable.
+        await secThrottled(admin, source, "rate_limited", "low", { bucket: opts.bucket, ...data });
         return {
           ok: false,
           reason: "rate_limited",
@@ -149,6 +162,38 @@ export async function record(
     if (error) console.error("[guardrails] spend_record failed", { error: error.message, provider: opts.provider });
   } catch (e) {
     console.error("[guardrails] spend_record threw", { error: String(e) });
+  }
+}
+
+/**
+ * sec(), but at most once per `source` per five minutes.
+ *
+ * Uses rl_take against a bucket in its own namespace, so the throttle shares
+ * the limiter's atomicity: concurrent refusals cannot all decide they are the
+ * one allowed to log. Capacity 1 with a 0.2/min refill is exactly "one, then
+ * one every five minutes".
+ */
+async function secThrottled(
+  admin: SupabaseClient,
+  source: string,
+  kind: string,
+  severity: "info" | "low" | "medium" | "high" | "critical",
+  detail: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const { data, error } = await admin.rpc("rl_take", {
+      p_key: `seclog:${kind}:${source}`,
+      p_capacity: 1,
+      p_refill_per_min: 0.2,
+      p_cost: 1,
+    });
+    // If the throttle check itself fails we log anyway. Losing visibility of a
+    // refusal is worse than one extra row.
+    if (error || !data || data.allowed !== false) {
+      await sec(admin, kind, severity, source, detail);
+    }
+  } catch {
+    await sec(admin, kind, severity, source, detail);
   }
 }
 

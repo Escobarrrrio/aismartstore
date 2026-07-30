@@ -129,8 +129,7 @@ const Auth = () => {
   // can't be turned into an open redirect. Validation lives in safeRedirectPath
   // because the obvious inline version (startsWith("/") && !startsWith("//"))
   // accepts "/\evil.com", which browsers normalise to "//evil.com".
-  const rawRedirect = searchParams.get("redirect");
-  const redirectTo = safeRedirectPath(rawRedirect);
+  const redirectTo = safeRedirectPath(searchParams.get("redirect"));
 
   const resetSignupFields = () => {
     setName(""); setPhone(""); setIdNumber("");

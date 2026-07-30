@@ -120,7 +120,13 @@ Deno.serve(async (req) => {
   const gate = await guard(admin, {
     provider: "telnyx-sms",
     source: "send-phone-otp",
-    bucket: `otp:ip:${callerKey(req)}`,
+    // The fallback is the user id, not the shared default. If the edge proxy
+    // ever stops setting a forwarded-for header, callerKey() would otherwise
+    // return the same literal for everybody and drop the entire store into one
+    // bucket -- five signups, then one every two minutes, for all customers at
+    // once. Degrading to per-user instead makes the worst case "no better than
+    // the cooldown that already existed" rather than "signups are broken".
+    bucket: `otp:ip:${callerKey(req, `user:${userId}`)}`,
     capacity: 5,
     refillPerMin: 0.5,
     estimatedCostZar: SMS_COST_ZAR,

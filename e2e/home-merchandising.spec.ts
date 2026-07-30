@@ -54,15 +54,18 @@ test.describe("residential home page merchandising", () => {
     const cards = page.locator('[data-testid="product-card"]');
     await expect(cards.first()).toBeVisible({ timeout: 15_000 });
 
-    const prices = await cards.locator("text=/^R\\s?[\\d\\s,]+/").allTextContents();
+    // Read the raw ZAR figure off the card rather than parsing the rendered
+    // price: the storefront formats through formatPrice across 13 locales and
+    // a currency switcher, so "R1 129,05" is only one of several renderings.
+    const prices = await cards.evaluateAll((nodes) =>
+      nodes.map((n) => Number(n.getAttribute("data-product-price"))),
+    );
     expect(prices.length).toBeGreaterThan(0);
 
-    for (const raw of prices) {
-      // "R 12 345,67" / "R12,345.67" -> 12345
-      const digits = raw.replace(/[^\d]/g, "").slice(0, -2) || raw.replace(/[^\d]/g, "");
-      const value = Number(digits);
-      if (!Number.isFinite(value) || value === 0) continue;
-      expect(value, `${raw} is above the R15 000 residential ceiling`).toBeLessThanOrEqual(15_000);
+    for (const value of prices) {
+      expect(Number.isFinite(value), "a product card carries no readable price").toBe(true);
+      expect(value, `R${value} is above the R15 000 residential ceiling`).toBeLessThanOrEqual(15_000);
+      expect(value, "a product card is priced at zero").toBeGreaterThan(0);
     }
   });
 

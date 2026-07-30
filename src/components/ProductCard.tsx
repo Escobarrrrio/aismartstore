@@ -43,7 +43,17 @@ const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   return (
-    <article data-testid="product-card" data-product-id={product.id} data-product-category={product.category ?? ''} className="group relative flex flex-col overflow-hidden rounded-2xl bg-card border border-border/60 hover:border-border transition-all duration-300 hover:shadow-[0_20px_50px_-20px_hsl(var(--foreground)/0.18)] hover:-translate-y-0.5">
+    <article
+      data-testid="product-card"
+      data-product-id={product.id}
+      data-product-category={product.category ?? ''}
+      /* Raw ZAR price, for tests. The visible price goes through formatPrice,
+         which switches currency symbol and separators across 13 locales, so
+         parsing "R1 129,05" back out of the DOM would couple assertions to
+         whichever locale the run happened to pick. */
+      data-product-price={product.price}
+      className="group relative flex flex-col overflow-hidden rounded-2xl bg-card border border-border/60 hover:border-border transition-all duration-300 hover:shadow-[0_20px_50px_-20px_hsl(var(--foreground)/0.18)] hover:-translate-y-0.5"
+    >
       {/* Image */}
       <Link
         to={`/product/${product.id}`}

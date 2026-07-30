@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { coverArt, motifDataUri } from "@/lib/pulse-cover";
 import { supabase } from "@/integrations/supabase/client";
 import SEO from "@/components/SEO";
 import {
@@ -140,18 +141,35 @@ const CategoryTag = ({ category, className = "" }: { category: string; className
  *  category-accented "no photo on file" block (not a rainbow gradient,
  *  not a fake image) when none was found, or if it 404s by the time a
  *  visitor loads the page. */
-const PulseThumb = ({ src, alt, category, sourceLabel, className }: { src: string | null; alt: string; category: string; sourceLabel: string; className: string }) => {
+const PulseThumb = ({ src, alt, category, sourceLabel, seed, className }: { src: string | null; alt: string; category: string; sourceLabel: string; seed: string; className: string }) => {
   const [failed, setFailed] = useState(false);
   const meta = CATEGORY_META[category] ?? CATEGORY_META.news;
   const Icon = meta.icon;
+  // Generated per-story cover art rather than one shared grey tile. Three
+  // quarters of the feed has no og:image -- arXiv abstracts, GitHub links and
+  // PDFs never publish one -- and rendering all of them identically made a
+  // working feed look broken. Derived from the URL, so a story keeps the same
+  // cover across renders and sessions. See src/lib/pulse-cover.ts.
+  const art = useMemo(() => coverArt(seed, category), [seed, category]);
   if (!src || failed) {
     return (
       <div
-        className={`${className} flex flex-col items-center justify-center gap-1.5 bg-muted relative overflow-hidden`}
+        role="img"
+        aria-label={`${sourceLabel} — ${alt}`}
+        className={`${className} flex flex-col items-center justify-center gap-2 relative overflow-hidden`}
+        style={{ background: art.background }}
       >
-        <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundColor: meta.accent }} />
-        <Icon className="h-6 w-6 relative" style={{ color: meta.accent }} />
-        <span className="text-[10px] font-display font-bold uppercase tracking-widest text-muted-foreground relative">{sourceLabel}</span>
+        <div
+          className="absolute inset-0 opacity-[0.16]"
+          style={{ backgroundImage: motifDataUri(art), backgroundSize: "80px 80px" }}
+        />
+        <Icon className="h-7 w-7 relative" style={{ color: art.ink }} aria-hidden="true" />
+        <span
+          className="text-[10px] font-display font-bold uppercase tracking-widest relative px-2 text-center"
+          style={{ color: art.ink }}
+        >
+          {sourceLabel}
+        </span>
       </div>
     );
   }
@@ -484,6 +502,7 @@ const AiPulse = () => {
                       alt={featured.title}
                       category={featured.category}
                       sourceLabel={SOURCE_LABELS[featured.source] ?? featured.source}
+                      seed={featured.url}
                       className="w-full h-48 md:h-full object-cover"
                     />
                   </div>
@@ -532,6 +551,7 @@ const AiPulse = () => {
                         alt={item.title}
                         category={item.category}
                         sourceLabel={SOURCE_LABELS[item.source] ?? item.source}
+                        seed={item.url}
                         className="w-full h-36 object-cover"
                       />
                     </div>

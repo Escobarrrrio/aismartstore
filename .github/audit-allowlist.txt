@@ -1,0 +1,16 @@
+# Advisories the Security Gate is allowed to skip.
+#
+# One GHSA id per line. Everything else at high or critical severity still
+# fails the build -- this is a narrow, reviewed exception list, not a way to
+# turn the gate off.
+#
+# An entry may only be added if SECURITY.md carries a written analysis of why
+# the advisory does not apply to this codebase, and what would change that
+# decision. Remove the entry the moment an upgrade path exists.
+
+# react-router RSC Mode CSRF bypass. Affects react-router >=7.12.0 <8.3.0; we
+# run 7.18.2. The vulnerable path requires RSC mode, which a Vite SPA using
+# <BrowserRouter> with no server runtime and no router actions does not have.
+# Fixed in 8.3.0, which requires React >= 19.2.7 -- a separate upgrade.
+# See SECURITY.md, "Accepted dependency advisories".
+GHSA-qwww-vcr4-c8h2

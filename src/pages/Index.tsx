@@ -9,16 +9,22 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/contexts/CartContext";
 import { trackEvent } from "@/lib/analytics";
+import { fetchShowcase, mapShowcaseRow } from "@/lib/home-showcase";
 
 const Index = () => {
   const { products, loading } = useProducts();
   const { t } = useTranslation();
   const [aiPicks, setAiPicks] = useState<Product[]>([]);
+  const [curatedFeatured, setCuratedFeatured] = useState<Product[]>([]);
   // AI Picks and Featured both draw from the newest-residential-products
   // pool, so without this exclusion the same items show up in both grids
   // back to back. Featured should showcase what AI Picks isn't already covering.
+  // (The curated path cannot collide: home_showcase has a unique index on
+  // product_id, so a product can only ever occupy one slot.)
   const aiPickIds = new Set(aiPicks.map((p) => p.id));
-  const featured = products.filter((p) => !aiPickIds.has(p.id)).slice(0, 8);
+  const featured = curatedFeatured.length > 0
+    ? curatedFeatured
+    : products.filter((p) => !aiPickIds.has(p.id)).slice(0, 8);
   const [catalogCount, setCatalogCount] = useState<number | null>(null);
   const [businessCount, setBusinessCount] = useState<number | null>(null);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
@@ -26,9 +32,40 @@ const Index = () => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Residential-friendly AI picks: AI-tagged, priced for a household budget
-      // (≤ R15,000), image required. Enterprise/high-ticket AI hardware lives
-      // in the "For Business" (/procurement) section instead.
+      // Preferred path: the curated showcase. Products are ranked by the
+      // merchandising engine (consumer demand, brand recognition, price band,
+      // title readability, stock, photography, real sales) with per-brand and
+      // per-category diversity caps, and refreshed on a cron. See
+      // src/lib/home-showcase.ts and docs/MERCHANDISING.md.
+      const [curatedPicks, curatedFeat] = await Promise.all([
+        fetchShowcase("ai_picks"),
+        fetchShowcase("featured"),
+      ]);
+      if (cancelled) return;
+      if (curatedFeat.length > 0) setCuratedFeatured(curatedFeat);
+      if (curatedPicks.length > 0) {
+        setAiPicks(curatedPicks);
+      } else {
+        // Fallback: the date-ordered query the page used before the engine
+        // existed. Reached only if the showcase is empty (first boot, or a
+        // refresh that found no eligible candidates), so the page always
+        // renders something rather than an empty grid.
+        await loadAiPicksFallback();
+      }
+
+      const { count } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true)
+        .eq("audience", "residential");
+      if (typeof count === "number") setCatalogCount(count);
+      await loadRemainingCounts();
+    })();
+
+    // Residential-friendly AI picks: AI-tagged, priced for a household budget
+    // (≤ R15,000), image required. Enterprise/high-ticket AI hardware lives
+    // in the "For Business" (/procurement) section instead.
+    async function loadAiPicksFallback() {
       const { data } = await supabase
         .from("products")
         .select("id, name, description, price, category, brand, sku, images, in_stock, stock_quantity, is_ai_product, created_at")
@@ -39,33 +76,17 @@ const Index = () => {
         .not("images", "is", null)
         .order("created_at", { ascending: false })
         .limit(16);
+      // Same row shape as the showcase RPC minus the ranking columns, so it
+      // shares the mapper rather than repeating it.
       setAiPicks(
-        ((data as any[]) || [])
+        (data ?? [])
           .filter((p) => Array.isArray(p.images) && p.images[0])
           .slice(0, 8)
-          .map((p) => ({
-            id: p.id,
-            name: p.name,
-            description: p.description || "",
-            price: Number(p.price),
-            category: p.category || "",
-            brand: p.brand || undefined,
-            sku: p.sku || undefined,
-            images: p.images || [],
-            inStock: p.in_stock,
-            stockQuantity: typeof p.stock_quantity === "number" ? p.stock_quantity : undefined,
-            isAiProduct: !!p.is_ai_product,
-            createdAt: p.created_at || new Date().toISOString(),
-          }))
+          .map((p) => mapShowcaseRow({ ...p, score: null, reasons: [] }))
       );
+    }
 
-      const { count } = await supabase
-        .from("products")
-        .select("id", { count: "exact", head: true })
-        .eq("is_active", true)
-        .eq("audience", "residential");
-      if (typeof count === "number") setCatalogCount(count);
-
+    async function loadRemainingCounts() {
       // Counted live rather than hardcoded: the banner used to advertise
       // "86,000+ enterprise SKUs" against 2 405 active business products, so
       // the promise and the destination disagreed by a factor of 35.
@@ -94,7 +115,8 @@ const Index = () => {
         if (typeof n === "number") counts[key] = n;
       }
       if (!cancelled) setCategoryCounts(counts);
-    })();
+    }
+
     return () => { cancelled = true; };
   }, []);
 

@@ -3,7 +3,7 @@ import {
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
   HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard, ShieldCheck, Bot,
-  ReceiptText
+  ReceiptText, Home
 } from "lucide-react";
 import Logo from "@/components/Logo";
 
@@ -12,7 +12,7 @@ export type AdminTab =
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
   | "edge-function-health"
   | "settings" | "system-health" | "security" | "cost-usage"
-  | "integrations" | "backups" | "catalog-health"
+  | "integrations" | "backups" | "catalog-health" | "merchandising"
   | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
   | "compliance-audit"
   | "order-diagnostics" | "yoco-health" | "payment-events" | "email-health" | "ai-agent";
@@ -33,6 +33,7 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "system-health", label: "System Health", icon: <Activity className="h-4 w-4" /> },
   { id: "products", label: "Products", icon: <Package className="h-4 w-4" />, section: "Catalogue" },
   { id: "catalog-health", label: "Catalog Health", icon: <Activity className="h-4 w-4" /> },
+  { id: "merchandising", label: "Home Merchandising", icon: <Home className="h-4 w-4" /> },
   { id: "import", label: "Bulk Import", icon: <FileSpreadsheet className="h-4 w-4" /> },
   { id: "orders", label: "Orders", icon: <ShoppingCart className="h-4 w-4" />, section: "Sales" },
   { id: "order-diagnostics", label: "Order Diagnostics", icon: <Stethoscope className="h-4 w-4" /> },

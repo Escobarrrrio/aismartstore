@@ -13,6 +13,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # The dependency scanner can only read TEXT lockfiles. If bun.lock is
+      # missing (or someone committed the binary bun.lockb instead), a
+      # vulnerable package could ship unnoticed because nothing can parse the
+      # resolved versions. Regenerate as text and fail the build if that
+      # produces a diff, so the fix lands in the repo rather than only in CI.
+      - name: Verify text lockfile
+        run: |
+          set -e
+          if [ -f bun.lockb ] || [ ! -f bun.lock ]; then
+            echo "::warning::Text lockfile missing or binary bun.lockb present — regenerating."
+            bun install --save-text-lockfile
+            rm -f bun.lockb
+          fi
+          bun install --save-text-lockfile --frozen-lockfile 2>/dev/null || bun install --save-text-lockfile
+          if ! git diff --quiet -- bun.lock bun.lockb package.json; then
+            echo "::error::bun.lock is out of date or not in text format. Run 'bun install --save-text-lockfile' and commit the result."
+            git diff --stat -- bun.lock bun.lockb package.json
+            exit 1
+          fi
+          echo "Text lockfile present and up to date."
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:

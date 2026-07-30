@@ -13,5 +13,28 @@ updates:
       radix-ui:
         patterns:
           - "@radix-ui/*"
+      # Routing packages move as a set -- react-router-dom re-exports
+      # react-router, so patching one without the other just produces a
+      # duplicated install. Grouping them means a single PR that CI can
+      # type-check, test and build as one coherent upgrade.
+      react-router:
+        patterns:
+          - "react-router"
+          - "react-router-dom"
+          - "@remix-run/router"
     commit-message:
       prefix: "deps"
+  # Security patches shouldn't wait for the weekly window.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    # Dependabot always raises security advisories regardless of the
+    # allow list; this entry keeps the daily run focused on them.
+    allow:
+      - dependency-type: "production"
+    labels:
+      - "security"
+    commit-message:
+      prefix: "deps(security)"

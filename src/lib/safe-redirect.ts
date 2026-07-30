@@ -74,3 +74,47 @@ export function safeRedirectPath(raw: string | null | undefined, fallback: strin
     return fallback;
   }
 }
+
+/**
+ * Payment gateways are the only case where we hand the browser an *external*
+ * URL that came back over the wire. If an edge function (or anything able to
+ * spoof its response) ever returned an attacker URL, `window.location.href =
+ * data.redirectUrl` would be a straight open redirect off a page that has just
+ * collected an address and is about to collect card details — and a
+ * `javascript:` value there would be script execution.
+ *
+ * So the target is checked against an allowlist of the gateway hosts we
+ * actually integrate with, over https only. Anything else is refused.
+ */
+const GATEWAY_HOSTS = [
+  "yoco.com",
+  "payfast.co.za",
+  "payfast.io",
+  "paypal.com",
+  "sandbox.paypal.com",
+  "stripe.com",
+  "checkout.stripe.com",
+];
+
+function isAllowedGatewayHost(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  return GATEWAY_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
+}
+
+/**
+ * Returns the URL when it is an https URL on a known payment gateway host,
+ * otherwise `null`. Callers must treat `null` as a hard failure rather than
+ * navigating anyway.
+ */
+export function safeGatewayUrl(raw: unknown): string | null {
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  if (hasBackslashOrControl(raw)) return null;
+  try {
+    const url = new URL(raw.trim());
+    if (url.protocol !== "https:") return null;
+    if (!isAllowedGatewayHost(url.hostname)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Sparkles, RefreshCw, ArrowRight, PackageCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocale } from "@/contexts/LocaleContext";
+import { fetchShowcase } from "@/lib/home-showcase";
 
 type SpotlightProduct = {
   id: string;
@@ -33,16 +34,43 @@ const StorefrontShowcase = () => {
           .select("id, name, price, brand, images")
           .eq("is_active", true)
           .eq("audience", "residential")
+          // The panel is headed "Newest in stock", so it has to actually be in
+          // stock. Without this it was showing the Withings Body Analyzer and
+          // the LIFX bulb, both supplier out-of-stock -- the same kind of
+          // promise-the-page-cannot-keep the delivery dates and the hardcoded
+          // SKU counts had.
+          .eq("in_stock", true)
           .not("images", "is", null)
           .order("created_at", { ascending: false })
-          .limit(12),
+          .limit(24),
       ]);
       if (cancelled) return;
       setLive({ skus: skus ?? null, ai: ai ?? null });
-      const withImages = ((rows as any[]) || [])
-        .filter((p) => Array.isArray(p.images) && p.images[0])
+
+      // Prefer the merchandising engine, so the hero and the grids below it
+      // agree on what a household shopper should see. Picking independently is
+      // how the panel ended up leading with an Aruba campus access point.
+      const curated = await fetchShowcase("ai_picks", 8);
+      if (cancelled) return;
+      const curatedTop = curated
+        .filter((p) => p.inStock && p.images[0] && !/placeholder/i.test(p.images[0]))
         .slice(0, 3)
-        .map((p) => ({ id: p.id, name: p.name, price: Number(p.price), brand: p.brand || null, image: p.images[0] }));
+        .map((p) => ({ id: p.id, name: p.name, price: p.price, brand: p.brand ?? null, image: p.images[0] }));
+      if (curatedTop.length === 3) {
+        setProducts(curatedTop);
+        return;
+      }
+
+      // Fallback: the newest in-stock residential products with a real photo.
+      // Reached when the showcase has fewer than three in-stock picks.
+      type Row = { id: string; name: string; price: number | string; brand: string | null; images: string[] | null };
+      const withImages = ((rows as Row[] | null) || [])
+        // `images[0]` alone is not "has a photo": a product carrying
+        // /placeholder.svg passes that check and renders as an empty grey
+        // square in the hero, which is worse than showing one fewer product.
+        .filter((p) => Array.isArray(p.images) && !!p.images[0] && !/placeholder/i.test(p.images[0]))
+        .slice(0, 3)
+        .map((p) => ({ id: p.id, name: p.name, price: Number(p.price), brand: p.brand || null, image: p.images![0] }));
       setProducts(withImages);
     })();
     return () => { cancelled = true; };

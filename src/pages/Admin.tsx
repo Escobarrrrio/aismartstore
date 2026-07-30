@@ -32,6 +32,7 @@ import BackupsModule from "@/components/admin/BackupsModule";
 import NotificationsModule from "@/components/admin/NotificationsModule";
 import EmailPreviewsModule from "@/components/admin/EmailPreviewsModule";
 import CatalogHealthModule from "@/components/admin/CatalogHealthModule";
+import MerchandisingModule from "@/components/admin/MerchandisingModule";
 import ComplianceAuditModule from "@/components/admin/ComplianceAuditModule";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -176,6 +177,7 @@ const Admin = () => {
           {activeTab === "products" && (loading.products ? <LoadingSkeleton /> : <ProductsModule products={products} onReload={reload.loadProducts} />)}
           {activeTab === "import" && <ImportModule />}
           {activeTab === "catalog-health" && <CatalogHealthModule />}
+          {activeTab === "merchandising" && <MerchandisingModule />}
           {activeTab === "orders" && (loading.orders ? <LoadingSkeleton /> : <OrdersModule orders={orders} onReload={reload.loadOrders} />)}
           {activeTab === "order-diagnostics" && <OrderDiagnosticsModule />}
           {activeTab === "yoco-health" && <YocoHealthModule />}

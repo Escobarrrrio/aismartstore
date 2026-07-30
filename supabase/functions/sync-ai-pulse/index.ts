@@ -259,6 +259,45 @@ const handler = async (_req: Request) => {
     }
   }
 
+  // Retry the og:image scrape for older stories that came in without one.
+  //
+  // Without this, a single transient failure -- a slow site, a timeout, a
+  // momentary 503 -- is permanent: the upsert only ever touches items still
+  // inside the current feed window, so a story that missed its image on the
+  // first pass never gets a second chance. 919 of 1 200 stored items have no
+  // image, and that ratchet is why.
+  //
+  // Bounded to a small batch per run so the sync stays well inside the edge
+  // function time limit. At 25 per run on a 6-hourly cron that is 100/day, so
+  // the existing backlog clears in under a fortnight and then stays clear.
+  // Newest first, because those are the ones actually on screen.
+  try {
+    const { data: needImages } = await supabase
+      .from("ai_pulse_items")
+      .select("id, url")
+      .is("image_url", null)
+      .order("published_at", { ascending: false })
+      .limit(25);
+
+    let recovered = 0;
+    await Promise.all(
+      (needImages ?? []).map(async (row: { id: string; url: string }) => {
+        const image_url = await fetchOgImage(row.url);
+        if (!image_url) return; // Genuinely has no og:image -- leave it alone.
+        const { error } = await supabase
+          .from("ai_pulse_items")
+          .update({ image_url })
+          .eq("id", row.id);
+        if (!error) recovered++;
+      }),
+    );
+    results.images_recovered = recovered;
+  } catch (e) {
+    // Never let the backfill fail the sync: it is a bonus pass over data that
+    // is already stored and already renders.
+    errors.push(`image-backfill: ${(e as Error).message}`);
+  }
+
   const totalSynced = results.arxiv + results.hn + results.local;
   const runStatus = deriveRunStatus(totalSynced, errors.length);
   await finishRun(supabase, run, {

@@ -21,7 +21,36 @@ jobs:
         # severity (moderate/low included), not just high+ as the step name
         # promised. The flag that actually gates by threshold is
         # `--audit-level`.
-        run: bun audit --prod --audit-level=high || (echo "::error::High-severity vulnerabilities detected" && exit 1)
+        #
+        # Advisories listed in .github/audit-allowlist.txt are filtered out
+        # before the check. bun prints the severity and the GHSA id on the same
+        # line, so dropping the line drops the finding. Everything else at high
+        # or critical still fails. This exists because the gate had been red on
+        # main since the react-router v7 upgrade over a single advisory that
+        # SECURITY.md already analyses as not applicable -- and a permanently
+        # red security gate is one nobody reads.
+        run: |
+          set -o pipefail
+          bun audit --prod --audit-level=high 2>&1 | tee audit.txt || true
+
+          # Strip comments and blank lines, then drop every allowlisted advisory.
+          grep -vE '^[[:space:]]*(#|$)' .github/audit-allowlist.txt > allow.txt || true
+          if [ -s allow.txt ]; then
+            grep -vFf allow.txt audit.txt > remaining.txt || true
+          else
+            cp audit.txt remaining.txt
+          fi
+
+          if grep -Eq '^[[:space:]]*(high|critical):' remaining.txt; then
+            echo "::error::High-severity vulnerabilities detected (not on the reviewed allowlist)"
+            grep -E '^[[:space:]]*(high|critical):' remaining.txt
+            exit 1
+          fi
+
+          if [ -s allow.txt ] && grep -qFf allow.txt audit.txt; then
+            echo "::notice::Allowlisted advisories present and skipped — see .github/audit-allowlist.txt and SECURITY.md"
+          fi
+          echo "No unaccepted high or critical advisories."
       - name: Test suite
         run: bunx vitest run
       - name: Lint

@@ -30,7 +30,12 @@ const gotoProducts = async (page: Page, url = "/products") => {
 };
 
 test.describe("catalogue scope — desktop", () => {
-  test.beforeEach((_fixtures, testInfo) => {
+  // `{}` rather than a named parameter: Playwright inspects the first
+  // argument's source text and rejects anything that is not an object
+  // destructuring pattern. `(_fixtures, testInfo)` made the whole e2e suite
+  // fail to collect -- not just this file -- so every spec had been silently
+  // unrun since this one was added.
+  test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-chromium", "Desktop-only sidebar control");
   });
 
@@ -99,7 +104,12 @@ test.describe("catalogue scope — desktop", () => {
 });
 
 test.describe("catalogue scope — mobile", () => {
-  test.beforeEach((_fixtures, testInfo) => {
+  // `{}` rather than a named parameter: Playwright inspects the first
+  // argument's source text and rejects anything that is not an object
+  // destructuring pattern. `(_fixtures, testInfo)` made the whole e2e suite
+  // fail to collect -- not just this file -- so every spec had been silently
+  // unrun since this one was added.
+  test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-chromium", "Mobile-only bottom sheet");
   });
 

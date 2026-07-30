@@ -8,6 +8,8 @@ import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from "@/components/ImageLightbox";
 import { buildSpecifications } from "@/lib/specifications";
+import { generateContent, faqJsonLd } from "@/lib/product-content";
+import { useStoreFlag } from "@/hooks/useStoreFlag";
 import { estimateDelivery, formatArrivalWindow, PROVINCE_ZONES } from "@/lib/delivery";
 import {
   ArrowLeft, ShoppingCart, Check, Truck, Shield, RotateCcw, MapPin,
@@ -88,6 +90,16 @@ const ProductDetail = () => {
     [product, storedSpecs],
   );
 
+  // The "SEO on steroids" switch. Off by default; flip `seo.content_engine`
+  // in Admin -> Home Merchandising -> Search visibility to turn it on across
+  // the catalogue. While it is off this stays null and every consumer below
+  // falls back to exactly what the page rendered before.
+  const { value: seoEngineOn } = useStoreFlag("seo.content_engine");
+  const seoContent = useMemo(
+    () => (product && seoEngineOn ? generateContent(product, storedSpecs) : null),
+    [product, seoEngineOn, storedSpecs],
+  );
+
   // Related products (from currently loaded page)
   const related = product
     ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
@@ -128,7 +140,7 @@ const ProductDetail = () => {
     <div className="min-h-screen">
       <SEO
         title={product.name}
-        description={product.description || `${product.name} — available now at AI Smart Store. ${product.inStock ? "In stock" : "Currently out of stock"}, with secure checkout and SA-wide delivery.`}
+        description={seoContent?.metaDescription || product.description || `${product.name} — available now at AI Smart Store. ${product.inStock ? "In stock" : "Currently out of stock"}, with secure checkout and SA-wide delivery.`}
         path={`/product/${product.id}`}
         ogType="product"
         image={product.images[0]}
@@ -137,7 +149,7 @@ const ProductDetail = () => {
             "@context": "https://schema.org",
             "@type": "Product",
             name: product.name,
-            description: product.description,
+            description: seoContent?.description || product.description,
             image: product.images,
             category: product.category || undefined,
             offers: {
@@ -162,6 +174,10 @@ const ProductDetail = () => {
               { "@type": "ListItem", position: product.category ? 4 : 3, name: product.name, item: `https://aismartstore.co.za/product/${product.id}` },
             ],
           },
+          // FAQPage schema only when the engine is on AND the answers are
+          // actually rendered below. Emitting FAQ markup for text a visitor
+          // cannot see is exactly what Google drops rich results over.
+          ...(seoContent ? [faqJsonLd(seoContent)] : []),
         ]}
       />
       {/* Breadcrumb */}
@@ -416,6 +432,42 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Generated overview + FAQ. Rendered only when the content engine is
+            switched on, and the answers are visible on the page because the
+            FAQPage schema above claims they are -- schema describing hidden
+            text is what gets rich results revoked. Every sentence is assembled
+            from facts already in the record; nothing is invented. */}
+        {seoContent && (
+          <section className="mt-16 border-t border-border pt-12" aria-labelledby="product-overview">
+            <h2 id="product-overview" className="font-display font-bold text-xl mb-4">
+              About the {product.name}
+            </h2>
+            <p className="text-sm leading-relaxed text-muted-foreground max-w-3xl">
+              {seoContent.description}
+            </p>
+
+            {seoContent.highlights.length > 0 && (
+              <ul className="mt-6 flex flex-wrap gap-2">
+                {seoContent.highlights.map((h) => (
+                  <li key={h} className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                    {h}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <h3 className="font-display font-bold text-lg mt-10 mb-4">Common questions</h3>
+            <dl className="max-w-3xl divide-y divide-border/60">
+              {seoContent.faqs.map((f) => (
+                <div key={f.question} className="py-4">
+                  <dt className="font-semibold text-sm">{f.question}</dt>
+                  <dd className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{f.answer}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
 
         {/* Specifications — derived from the product name plus known attributes,
             since the distributor never sends a structured spec sheet. */}

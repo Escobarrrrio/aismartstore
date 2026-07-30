@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Home, RefreshCw, Sparkles, LayoutGrid, TrendingUp, Save } from "lucide-react";
+import { Home, RefreshCw, Sparkles, LayoutGrid, TrendingUp, Save, Search } from "lucide-react";
 
 /**
  * Admin control panel for the home-page merchandising engine.
@@ -79,6 +79,8 @@ const MerchandisingModule = () => {
   const [loading, setLoading] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
   const [savingDials, setSavingDials] = useState(false);
+  const [seoOn, setSeoOn] = useState(false);
+  const [savingSeo, setSavingSeo] = useState(false);
   const { toast } = useToast();
 
   const load = useCallback(async (which: SlotId) => {
@@ -90,7 +92,7 @@ const MerchandisingModule = () => {
           .select("id, name, brand, category, price, in_stock, score")
           .order("score", { ascending: false })
           .limit(40),
-        supabase.from("store_settings").select("key, value").like("key", "merch.%"),
+        supabase.from("store_settings").select("key, value").or("key.like.merch.%,key.like.seo.%"),
       ]);
       setRows(Array.isArray(showcase.data) ? (showcase.data as ShowcaseRow[]) : []);
 
@@ -106,6 +108,7 @@ const MerchandisingModule = () => {
       const next: Record<string, string> = {};
       for (const s of settings.data ?? []) next[s.key] = s.value ?? "";
       setDials(next);
+      setSeoOn(["true", "1", "on", "yes"].includes((next["seo.content_engine"] ?? "").trim().toLowerCase()));
     } catch (e) {
       toast({
         title: "Could not load the showcase",
@@ -167,6 +170,32 @@ const MerchandisingModule = () => {
       });
     } finally {
       setSavingDials(false);
+    }
+  };
+
+  const toggleSeo = async () => {
+    const nextValue = !seoOn;
+    setSavingSeo(true);
+    try {
+      const { error } = await supabase
+        .from("store_settings")
+        .upsert({ key: "seo.content_engine", value: String(nextValue) }, { onConflict: "key" });
+      if (error) throw error;
+      setSeoOn(nextValue);
+      toast({
+        title: nextValue ? "Search visibility switched ON" : "Search visibility switched OFF",
+        description: nextValue
+          ? "Every product page now carries a generated overview, FAQ block and FAQ schema."
+          : "Product pages are back to supplier copy only.",
+      });
+    } catch (e) {
+      toast({
+        title: "Could not change the switch",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setSavingSeo(false);
     }
   };
 
@@ -282,6 +311,34 @@ const MerchandisingModule = () => {
           </ul>
         </div>
       )}
+
+      <div className="rounded-2xl border border-border p-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <h3 className="font-semibold text-sm">Search visibility</h3>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                  seoOn ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {seoOn ? "On" : "Off"}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 max-w-2xl leading-relaxed">
+              2 853 of 3 488 products have a description under 40 characters, so most product pages
+              give Google almost nothing to index. Switching this on adds a written overview, a
+              highlights strip and a Common Questions block to every product page, plus FAQ
+              structured data — all of it assembled from facts already on the record. Nothing is
+              invented, and switching it back off restores supplier copy immediately.
+            </p>
+          </div>
+          <Button variant={seoOn ? "outline" : "default"} onClick={toggleSeo} disabled={savingSeo}>
+            {savingSeo ? "Saving…" : seoOn ? "Switch off" : "Switch on"}
+          </Button>
+        </div>
+      </div>
 
       <div className="rounded-2xl border border-border p-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-1">

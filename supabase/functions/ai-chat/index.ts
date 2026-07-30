@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { resolveAiProvider } from "../_shared/ai-provider.ts";
+import { guard, record } from "../_shared/guardrails.ts";
+
+// Rough per-conversation-turn cost, in rand. Deliberately an estimate -- see
+// the note at the guard() call below.
+const AI_CHAT_EST_COST_ZAR = 0.06;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -107,6 +112,31 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // Requiring a signed-in user raises the bar for scripting this endpoint; it
+    // does not cap it. Signing up is free, so "authenticated" is a speed bump,
+    // not a budget. These two are the budget: 12 messages of burst then one a
+    // minute per account, and a store-wide daily ceiling that no number of
+    // accounts gets around.
+    //
+    // Checked here rather than just before the model call, so a refused request
+    // does not first run the catalogue and order queries below on our behalf --
+    // otherwise a blocked flood still costs database time even once it costs no
+    // AI credits.
+    //
+    // The rand figure is an estimate and is recorded as one. The AI gateway
+    // does not publish a per-token rate, and ai_usage_log already leaves cost
+    // NULL rather than invent one; the daily *call* cap is the real enforcement
+    // here. An honestly labelled estimate beats a precise-looking number that
+    // cannot be reconciled against a statement.
+    const chatGate = await guard(supabase, {
+      provider: "ai-gateway",
+      source: "ai-chat",
+      bucket: `ai-chat:${userData.user.id}`,
+      capacity: 12,
+      refillPerMin: 1,
+      estimatedCostZar: AI_CHAT_EST_COST_ZAR,
+    });
+    if (!chatGate.ok) return chatGate.response!;
 
     // Fetch products for context
     const { data: products } = await supabase
@@ -177,6 +207,18 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Recorded here, not after the stream drains. The response body is handed
+    // straight to the client, so this function never sees the end of it -- and
+    // the provider bills for a generation the moment it starts producing one,
+    // whether or not the browser stays to read it. Waiting for a completion we
+    // are not in a position to observe would mean recording nothing at all.
+    await record(supabase, {
+      provider: "ai-gateway",
+      source: "ai-chat",
+      costZar: AI_CHAT_EST_COST_ZAR,
+      meta: { model, user_id: userData.user.id, cost_is_estimate: true },
+    });
 
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },

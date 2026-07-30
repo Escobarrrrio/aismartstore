@@ -34,6 +34,9 @@ const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const Procurement = lazy(() => import("./pages/Procurement"));
 const AiPulse = lazy(() => import("./pages/AiPulse"));
 const Compliance = lazy(() => import("./pages/Compliance"));
+const About = lazy(() => import("./pages/About"));
+const Vision = lazy(() => import("./pages/Vision"));
+const Mission = lazy(() => import("./pages/Mission"));
 const ShippingReturns = lazy(() => import("./pages/ShippingReturns"));
 const Terms = lazy(() => import("./pages/Terms"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
@@ -89,6 +92,9 @@ const App = () => (
                       <Route path="/procurement" element={<StorefrontLayout><AudienceGuard allow="business"><Procurement /></AudienceGuard></StorefrontLayout>} />
                       <Route path="/ai-pulse" element={<StorefrontLayout><AiPulse /></StorefrontLayout>} />
                       <Route path="/compliance" element={<StorefrontLayout><Compliance /></StorefrontLayout>} />
+                      <Route path="/about" element={<StorefrontLayout><About /></StorefrontLayout>} />
+                      <Route path="/vision" element={<StorefrontLayout><Vision /></StorefrontLayout>} />
+                      <Route path="/mission" element={<StorefrontLayout><Mission /></StorefrontLayout>} />
                       <Route path="/shipping-returns" element={<StorefrontLayout><ShippingReturns /></StorefrontLayout>} />
                       <Route path="/terms" element={<StorefrontLayout><Terms /></StorefrontLayout>} />
                       <Route path="/cookies" element={<StorefrontLayout><CookiePolicy /></StorefrontLayout>} />

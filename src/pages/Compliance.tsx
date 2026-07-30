@@ -83,7 +83,7 @@ const Compliance = () => (
 
       <Section icon={<Mail className="h-5 w-5" />} title="Information Officer">
         <p>
-          <strong>Ferdinand Steyn</strong><br />
+          <strong>Fernando Steyn</strong><br />
           Information Officer, AI Smart Store<br />
           Email: <a className="text-primary underline" href="mailto:privacy@aismartstore.co.za">privacy@aismartstore.co.za</a><br />
           Response time: within 30 days of a written request, per POPIA s.23.

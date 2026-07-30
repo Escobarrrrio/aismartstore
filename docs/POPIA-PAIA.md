@@ -14,7 +14,7 @@ is presented publicly at `/compliance`.
 | Field | Value |
 | --- | --- |
 | Responsible Party | AI Smart Store |
-| Information Officer | Ferdinand Steyn |
+| Information Officer | Fernando Steyn |
 | Contact | privacy@aismartstore.co.za |
 | Jurisdiction | Republic of South Africa |
 | Regulator | Information Regulator of South Africa (https://inforegulator.org.za) |

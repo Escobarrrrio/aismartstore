@@ -22,6 +22,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
 import { getAuthContext } from "../_shared/auth-guard.ts";
+import { guard, record, callerKey, SMS_COST_ZAR } from "../_shared/guardrails.ts";
 
 const TELNYX_API_KEY = Deno.env.get("TELNYX_API_KEY");
 // Created via the Telnyx Verify Profiles API -- "AI Smart Store - Phone
@@ -102,6 +103,44 @@ Deno.serve(async (req) => {
     }
   }
 
+  // The per-user cooldown above is a good limit on one account and no limit at
+  // all on the thing that actually costs money. An attacker does not resend to
+  // one user; they create accounts, and every fresh user_id gets a fresh
+  // 60-second clock. Nothing above bounds the total.
+  //
+  // Two ceilings close that. The IP bucket slows account-pumping from a single
+  // origin -- 5 sends, then one per two minutes. The spend guard is the one
+  // that cannot be worked around by simply using more addresses: it counts
+  // rand across the whole provider and stops at the daily cap regardless of
+  // who is asking or how many identities they are wearing.
+  //
+  // This runs after the profile and cooldown checks on purpose. Those refuse
+  // requests that were never going to send an SMS, and a refusal should not
+  // consume a token from the bucket that protects the ones that would.
+  const gate = await guard(admin, {
+    provider: "telnyx-sms",
+    source: "send-phone-otp",
+    // The fallback is the user id, not the shared default. If the edge proxy
+    // ever stops setting a forwarded-for header, callerKey() would otherwise
+    // return the same literal for everybody and drop the entire store into one
+    // bucket -- five signups, then one every two minutes, for all customers at
+    // once. Degrading to per-user instead makes the worst case "no better than
+    // the cooldown that already existed" rather than "signups are broken".
+    bucket: `otp:ip:${callerKey(req, `user:${userId}`)}`,
+    capacity: 5,
+    refillPerMin: 0.5,
+    estimatedCostZar: SMS_COST_ZAR,
+  });
+  if (!gate.ok) {
+    await admin.from("sms_send_log").insert({
+      user_id: userId,
+      phone: phoneNumber,
+      status: "failed",
+      error_message: `blocked by guardrail: ${gate.reason}`,
+    });
+    return gate.response!;
+  }
+
   let telnyxRes: Response;
   try {
     telnyxRes = await fetch("https://api.telnyx.com/v2/verifications/sms", {
@@ -143,6 +182,17 @@ Deno.serve(async (req) => {
     phone: phoneNumber,
     status: "sent",
     telnyx_status_code: telnyxRes.status,
+  });
+
+  // Only successful sends are billed, so only successful sends are recorded.
+  // Counting the failures above would make the cap fire early on a Telnyx
+  // outage -- switching off signups because a third party is down, without
+  // a rand having been spent.
+  await record(admin, {
+    provider: "telnyx-sms",
+    source: "send-phone-otp",
+    costZar: SMS_COST_ZAR,
+    meta: { user_id: userId },
   });
 
   return jsonResponse({ success: true }, 200);

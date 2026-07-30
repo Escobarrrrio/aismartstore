@@ -3,7 +3,7 @@ import {
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
   HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard, ShieldCheck, Bot,
-  ReceiptText, Home
+  ReceiptText, Home, Gauge
 } from "lucide-react";
 import Logo from "@/components/Logo";
 
@@ -11,7 +11,7 @@ export type AdminTab =
   | "dashboard" | "products" | "import" | "orders" | "customers"
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
   | "edge-function-health"
-  | "settings" | "system-health" | "security" | "cost-usage"
+  | "settings" | "system-health" | "security" | "cost-usage" | "engine-room"
   | "integrations" | "backups" | "catalog-health" | "merchandising"
   | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
   | "compliance-audit"
@@ -51,7 +51,8 @@ const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: stri
   { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },
   { id: "notifications-mgmt", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
   { id: "email-previews", label: "Email Previews", icon: <Mail className="h-4 w-4" /> },
-  { id: "security", label: "Security", icon: <Shield className="h-4 w-4" />, section: "System" },
+  { id: "engine-room", label: "Engine Room", icon: <Gauge className="h-4 w-4" />, section: "System" },
+  { id: "security", label: "Security", icon: <Shield className="h-4 w-4" /> },
   { id: "integrations", label: "Integrations", icon: <Link2 className="h-4 w-4" /> },
   { id: "cost-usage", label: "Cost & Usage", icon: <DollarSign className="h-4 w-4" /> },
   { id: "backups", label: "Backups", icon: <HardDrive className="h-4 w-4" /> },

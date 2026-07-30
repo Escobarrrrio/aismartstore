@@ -1,6 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getAuthContext, unauthorized, forbidden } from "../_shared/auth-guard.ts";
 import { resolveAiProvider } from "../_shared/ai-provider.ts";
+import { guard, record } from "../_shared/guardrails.ts";
+
+// Stand-in cost, in rand, for a turn whose real token usage the provider did
+// not return. Used only as a fallback -- see the record() call at the end.
+const AGENT_EST_COST_ZAR = 0.12;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +54,25 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
+
+    // The same ceiling the customer chat is held to, applied to the owner's own
+    // agent. That is the point rather than an oversight: the account most able
+    // to run up a bill here is the admin one, and it is also the account an
+    // attacker would most like to be holding. A cap with an admin exemption
+    // protects nobody from the case that actually costs money.
+    //
+    // The burst allowance is smaller than ai-chat's because this is one human
+    // typing, not a shop full of them; 6 back-to-back questions is a generous
+    // reading of a conversation and a tight one for a script.
+    const agentGate = await guard(supabase, {
+      provider: "ai-gateway",
+      source: "admin-ai-agent",
+      bucket: `admin-agent:${auth.userId}`,
+      capacity: 6,
+      refillPerMin: 1,
+      estimatedCostZar: AGENT_EST_COST_ZAR,
+    });
+    if (!agentGate.ok) return agentGate.response!;
 
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
@@ -105,13 +129,17 @@ LIVE DATA SNAPSHOT (as of ${new Date().toISOString()}):
     const reply = data?.choices?.[0]?.message?.content ?? "No response generated.";
 
     const usage = data?.usage;
+    // Hoisted out of the block below so the spend ledger can use the same
+    // figure. Declared null rather than 0 so "we could not price this call" and
+    // "this call was free" stay distinguishable downstream.
+    let estimatedCostUsd: number | null = null;
     if (usage) {
       const isOpenAi = provider.apiUrl.includes("api.openai.com");
       // gpt-4o-mini published rates: $0.15 / 1M input tokens, $0.60 / 1M
       // output tokens. Left null for the AI gateway fallback -- its
       // per-token markup isn't publicly documented, so we log real tokens
       // without guessing a dollar figure we can't verify.
-      const estimatedCostUsd = isOpenAi
+      estimatedCostUsd = isOpenAi
         ? (Number(usage.prompt_tokens || 0) * 0.15 + Number(usage.completion_tokens || 0) * 0.60) / 1_000_000
         : null;
       await supabase.from("ai_usage_log").insert({
@@ -125,6 +153,30 @@ LIVE DATA SNAPSHOT (as of ${new Date().toISOString()}):
         user_id: auth.userId,
       });
     }
+
+    // Unlike ai-chat, this call is not streamed, so the provider's own token
+    // counts came back with the reply. Where those give a real dollar figure it
+    // is converted and used; where they do not, the flat estimate stands in and
+    // is flagged as one. The ledger is what the daily cap reads, so an
+    // unrecorded call is an invisible one.
+    let costZar = AGENT_EST_COST_ZAR;
+    let isEstimate = true;
+    if (estimatedCostUsd !== null) {
+      const { data: fx } = await supabase
+        .from("exchange_rates").select("rate_to_zar").eq("currency_code", "USD").maybeSingle();
+      // The fallback is a deliberately high rand-per-dollar rate. If the FX
+      // sync is stale the cap should bind slightly early rather than slightly
+      // late -- erring towards under-spending is the cheap mistake here.
+      const rate = Number(fx?.rate_to_zar) || 20;
+      costZar = estimatedCostUsd * rate;
+      isEstimate = false;
+    }
+    await record(supabase, {
+      provider: "ai-gateway",
+      source: "admin-ai-agent",
+      costZar,
+      meta: { model: provider.model, user_id: auth.userId, cost_is_estimate: isEstimate },
+    });
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

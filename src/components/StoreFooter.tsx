@@ -60,6 +60,9 @@ const StoreFooter = () => {
           <div>
             <h5 className="font-display font-bold text-sm text-background/90 mb-4">Support</h5>
             <nav className="flex flex-col gap-2">
+              <Link to="/about" className="text-sm hover:text-background/80 transition-colors">Our Story</Link>
+              <Link to="/vision" className="text-sm hover:text-background/80 transition-colors">Vision</Link>
+              <Link to="/mission" className="text-sm hover:text-background/80 transition-colors">Mission</Link>
               <Link to="/auth" className="text-sm hover:text-background/80 transition-colors">Login / Register</Link>
               <Link to="/shipping-returns" className="text-sm hover:text-background/80 transition-colors">Shipping & Returns</Link>
               <Link to="/compliance" className="text-sm hover:text-background/80 transition-colors">Privacy (POPIA)</Link>

@@ -91,7 +91,26 @@ const ProcurementPage = () => {
       // 24-row page — it's what the "browse everything" link below advertises.
       const catalogueTotal = rows[0]?.total_count ? Number(rows[0].total_count) : rows.length;
       setEnterpriseTotal(catalogueTotal);
-      const list = rows.filter((p) => Array.isArray(p.images) && !!p.images[0]);
+      let list = rows.filter((p) => Array.isArray(p.images) && !!p.images[0]);
+
+      // Re-rank by expected profit rather than price. `sort_by: "price_desc"`
+      // above still fetches the catalogue page and gives us total_count, but
+      // showing it in that order opened this page with a R24 137 302 storage
+      // array that was out of stock -- a deal nobody has ever closed from a web
+      // listing. get_business_picks ranks by margin x close-rate x repeat rate,
+      // capped at three per brand. Falls back to the fetched order if the RPC
+      // is unavailable, so the page never empties.
+      try {
+        const { data: picks } = await supabase.rpc("get_business_picks" as never, { p_limit: 12 } as never);
+        // `as never` on the RPC name (the generated types lag migrations applied
+        // out of band) makes the result `never`, so it is re-typed here.
+        const ranked = picks as unknown as SearchRow[] | null;
+        if (ranked && ranked.length > 0) {
+          list = ranked.filter((p) => Array.isArray(p.images) && !!p.images[0]);
+        }
+      } catch {
+        /* keep the fetched order */
+      }
       trackEvent({
         name: "product_list_returned",
         audience: "business",

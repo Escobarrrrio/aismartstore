@@ -84,7 +84,7 @@ Deno.test("a cap that is over but not hard_stop warns without blocking", async (
     spend_guard: { data: { allowed: true, blocked: false, reason: "daily_rand_cap" } },
   });
   // deno-lint-ignore no-explicit-any
-  const r = await guard(admin as any, { provider: "lovable-ai" , bucket: "b", capacity: 10, refillPerMin: 1 });
+  const r = await guard(admin as any, { provider: "ai-gateway" , bucket: "b", capacity: 10, refillPerMin: 1 });
   assertEquals(r.ok, true);
 });
 

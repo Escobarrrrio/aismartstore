@@ -123,13 +123,13 @@ Deno.serve(async (req) => {
     // otherwise a blocked flood still costs database time even once it costs no
     // AI credits.
     //
-    // The rand figure is an estimate and is recorded as one. The Lovable
-    // gateway does not publish a per-token rate, and ai_usage_log already
-    // leaves cost NULL rather than invent one; the daily *call* cap is the real
-    // enforcement here. An honestly labelled estimate beats a precise-looking
-    // number that cannot be reconciled against a statement.
+    // The rand figure is an estimate and is recorded as one. The AI gateway
+    // does not publish a per-token rate, and ai_usage_log already leaves cost
+    // NULL rather than invent one; the daily *call* cap is the real enforcement
+    // here. An honestly labelled estimate beats a precise-looking number that
+    // cannot be reconciled against a statement.
     const chatGate = await guard(supabase, {
-      provider: "lovable-ai",
+      provider: "ai-gateway",
       source: "ai-chat",
       bucket: `ai-chat:${userData.user.id}`,
       capacity: 12,
@@ -214,7 +214,7 @@ Deno.serve(async (req) => {
     // whether or not the browser stays to read it. Waiting for a completion we
     // are not in a position to observe would mean recording nothing at all.
     await record(supabase, {
-      provider: "lovable-ai",
+      provider: "ai-gateway",
       source: "ai-chat",
       costZar: AI_CHAT_EST_COST_ZAR,
       meta: { model, user_id: userData.user.id, cost_is_estimate: true },

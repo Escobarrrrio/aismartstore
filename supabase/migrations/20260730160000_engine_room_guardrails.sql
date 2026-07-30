@@ -211,7 +211,7 @@ COMMENT ON TABLE public.spend_ledger IS
 -- Seed. Numbers chosen for a business whose next fixed payment is R4 000, not
 -- for a funded startup: the caps should hurt slightly before they bankrupt.
 INSERT INTO public.spend_caps (provider, label, daily_cap_zar, monthly_cap_zar, daily_call_cap, hard_stop) VALUES
-  ('lovable-ai',   'Lovable AI gateway',      40.00,   600.00,   2000,  true),
+  ('ai-gateway',   'AI gateway',      40.00,   600.00,   2000,  true),
   ('openai',       'OpenAI',                  40.00,   600.00,   2000,  true),
   ('telnyx-sms',   'Telnyx SMS (OTP)',        60.00,   700.00,    600,  true),
   ('resend-email', 'Transactional email',     30.00,   400.00,   5000,  true),

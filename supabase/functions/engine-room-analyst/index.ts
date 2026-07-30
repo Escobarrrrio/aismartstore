@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
     let aiModel: string | null = null;
     if (severity !== "ok") {
       const gate = await guard(supabase, {
-        provider: "lovable-ai",
+        provider: "ai-gateway",
         source: "engine-room-analyst",
         estimatedCostZar: ANALYST_EST_COST_ZAR,
       });
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
               narrative = j?.choices?.[0]?.message?.content?.trim() ?? null;
               aiModel = provider.model;
               await record(supabase, {
-                provider: "lovable-ai", source: "engine-room-analyst",
+                provider: "ai-gateway", source: "engine-room-analyst",
                 costZar: ANALYST_EST_COST_ZAR, meta: { model: provider.model, cost_is_estimate: true },
               });
             } else {

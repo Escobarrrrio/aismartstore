@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     // typing, not a shop full of them; 6 back-to-back questions is a generous
     // reading of a conversation and a tight one for a script.
     const agentGate = await guard(supabase, {
-      provider: "lovable-ai",
+      provider: "ai-gateway",
       source: "admin-ai-agent",
       bucket: `admin-agent:${auth.userId}`,
       capacity: 6,
@@ -172,7 +172,7 @@ LIVE DATA SNAPSHOT (as of ${new Date().toISOString()}):
       isEstimate = false;
     }
     await record(supabase, {
-      provider: "lovable-ai",
+      provider: "ai-gateway",
       source: "admin-ai-agent",
       costZar,
       meta: { model: provider.model, user_id: auth.userId, cost_is_estimate: isEstimate },

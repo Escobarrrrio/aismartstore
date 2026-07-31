@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   RefreshCw, ShieldAlert, Gauge, Cpu, AlertTriangle, CheckCircle2,
-  PauseCircle, HelpCircle, Loader2, Lock,
+  PauseCircle, HelpCircle, Loader2, Lock, ShieldBan, Inbox,
 } from "lucide-react";
 
 /**
@@ -82,6 +82,21 @@ interface Assessment {
   created_at: string;
 }
 
+interface ThreatBlock {
+  key: string; reason: string; category: string; score: number;
+  offences: number; until: string;
+}
+interface Quarantined {
+  id: number; surface: string; email: string | null; score: number;
+  category: string; payload: Record<string, unknown>;
+  hits: Array<{ category: string; label: string; weight: number }>; at: string;
+}
+interface ThreatSummary {
+  active_blocks: number; blocked_24h: number; suspicious_24h: number;
+  quarantined_24h: number; by_category: Record<string, number>;
+  blocks: ThreatBlock[]; quarantine: Quarantined[];
+}
+
 const ASSESSMENT_STYLE: Record<Assessment["severity"], string> = {
   critical: "border-destructive/40 bg-destructive/5",
   warning: "border-amber-500/40 bg-amber-500/5",
@@ -125,10 +140,11 @@ const EngineRoomModule = () => {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [checking, setChecking] = useState(false);
+  const [threats, setThreats] = useState<ThreatSummary | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [snapRes, assessRes] = await Promise.all([
+    const [snapRes, assessRes, threatRes] = await Promise.all([
       supabase.rpc("engine_room_snapshot" as never),
       supabase
         .from("engine_room_assessments" as never)
@@ -136,6 +152,7 @@ const EngineRoomModule = () => {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabase.rpc("threat_summary" as never),
     ]);
     if (snapRes.error) {
       // The RPC raises 42501 for non-admins rather than returning an empty
@@ -150,6 +167,7 @@ const EngineRoomModule = () => {
     // The assessment is commentary on the snapshot. If it is missing, the live
     // numbers below still stand on their own -- so its absence is not an error.
     setAssessment((assessRes.data as unknown as Assessment) ?? null);
+    setThreats((threatRes.data as unknown as ThreatSummary) ?? null);
     setLoading(false);
   }, []);
 
@@ -189,6 +207,12 @@ const EngineRoomModule = () => {
     }
     toast.success("Cap updated — the change is recorded in the security log.");
     load();
+  };
+
+  const unblock = async (key: string) => {
+    const { error: e } = await supabase.rpc("threat_unblock" as never, { p_key: key } as never);
+    if (e) toast.error(e.message);
+    else { toast.success(`Unblocked ${key}`); load(); }
   };
 
   if (loading && !snap) {
@@ -416,6 +440,85 @@ const EngineRoomModule = () => {
             );
           })}
         </div>
+      </Card>
+
+      {/* Threats */}
+      <Card className="p-5">
+        <h3 className="font-display font-bold mb-1">Bots, spam and phishing</h3>
+        <p className="text-xs text-muted-foreground mb-5">
+          Newsletter signups and business quote requests are scored the moment they hit the database —
+          the only place that catches them, since both post straight to the API rather than through a
+          function. Anything scoring 70+ is quarantined rather than rejected: the sender is told nothing,
+          and you keep the submission in case we got it wrong.
+        </p>
+
+        <div className="grid gap-3 sm:grid-cols-4 mb-5">
+          {[
+            { label: "Active blocks", value: threats?.active_blocks ?? 0, Icon: ShieldBan },
+            { label: "Blocked (24h)", value: threats?.blocked_24h ?? 0, Icon: ShieldAlert },
+            { label: "Quarantined (24h)", value: threats?.quarantined_24h ?? 0, Icon: Inbox },
+            { label: "Suspicious (24h)", value: threats?.suspicious_24h ?? 0, Icon: AlertTriangle },
+          ].map(({ label, value, Icon }) => (
+            <div key={label} className="rounded-xl border border-border p-4">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">
+                <Icon className="h-3.5 w-3.5" /> {label}
+              </div>
+              <p className="font-display font-extrabold text-xl">{value}</p>
+            </div>
+          ))}
+        </div>
+
+        {(threats?.blocks?.length ?? 0) > 0 && (
+          <div className="mb-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Currently blocked
+            </p>
+            <div className="space-y-1.5">
+              {threats!.blocks.map((b) => (
+                <div key={b.key} className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-3 py-2">
+                  <Badge variant="outline" className="text-[10px]">{b.category}</Badge>
+                  <span className="text-sm font-mono break-all">{b.key}</span>
+                  <span className="text-xs text-muted-foreground">
+                    score {b.score} · offence #{b.offences} · until {new Date(b.until).toLocaleString("en-ZA")}
+                  </span>
+                  {/* Blocks expire on their own; this is for the one you decide was a mistake. */}
+                  <Button size="sm" variant="ghost" className="ml-auto h-7 text-xs"
+                          onClick={() => unblock(b.key)}>
+                    Unblock
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+          Quarantined submissions
+        </p>
+        {(threats?.quarantine?.length ?? 0) === 0 ? (
+          <p className="text-sm text-muted-foreground">Nothing quarantined.</p>
+        ) : (
+          <div className="space-y-2 max-h-[380px] overflow-y-auto">
+            {threats!.quarantine.map((q) => (
+              <div key={q.id} className="rounded-lg border border-border p-3">
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                  <Badge className="text-[10px] bg-destructive/15 text-destructive">{q.category}</Badge>
+                  <span className="text-xs font-semibold">{q.surface}</span>
+                  <span className="text-xs font-mono break-all">{q.email}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {q.score}/100 · {new Date(q.at).toLocaleString("en-ZA")}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-1.5">
+                  Matched: {q.hits.map((h) => h.label).join(", ") || "structural signals only"}
+                </p>
+                <pre className="text-[11px] font-mono whitespace-pre-wrap break-all text-muted-foreground bg-muted/40 rounded p-2">
+                  {JSON.stringify(q.payload, null, 1)}
+                </pre>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Security */}

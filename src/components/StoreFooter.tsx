@@ -33,9 +33,13 @@ const StoreFooter = () => {
       </div>
 
       <div className="container mx-auto px-4 pt-10 pb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+        {/* Five columns now that Company is its own rather than four. Six
+            tracks, with the brand column taking two: it carries the newsletter
+            form, and at five equal tracks the email input is the thing that
+            gets squeezed. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 mb-10">
           {/* Brand */}
-          <div>
+          <div className="lg:col-span-2">
             <div className="mb-4">
               <Logo size={28} invert />
             </div>
@@ -56,13 +60,25 @@ const StoreFooter = () => {
             </nav>
           </div>
 
-          {/* Support */}
+          {/* Company. Split out of Support, where the founder's story sat between
+              "Login / Register" and "Shipping & Returns" -- three pages nobody
+              would think to look for under a heading that promises help with an
+              order. They are the reason someone buys from a one-man shop rather
+              than Takealot; they should not be filed as an admin link. */}
           <div>
-            <h5 className="font-display font-bold text-sm text-background/90 mb-4">Support</h5>
+            <h5 className="font-display font-bold text-sm text-background/90 mb-4">Company</h5>
             <nav className="flex flex-col gap-2">
               <Link to="/about" className="text-sm hover:text-background/80 transition-colors">Our Story</Link>
               <Link to="/vision" className="text-sm hover:text-background/80 transition-colors">Vision</Link>
               <Link to="/mission" className="text-sm hover:text-background/80 transition-colors">Mission</Link>
+              <Link to="/procurement" className="text-sm hover:text-background/80 transition-colors">Business &amp; Government</Link>
+            </nav>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h5 className="font-display font-bold text-sm text-background/90 mb-4">Support</h5>
+            <nav className="flex flex-col gap-2">
               <Link to="/auth" className="text-sm hover:text-background/80 transition-colors">Login / Register</Link>
               <Link to="/shipping-returns" className="text-sm hover:text-background/80 transition-colors">Shipping & Returns</Link>
               <Link to="/compliance" className="text-sm hover:text-background/80 transition-colors">Privacy (POPIA)</Link>

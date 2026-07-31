@@ -62,6 +62,19 @@ const NewsletterSignup = ({ source = "footer", variant = "footer" }: NewsletterS
         setSubscribed(true);
         return;
       }
+      // PGRST116 = "no rows returned". The threat gate quarantined this
+      // submission: the BEFORE INSERT trigger returned NULL, so nothing was
+      // written and .single() has nothing to hand back.
+      //
+      // Shown as success on purpose. A bot that sees an error learns which
+      // payloads trip the scorer and tunes against it -- the whole point of
+      // quarantining rather than rejecting is that the sender is told nothing.
+      // The submission is not lost: it sits in the Engine Room's quarantine,
+      // where a real person misjudged by a regex can be found and released.
+      if (error.code === "PGRST116") {
+        setSubscribed(true);
+        return;
+      }
       toast({ title: t("newsletter.errorTitle"), description: error.message, variant: "destructive" });
       return;
     }

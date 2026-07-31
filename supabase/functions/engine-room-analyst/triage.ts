@@ -33,11 +33,16 @@ interface SecuritySummary {
   last_24h: number; high_24h: number;
   recent: Array<{ kind: string; severity: string; actor: string | null }>;
 }
+export interface ThreatSummary {
+  active_blocks: number; blocked_24h: number;
+  suspicious_24h: number; quarantined_24h: number;
+}
 export interface Snapshot {
   generated_at: string;
   engines: Engine[];
   spend: SpendRow[];
   security: SecuritySummary;
+  threats?: ThreatSummary;
 }
 
 const RANK: Record<Severity, number> = { ok: 0, notice: 1, warning: 2, critical: 3 };
@@ -146,6 +151,32 @@ export function triage(snap: Snapshot): { severity: Severity; findings: Finding[
       findings.push({
         severity: "notice", area: "security", subject: "Spend caps edited",
         detail: `${capChanges} cap change(s) recorded recently. Expected if you changed them; worth a look if you did not.`,
+      });
+    }
+  }
+
+  // Quarantine needs a voice of its own. A quarantined submission is invisible
+  // by design -- the sender is told nothing and no error is logged anywhere the
+  // owner would trip over. That is right for a bot and wrong for the one real
+  // buyer the scorer misjudged, whose enquiry would otherwise sit unread until
+  // it stopped mattering. So the only thing standing between a false positive
+  // and a lost customer is this finding.
+  const th = snap.threats;
+  if (th) {
+    if (Number(th.quarantined_24h) > 0) {
+      raise("notice");
+      findings.push({
+        severity: "notice", area: "security", subject: "Quarantined submissions",
+        detail: `${th.quarantined_24h} submission(s) held in the last 24 hours. Worth a glance — if one is a real enquiry, nobody else will ever see it.`,
+      });
+    }
+    // A single spammer is weather. Ten distinct blocked sources in a day is
+    // someone working through the site on purpose.
+    if (Number(th.blocked_24h) >= 10) {
+      raise("warning");
+      findings.push({
+        severity: "warning", area: "security", subject: "Sustained abuse",
+        detail: `${th.blocked_24h} sources blocked in 24 hours. This is a campaign rather than passing spam; the guardrails are holding, but expect it to continue.`,
       });
     }
   }

@@ -126,3 +126,27 @@ Deno.test("missing sections are tolerated rather than throwing", () => {
   const r = triage({ generated_at: "x" } as any);
   assertEquals(r.severity, "ok");
 });
+
+const threats = (over: Record<string, unknown> = {}) => ({
+  active_blocks: 0, blocked_24h: 0, suspicious_24h: 0, quarantined_24h: 0, ...over,
+// deno-lint-ignore no-explicit-any
+}) as any;
+
+Deno.test("a quarantined submission always produces a finding", () => {
+  // The only thing standing between a false positive and a silently lost
+  // customer. The sender was told nothing and nothing else logs it.
+  const r = triage(base({ threats: threats({ quarantined_24h: 1 }) }));
+  assertEquals(r.severity, "notice");
+  assert(r.findings.some((f) => f.subject === "Quarantined submissions"), JSON.stringify(r.findings));
+});
+
+Deno.test("ten blocked sources in a day is a campaign, nine is weather", () => {
+  assertEquals(triage(base({ threats: threats({ blocked_24h: 10 }) })).severity, "warning");
+  assertEquals(triage(base({ threats: threats({ blocked_24h: 9 }) })).severity, "ok");
+});
+
+Deno.test("a snapshot with no threats section still grades cleanly", () => {
+  // The threat migration can land after the analyst deploys. A monitor that
+  // throws on a field it has not met yet is a monitor that is off.
+  assertEquals(triage(base()).severity, "ok");
+});

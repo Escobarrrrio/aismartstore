@@ -103,6 +103,15 @@ Deno.serve(async (req) => {
     if (snapErr) throw new Error(`snapshot failed: ${snapErr.message}`);
     const snap = snapRaw as unknown as Snapshot;
 
+    // The threat summary is a separate RPC rather than part of the snapshot, so
+    // the Engine Room screen and this watch can each be deployed without
+    // waiting for the other. A failure here must not cost us the engine and
+    // spend assessment, so it degrades to "no threat section" -- which triage()
+    // is written to tolerate.
+    const { data: threatRaw, error: threatErr } = await supabase.rpc("threat_summary");
+    if (threatErr) console.error("[engine-room-analyst] threat_summary failed", threatErr.message);
+    else snap.threats = threatRaw as unknown as Snapshot["threats"];
+
     const { severity, findings } = triage(snap);
     const headline = headlineFor(severity, findings);
 

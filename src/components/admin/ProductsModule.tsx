@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trash2, Plus, ImagePlus, Search, Filter, Edit2, Check, X, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Product photos are shown at ~600px; anything past this is bytes nobody sees.
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+
 interface ProductsModuleProps {
   products: any[];
   onReload: () => void;
@@ -24,6 +27,8 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [editImages, setEditImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [addForm, setAddForm] = useState({ name: "", description: "", price: "", category: "", brand: "", stockQuantity: "", isAiProduct: false });
   const [images, setImages] = useState<string[]>([]);
@@ -61,6 +66,47 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
   const startEdit = (p: any) => {
     setEditingId(p.id);
     setEditForm({ name: p.name, price: p.price, stock_quantity: p.stock_quantity ?? 0, category: p.category || "", brand: p.brand || "" });
+    // Images were the one field the edit form did not carry, so there was no
+    // way to replace a placeholder photo on an existing product -- only to
+    // delete it and add it again from scratch, losing its id, its order history
+    // and its supplier metadata.
+    setEditImages(Array.isArray(p.images) ? p.images : []);
+  };
+
+  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    setUploading(true);
+    for (const file of Array.from(files)) {
+      // The bucket has no size limit of its own, and a photo straight off a
+      // phone is routinely 8-12MB. Uploading one would work and then be served
+      // at full size to every shopper on mobile data -- an invisible tax on the
+      // slowest connections, paid on the page we most want to load fast.
+      if (file.size > MAX_IMAGE_BYTES) {
+        toast({
+          title: "That image is too large",
+          description: `${file.name} is ${(file.size / 1024 / 1024).toFixed(1)}MB. Please resize it under ${MAX_IMAGE_BYTES / 1024 / 1024}MB first — shoppers on mobile data pay for every byte.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+      const ext = file.name.split(".").pop();
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file);
+      if (error) {
+        toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+        continue;
+      }
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+      // Replaces rather than appends when the only existing image is the
+      // placeholder: leaving it in position 1 would keep the product hidden
+      // from the home page, which is the whole reason for uploading.
+      setEditImages((prev) => {
+        const cleaned = prev.filter((u) => !u.includes("placeholder"));
+        return [...cleaned, urlData.publicUrl];
+      });
+    }
+    setUploading(false);
   };
 
   const saveEdit = async () => {
@@ -71,6 +117,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
       stock_quantity: parseInt(editForm.stock_quantity),
       category: editForm.category,
       brand: editForm.brand,
+      images: editImages,
     }).eq("id", editingId);
     setEditingId(null);
     onReload();
@@ -222,7 +269,31 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
                             <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center"><Package className="h-4 w-4 text-muted-foreground" /></div>
                           )}
                           {isEditing ? (
-                            <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="px-2 py-1 rounded border border-primary bg-card text-sm w-36" />
+                            <div className="flex flex-col gap-1.5">
+                              <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="px-2 py-1 rounded border border-primary bg-card text-sm w-36" />
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {editImages.map((img, i) => (
+                                  <div key={i} className="relative w-9 h-9 rounded border border-border overflow-hidden bg-muted">
+                                    <img src={img} alt="" className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      aria-label="Remove image"
+                                      onClick={() => setEditImages((prev) => prev.filter((_, j) => j !== i))}
+                                      className="absolute top-0 right-0 bg-foreground/70 text-white p-0.5 rounded-bl"
+                                    >
+                                      <X className="h-2.5 w-2.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                                <label className={`w-9 h-9 rounded border-2 border-dashed flex items-center justify-center transition-colors ${
+                                  uploading ? "border-border opacity-50 cursor-wait" : "border-border cursor-pointer hover:border-primary"
+                                }`} title="Upload a photo from this computer">
+                                  <ImagePlus className="h-3.5 w-3.5 text-primary" />
+                                  <input type="file" accept="image/*" multiple disabled={uploading}
+                                         onChange={handleEditImageUpload} className="hidden" />
+                                </label>
+                              </div>
+                            </div>
                           ) : (
                             <div>
                               <p className="text-sm font-semibold truncate max-w-[200px]">{p.name}</p>

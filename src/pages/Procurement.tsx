@@ -159,6 +159,24 @@ const ProcurementPage = () => {
       })
       .select("id, email")
       .single();
+    // PGRST116 = "no rows returned". The threat gate quarantined this
+    // submission: the BEFORE INSERT trigger returned NULL, so nothing was
+    // written and .single() has nothing to hand back.
+    //
+    // Treated as sent on purpose. Telling the sender it failed hands a spammer
+    // a free oracle for tuning payloads against the scorer, and the point of
+    // quarantining rather than rejecting is that they learn nothing. The
+    // enquiry is not lost -- it is kept whole in the Engine Room's quarantine,
+    // where a genuine buyer misjudged by a regex is visible and recoverable.
+    //
+    // They do not get the compliance pack below, which is correct: unlocking it
+    // requires a real quote_requests row to prove ownership against, and there
+    // is deliberately no row.
+    if (error?.code === "PGRST116" || (!error && !inserted)) {
+      setSubmitting(false);
+      setSubmitted(true);
+      return;
+    }
     if (error || !inserted) {
       setSubmitting(false);
       toast({

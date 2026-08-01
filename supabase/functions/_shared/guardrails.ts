@@ -52,7 +52,17 @@ export interface GuardResult {
 }
 
 function refusal(body: Record<string, unknown>, status: number, retryAfterS?: number) {
-  const headers: Record<string, string> = { ...corsHeaders, "Content-Type": "application/json" };
+  const headers: Record<string, string> = {
+    ...corsHeaders,
+    "Content-Type": "application/json",
+    // A guardrail refusal is the error a confused customer is most likely to
+    // report, and these responses bypass the calling function's own CORS
+    // headers entirely. Without naming the header here the browser hides it,
+    // so the reference the UI tries to show would be blank on exactly the
+    // refusals we most want to trace.
+    "Access-Control-Expose-Headers": "x-request-id, sb-request-id",
+    "x-request-id": crypto.randomUUID().slice(0, 8),
+  };
   // A 429 without Retry-After invites an immediate retry, which is the same
   // traffic again one second later. The number comes from the token bucket's
   // actual refill rate, so it is a real answer rather than a polite guess.

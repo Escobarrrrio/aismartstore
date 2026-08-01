@@ -75,6 +75,7 @@ async function fetchAxiz(url: string, init: RequestInit, label: string): Promise
     retries: 4,
     baseDelayMs: 750,
     maxDelayMs: 6_000,
+    shouldRetry: (error) => !(error as { terminal?: boolean }).terminal,
     onRetry: (attempt, error, delayMs) => {
       console.warn(`[axiz-sync] ${label} retry ${attempt} in ${delayMs}ms: ${(error as Error).message}`);
     },

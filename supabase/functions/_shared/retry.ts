@@ -12,6 +12,8 @@ export type RetryOptions = {
   baseDelayMs?: number;
   /** Upper bound on the backoff delay regardless of attempt count. */
   maxDelayMs?: number;
+  /** Return false for terminal errors that must not be retried. */
+  shouldRetry?: (error: unknown) => boolean;
   onRetry?: (attempt: number, error: unknown, delayMs: number) => void;
 };
 
@@ -26,7 +28,7 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
       return await fn();
     } catch (error) {
       lastError = error;
-      if (attempt === retries) break;
+      if (attempt === retries || options.shouldRetry?.(error) === false) break;
       const delayMs = Math.min(baseDelayMs * 2 ** attempt, maxDelayMs);
       options.onRetry?.(attempt + 1, error, delayMs);
       await new Promise((resolve) => setTimeout(resolve, delayMs));

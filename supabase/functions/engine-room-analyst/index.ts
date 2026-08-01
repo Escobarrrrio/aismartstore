@@ -194,8 +194,37 @@ Deno.serve(async (req) => {
               }),
             });
             alertSent = res.ok;
+            if (!res.ok) {
+              // The one failure this whole subsystem cannot afford to swallow.
+              //
+              // `alertSent = res.ok` on its own recorded a false and said
+              // nothing: the assessment row looked complete, the screen showed
+              // the finding, and the email the owner was relying on had simply
+              // not gone. A watchman that fails quietly is the thing this was
+              // built to prevent, and it was doing it to itself.
+              //
+              // Resend's body carries the actual reason -- an unverified
+              // sending domain, a revoked key, a recipient the free tier will
+              // not send to -- and none of it is guessable from a boolean.
+              const detail = await res.text().catch(() => "");
+              console.error("[engine-room-analyst] alert email REJECTED", res.status, detail);
+              await supabase.from("automation_events").insert({
+                source: "engine-room-analyst",
+                event_type: "alert_email.rejected",
+                status: "error",
+                error_message: `Resend returned ${res.status}: ${detail.slice(0, 500)}`,
+                payload: { from, to: recipient, severity, headline: headline.slice(0, 200) },
+              });
+            }
           } catch (e) {
             console.error("[engine-room-analyst] alert email failed", String(e));
+            await supabase.from("automation_events").insert({
+              source: "engine-room-analyst",
+              event_type: "alert_email.failed",
+              status: "error",
+              error_message: String(e).slice(0, 500),
+              payload: { to: recipient, severity },
+            }).then(() => {}, () => {});
           }
         }
       }

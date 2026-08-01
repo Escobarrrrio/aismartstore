@@ -1654,6 +1654,105 @@ export type Database = {
         }
         Relationships: []
       }
+      threat_blocks: {
+        Row: {
+          block_key: string
+          blocked_at: string
+          category: string
+          detail: Json
+          expires_at: string
+          offences: number
+          reason: string
+          score: number
+        }
+        Insert: {
+          block_key: string
+          blocked_at?: string
+          category: string
+          detail?: Json
+          expires_at: string
+          offences?: number
+          reason: string
+          score: number
+        }
+        Update: {
+          block_key?: string
+          blocked_at?: string
+          category?: string
+          detail?: Json
+          expires_at?: string
+          offences?: number
+          reason?: string
+          score?: number
+        }
+        Relationships: []
+      }
+      threat_quarantine: {
+        Row: {
+          category: string
+          created_at: string
+          email: string | null
+          hits: Json
+          id: number
+          payload: Json
+          released: boolean
+          score: number
+          surface: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          email?: string | null
+          hits?: Json
+          id?: number
+          payload: Json
+          released?: boolean
+          score: number
+          surface: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          hits?: Json
+          id?: number
+          payload?: Json
+          released?: boolean
+          score?: number
+          surface?: string
+        }
+        Relationships: []
+      }
+      threat_signatures: {
+        Row: {
+          category: string
+          created_at: string
+          enabled: boolean
+          id: number
+          label: string
+          pattern: string
+          weight: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          enabled?: boolean
+          id?: number
+          label: string
+          pattern: string
+          weight: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          enabled?: boolean
+          id?: number
+          label?: string
+          pattern?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       ticket_messages: {
         Row: {
           created_at: string
@@ -2172,6 +2271,31 @@ export type Database = {
         }
         Returns: undefined
       }
+      threat_block: {
+        Args: {
+          p_category: string
+          p_detail?: Json
+          p_key: string
+          p_reason: string
+          p_score: number
+        }
+        Returns: string
+      }
+      threat_gate: {
+        Args: {
+          p_bonus?: number
+          p_content: string
+          p_detail?: Json
+          p_email: string
+          p_surface: string
+        }
+        Returns: boolean
+      }
+      threat_is_blocked: { Args: { p_key: string }; Returns: boolean }
+      threat_score: { Args: { p_text: string }; Returns: Json }
+      threat_summary: { Args: never; Returns: Json }
+      threat_sweep: { Args: never; Returns: number }
+      threat_unblock: { Args: { p_key: string }; Returns: boolean }
     }
     Enums: {
       app_role: "customer" | "admin"

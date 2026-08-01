@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getAuthContext } from "../_shared/auth-guard.ts";
+import { withRetry } from "../_shared/retry.ts";
 
 
 // =====================================================================
@@ -24,6 +25,61 @@ const PAGES_PER_RUN = 8;
 const UPSERT_BATCH_SIZE = 150;
 /** Don't subdivide below this — past it the timeout isn't about batch size. */
 const MIN_UPSERT_BATCH_SIZE = 20;
+const AXIZ_REQUEST_TIMEOUT_MS = 20_000;
+
+class AxizUpstreamError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "AxizUpstreamError";
+  }
+}
+
+function isRetryableStatus(status: number): boolean {
+  return status === 408 || status === 425 || status === 429 || status >= 500;
+}
+
+function compactResponse(text: string): string {
+  return text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 240);
+}
+
+async function fetchAxiz(url: string, init: RequestInit, label: string): Promise<Response> {
+  return withRetry(async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), AXIZ_REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, { ...init, signal: controller.signal });
+      if (!response.ok) {
+        const detail = compactResponse(await response.text());
+        const error = new AxizUpstreamError(
+          `${label} returned HTTP ${response.status}${detail ? `: ${detail}` : ""}`,
+          response.status,
+        );
+        if (isRetryableStatus(response.status)) throw error;
+        throw Object.assign(error, { terminal: true });
+      }
+      return response;
+    } catch (error) {
+      if ((error as { terminal?: boolean }).terminal) throw error;
+      if (error instanceof AxizUpstreamError) throw error;
+      const message = error instanceof DOMException && error.name === "AbortError"
+        ? `${label} timed out after ${AXIZ_REQUEST_TIMEOUT_MS / 1000}s`
+        : `${label} network error: ${(error as Error).message}`;
+      throw new AxizUpstreamError(message, 503);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }, {
+    retries: 4,
+    baseDelayMs: 750,
+    maxDelayMs: 6_000,
+    onRetry: (attempt, error, delayMs) => {
+      console.warn(`[axiz-sync] ${label} retry ${attempt} in ${delayMs}ms: ${(error as Error).message}`);
+    },
+  });
+}
 
 function isAiRelated(s: string): boolean {
   if (/\bAI\b/i.test(s)) return true;
@@ -47,15 +103,14 @@ function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 async function getAxizToken(clientId: string, clientSecret: string, scope: string): Promise<string> {
-  const res = await fetch(AXIZ_TOKEN_URL, {
+  const res = await fetchAxiz(AXIZ_TOKEN_URL, {
     method: "POST",
     headers: {
       "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({ grant_type: "client_credentials", scope }),
-  });
-  if (!res.ok) throw new Error(`Axiz token failed: ${res.status} ${await res.text()}`);
+  }, "Axiz identity service");
   const data = await res.json();
   if (!data.access_token) throw new Error("No access_token in Axiz response");
   return data.access_token as string;
@@ -162,18 +217,11 @@ Deno.serve(async (req) => {
 
     while (pagesDone < PAGES_PER_RUN) {
       const market = markets[mIdx];
-      const res = await fetch(`${AXIZ_API_BASE}/api/services/app/PriceList/SearchPriceList`, {
+      const res = await fetchAxiz(`${AXIZ_API_BASE}/api/services/app/PriceList/SearchPriceList`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({ maxResultCount: PAGE_SIZE, pageIndex: pIdx, market, brandFilter }),
-      });
-
-      if (!res.ok) {
-        notes.push(`market ${market} page ${pIdx}: HTTP ${res.status} -- skipping market`);
-        mIdx++; pIdx = 0;
-        if (mIdx >= markets.length) { catalogComplete = true; break; }
-        continue;
-      }
+      }, `Axiz catalogue market ${market} page ${pIdx}`);
 
       const data = await res.json();
       const pageItems = (data?.result?.items ?? data?.result ?? []).filter((i: any) => i.productCode);
@@ -311,13 +359,23 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
+    const upstreamError = e instanceof AxizUpstreamError && isRetryableStatus(e.status);
+    const message = (e as Error).message;
     await supabase.from("sync_logs").update({
-      status: "error",
-      error_details: `v3: ${(e as Error).message}`,
+      // A distributor outage is deferred work, not a failed catalogue write.
+      // Keep the cursor untouched so the exact same page resumes next run.
+      status: upstreamError ? "deferred" : "error",
+      error_details: `v3: ${upstreamError ? "Axiz temporarily unavailable; cursor preserved" : message}`,
       completed_at: new Date().toISOString(),
     }).eq("id", logRow.id);
-    return new Response(JSON.stringify({ status: "error", message: (e as Error).message }), {
-      status: 500,
+    return new Response(JSON.stringify({
+      status: upstreamError ? "deferred" : "error",
+      retryable: upstreamError,
+      message: upstreamError ? "Axiz is temporarily unavailable. Sync will resume automatically." : message,
+    }), {
+      // Scheduled invocations should not be marked failed for a recoverable
+      // third-party outage; monitoring still sees the deferred sync_log row.
+      status: upstreamError ? 200 : 500,
       headers: { "Content-Type": "application/json" },
     });
   }

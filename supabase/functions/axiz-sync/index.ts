@@ -14,18 +14,23 @@ import { withRetry } from "../_shared/retry.ts";
 const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
 const AXIZ_API_BASE = "https://api.goaxiz.co.za";
 const PAGE_SIZE = 1000;
-const PAGES_PER_RUN = 8;
+// 8 pages/run was overrunning the gateway timeout (15x 504 in 24h). Fewer pages
+// plus the wall-clock budget below means every run finishes and saves its cursor.
+const PAGES_PER_RUN = 4;
 // 500-row upserts were exceeding the statement timeout: 121 of 194 runs over two
 // days ended "partial" with "canceling statement due to statement timeout", and
 // because a failed batch was simply skipped while the page cursor still advanced,
 // those product updates were silently lost until the cursor wrapped the whole
 // catalogue again. `products` carries several indexes plus the category-classifier
 // and image-blocklist triggers, so each row costs more than the original size
-// assumed.
-const UPSERT_BATCH_SIZE = 150;
+// assumed. 150 still timed out in production; 75 keeps each statement well inside
+// the limit (the split-on-timeout retry below covers the remaining outliers).
+const UPSERT_BATCH_SIZE = 75;
 /** Don't subdivide below this — past it the timeout isn't about batch size. */
 const MIN_UPSERT_BATCH_SIZE = 20;
 const AXIZ_REQUEST_TIMEOUT_MS = 20_000;
+/** Wall-clock budget for one invocation, comfortably under the gateway timeout. */
+const RUN_BUDGET_MS = 110_000;
 
 class AxizUpstreamError extends Error {
   constructor(
@@ -214,15 +219,41 @@ Deno.serve(async (req) => {
     let underpriced = 0;
     let pagesDone = 0;
     let catalogComplete = false;
+    let deferredReason: string | null = null;
+    const runStartedAt = Date.now();
     const notes: string[] = [];
 
     while (pagesDone < PAGES_PER_RUN) {
+      // Stop well before the gateway's own timeout so the cursor is always
+      // persisted and the work done so far isn't thrown away.
+      if (Date.now() - runStartedAt > RUN_BUDGET_MS) {
+        notes.push("run time budget reached; resuming from cursor next invocation");
+        break;
+      }
+
       const market = markets[mIdx];
-      const res = await fetchAxiz(`${AXIZ_API_BASE}/api/services/app/PriceList/SearchPriceList`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ maxResultCount: PAGE_SIZE, pageIndex: pIdx, market, brandFilter }),
-      }, `Axiz catalogue market ${market} page ${pIdx}`);
+      let res: Response;
+      try {
+        res = await fetchAxiz(`${AXIZ_API_BASE}/api/services/app/PriceList/SearchPriceList`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ maxResultCount: PAGE_SIZE, pageIndex: pIdx, market, brandFilter }),
+        }, `Axiz catalogue market ${market} page ${pIdx}`);
+      } catch (err) {
+        const message = (err as Error).message;
+        notes.push(`market ${market} page ${pIdx}: ${message}`);
+        if ((err as { terminal?: boolean }).terminal) {
+          // A permanent problem on this market (bad filter, 404, 403) must not
+          // block every later market: skip it and keep syncing the rest.
+          pagesDone++;
+          mIdx++; pIdx = 0;
+          if (mIdx >= markets.length) { catalogComplete = true; break; }
+          continue;
+        }
+        // Transient outage: end the run here, leaving the cursor on this page.
+        deferredReason = message;
+        break;
+      }
 
       const data = await res.json();
       const pageItems = (data?.result?.items ?? data?.result ?? []).filter((i: any) => i.productCode);
@@ -347,9 +378,9 @@ Deno.serve(async (req) => {
       { onConflict: "key" }
     );
 
-    const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`} | AI-flagged this run: ${aiFlagged} | withheld (below R${minSellablePrice}): ${underpriced}${notes.length ? " | " + notes.join("; ") : ""}`;
+    const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`}${deferredReason ? ` | deferred: ${deferredReason}` : ""} | AI-flagged this run: ${aiFlagged} | withheld (below R${minSellablePrice}): ${underpriced}${notes.length ? " | " + notes.join("; ") : ""}`;
     await supabase.from("sync_logs").update({
-      status: totalFailed === 0 ? "success" : "partial",
+      status: deferredReason ? "deferred" : (totalFailed === 0 && notes.length === 0 ? "success" : "partial"),
       items_synced: totalSynced,
       items_failed: totalFailed,
       error_details: summary,

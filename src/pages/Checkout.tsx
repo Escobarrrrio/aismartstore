@@ -39,19 +39,27 @@ const Checkout = () => {
   const [retrying, setRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
-  const [paymentMethod, setPaymentMethod] = useState<"yoco" | "payfast">("yoco");
-  // Capitec Pay / Instant EFT stays hidden until PayFast credentials are
-  // actually configured -- offering it without them sends shoppers to a
-  // "PayFast not configured" error from create-payfast-checkout.
+  const [paymentMethod, setPaymentMethod] = useState<"yoco" | "payfast">("payfast");
+  // Each gateway stays hidden until its credentials are actually configured --
+  // offering one without them sends shoppers to a "not configured" error from
+  // the checkout function instead of a payment page.
   const [payfastEnabled, setPayfastEnabled] = useState(false);
+  const [yocoEnabled, setYocoEnabled] = useState(false);
 
   useEffect(() => {
     supabase
       .from("store_settings")
-      .select("value")
-      .eq("key", "payfast_enabled")
-      .maybeSingle()
-      .then(({ data }) => setPayfastEnabled(data?.value === "true"));
+      .select("key, value")
+      .in("key", ["payfast_enabled", "yoco_enabled"])
+      .then(({ data }) => {
+        const on = (k: string) => data?.find((r) => r.key === k)?.value === "true";
+        const pf = on("payfast_enabled");
+        const yc = on("yoco_enabled");
+        setPayfastEnabled(pf);
+        setYocoEnabled(yc);
+        // Default to whichever gateway is actually live, preferring PayFast.
+        setPaymentMethod(pf ? "payfast" : "yoco");
+      });
   }, []);
   const [capturingPaypal, setCapturingPaypal] = useState(searchParams.get("status") === "paypal_return");
   const failedOrderId = searchParams.get("orderId");

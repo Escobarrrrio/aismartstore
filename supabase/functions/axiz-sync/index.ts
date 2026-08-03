@@ -217,12 +217,36 @@ Deno.serve(async (req) => {
     const notes: string[] = [];
 
     while (pagesDone < PAGES_PER_RUN) {
+      // Stop well before the gateway's own timeout so the cursor is always
+      // persisted and the work done so far isn't thrown away.
+      if (Date.now() - runStartedAt > RUN_BUDGET_MS) {
+        notes.push("run time budget reached; resuming from cursor next invocation");
+        break;
+      }
+
       const market = markets[mIdx];
-      const res = await fetchAxiz(`${AXIZ_API_BASE}/api/services/app/PriceList/SearchPriceList`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ maxResultCount: PAGE_SIZE, pageIndex: pIdx, market, brandFilter }),
-      }, `Axiz catalogue market ${market} page ${pIdx}`);
+      let res: Response;
+      try {
+        res = await fetchAxiz(`${AXIZ_API_BASE}/api/services/app/PriceList/SearchPriceList`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ maxResultCount: PAGE_SIZE, pageIndex: pIdx, market, brandFilter }),
+        }, `Axiz catalogue market ${market} page ${pIdx}`);
+      } catch (err) {
+        const message = (err as Error).message;
+        notes.push(`market ${market} page ${pIdx}: ${message}`);
+        if ((err as { terminal?: boolean }).terminal) {
+          // A permanent problem on this market (bad filter, 404, 403) must not
+          // block every later market: skip it and keep syncing the rest.
+          pagesDone++;
+          mIdx++; pIdx = 0;
+          if (mIdx >= markets.length) { catalogComplete = true; break; }
+          continue;
+        }
+        // Transient outage: end the run here, leaving the cursor on this page.
+        deferredReason = message;
+        break;
+      }
 
       const data = await res.json();
       const pageItems = (data?.result?.items ?? data?.result ?? []).filter((i: any) => i.productCode);

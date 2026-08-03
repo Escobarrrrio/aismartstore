@@ -410,7 +410,7 @@ const Checkout = () => {
             Shipping is calculated from our Gqeberha (NMBM) warehouse using a benchmark zone × weight rate table. Weight above 5&nbsp;kg is an estimate.
           </p>
 
-          {currency === "ZAR" && payfastEnabled && (
+          {currency === "ZAR" && payfastEnabled && yocoEnabled && (
             <fieldset className="border border-border rounded-xl p-4 mt-2 space-y-2">
               <legend className="text-xs font-semibold px-1">Payment method</legend>
               <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentMethod === "yoco" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"}`}>
@@ -424,7 +424,7 @@ const Checkout = () => {
                 <input type="radio" name="paymentMethod" value="payfast" checked={paymentMethod === "payfast"} onChange={() => setPaymentMethod("payfast")} className="accent-primary" />
                 <div>
                   <span className="text-sm font-semibold">Capitec Pay / Instant EFT</span>
-                  <span className="block text-xs text-muted-foreground">Pay from your bank app via PayFast</span>
+                  <span className="block text-xs text-muted-foreground">Card, Capitec Pay or Instant EFT via PayFast</span>
                 </div>
               </label>
             </fieldset>

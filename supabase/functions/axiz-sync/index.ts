@@ -14,18 +14,23 @@ import { withRetry } from "../_shared/retry.ts";
 const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
 const AXIZ_API_BASE = "https://api.goaxiz.co.za";
 const PAGE_SIZE = 1000;
-const PAGES_PER_RUN = 8;
+// 8 pages/run was overrunning the gateway timeout (15x 504 in 24h). Fewer pages
+// plus the wall-clock budget below means every run finishes and saves its cursor.
+const PAGES_PER_RUN = 4;
 // 500-row upserts were exceeding the statement timeout: 121 of 194 runs over two
 // days ended "partial" with "canceling statement due to statement timeout", and
 // because a failed batch was simply skipped while the page cursor still advanced,
 // those product updates were silently lost until the cursor wrapped the whole
 // catalogue again. `products` carries several indexes plus the category-classifier
 // and image-blocklist triggers, so each row costs more than the original size
-// assumed.
-const UPSERT_BATCH_SIZE = 150;
+// assumed. 150 still timed out in production; 75 keeps each statement well inside
+// the limit (the split-on-timeout retry below covers the remaining outliers).
+const UPSERT_BATCH_SIZE = 75;
 /** Don't subdivide below this — past it the timeout isn't about batch size. */
 const MIN_UPSERT_BATCH_SIZE = 20;
 const AXIZ_REQUEST_TIMEOUT_MS = 20_000;
+/** Wall-clock budget for one invocation, comfortably under the gateway timeout. */
+const RUN_BUDGET_MS = 110_000;
 
 class AxizUpstreamError extends Error {
   constructor(

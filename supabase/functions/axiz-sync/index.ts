@@ -373,9 +373,9 @@ Deno.serve(async (req) => {
       { onConflict: "key" }
     );
 
-    const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`} | AI-flagged this run: ${aiFlagged} | withheld (below R${minSellablePrice}): ${underpriced}${notes.length ? " | " + notes.join("; ") : ""}`;
+    const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`}${deferredReason ? ` | deferred: ${deferredReason}` : ""} | AI-flagged this run: ${aiFlagged} | withheld (below R${minSellablePrice}): ${underpriced}${notes.length ? " | " + notes.join("; ") : ""}`;
     await supabase.from("sync_logs").update({
-      status: totalFailed === 0 ? "success" : "partial",
+      status: deferredReason ? "deferred" : (totalFailed === 0 && notes.length === 0 ? "success" : "partial"),
       items_synced: totalSynced,
       items_failed: totalFailed,
       error_details: summary,

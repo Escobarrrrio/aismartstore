@@ -214,6 +214,8 @@ Deno.serve(async (req) => {
     let underpriced = 0;
     let pagesDone = 0;
     let catalogComplete = false;
+    let deferredReason: string | null = null;
+    const runStartedAt = Date.now();
     const notes: string[] = [];
 
     while (pagesDone < PAGES_PER_RUN) {

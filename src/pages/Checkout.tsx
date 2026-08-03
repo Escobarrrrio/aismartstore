@@ -39,19 +39,27 @@ const Checkout = () => {
   const [retrying, setRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
-  const [paymentMethod, setPaymentMethod] = useState<"yoco" | "payfast">("yoco");
-  // Capitec Pay / Instant EFT stays hidden until PayFast credentials are
-  // actually configured -- offering it without them sends shoppers to a
-  // "PayFast not configured" error from create-payfast-checkout.
+  const [paymentMethod, setPaymentMethod] = useState<"yoco" | "payfast">("payfast");
+  // Each gateway stays hidden until its credentials are actually configured --
+  // offering one without them sends shoppers to a "not configured" error from
+  // the checkout function instead of a payment page.
   const [payfastEnabled, setPayfastEnabled] = useState(false);
+  const [yocoEnabled, setYocoEnabled] = useState(false);
 
   useEffect(() => {
     supabase
       .from("store_settings")
-      .select("value")
-      .eq("key", "payfast_enabled")
-      .maybeSingle()
-      .then(({ data }) => setPayfastEnabled(data?.value === "true"));
+      .select("key, value")
+      .in("key", ["payfast_enabled", "yoco_enabled"])
+      .then(({ data }) => {
+        const on = (k: string) => data?.find((r) => r.key === k)?.value === "true";
+        const pf = on("payfast_enabled");
+        const yc = on("yoco_enabled");
+        setPayfastEnabled(pf);
+        setYocoEnabled(yc);
+        // Default to whichever gateway is actually live, preferring PayFast.
+        setPaymentMethod(pf ? "payfast" : "yoco");
+      });
   }, []);
   const [capturingPaypal, setCapturingPaypal] = useState(searchParams.get("status") === "paypal_return");
   const failedOrderId = searchParams.get("orderId");
@@ -402,7 +410,7 @@ const Checkout = () => {
             Shipping is calculated from our Gqeberha (NMBM) warehouse using a benchmark zone × weight rate table. Weight above 5&nbsp;kg is an estimate.
           </p>
 
-          {currency === "ZAR" && payfastEnabled && (
+          {currency === "ZAR" && payfastEnabled && yocoEnabled && (
             <fieldset className="border border-border rounded-xl p-4 mt-2 space-y-2">
               <legend className="text-xs font-semibold px-1">Payment method</legend>
               <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentMethod === "yoco" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"}`}>
@@ -416,7 +424,7 @@ const Checkout = () => {
                 <input type="radio" name="paymentMethod" value="payfast" checked={paymentMethod === "payfast"} onChange={() => setPaymentMethod("payfast")} className="accent-primary" />
                 <div>
                   <span className="text-sm font-semibold">Capitec Pay / Instant EFT</span>
-                  <span className="block text-xs text-muted-foreground">Pay from your bank app via PayFast</span>
+                  <span className="block text-xs text-muted-foreground">Card, Capitec Pay or Instant EFT via PayFast</span>
                 </div>
               </label>
             </fieldset>

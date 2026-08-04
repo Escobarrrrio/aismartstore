@@ -63,9 +63,16 @@ function buildAlertHtml(args: {
       ` : ""}
     </table>
     <p style="color:#475569;font-size:13px;margin:16px 0 0">
-      This usually means the last Axiz sync returned <code>onHand: null</code> for a large batch of SKUs.
-      Re-run the sync from Admin → Catalogue → Sync Logs, or run the SQL patch to flip <code>in_stock = true</code>
-      where inventory is unknown.
+      Check <strong>Admin → Sync Logs</strong> first: if the Axiz sync has been deferring on the same
+      cursor, this figure is frozen rather than current, and the stock picture is simply stale.
+      If the sync is running clean, then the distributor genuinely has this much out of stock and the
+      number is correct.
+    </p>
+    <p style="color:#475569;font-size:13px;margin:12px 0 0">
+      Do <strong>not</strong> mass-set <code>in_stock = true</code> to clear this alert. The sync already
+      treats an unknown quantity (<code>onHand: null</code>) as in stock; anything showing out of stock
+      was reported as zero by the distributor. Overriding it advertises stock that does not exist, which
+      is a Consumer Protection Act problem, not a display problem.
     </p>
   </div>`;
 }
@@ -153,15 +160,50 @@ Deno.serve(async (req) => {
           reason = `Out-of-stock count jumped by ${deltaAbs.toLocaleString()} products (+${deltaPct}pp) since last check.`;
         }
       }
-      if (!alert && oosShare >= thresholds.oos_share_ceiling) {
+      // The ceiling alerts on *crossing* it, not on *being above* it.
+      //
+      // As written before, this fired on every run for as long as the share
+      // stayed high: twenty-four identical emails a day, each one reporting a
+      // delta of "+0 products / +0pp" -- the system saying "nothing has
+      // changed" in the form of an alarm. Dozens of them arrived while a
+      // genuinely stuck Axiz sync sat behind them, unnoticed, because by then
+      // the alert had trained its only reader to ignore it.
+      //
+      // A level that has been reported once and has not moved is not news. It
+      // becomes news again only when it materially worsens, so re-alerting
+      // requires a full percentage point of deterioration against the level
+      // last reported.
+      const lastAlerted = (baseline as (Baseline & { alerted_share?: number }) | null)?.alerted_share;
+      const alertedBefore = typeof lastAlerted === "number";
+      const worthReporting = oosShare >= thresholds.oos_share_ceiling &&
+        (!alertedBefore || oosShare >= lastAlerted + 1);
+
+      if (!alert && worthReporting) {
         alert = true;
-        reason = `Out-of-stock share is ${oosShare}%, above the ${thresholds.oos_share_ceiling}% ceiling.`;
+        reason = alertedBefore
+          ? `Out-of-stock share worsened to ${oosShare}% (last reported at ${lastAlerted}%), above the ${thresholds.oos_share_ceiling}% ceiling.`
+          : `Out-of-stock share is ${oosShare}%, above the ${thresholds.oos_share_ceiling}% ceiling.`;
       }
     }
 
+    // Carry the last-reported level forward so the ceiling check above can
+    // tell "already told you" from "this is new". Without it the baseline
+    // records the level but not the fact that it was reported, and the alert
+    // re-fires on every run for as long as the condition lasts.
+    const previouslyAlertedShare =
+      (baseline as (Baseline & { alerted_share?: number }) | null)?.alerted_share;
+    const currentWithAlertState = {
+      ...current,
+      ...(alert
+        ? { alerted_share: oosShare }
+        : typeof previouslyAlertedShare === "number"
+          ? { alerted_share: previouslyAlertedShare }
+          : {}),
+    };
+
     // Persist new baseline (upsert). value column is text — store JSON string.
     await supabase.from("store_settings").upsert(
-      { key: "stock_sanity_baseline", value: JSON.stringify(current) },
+      { key: "stock_sanity_baseline", value: JSON.stringify(currentWithAlertState) },
       { onConflict: "key" },
     );
 

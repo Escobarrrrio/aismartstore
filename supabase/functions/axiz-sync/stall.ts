@@ -58,6 +58,18 @@ export interface StallDecision {
  */
 export const STALL_LIMIT = 3;
 
+/**
+ * Would this run's failure take the counter to the skip threshold?
+ *
+ * Lets the caller spend one extra request probing a known-good page only on
+ * the run where the answer actually changes the decision, rather than on every
+ * deferral.
+ */
+export function willReachLimit(cursorBefore: string, stall: StallState | null): boolean {
+  const count = (stall && stall.cursor === cursorBefore ? stall.count : 0) + 1;
+  return count >= STALL_LIMIT;
+}
+
 /** "0:1" -> [0, 1]; anything unparseable reads as the start of the catalogue. */
 export function parseCursor(cursor: string): [number, number] {
   const [m, p] = String(cursor ?? "").split(":").map((n) => Number(n));
@@ -77,8 +89,23 @@ export function resolveStall(args: {
   deferred: boolean;
   itemsSynced: number;
   stall: StallState | null;
+  /**
+   * Result of probing a known-good page, or null when no probe was run.
+   *
+   * This is what separates "this page is broken" from "the distributor is
+   * down", and the difference decides whether skipping helps or harms.
+   *
+   * The first version of this had no probe, and the production trace showed
+   * why that was wrong within the hour: page 1 timed out for a day, and when
+   * the cursor was moved past it, page 2 timed out as well. Skipping is right
+   * for one unreadable page and actively harmful across an outage -- it would
+   * march the cursor through the entire catalogue, three failed runs at a
+   * time, syncing nothing and destroying the one piece of evidence worth
+   * keeping: which page we were on when the distributor came back.
+   */
+  probeSucceeded?: boolean | null;
 }): StallDecision {
-  const { cursorBefore, cursorAfter, deferred, itemsSynced, stall } = args;
+  const { cursorBefore, cursorAfter, deferred, itemsSynced, stall, probeSucceeded = null } = args;
 
   // Any forward movement, or any row actually written, clears the counter.
   // Counting across unrelated cursors would eventually trip a skip on a page
@@ -96,6 +123,23 @@ export function resolveStall(args: {
       stall: { cursor: cursorBefore, count },
       skipped: false,
       note: `no progress at cursor ${cursorBefore} (${count} of ${STALL_LIMIT} before skipping)`,
+    };
+  }
+
+  // The distributor is down, not the page. Hold position and keep waiting --
+  // the cursor is the only record of where to resume, and skipping would
+  // discard it one page at a time for as long as the outage lasts. The counter
+  // is held at the limit so the moment the probe succeeds again, the next
+  // failure re-evaluates immediately rather than serving another 45 minutes of
+  // patience the outage has already used up.
+  if (probeSucceeded === false) {
+    return {
+      cursor: cursorAfter,
+      stall: { cursor: cursorBefore, count },
+      skipped: false,
+      note:
+        `distributor appears to be down -- a known-good page failed the same way. ` +
+        `Holding at cursor ${cursorBefore} rather than skipping; no catalogue data is being lost.`,
     };
   }
 

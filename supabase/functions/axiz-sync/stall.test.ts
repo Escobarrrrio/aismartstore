@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { resolveStall, parseCursor, STALL_LIMIT, type StallState } from "./stall.ts";
+import { resolveStall, parseCursor, willReachLimit, STALL_LIMIT, type StallState } from "./stall.ts";
 
 // The incident this exists to prevent, replayed. On 3 August the sync deferred
 // on cursor "0:1" every fifteen minutes for twenty-two hours, syncing nothing
@@ -85,4 +85,37 @@ Deno.test("parseCursor: tolerates rubbish rather than throwing", () => {
   assertEquals(parseCursor("14:72"), [14, 72]);
   assertEquals(parseCursor(""), [0, 0]);
   assertEquals(parseCursor("nonsense"), [0, 0]);
+});
+
+Deno.test("stall: an outage holds position instead of skipping", () => {
+  // The real second act. Page 1 timed out for a day; the cursor was moved to
+  // page 2 by hand and page 2 timed out the same way. The distributor was
+  // down, not the page -- and skipping would have walked the cursor through
+  // the whole catalogue, three failed runs at a time, syncing nothing.
+  const d = resolveStall({
+    cursorBefore: "0:2", cursorAfter: "0:2", deferred: true, itemsSynced: 0,
+    stall: { cursor: "0:2", count: STALL_LIMIT - 1 },
+    probeSucceeded: false,
+  });
+  assertEquals(d.skipped, false, "must not skip during an outage");
+  assertEquals(d.cursor, "0:2", "position held so work resumes here");
+  assertEquals(d.stall?.count, STALL_LIMIT, "counter held at the limit, ready to re-decide");
+});
+
+Deno.test("stall: a working probe confirms the page itself is bad", () => {
+  const d = resolveStall({
+    cursorBefore: "0:2", cursorAfter: "0:2", deferred: true, itemsSynced: 0,
+    stall: { cursor: "0:2", count: STALL_LIMIT - 1 },
+    probeSucceeded: true,
+  });
+  assertEquals(d.skipped, true);
+  assertEquals(d.cursor, "0:3");
+});
+
+Deno.test("willReachLimit: only true on the run that would trigger a skip", () => {
+  assertEquals(willReachLimit("0:1", null), STALL_LIMIT === 1);
+  assertEquals(willReachLimit("0:1", { cursor: "0:1", count: STALL_LIMIT - 1 }), true);
+  assertEquals(willReachLimit("0:1", { cursor: "0:1", count: STALL_LIMIT - 2 }), false);
+  assertEquals(willReachLimit("0:9", { cursor: "0:1", count: STALL_LIMIT - 1 }), false,
+    "a different cursor starts its own count");
 });

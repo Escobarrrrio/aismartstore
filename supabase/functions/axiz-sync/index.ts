@@ -11,7 +11,7 @@ import { withRetry } from "../_shared/retry.ts";
 // - Trigger repeatedly (or via cron) until status shows catalog_complete
 // =====================================================================
 
-import { resolveStall, type StallState } from "./stall.ts";
+import { resolveStall, willReachLimit, type StallState } from "./stall.ts";
 
 const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
 const AXIZ_API_BASE = "https://api.goaxiz.co.za";
@@ -384,12 +384,37 @@ Deno.serve(async (req) => {
       priorStall = settings.axiz_sync_stall ? JSON.parse(settings.axiz_sync_stall) : null;
     } catch { /* a corrupt counter must not stop the sync; start it over */ }
 
+    // Before stepping over a page, establish which failure this actually is.
+    //
+    // Production settled the question the hard way: page 1 timed out for a
+    // day, the cursor was moved past it by hand, and page 2 timed out
+    // identically. Skipping is the right answer for one unreadable page and
+    // the wrong one during an outage, where it would walk the cursor through
+    // the whole catalogue syncing nothing.
+    //
+    // Page 0 of the first market is the control. One extra request, spent only
+    // on the run where the answer changes what happens next.
+    let probeSucceeded: boolean | null = null;
+    if (deferredReason && willReachLimit(cursorRaw, priorStall)) {
+      try {
+        await fetchAxiz(`${AXIZ_API_BASE}/api/services/app/PriceList/SearchPriceList`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ maxResultCount: 1, pageIndex: 0, market: markets[0], brandFilter }),
+        }, "Axiz availability probe");
+        probeSucceeded = true;
+      } catch {
+        probeSucceeded = false;
+      }
+    }
+
     const decision = resolveStall({
       cursorBefore: cursorRaw,
       cursorAfter: naturalCursor,
       deferred: Boolean(deferredReason),
       itemsSynced: totalSynced,
       stall: priorStall,
+      probeSucceeded,
     });
     const nextCursor = decision.cursor;
     if (decision.note) notes.push(decision.note);

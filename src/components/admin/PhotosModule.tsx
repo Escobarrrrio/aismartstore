@@ -60,6 +60,21 @@ const needsPhoto = (p: { images: string[] | null }) => {
   return !first || first.includes("placeholder");
 };
 
+/**
+ * What to keep from a product's existing images when a new photo is uploaded.
+ *
+ * Drops the placeholder, and drops inline `data:` images -- the low-resolution
+ * base64 thumbnails (7-27KB) that were pasted into the catalogue early on and
+ * are precisely the "old photos" this screen exists to replace. Keeping them
+ * would leave the new upload sitting in front of the very image the owner
+ * asked to be rid of, still carried in every row of the database.
+ *
+ * Real hosted URLs are kept: a product legitimately has several angles, and a
+ * new photo should join them rather than silently delete work.
+ */
+const keepableImages = (images: string[] | null | undefined): string[] =>
+  (images ?? []).filter((u) => !u.includes("placeholder") && !u.startsWith("data:"));
+
 interface StagedFolder {
   folder: string;
   files: File[];
@@ -127,13 +142,23 @@ const PhotosModule = () => {
 
   const missing = useMemo(() => products.filter(needsPhoto), [products]);
 
+  // Empty search lists the products with no photo at all -- the common case,
+  // and the reason to open this screen. A search searches EVERY active
+  // product, not just those.
+  //
+  // The distinction is the whole bug this fixes. Restricting the list to
+  // products missing a photo also hid the manual "Add photo" button for the
+  // three products whose photo the owner most wanted to replace (Govee, Oura,
+  // SwitchBot -- all of which already carry an old image). So when folder
+  // matching did not work for him, the fallback path could not reach those
+  // products either, and there was no way in at all.
   const visibleMissing = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return missing.slice(0, 60);
-    return missing
+    return products
       .filter((p) => p.name.toLowerCase().includes(q) || (p.brand ?? "").toLowerCase().includes(q))
       .slice(0, 60);
-  }, [missing, search]);
+  }, [missing, products, search]);
 
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
@@ -229,7 +254,7 @@ const PhotosModule = () => {
         // The placeholder is dropped rather than kept: while it occupies
         // position one the product stays hidden from the home page, which is
         // the entire reason for uploading.
-        const existing = (byId.get(group.productId!)?.images ?? []).filter((u) => !u.includes("placeholder"));
+        const existing = keepableImages(byId.get(group.productId!)?.images);
         const { error } = await supabase
           .from("products")
           .update({ images: [...urls, ...existing] })
@@ -267,7 +292,7 @@ const PhotosModule = () => {
     try {
       const urls: string[] = [];
       for (const f of files) urls.push(await uploadOne(f));
-      const existing = (byId.get(productId)?.images ?? []).filter((u) => !u.includes("placeholder"));
+      const existing = keepableImages(byId.get(productId)?.images);
       const { error } = await supabase.from("products").update({ images: [...urls, ...existing] }).eq("id", productId);
       if (error) throw new Error(error.message);
       toast({ title: "Photo added", description: `${urls.length} image${urls.length === 1 ? "" : "s"} uploaded.` });
@@ -528,13 +553,22 @@ const PhotosModule = () => {
       {/* Products still waiting */}
       <section className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border flex-wrap">
-          <h3 className="font-display font-bold">Products with no photo</h3>
+          <div>
+            <h3 className="font-display font-bold">
+              {search.trim() ? "Search results" : "Products with no photo"}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {search.trim()
+                ? "Searching every live product — including ones that already have a photo you want replaced."
+                : "Search to reach any product, including ones whose existing photo you want to replace."}
+            </p>
+          </div>
           <div className="relative">
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter by name or brand"
+              placeholder="Search any product by name or brand"
               className="rounded-lg border border-border bg-background pl-9 pr-3 py-2 text-sm w-64"
             />
           </div>
@@ -551,14 +585,27 @@ const PhotosModule = () => {
           <ul className="divide-y divide-border">
             {visibleMissing.map((p) => (
               <li key={p.id} className="px-5 py-3 flex items-center gap-4 justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{p.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {[p.brand, p.sku, p.stock_status?.replace(/_/g, " ")].filter(Boolean).join(" · ")}
-                  </p>
+                <div className="min-w-0 flex items-center gap-3">
+                  {/* The product's current photo, thumbnail-sized. Without it
+                      this list gives no way to tell whether a product already
+                      has an image -- which is precisely the question being
+                      answered when the job is replacing an old one. */}
+                  <div className="h-10 w-10 shrink-0 rounded border border-border bg-white overflow-hidden grid place-items-center">
+                    {needsPhoto(p) ? (
+                      <Images className="h-4 w-4 text-muted-foreground/50" />
+                    ) : (
+                      <img src={p.images![0]} alt="" className="h-full w-full object-contain" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{p.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {[p.brand, p.sku, p.stock_status?.replace(/_/g, " ")].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
                 </div>
                 <label className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold cursor-pointer hover:bg-muted">
-                  <Upload className="h-3.5 w-3.5" /> Add photo
+                  <Upload className="h-3.5 w-3.5" /> {needsPhoto(p) ? "Add photo" : "Replace photo"}
                   <input
                     type="file"
                     accept="image/*"

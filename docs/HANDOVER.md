@@ -31,16 +31,27 @@ matters most.
 |---|---|
 | Paid orders, all time | **0** |
 | Revenue, all time | **R0** |
-| Orders created (unpaid/abandoned) | 7 |
+| Orders on record | 0 (7 test orders placed by the owner were deleted 4 Aug) |
 | Registered customers | 8 |
-| Newsletter subscribers | 6 |
+| Newsletter subscribers | 5 |
 | Quote requests | 0 |
 
-Payments run on **Yoco sandbox keys**, deliberately — the catalogue carries
-high-value enterprise SKUs and the owner chose not to expose live card
-processing before the pricing and stock discipline was proven. No live
-transaction has ever been processed. Switching to live keys is a configuration
-change, not development work (section 10).
+**No payment gateway has processed a single transaction.** `payment_events` —
+the audit table both gateways write to on every attempt, success or failure —
+has **zero rows**. This is not "payments are on test keys, deliberately"; it is
+that neither configured gateway has been proven end-to-end:
+
+- **Yoco**: not configured. The live secret key was removed during earlier
+  test-mode work and has not been replaced. Every Yoco checkout would fail
+  before reaching Yoco at all.
+- **PayFast**: merchant ID and key are set and the `payfast_enabled` flag is
+  on, but the merchant account's business-verification documents are still
+  under review with PayFast as of 4 August. Whether it can settle a live
+  transaction today is unconfirmed — the zero rows in `payment_events` mean it
+  has not been tested, not that it works.
+
+Getting either gateway to a proven state is a configuration and verification
+task, not development work — see section 10.
 
 **What this means for valuation:** this is an asset sale of software plus
 domain, priced on build cost and strategic value, not a multiple of earnings.
@@ -115,8 +126,8 @@ Deployment of edge functions is automated on merge to `main`
 | Integration | Purpose | Status |
 |---|---|---|
 | **Axiz** (distributor) | OAuth2 catalogue + pricing feed, syncs every 15 min | Live, working |
-| **Yoco** | Card payments | **Sandbox keys** — see §2 |
-| **PayFast** | Capitec Pay / EFT | Built, feature-flagged off (`payfast_enabled`) |
+| **Yoco** | Card payments | Built, **not configured** — see §2 |
+| **PayFast** | Card / Capitec Pay / EFT | Built, `payfast_enabled` on, **KYC pending** — see §2 |
 | **The Courier Guy** | Shipping rates + tracking sync every 30 min | Live |
 | **Resend** | Transactional email | Live; sending domain needs verification (§10) |
 | **Telnyx** | SMS OTP | Configured, capped |
@@ -187,12 +198,12 @@ Current caps (rand):
 Listing these is not weakness. A buyer finds them anyway, and finding them
 undisclosed is what kills a deal.
 
-1. **Yoco is on sandbox keys.** No live payment has been processed end-to-end. Swapping to live keys and running one R1 transaction is the remaining proof.
+1. **No payment gateway is proven live.** Yoco has no secret key configured. PayFast has credentials set but the merchant account is awaiting document verification with PayFast — whether it can settle a live transaction is unconfirmed. Getting one gateway to a proven state (a real R1 transaction, confirmed in `payment_events` and the order flipping to paid) is the single most important thing standing between this asset and "ready to trade."
 2. **Resend sending domain is unverified**, so `support@aismartstore.co.za` outbound mail — including Engine Room alerts — is not being delivered. DNS records at Resend fix it.
 3. **E2E tests do not run in CI** — `E2E_SUPABASE_URL` / `E2E_SUPABASE_SERVICE_ROLE_KEY` repo secrets are unset. The suite exists and is comprehensive; the workflow now skips loudly rather than failing red.
-4. **176 in-stock products.** Commercial ceiling until stock is broadened or a second distributor is added.
+4. **177 in-stock products.** Commercial ceiling until stock is broadened or a second distributor is added.
 5. **Six manually-sourced products** carry supplier-researched pricing recorded in `specifications` jsonb rather than an automated feed; these need manual re-checking.
-6. **Axiz upstream availability** — the distributor API returned 502 for a period on 1 August. Outside our control; the sync retries and logs.
+6. **Axiz upstream availability** — the distributor's catalogue API was degraded for a period around 3–4 August, causing the sync to stall on individual pages. A guard now distinguishes a broken page from a distributor outage and holds position safely during the latter rather than losing catalogue coverage; see `supabase/functions/axiz-sync/stall.ts`.
 7. **AI Pulse feeds** — several South African news sources (mybroadband, businesstech) return 403 to automated fetches behind Cloudflare.
 8. **Lovable platform dependency** — hosting and deploys run through Lovable. Migrating to another host is feasible (it is a standard Vite + Supabase app) but is work a buyer should scope.
 

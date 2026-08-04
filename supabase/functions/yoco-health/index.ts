@@ -1,5 +1,6 @@
 // Admin-only diagnostics for Yoco integration:
-//  - detects live vs test mode from the configured YOCO_SECRET_KEY prefix
+//  - detects live vs test mode from the configured YOCO_SECRET_KEY (see mode.ts
+//    for why that check moved out to its own tested module)
 //  - reports whether YOCO_WEBHOOK_SECRET is set
 //  - pings the yoco-webhook endpoint to confirm reachability
 //  - returns the latest 20 webhook events from automation_events
@@ -7,6 +8,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { getAuthContext } from "../_shared/auth-guard.ts";
+import { detectYocoMode } from "./mode.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -23,10 +25,7 @@ Deno.serve(async (req) => {
     const webhookSecret = Deno.env.get("YOCO_WEBHOOK_SECRET") ?? "";
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 
-    // Yoco convention: sk_test_* / sk_live_*
-    let mode: "live" | "test" | "unknown" = "unknown";
-    if (/^sk_live_/i.test(secretKey)) mode = "live";
-    else if (/^sk_test_/i.test(secretKey)) mode = "test";
+    const mode = detectYocoMode(secretKey);
 
     // Endpoint reachability (OPTIONS should always answer with `ok`).
     const endpoint = `${supabaseUrl}/functions/v1/yoco-webhook`;

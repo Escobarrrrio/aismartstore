@@ -312,7 +312,10 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
           <SectionCard title="Credential Vault" icon={<Key className="h-4 w-4" />} actions={<span className="badge-info text-[10px]">Production</span>}>
             <div className="space-y-3">
               {[
-                { name: "Yoco Secret Key", key: "yoco_secret_key", placeholder: "sk_live_...", sensitive: true },
+                // Yoco's real key format is yoco_live_... / yoco_test_..., not
+                // Stripe's sk_live_ -- see supabase/functions/yoco-health for
+                // the fuller story of how that assumption cost a false "Fail".
+                { name: "Yoco Secret Key", key: "yoco_secret_key", placeholder: "yoco_live_...", sensitive: true },
                 { name: "OpenAI API Key", key: "openai_api_key", placeholder: "sk-...", sensitive: true },
                 { name: "Make Pro Webhook", key: "make_webhook_url", placeholder: "https://hook.eu1.make.com/..." },
                 { name: "Axiz API Key", key: "axiz_api_key", placeholder: "Your Axiz API key...", sensitive: true },

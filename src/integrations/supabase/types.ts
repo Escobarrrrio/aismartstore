@@ -429,6 +429,33 @@ export type Database = {
         }
         Relationships: []
       }
+      data_retention_policy: {
+        Row: {
+          enabled: boolean
+          rationale: string
+          retention_days: number
+          table_name: string
+          timestamp_column: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          rationale: string
+          retention_days: number
+          table_name: string
+          timestamp_column?: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          rationale?: string
+          retention_days?: number
+          table_name?: string
+          timestamp_column?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1932,6 +1959,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      dispatch_ai_pulse_digest: { Args: never; Returns: string }
       email_queue_dispatch: { Args: never; Returns: undefined }
       engine_room_snapshot: { Args: never; Returns: Json }
       enqueue_email: {
@@ -2131,6 +2159,10 @@ export type Database = {
         }[]
       }
       refresh_product_facets_cache: { Args: never; Returns: number }
+      retention_sweep: {
+        Args: { p_max_rows_per_table?: number }
+        Returns: Json
+      }
       rl_sweep: { Args: { p_older_than?: string }; Returns: number }
       rl_take: {
         Args: {

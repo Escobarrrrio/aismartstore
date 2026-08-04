@@ -161,10 +161,32 @@ const PhotosModule = () => {
       return;
     }
 
-    // Matched against products that still need a photo, not the whole
-    // catalogue: a folder named "Govee" must not be able to overwrite a
-    // distributor product that already has a manufacturer photo on it.
-    const matches = matchFolders([...groups.keys()], missing);
+    // Matched against every active product, not just the ones with no photo.
+    //
+    // The first version restricted matching to products missing a photo, on
+    // the theory that a folder named "Govee" should not be able to silently
+    // overwrite a distributor photo that already looked fine. In production
+    // that theory was wrong in the case that actually mattered: three of the
+    // owner's own manually-sourced products (Govee, Oura, SwitchBot) already
+    // carried an old placeholder-style photo he wanted replaced, and this
+    // screen refused to even offer them as a match -- with no visible reason
+    // why, which read as the tool being broken rather than being cautious.
+    //
+    // Silently blocking a replacement and silently allowing one are both
+    // wrong. The fix is neither: match against everything, and mark clearly,
+    // per row, when accepting a match means replacing a photo that already
+    // exists (see `replacesExisting` below) -- an informed decision the owner
+    // makes by looking at the review table, not a restriction the tool makes
+    // for him without saying so.
+    if (products.length === 0) {
+      toast({
+        title: "Still loading the catalogue",
+        description: "Give it a second and try Choose Folder again — matching against zero products is why every folder just showed \"no match\".",
+        variant: "destructive",
+      });
+      return;
+    }
+    const matches = matchFolders([...groups.keys()], products);
     setStaged(
       matches.map((m) => {
         const files = groups.get(m.folder) ?? [];
@@ -322,9 +344,26 @@ const PhotosModule = () => {
             holding a sub-folder per product. Every photo inside is matched to its product by the folder
             name, resized for the web, and you get to check the matches before anything goes live.
           </p>
-          <label className="inline-flex items-center gap-2 rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-semibold cursor-pointer hover:bg-foreground/90">
-            <FolderUp className="h-4 w-4" /> Choose folder
-            <input ref={folderInput} type="file" multiple accept="image/*" onChange={handleFolderPick} className="hidden" />
+          <label
+            className={`inline-flex items-center gap-2 rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-semibold ${
+              loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-foreground/90"
+            }`}
+          >
+            <FolderUp className="h-4 w-4" /> {loading ? "Loading catalogue…" : "Choose folder"}
+            {/* Disabled while the product list is still loading. Picking a
+                folder before it arrives matches every real folder against zero
+                candidates -- every match comes back "no confident match", which
+                reads exactly like the tool being broken rather than like a
+                page that had not finished loading yet. */}
+            <input
+              ref={folderInput}
+              type="file"
+              multiple
+              accept="image/*"
+              disabled={loading}
+              onChange={handleFolderPick}
+              className="hidden"
+            />
           </label>
           <p className="text-[11px] text-muted-foreground">
             Folder selection needs Chrome or Edge. On other browsers this picks individual files instead —
@@ -398,7 +437,12 @@ const PhotosModule = () => {
                       className="flex-1 rounded-lg border border-border bg-background px-2 py-2 text-sm"
                     >
                       <option value="">— skip this folder —</option>
-                      {missing.map((p) => (
+                      {/* Every active product, not just ones missing a photo --
+                          this dropdown is the manual-override path, and it must
+                          be able to do the thing this screen exists for:
+                          replace a photo the owner has already flagged as
+                          wrong, not only fill a gap. */}
+                      {products.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
@@ -416,6 +460,20 @@ const PhotosModule = () => {
                     No confident match{s.alternatives.length > 0 && s.alternatives[0].score >= MATCH_THRESHOLD * 0.6
                       ? ` — closest was "${byId.get(s.alternatives[0].productId)?.name ?? "?"}"`
                       : ""}. Pick the product yourself, or skip it.
+                  </p>
+                )}
+
+                {/* Replacing a photo that already exists is allowed, and now
+                    said out loud rather than done -- or refused -- silently.
+                    The three products this matters for most (Govee, Oura,
+                    SwitchBot) already carry a real photo the owner wants gone;
+                    hiding that this action removes it would just move the
+                    surprise from "why won't it match" to "where did my old
+                    photo go". */}
+                {s.productId && s.state === "pending" && byId.get(s.productId) && !needsPhoto(byId.get(s.productId)!) && (
+                  <p className="w-full text-xs text-blue-700 inline-flex items-center gap-1.5">
+                    <Images className="h-3.5 w-3.5" />
+                    Replaces the existing photo on "{byId.get(s.productId)!.name}".
                   </p>
                 )}
               </li>

@@ -39,6 +39,14 @@ const ALLOWLISTED_FILES = new Set([
   "supabase/functions/auth-email-hook/index.ts",
   "supabase/functions/process-email-queue/index.ts",
   "supabase/functions/_shared/ai-provider.ts",
+  // The due-diligence pack (2026-08-04). This guard exists to keep
+  // build-platform attribution off a customer-facing storefront -- but the
+  // hosting platform is a real, transferable dependency, and the one document
+  // whose entire value is that a buyer can trust it is the last place to omit
+  // an inconvenient fact. Named in "Known gaps" and in the transfer checklist
+  // on purpose: a buyer finds it during diligence regardless, and finding it
+  // undisclosed is what ends a deal.
+  "docs/HANDOVER.md",
 ]);
 
 const SUPPRESSION_MARKER = "lovable-ref-ok";

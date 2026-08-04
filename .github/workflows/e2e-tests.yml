@@ -15,10 +15,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Why this gate exists
+      # --------------------
+      # The E2E suite needs a database to seed. Without E2E_SUPABASE_URL and
+      # E2E_SUPABASE_SERVICE_ROLE_KEY the seed step fails on every run, which
+      # has left this job red on every commit for weeks -- including merges
+      # that were themselves perfectly fine.
+      #
+      # A check that is always red is worse than no check. It stops carrying
+      # information the moment people learn to scroll past it, and then the one
+      # run that fails for a real reason gets scrolled past too. Anyone
+      # evaluating this repository sees a wall of red X's and cannot tell which
+      # of them meant anything.
+      #
+      # So: skip loudly instead. The job never claims a pass it did not earn --
+      # the summary says plainly that nothing ran and why -- and a red X here
+      # goes back to meaning a test actually broke. Same pattern as
+      # security.yml and deploy-functions.yml.
+      - name: Check required secrets
+        id: check
+        env:
+          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          E2E_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$E2E_SUPABASE_URL" ] || [ -z "$E2E_SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::warning::E2E tests SKIPPED — set E2E_SUPABASE_URL and E2E_SUPABASE_SERVICE_ROLE_KEY repo secrets to enable them."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # Node + npm download cache (~/.npm). We intentionally do NOT cache
       # node_modules directly — `npm ci` always reinstalls from the lockfile,
       # which preserves deterministic, reproducible installs.
       - name: Setup Node.js
+        if: steps.check.outputs.skip == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -26,11 +57,13 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        if: steps.check.outputs.skip == 'false'
         run: npm ci --prefer-offline --no-audit --fund=false
 
       # Resolve the exact @playwright/test version from the lockfile so the
       # browser cache key only changes when Playwright itself changes.
       - name: Resolve Playwright version
+        if: steps.check.outputs.skip == 'false'
         id: pw-version
         run: |
           VERSION=$(node -p "require('./node_modules/@playwright/test/package.json').version")
@@ -38,6 +71,7 @@ jobs:
           echo "Playwright version: $VERSION"
 
       - name: Cache Playwright browsers
+        if: steps.check.outputs.skip == 'false'
         id: playwright-cache
         uses: actions/cache@v4
         with:
@@ -51,7 +85,7 @@ jobs:
       # back to a full install below.
       - name: Verify cached Chromium
         id: pw-verify
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        if: steps.check.outputs.skip == 'false' && steps.playwright-cache.outputs.cache-hit == 'true'
         run: |
           set -euo pipefail
           if compgen -G "$HOME/.cache/ms-playwright/chromium-*/chrome-linux/chrome" > /dev/null; then
@@ -63,20 +97,22 @@ jobs:
           fi
 
       - name: Install Playwright browsers (no cache / corrupt cache)
-        if: steps.playwright-cache.outputs.cache-hit != 'true' || steps.pw-verify.outputs.chromium == 'missing'
+        if: steps.check.outputs.skip == 'false' && (steps.playwright-cache.outputs.cache-hit != 'true' || steps.pw-verify.outputs.chromium == 'missing')
         run: npx playwright install --with-deps chromium
 
       - name: Install Playwright system deps (valid cache hit)
-        if: steps.playwright-cache.outputs.cache-hit == 'true' && steps.pw-verify.outputs.chromium == 'present'
+        if: steps.check.outputs.skip == 'false' && steps.playwright-cache.outputs.cache-hit == 'true' && steps.pw-verify.outputs.chromium == 'present'
         run: npx playwright install-deps chromium
 
       - name: Seed deterministic E2E database
+        if: steps.check.outputs.skip == 'false'
         run: npm run test:e2e:seed
         env:
           E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
           E2E_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Run E2E tests
+        if: steps.check.outputs.skip == 'false'
         id: e2e
         # pipefail: without it, `tee`'s exit code (always 0) masks real
         # Playwright test failures, so the step -- and the whole job --
@@ -92,7 +128,7 @@ jobs:
       # These uploads are for human debugging convenience only -- they must
       # never be what turns a real test pass/fail into a false CI result.
       - name: Upload Playwright HTML report
-        if: always()
+        if: always() && steps.check.outputs.skip == 'false'
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
@@ -101,7 +137,7 @@ jobs:
           retention-days: 14
 
       - name: Upload test results (traces, screenshots, videos)
-        if: always()
+        if: always() && steps.check.outputs.skip == 'false'
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
@@ -110,7 +146,7 @@ jobs:
           retention-days: 14
 
       - name: Upload run log
-        if: always()
+        if: always() && steps.check.outputs.skip == 'false'
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
@@ -119,7 +155,7 @@ jobs:
           retention-days: 14
 
       - name: Report failure summary
-        if: failure()
+        if: failure() && steps.check.outputs.skip == 'false'
         run: |
           {
             echo "## ❌ Playwright E2E tests failed"
@@ -131,3 +167,19 @@ jobs:
             tail -n 100 playwright-output.log || true
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Summarise
+        if: always()
+        run: |
+          if [ "${{ steps.check.outputs.skip }}" = "true" ]; then
+            {
+              echo "### ⚠️ E2E tests did not run"
+              echo ""
+              echo "No test result was produced — this is **not** a pass."
+              echo ""
+              echo "Add these repo secrets to enable them (Settings → Secrets and variables → Actions):"
+              echo ""
+              echo "- \`E2E_SUPABASE_URL\`"
+              echo "- \`E2E_SUPABASE_SERVICE_ROLE_KEY\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -11,6 +11,8 @@ import { withRetry } from "../_shared/retry.ts";
 // - Trigger repeatedly (or via cron) until status shows catalog_complete
 // =====================================================================
 
+import { resolveStall, willReachLimit, type StallState } from "./stall.ts";
+
 const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
 const AXIZ_API_BASE = "https://api.goaxiz.co.za";
 const PAGE_SIZE = 1000;
@@ -172,7 +174,7 @@ Deno.serve(async (req) => {
     const { data: settingsRows } = await supabase
       .from("store_settings")
       .select("key, value")
-      .in("key", ["axiz_markup_pct", "axiz_markets", "axiz_brand_filter", "axiz_sync_cursor", "min_sellable_price"]);
+      .in("key", ["axiz_markup_pct", "axiz_markets", "axiz_brand_filter", "axiz_sync_cursor", "axiz_sync_stall", "min_sellable_price"]);
     const settings = Object.fromEntries((settingsRows || []).map((r) => [r.key, r.value]));
 
     // Load blocked placeholder image URLs so we never publish products that use them.
@@ -372,11 +374,72 @@ Deno.serve(async (req) => {
     }
 
     // Persist cursor for the next invocation.
-    const nextCursor = catalogComplete ? "0:0" : `${mIdx}:${pIdx}`;
-    await supabase.from("store_settings").upsert(
+    const naturalCursor = catalogComplete ? "0:0" : `${mIdx}:${pIdx}`;
+
+    // Guard against deferring forever on a page that will not load. See
+    // stall.ts -- this exact loop froze the whole catalogue for twenty-two
+    // hours while every run reported the healthy-looking status "deferred".
+    let priorStall: StallState | null = null;
+    try {
+      priorStall = settings.axiz_sync_stall ? JSON.parse(settings.axiz_sync_stall) : null;
+    } catch { /* a corrupt counter must not stop the sync; start it over */ }
+
+    // Before stepping over a page, establish which failure this actually is.
+    //
+    // Production settled the question the hard way: page 1 timed out for a
+    // day, the cursor was moved past it by hand, and page 2 timed out
+    // identically. Skipping is the right answer for one unreadable page and
+    // the wrong one during an outage, where it would walk the cursor through
+    // the whole catalogue syncing nothing.
+    //
+    // Page 0 of the first market is the control. One extra request, spent only
+    // on the run where the answer changes what happens next.
+    let probeSucceeded: boolean | null = null;
+    if (deferredReason && willReachLimit(cursorRaw, priorStall)) {
+      try {
+        await fetchAxiz(`${AXIZ_API_BASE}/api/services/app/PriceList/SearchPriceList`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ maxResultCount: 1, pageIndex: 0, market: markets[0], brandFilter }),
+        }, "Axiz availability probe");
+        probeSucceeded = true;
+      } catch {
+        probeSucceeded = false;
+      }
+    }
+
+    const decision = resolveStall({
+      cursorBefore: cursorRaw,
+      cursorAfter: naturalCursor,
+      deferred: Boolean(deferredReason),
+      itemsSynced: totalSynced,
+      stall: priorStall,
+      probeSucceeded,
+    });
+    const nextCursor = decision.cursor;
+    if (decision.note) notes.push(decision.note);
+
+    await supabase.from("store_settings").upsert([
       { key: "axiz_sync_cursor", value: nextCursor, updated_at: new Date().toISOString() },
-      { onConflict: "key" }
-    );
+      {
+        key: "axiz_sync_stall",
+        value: decision.stall ? JSON.stringify(decision.stall) : "",
+        updated_at: new Date().toISOString(),
+      },
+    ], { onConflict: "key" });
+
+    if (decision.skipped) {
+      // Recorded as an error even though the sync recovered on its own: a page
+      // the distributor cannot serve is a real problem, and the automatic
+      // workaround is precisely why nobody would otherwise hear about it.
+      await supabase.from("automation_events").insert({
+        source: "axiz-sync",
+        event_type: "sync.page_skipped",
+        status: "error",
+        error_message: decision.note,
+        payload: { skipped_cursor: cursorRaw, resumed_at: nextCursor, reason: deferredReason },
+      });
+    }
 
     const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`}${deferredReason ? ` | deferred: ${deferredReason}` : ""} | AI-flagged this run: ${aiFlagged} | withheld (below R${minSellablePrice}): ${underpriced}${notes.length ? " | " + notes.join("; ") : ""}`;
     await supabase.from("sync_logs").update({

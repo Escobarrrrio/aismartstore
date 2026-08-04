@@ -3,8 +3,9 @@ import {
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
   HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard, ShieldCheck, Bot,
-  ReceiptText, Home, Gauge, Images
+  ReceiptText, Home, Gauge, Images, ChevronRight
 } from "lucide-react";
+import { useState } from "react";
 import Logo from "@/components/Logo";
 
 export type AdminTab =
@@ -28,43 +29,110 @@ interface AdminSidebarProps {
   onOpenCommand: () => void;
 }
 
-const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: string }[] = [
-  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" />, section: "Overview" },
-  { id: "system-health", label: "System Health", icon: <Activity className="h-4 w-4" /> },
-  { id: "products", label: "Products", icon: <Package className="h-4 w-4" />, section: "Catalogue" },
-  { id: "catalog-health", label: "Catalog Health", icon: <Activity className="h-4 w-4" /> },
-  { id: "merchandising", label: "Home Merchandising", icon: <Home className="h-4 w-4" /> },
-  { id: "photos", label: "Photos", icon: <Images className="h-4 w-4" /> },
-  { id: "import", label: "Bulk Import", icon: <FileSpreadsheet className="h-4 w-4" /> },
-  { id: "orders", label: "Orders", icon: <ShoppingCart className="h-4 w-4" />, section: "Sales" },
-  { id: "order-diagnostics", label: "Order Diagnostics", icon: <Stethoscope className="h-4 w-4" /> },
-  { id: "yoco-health", label: "Yoco Health", icon: <CreditCard className="h-4 w-4" /> },
-  { id: "payment-events", label: "Payment Events", icon: <ReceiptText className="h-4 w-4" /> },
-  { id: "email-health", label: "Email Health", icon: <ShieldCheck className="h-4 w-4" /> },
-  { id: "returns", label: "Returns", icon: <RotateCcw className="h-4 w-4" /> },
+// Navigation, grouped by the job you came here to do.
+//
+// WHY THIS WAS REGROUPED
+// ----------------------
+// Thirty-four destinations sat in a flat list under five headings that had
+// stopped describing their contents. "Engine Room", "System Health", "Edge
+// Function Health", "Sync Logs" and "Automations" were filed apart from each
+// other while all five answer one question -- is the machinery running -- and
+// the owner's own verdict was that he could not find his way around it.
+//
+// The grouping below is by intent, not by subsystem: what you are trying to do,
+// not which service implements it. Sections collapse, and only the one you are
+// working in stays open, so the list you scan is roughly seven items rather
+// than thirty-four.
+//
+// `defaultOpen` marks the three sections that carry daily work. The rest are
+// places you go deliberately, and a section you open deliberately is easier to
+// find than one that was always open and therefore always scrolled past.
 
-  { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
-  { id: "newsletter", label: "Newsletter", icon: <Mail className="h-4 w-4" /> },
-  { id: "quotes", label: "Quote Requests", icon: <FileSpreadsheet className="h-4 w-4" /> },
-  { id: "compliance-audit", label: "Compliance Audit", icon: <Shield className="h-4 w-4" /> },
-  { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" />, section: "Operations" },
-  { id: "ai-agent", label: "AI Agent", icon: <Bot className="h-4 w-4" /> },
-  { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },
-  { id: "notifications-mgmt", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
-  { id: "email-previews", label: "Email Previews", icon: <Mail className="h-4 w-4" /> },
-  { id: "engine-room", label: "Engine Room", icon: <Gauge className="h-4 w-4" />, section: "System" },
-  { id: "security", label: "Security", icon: <Shield className="h-4 w-4" /> },
-  { id: "integrations", label: "Integrations", icon: <Link2 className="h-4 w-4" /> },
-  { id: "cost-usage", label: "Cost & Usage", icon: <DollarSign className="h-4 w-4" /> },
-  { id: "backups", label: "Backups", icon: <HardDrive className="h-4 w-4" /> },
-  { id: "sync-logs", label: "Sync Logs", icon: <RefreshCw className="h-4 w-4" /> },
-  { id: "automations", label: "Automations", icon: <Zap className="h-4 w-4" /> },
-  { id: "edge-function-health", label: "Edge Function Health", icon: <Stethoscope className="h-4 w-4" /> },
-  { id: "settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
+interface TabDef { id: AdminTab; label: string; icon: React.ReactNode; }
+interface SectionDef { title: string; defaultOpen?: boolean; items: TabDef[]; }
+
+const SECTIONS: SectionDef[] = [
+  {
+    title: "Today", defaultOpen: true,
+    items: [
+      { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+      { id: "orders", label: "Orders", icon: <ShoppingCart className="h-4 w-4" /> },
+      { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" /> },
+      { id: "quotes", label: "Quote Requests", icon: <FileSpreadsheet className="h-4 w-4" /> },
+      { id: "returns", label: "Returns", icon: <RotateCcw className="h-4 w-4" /> },
+    ],
+  },
+  {
+    title: "Catalogue", defaultOpen: true,
+    items: [
+      { id: "products", label: "Products", icon: <Package className="h-4 w-4" /> },
+      { id: "photos", label: "Photos", icon: <Images className="h-4 w-4" /> },
+      { id: "import", label: "Bulk Import", icon: <FileSpreadsheet className="h-4 w-4" /> },
+      { id: "merchandising", label: "Home Merchandising", icon: <Home className="h-4 w-4" /> },
+      { id: "catalog-health", label: "Catalogue Health", icon: <Activity className="h-4 w-4" /> },
+    ],
+  },
+  {
+    title: "Customers",
+    items: [
+      { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
+      { id: "newsletter", label: "Newsletter", icon: <Mail className="h-4 w-4" /> },
+      { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },
+      { id: "ai-agent", label: "AI Agent", icon: <Bot className="h-4 w-4" /> },
+    ],
+  },
+  {
+    title: "Money",
+    items: [
+      { id: "payment-events", label: "Payment Events", icon: <ReceiptText className="h-4 w-4" /> },
+      { id: "yoco-health", label: "Yoco Health", icon: <CreditCard className="h-4 w-4" /> },
+      { id: "order-diagnostics", label: "Order Diagnostics", icon: <Stethoscope className="h-4 w-4" /> },
+      { id: "cost-usage", label: "Cost & Usage", icon: <DollarSign className="h-4 w-4" /> },
+    ],
+  },
+  {
+    // Everything that answers "is the machinery running". Engine Room leads
+    // because it is the one screen that summarises the other five, and burying
+    // it among them is why it went unread while the sync was stuck.
+    title: "Machinery", defaultOpen: true,
+    items: [
+      { id: "engine-room", label: "Engine Room", icon: <Gauge className="h-4 w-4" /> },
+      { id: "sync-logs", label: "Sync Logs", icon: <RefreshCw className="h-4 w-4" /> },
+      { id: "automations", label: "Automations", icon: <Zap className="h-4 w-4" /> },
+      { id: "edge-function-health", label: "Edge Functions", icon: <Stethoscope className="h-4 w-4" /> },
+      { id: "email-health", label: "Email Health", icon: <ShieldCheck className="h-4 w-4" /> },
+      { id: "system-health", label: "System Health", icon: <Activity className="h-4 w-4" /> },
+    ],
+  },
+  {
+    title: "Trust & Safety",
+    items: [
+      { id: "security", label: "Security", icon: <Shield className="h-4 w-4" /> },
+      { id: "compliance-audit", label: "Compliance Audit", icon: <Shield className="h-4 w-4" /> },
+      { id: "backups", label: "Backups", icon: <HardDrive className="h-4 w-4" /> },
+    ],
+  },
+  {
+    title: "Setup",
+    items: [
+      { id: "settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
+      { id: "integrations", label: "Integrations", icon: <Link2 className="h-4 w-4" /> },
+      { id: "notifications-mgmt", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
+      { id: "email-previews", label: "Email Previews", icon: <Mail className="h-4 w-4" /> },
+    ],
+  },
 ];
 
+/** Flat list, kept for the command palette (Ctrl+K), which searches everything
+ *  regardless of which section it lives in -- and remains the fastest route for
+ *  anyone who already knows the name of where they are going. */
+const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: string }[] =
+  SECTIONS.flatMap((s) => s.items.map((t) => ({ ...t, section: s.title })));
+
 const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, email, onSignOut, onOpenCommand }: AdminSidebarProps) => {
-  let lastSection = "";
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(SECTIONS.map((s) => [s.title, Boolean(s.defaultOpen)])),
+  );
 
   return (
     <>
@@ -93,27 +161,42 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, em
 
         {/* Nav */}
         <nav className="flex-1 py-3 overflow-y-auto">
-          {tabs.map((tab) => {
-            const showSection = tab.section && tab.section !== lastSection;
-            if (tab.section) lastSection = tab.section;
+          {SECTIONS.map((section) => {
+            const holdsActive = section.items.some((t) => t.id === activeTab);
+            // The section holding the current screen is always open, whatever
+            // the user last collapsed. Otherwise arriving via the command
+            // palette drops you somewhere with no visible sign of where "here"
+            // is, which is the disorientation this whole regroup is fixing.
+            const open = holdsActive || openSections[section.title];
+
             return (
-              <div key={tab.id}>
-                {showSection && (
-                  <p className="px-5 pt-5 pb-2 text-[10px] font-display font-bold text-sidebar-foreground/25 uppercase tracking-widest">
-                    {tab.section}
-                  </p>
-                )}
+              <div key={section.title} className="pb-1">
                 <button
-                  onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-5 py-2.5 text-[13px] font-medium transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? "bg-sidebar-accent text-sidebar-foreground border-l-2 border-l-sidebar-primary"
-                      : "text-sidebar-foreground/40 border-l-2 border-l-transparent hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/70"
-                  }`}
+                  onClick={() => setOpenSections((prev) => ({ ...prev, [section.title]: !open }))}
+                  aria-expanded={open}
+                  className="w-full flex items-center gap-2 px-5 pt-4 pb-2 text-[10px] font-display font-bold text-sidebar-foreground/40 uppercase tracking-widest hover:text-sidebar-foreground/70 transition-colors"
                 >
-                  <span className={activeTab === tab.id ? "text-sidebar-primary" : "text-sidebar-foreground/25"}>{tab.icon}</span>
-                  {tab.label}
+                  <ChevronRight className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`} />
+                  <span className="flex-1 text-left">{section.title}</span>
+                  {!open && (
+                    <span className="text-sidebar-foreground/30 font-mono normal-case">{section.items.length}</span>
+                  )}
                 </button>
+
+                {open && section.items.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-5 py-2.5 text-[13px] font-medium transition-all duration-200 ${
+                      activeTab === tab.id
+                        ? "bg-sidebar-accent text-sidebar-foreground border-l-2 border-l-sidebar-primary"
+                        : "text-sidebar-foreground/50 border-l-2 border-l-transparent hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/80"
+                    }`}
+                  >
+                    <span className={activeTab === tab.id ? "text-sidebar-primary" : "text-sidebar-foreground/35"}>{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
               </div>
             );
           })}

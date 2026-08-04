@@ -7,6 +7,7 @@ import CommandPalette from "@/components/admin/CommandPalette";
 import DashboardModule from "@/components/admin/DashboardModule";
 import ProductsModule from "@/components/admin/ProductsModule";
 import ImportModule from "@/components/admin/ImportModule";
+import PhotosModule from "@/components/admin/PhotosModule";
 import OrdersModule from "@/components/admin/OrdersModule";
 import OrderDiagnosticsModule from "@/components/admin/OrderDiagnosticsModule";
 import YocoHealthModule from "@/components/admin/YocoHealthModule";
@@ -176,6 +177,7 @@ const Admin = () => {
         <div className="p-4 lg:p-6">
           {activeTab === "dashboard" && <DashboardModule products={products} orders={orders} customers={customers} onRefresh={reload.loadOrders} />}
           {activeTab === "products" && (loading.products ? <LoadingSkeleton /> : <ProductsModule products={products} onReload={reload.loadProducts} />)}
+          {activeTab === "photos" && <PhotosModule />}
           {activeTab === "import" && <ImportModule />}
           {activeTab === "catalog-health" && <CatalogHealthModule />}
           {activeTab === "merchandising" && <MerchandisingModule />}

@@ -9,7 +9,31 @@ const AI_CHAT_EST_COST_ZAR = 0.06;
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  // Without this, ChatWidget's support reference never appears -- and had never
+  // appeared once in production.
+  //
+  // This function is served from *.supabase.co while the storefront is on
+  // aismartstore.co.za, so every call is cross-origin. Under CORS a browser
+  // only lets JavaScript read a six-header safelist; everything else is
+  // invisible to fetch() unless the server names it here. `resp.headers.get(
+  // "x-request-id")` was therefore always null, the `(ref: ...)` line was never
+  // appended, and a customer reporting "the chat is broken" had no reference to
+  // quote and we had nothing to search for.
+  //
+  // Nothing in the code looked wrong, which is why it survived: the read, the
+  // conditional and the string concatenation are all correct. The header simply
+  // never arrived.
+  "Access-Control-Expose-Headers": "x-request-id, sb-request-id",
 };
+
+/**
+ * Correlates a failing chat with its server-side log line.
+ *
+ * Generated here rather than relying on the platform's own sb-request-id, so
+ * the reference exists on every error path including the ones this function
+ * returns before the platform gets involved.
+ */
+const newRequestId = () => crypto.randomUUID().slice(0, 8);
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English", af: "Afrikaans", ar: "Arabic", de: "German", es: "Spanish",
@@ -49,6 +73,12 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // One id for the life of this request, echoed on every error response and
+  // logged beside every console.error, so a customer's "(ref: 3f2a91c4)" maps
+  // to exactly one line in the function logs.
+  const requestId = newRequestId();
+  const errorHeaders = { ...corsHeaders, "Content-Type": "application/json", "x-request-id": requestId };
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -60,7 +90,7 @@ Deno.serve(async (req) => {
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Authentication required" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: errorHeaders,
       });
     }
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -70,7 +100,7 @@ Deno.serve(async (req) => {
     if (userErr || !userData?.user) {
       return new Response(JSON.stringify({ error: "Authentication required" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: errorHeaders,
       });
     }
 
@@ -78,7 +108,7 @@ Deno.serve(async (req) => {
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages array required" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: errorHeaders,
       });
     }
 
@@ -89,7 +119,7 @@ Deno.serve(async (req) => {
     if (messages.length > MAX_MESSAGES) {
       return new Response(JSON.stringify({ error: `Conversation too long (max ${MAX_MESSAGES} messages).` }), {
         status: 413,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: errorHeaders,
       });
     }
     let totalChars = 0;
@@ -98,7 +128,7 @@ Deno.serve(async (req) => {
       if (c.length > MAX_MESSAGE_CHARS) {
         return new Response(JSON.stringify({ error: `Message too long (max ${MAX_MESSAGE_CHARS} characters).` }), {
           status: 413,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: errorHeaders,
         });
       }
       totalChars += c.length;
@@ -106,7 +136,7 @@ Deno.serve(async (req) => {
     if (totalChars > MAX_TOTAL_CHARS) {
       return new Response(JSON.stringify({ error: `Conversation payload too large (max ${MAX_TOTAL_CHARS} characters).` }), {
         status: 413,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: errorHeaders,
       });
     }
 
@@ -166,7 +196,7 @@ Deno.serve(async (req) => {
     if (!provider) {
       return new Response(JSON.stringify({ error: "No AI API key configured. Add an OpenAI key in admin settings." }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: errorHeaders,
       });
     }
     const { apiUrl, apiKey, model } = provider;
@@ -191,20 +221,20 @@ Deno.serve(async (req) => {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
           status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: errorHeaders,
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "AI credits exhausted. Please contact the store owner." }), {
           status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: errorHeaders,
         });
       }
       const t = await response.text();
       console.error("AI API error:", response.status, t);
       return new Response(JSON.stringify({ error: "AI service error" }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: errorHeaders,
       });
     }
 
@@ -227,7 +257,7 @@ Deno.serve(async (req) => {
     console.error("Chat error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: errorHeaders,
     });
   }
 });

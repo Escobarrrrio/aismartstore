@@ -13,6 +13,7 @@ import { withRetry } from "../_shared/retry.ts";
 
 import { resolveStall, willReachLimit, type StallState } from "./stall.ts";
 import { partitionByGate } from "./gate.ts";
+import { markupFor, sellingPriceFor } from "./markup.ts";
 
 const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
 const AXIZ_API_BASE = "https://api.goaxiz.co.za";
@@ -183,6 +184,23 @@ Deno.serve(async (req) => {
     const blockedImages = new Set<string>((blockRows ?? []).map((r: any) => r.url));
 
     const markupPct = Number(settings.axiz_markup_pct || "17");
+
+    // Margin by category, not one number for the whole catalogue. 17% on a
+    // R200 cable is R34 -- a card fee and a courier bag eat it -- while 17% on
+    // a R35,000 workstation is R5,950 on a line where the market pays single
+    // digits. Loaded once per run: it is a handful of rows, and the alternative
+    // is a database round trip per product.
+    const { data: markupRows } = await supabase
+      .from("category_markup")
+      .select("category, percent");
+    const markupRules: Array<{ category: string | null; percent: number }> =
+      (markupRows ?? []).map((r: any) => ({ category: r.category, percent: Number(r.percent) }));
+    // The store-wide setting stays the fallback when no rule table exists yet,
+    // so a sync running against a database without this migration prices
+    // exactly as it did before rather than defaulting everything to 17%.
+    if (!markupRules.some((r) => r.category == null)) {
+      markupRules.push({ category: null, percent: markupPct });
+    }
     // Floor below which a distributor line is treated as a feed artefact rather
     // than a sellable product. Axiz ships licence/registration "Trk" SKUs
     // alongside real stock -- they carried names like "HPE Alletra 6010 AF DC
@@ -271,7 +289,8 @@ Deno.serve(async (req) => {
           const ai = isAiRelated(searchable);
           if (ai) aiFlagged++;
           const cost = Number(item.price ?? 0);
-          const sellingPrice = Math.round(cost * (1 + markupPct / 100) * 100) / 100;
+          const effectiveMarkup = markupFor(item.productCategory, markupRules);
+          const sellingPrice = sellingPriceFor(cost, effectiveMarkup);
           const imgs = normalizeImages(item.imageGallery);
           const publishable = cost > 0 && imgs.length > 0 && sellingPrice >= minSellablePrice;
           if (cost > 0 && imgs.length > 0 && sellingPrice < minSellablePrice) underpriced++;
@@ -377,7 +396,10 @@ Deno.serve(async (req) => {
               product_id: p.id,
               cost_price: src._cost,
               selling_price: src.price,
-              margin_percentage: markupPct,
+              // The markup actually applied to THIS product, not the
+              // store-wide default -- otherwise every cost row claims a margin
+              // the product was never priced at.
+              margin_percentage: markupFor(src.category, markupRules),
               axiz_product_id: src._axiz_id,
               updated_at: now,
             }];

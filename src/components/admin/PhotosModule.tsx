@@ -54,6 +54,38 @@ const STORY_SLOTS: Array<{ key: StoryKey; title: string; hint: string }> = [
   },
 ];
 
+/**
+ * Every image extension worth accepting from a folder of product photos.
+ *
+ * Checked in addition to the MIME type, never instead of it, because Windows
+ * reports an empty `type` for anything its registry does not recognise -- HEIC
+ * and HEIF straight off an iPhone being the everyday case. Filtering on MIME
+ * alone silently discarded those files before they were ever counted, so a
+ * folder of twenty iPhone photos looked like an empty folder and the owner was
+ * told "nothing in there was a photo" about photos that were plainly there.
+ */
+const PHOTO_EXTENSIONS = new Set([
+  "jpg", "jpeg", "jpe", "jfif", "png", "webp", "gif", "bmp",
+  "heic", "heif", "avif", "tif", "tiff",
+]);
+
+/** True for anything we should treat as a product photo. */
+const isPhoto = (f: File): boolean => {
+  if (f.type.startsWith("image/")) return true;
+  const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+  return PHOTO_EXTENSIONS.has(ext);
+};
+
+/**
+ * Ceiling on how many images one product carries.
+ *
+ * A folder can legitimately hold two dozen shots of the same bulb. The product
+ * page shows a handful; the rest are weight in every query that selects
+ * `images`, on a database already close to its tier limit. Newest first, so an
+ * upload always wins over what was there before.
+ */
+const MAX_IMAGES_PER_PRODUCT = 8;
+
 /** A product with no usable photo: no images at all, or only the placeholder. */
 const needsPhoto = (p: { images: string[] | null }) => {
   const first = p.images?.[0];
@@ -108,20 +140,50 @@ const PhotosModule = () => {
 
   const load = async () => {
     setLoading(true);
-    // Only products a shopper could actually reach. A photo on a deactivated
-    // row helps nobody, and including them would bury the six that matter in
-    // several thousand that do not.
-    const { data, error } = await supabase
-      .from("products")
-      .select("id, name, brand, sku, images, stock_status, price, is_active")
-      .eq("is_active", true)
-      .order("name")
-      .limit(4000);
-    if (error) {
-      toast({ title: "Could not load products", description: error.message, variant: "destructive" });
+
+    // Fetched page by page, because PostgREST silently caps every response at
+    // 1,000 rows no matter what `.limit()` says.
+    //
+    // This is the bug that made the whole screen look broken. With 3,488 active
+    // products, a single request returned only the first 1,000 by name -- so
+    // the browser's idea of "the catalogue" stopped somewhere in the G's.
+    // Govee sits at index 847 and matched perfectly; LIFX (3,113), Nanoleaf
+    // (3,212), Oura (3,220), SwitchBot (3,447) and Withings (3,486) were never
+    // in the list to be matched against, and the screen reported "no confident
+    // match" -- which is true, and completely misleading, because the products
+    // were not absent from the catalogue, only from the page we had asked for.
+    //
+    // One folder out of five worked, and the one that worked was the only one
+    // alphabetically early enough to survive the cap.
+    const PAGE = 1000;
+    const all: ProductRow[] = [];
+    let from = 0;
+    let failed: string | null = null;
+
+    for (;;) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, brand, sku, images, stock_status, price, is_active")
+        .eq("is_active", true)
+        .order("name")
+        .range(from, from + PAGE - 1);
+
+      if (error) { failed = error.message; break; }
+      const page = (data ?? []) as ProductRow[];
+      all.push(...page);
+      // A short page is the last page. Guarded on the page size rather than a
+      // total count so it terminates even if rows are added mid-fetch.
+      if (page.length < PAGE) break;
+      from += PAGE;
+      // Belt and braces: never loop forever on a server that ignores range.
+      if (from > 100_000) break;
+    }
+
+    if (failed) {
+      toast({ title: "Could not load products", description: failed, variant: "destructive" });
       setProducts([]);
     } else {
-      setProducts((data ?? []) as ProductRow[]);
+      setProducts(all);
     }
 
     const { data: settings } = await supabase
@@ -169,7 +231,7 @@ const PhotosModule = () => {
 
     const groups = new Map<string, File[]>();
     for (const f of files) {
-      if (!f.type.startsWith("image/")) continue;  // .DS_Store, thumbs.db, stray PDFs
+      if (!isPhoto(f)) continue;  // .DS_Store, thumbs.db, stray PDFs
       const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath ?? "";
       const folder = folderOf(rel) || "(loose files)";
       const list = groups.get(folder) ?? [];
@@ -245,26 +307,66 @@ const PhotosModule = () => {
     if (ready.length === 0) return;
     setBusy(true);
 
+    let totalLive = 0;
+    let totalSkipped = 0;
+
     for (const group of ready) {
       setStaged((prev) => prev.map((s) => (s.folder === group.folder ? { ...s, state: "uploading" } : s)));
-      try {
-        const urls: string[] = [];
-        for (const file of group.files) urls.push(await uploadOne(file));
 
+      // Each file is attempted independently. A single unreadable photo used to
+      // throw and take its whole folder down with it -- twenty-three good
+      // photos discarded because the twenty-fourth was a screenshot the browser
+      // could not decode. Partial success is the honest outcome and is reported
+      // as one.
+      const urls: string[] = [];
+      const failures: string[] = [];
+      for (const file of group.files) {
+        try {
+          urls.push(await uploadOne(file));
+        } catch (err) {
+          console.error("[photos] upload failed", file.name, err);
+          failures.push(`${file.name}: ${err instanceof Error ? err.message : "failed"}`);
+        }
+      }
+
+      if (urls.length === 0) {
+        setStaged((prev) =>
+          prev.map((s) =>
+            s.folder === group.folder
+              ? {
+                  ...s,
+                  state: "error",
+                  message: failures[0] ?? "No photo in this folder could be uploaded.",
+                }
+              : s,
+          ),
+        );
+        continue;
+      }
+
+      try {
         // The placeholder is dropped rather than kept: while it occupies
         // position one the product stays hidden from the home page, which is
         // the entire reason for uploading.
         const existing = keepableImages(byId.get(group.productId!)?.images);
         const { error } = await supabase
           .from("products")
-          .update({ images: [...urls, ...existing] })
+          .update({ images: [...urls, ...existing].slice(0, MAX_IMAGES_PER_PRODUCT) })
           .eq("id", group.productId!);
         if (error) throw new Error(error.message);
 
+        totalLive += urls.length;
+        totalSkipped += failures.length;
         setStaged((prev) =>
           prev.map((s) =>
             s.folder === group.folder
-              ? { ...s, state: "done", message: `${urls.length} photo${urls.length === 1 ? "" : "s"} live` }
+              ? {
+                  ...s,
+                  state: "done",
+                  message:
+                    `${urls.length} photo${urls.length === 1 ? "" : "s"} live` +
+                    (failures.length ? ` · ${failures.length} could not be read and were skipped` : ""),
+                }
               : s,
           ),
         );
@@ -281,21 +383,54 @@ const PhotosModule = () => {
 
     setBusy(false);
     await load();
-    toast({ title: "Photos applied", description: "Refresh the storefront to see them." });
+    toast({
+      title: totalLive > 0 ? "Photos applied" : "Nothing uploaded",
+      description: totalLive > 0
+        ? `${totalLive} photo${totalLive === 1 ? "" : "s"} live${totalSkipped ? `, ${totalSkipped} skipped` : ""}. Refresh the storefront to see them.`
+        : "Every photo failed — the reason is shown on each folder above.",
+      variant: totalLive > 0 ? undefined : "destructive",
+    });
   };
 
   /** Single-product upload, for the one-off case and non-Chromium browsers. */
   const uploadForProduct = async (productId: string, fileList: FileList | null) => {
-    const files = Array.from(fileList ?? []).filter((f) => f.type.startsWith("image/"));
-    if (files.length === 0) return;
+    const files = Array.from(fileList ?? []).filter(isPhoto);
+    if (files.length === 0) {
+      toast({
+        title: "Nothing to upload",
+        description: "None of the selected files looked like a photo.",
+        variant: "destructive",
+      });
+      return;
+    }
     setBusy(true);
+    // Same per-file tolerance as the folder path: one unreadable photo must not
+    // discard the ones either side of it.
+    const urls: string[] = [];
+    const failures: string[] = [];
+    for (const f of files) {
+      try {
+        urls.push(await uploadOne(f));
+      } catch (err) {
+        console.error("[photos] upload failed", f.name, err);
+        failures.push(`${f.name}: ${err instanceof Error ? err.message : "failed"}`);
+      }
+    }
+
     try {
-      const urls: string[] = [];
-      for (const f of files) urls.push(await uploadOne(f));
+      if (urls.length === 0) throw new Error(failures[0] ?? "Upload failed");
       const existing = keepableImages(byId.get(productId)?.images);
-      const { error } = await supabase.from("products").update({ images: [...urls, ...existing] }).eq("id", productId);
+      const { error } = await supabase
+        .from("products")
+        .update({ images: [...urls, ...existing].slice(0, MAX_IMAGES_PER_PRODUCT) })
+        .eq("id", productId);
       if (error) throw new Error(error.message);
-      toast({ title: "Photo added", description: `${urls.length} image${urls.length === 1 ? "" : "s"} uploaded.` });
+      toast({
+        title: "Photo added",
+        description:
+          `${urls.length} image${urls.length === 1 ? "" : "s"} uploaded` +
+          (failures.length ? `, ${failures.length} skipped.` : "."),
+      });
       await load();
     } catch (err) {
       toast({
@@ -309,7 +444,7 @@ const PhotosModule = () => {
   };
 
   const uploadStoryPhoto = async (key: StoryKey, file: File | undefined) => {
-    if (!file || !file.type.startsWith("image/")) return;
+    if (!file || !isPhoto(file)) return;
     setBusy(true);
     try {
       const url = await uploadOne(file);
@@ -384,7 +519,13 @@ const PhotosModule = () => {
               ref={folderInput}
               type="file"
               multiple
-              accept="image/*"
+              /* No `accept` filter here, deliberately. Combined with
+                 webkitdirectory, `accept="image/*"` makes the browser hide
+                 files whose MIME type it does not recognise -- which on Windows
+                 includes HEIC/HEIF straight off an iPhone. The files never
+                 reach onChange at all, so no amount of filtering in our code
+                 can recover them. isPhoto() does the filtering instead, where
+                 it can also fall back to the file extension. */
               disabled={loading}
               onChange={handleFolderPick}
               className="hidden"

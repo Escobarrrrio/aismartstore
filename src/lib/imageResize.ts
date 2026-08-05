@@ -44,12 +44,25 @@ export interface ResizedImage {
 export async function resizeForWeb(file: File): Promise<ResizedImage> {
   const originalBytes = file.size;
   const inferredExt = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const original: ResizedImage = { blob: file, ext: inferredExt, originalBytes, bytes: originalBytes };
 
-  if (originalBytes <= PASSTHROUGH_BYTES) {
-    return { blob: file, ext: inferredExt, originalBytes, bytes: originalBytes };
+  if (originalBytes <= PASSTHROUGH_BYTES) return original;
+
+  // Resizing is an optimisation, never a gate.
+  //
+  // The browser cannot decode every format a camera or phone produces --
+  // HEIC/HEIF off an iPhone is the common one, and `createImageBitmap` simply
+  // throws on it. An earlier version let that throw propagate, which meant one
+  // undecodable photo in a folder failed the whole folder and the owner was
+  // told nothing useful. A photo we cannot shrink is still a photo worth
+  // uploading: hand back the original and let it through at full size.
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await loadBitmap(file);
+  } catch {
+    return original;
   }
 
-  const bitmap = await loadBitmap(file);
   try {
     const scale = Math.min(1, MAX_EDGE_PX / Math.max(bitmap.width, bitmap.height));
     const w = Math.max(1, Math.round(bitmap.width * scale));

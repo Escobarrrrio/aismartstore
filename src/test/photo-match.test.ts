@@ -150,3 +150,50 @@ describe("orderPhotos", () => {
     expect(orderPhotos(["10.jpg", "2.jpg", "1.jpg"])).toEqual(["1.jpg", "2.jpg", "10.jpg"]);
   });
 });
+
+// The production incident, reproduced as a test.
+//
+// PostgREST caps every response at 1,000 rows regardless of `.limit()`. The
+// Photos screen fetched the catalogue in one request, so the browser only ever
+// held the first 1,000 products by name. Of the owner's five folders, only
+// Govee (alphabetical index 847) fell inside that window; LIFX, Nanoleaf, Oura
+// and SwitchBot all sit past index 3,100 and were simply not in the list being
+// matched against. The screen said "no confident match" -- literally true, and
+// entirely misleading.
+describe("matching against a truncated catalogue", () => {
+  // Products the real folders need, positioned as they are in production:
+  // Govee early, the rest far past a 1,000-row cut.
+  const filler = (n: number, prefix: string): ProductLike[] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `${prefix}-${i}`,
+      name: `${prefix} Filler Product ${i}`,
+      brand: prefix,
+      sku: `${prefix}-SKU-${i}`,
+    }));
+
+  const FULL: ProductLike[] = [
+    ...filler(800, "Aaa"),
+    { id: "govee", name: "Govee Smart Outdoor Wall Light", brand: "Govee", sku: "H7078" },
+    ...filler(2200, "Zzz"),
+    { id: "lifx", name: "LIFX Color A19 Bulb", brand: "LIFX", sku: "GW-T-LIFX Color A19/E26" },
+    { id: "nanoleaf", name: "Nanoleaf Elements 7-Panel Kit", brand: "Nanoleaf", sku: "NL52-K-7002HB-7PK" },
+    { id: "oura", name: "Oura Ring 4 (Silver, Size 9)", brand: "Oura", sku: "GW-T-Oura Ring 4-Silver-Size 9" },
+    { id: "switchbot", name: "SwitchBot Hub Mini", brand: "SwitchBot", sku: "GW-T-Switchbot Hub Mini Smart remote" },
+  ];
+
+  it("reproduces the failure when only the first 1,000 rows are loaded", () => {
+    const truncated = FULL.slice(0, 1000);
+    const matched = matchFolders(REAL_FOLDERS, truncated).filter((m) => m.productId);
+    // Exactly what the owner saw: one folder of five, and it is Govee.
+    expect(matched).toHaveLength(1);
+    expect(matched[0].productId).toBe("govee");
+  });
+
+  it("matches all five once the whole catalogue is loaded", () => {
+    const matched = matchFolders(REAL_FOLDERS, FULL).filter((m) => m.productId);
+    expect(matched).toHaveLength(5);
+    expect(new Set(matched.map((m) => m.productId))).toEqual(
+      new Set(["govee", "lifx", "nanoleaf", "oura", "switchbot"]),
+    );
+  });
+});

@@ -12,6 +12,7 @@ import { withRetry } from "../_shared/retry.ts";
 // =====================================================================
 
 import { resolveStall, willReachLimit, type StallState } from "./stall.ts";
+import { partitionByGate } from "./gate.ts";
 
 const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
 const AXIZ_API_BASE = "https://api.goaxiz.co.za";
@@ -219,6 +220,8 @@ Deno.serve(async (req) => {
     let aiFlagged = 0;
     // Distributor lines withheld for being priced below the sellable floor.
     let underpriced = 0;
+    /** Rows the distributor returned that are not worth storing. See gate.ts. */
+    let skippedUnpublishable = 0;
     let pagesDone = 0;
     let catalogComplete = false;
     let deferredReason: string | null = null;
@@ -335,7 +338,30 @@ Deno.serve(async (req) => {
           return [];
         };
 
-        for (const batch of chunk(rows, UPSERT_BATCH_SIZE)) {
+        // Only rows that can actually be shown are written. See gate.ts --
+        // storing the ~172,000 unpublishable SKUs was 406MB of a 456MB
+        // database describing products no shopper can reach, and the
+        // distributor is re-read every 15 minutes so nothing is lost by
+        // leaving them out.
+        const { store: storable, deactivate } = partitionByGate(rows, minSellablePrice);
+        skippedUnpublishable += deactivate.length;
+
+        // A SKU that is live today and fails the gate today must come DOWN,
+        // not merely be skipped -- otherwise it sits on the storefront
+        // forever with stale data. `update` touches only rows that already
+        // exist, so this can never reintroduce what the gate just excluded.
+        if (deactivate.length > 0) {
+          for (const skuBatch of chunk(deactivate, UPSERT_BATCH_SIZE)) {
+            const { error: dErr } = await supabase
+              .from("products")
+              .update({ is_active: false, last_synced_at: now })
+              .in("sku", skuBatch)
+              .eq("is_active", true);
+            if (dErr) notes.push(`deactivate(${skuBatch.length}): ${dErr.message}`);
+          }
+        }
+
+        for (const batch of chunk(storable, UPSERT_BATCH_SIZE)) {
           const upserted = await upsertWithSplit(batch);
           if (upserted.length === 0) continue;
           totalSynced += upserted.length;
@@ -441,7 +467,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`}${deferredReason ? ` | deferred: ${deferredReason}` : ""} | AI-flagged this run: ${aiFlagged} | withheld (below R${minSellablePrice}): ${underpriced}${notes.length ? " | " + notes.join("; ") : ""}`;
+    const summary = `v3 | ${catalogComplete ? "catalog_complete" : `in_progress, next cursor ${nextCursor}`}${deferredReason ? ` | deferred: ${deferredReason}` : ""} | AI-flagged this run: ${aiFlagged} | withheld (below R${minSellablePrice}): ${underpriced} | not stored (unpublishable): ${skippedUnpublishable}${notes.length ? " | " + notes.join("; ") : ""}`;
     await supabase.from("sync_logs").update({
       status: deferredReason ? "deferred" : (totalFailed === 0 && notes.length === 0 ? "success" : "partial"),
       items_synced: totalSynced,
@@ -450,7 +476,7 @@ Deno.serve(async (req) => {
       completed_at: new Date().toISOString(),
     }).eq("id", logRow.id);
 
-    return new Response(JSON.stringify({ status: "completed", version: "v3", synced: totalSynced, failed: totalFailed, aiFlagged, underpriced, catalogComplete, nextCursor }), {
+    return new Response(JSON.stringify({ status: "completed", version: "v3", synced: totalSynced, failed: totalFailed, aiFlagged, underpriced, skippedUnpublishable, catalogComplete, nextCursor }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {

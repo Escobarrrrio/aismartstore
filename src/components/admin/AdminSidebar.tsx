@@ -3,7 +3,7 @@ import {
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
   HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard, ShieldCheck, Bot,
-  ReceiptText, Home, Gauge, Images, ChevronRight
+  ReceiptText, Home, Gauge, Images, ChevronRight, TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import Logo from "@/components/Logo";
@@ -13,7 +13,7 @@ export type AdminTab =
   | "support" | "returns" | "ai-logs" | "sync-logs" | "automations"
   | "edge-function-health"
   | "photos" | "settings" | "system-health" | "security" | "cost-usage" | "engine-room"
-  | "integrations" | "backups" | "catalog-health" | "merchandising"
+  | "integrations" | "backups" | "catalog-health" | "merchandising" | "sourcing"
   | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
   | "compliance-audit"
   | "order-diagnostics" | "yoco-health" | "payment-events" | "email-health" | "ai-agent";
@@ -69,6 +69,7 @@ const SECTIONS: SectionDef[] = [
       { id: "photos", label: "Photos", icon: <Images className="h-4 w-4" /> },
       { id: "import", label: "Bulk Import", icon: <FileSpreadsheet className="h-4 w-4" /> },
       { id: "merchandising", label: "Home Merchandising", icon: <Home className="h-4 w-4" /> },
+      { id: "sourcing", label: "Sourcing & Pricing", icon: <TrendingUp className="h-4 w-4" /> },
       { id: "catalog-health", label: "Catalogue Health", icon: <Activity className="h-4 w-4" /> },
     ],
   },

@@ -259,7 +259,8 @@
       "Operating system": "Isistimu yokusebenza",
       "Warranty": "Iwaranti",
       "Supplier": "Umthengisi"
-    }
+    },
+    "back": "Emuva"
   },
   "notFound": {
     "message": "Maa! Ikhasi alitholakali",

@@ -298,6 +298,27 @@ export type Database = {
         }
         Relationships: []
       }
+      category_markup: {
+        Row: {
+          category: string | null
+          note: string | null
+          percent: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          note?: string | null
+          percent: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          note?: string | null
+          percent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -1871,6 +1892,22 @@ export type Database = {
       }
     }
     Views: {
+      category_pricing_summary: {
+        Row: {
+          avg_cost: number | null
+          avg_margin_pct: number | null
+          avg_price: number | null
+          below_cost: number | null
+          category: string | null
+          in_stock: number | null
+          markup_pct: number | null
+          max_price: number | null
+          min_price: number | null
+          products: number | null
+          stale: number | null
+        }
+        Relationships: []
+      }
       ai_pulse_digest_candidates: {
         Row: {
           category: string | null
@@ -1902,6 +1939,24 @@ export type Database = {
       }
     }
     Functions: {
+      admin_command_metrics: { Args: never; Returns: Json }
+      get_category_pricing: {
+        Args: never
+        Returns: {
+          avg_cost: number | null
+          avg_margin_pct: number | null
+          avg_price: number | null
+          below_cost: number | null
+          category: string | null
+          in_stock: number | null
+          markup_pct: number | null
+          max_price: number | null
+          min_price: number | null
+          products: number | null
+          stale: number | null
+        }[]
+      }
+      markup_for_category: { Args: { p_category: string }; Returns: number }
       ai_pulse_enqueue_feeds: { Args: never; Returns: number }
       ai_pulse_headline_quality: { Args: { p_title: string }; Returns: number }
       ai_pulse_ingest_feed_responses: {

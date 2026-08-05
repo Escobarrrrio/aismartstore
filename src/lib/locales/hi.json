@@ -259,7 +259,8 @@
       "Operating system": "ऑपरेटिंग सिस्टम",
       "Warranty": "वारंटी",
       "Supplier": "आपूर्तिकर्ता"
-    }
+    },
+    "back": "वापस"
   },
   "notFound": {
     "message": "उफ़! पेज नहीं मिला",

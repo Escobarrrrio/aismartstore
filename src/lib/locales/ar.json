@@ -259,7 +259,8 @@
       "Operating system": "نظام التشغيل",
       "Warranty": "الضمان",
       "Supplier": "المورّد"
-    }
+    },
+    "back": "رجوع"
   },
   "notFound": {
     "message": "عذرًا! الصفحة غير موجودة",

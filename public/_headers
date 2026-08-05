@@ -1,0 +1,55 @@
+# Security headers for aismartstore.co.za
+#
+# The storefront was sending none. Not weak ones -- none. No clickjacking
+# protection, no referrer policy, no MIME-sniffing protection, no CSP. A store
+# that takes card details and holds customer addresses under POPIA should not
+# be missing the cheapest layer of defence there is.
+#
+# This file is the Netlify / Cloudflare Pages format. `vercel.json` carries the
+# same set for Vercel, which is where the migration is heading. Both are kept
+# in step deliberately: a header that exists on one host and not the other is
+# a protection that silently disappears at cutover.
+#
+# CSP is Report-Only ON PURPOSE. A content policy tight enough to be useful is
+# also tight enough to white-screen a storefront if one origin is missed, and
+# taking the shop down to harden it is a bad trade. Report-Only collects the
+# violations for a week; the policy then goes enforcing with evidence behind it
+# rather than guesswork.
+
+/*
+  # Clickjacking. Without this the whole site can be framed inside an attacker's
+  # page with an invisible overlay -- the classic way to harvest a click on
+  # "Confirm order" or a logged-in admin's "Delete".
+  X-Frame-Options: DENY
+
+  # Stops a browser guessing that an uploaded "photo" is actually JavaScript.
+  # This store lets an admin upload arbitrary files to a public bucket, which
+  # is exactly the case this header exists for.
+  X-Content-Type-Options: nosniff
+
+  # Full URLs leak to every third party otherwise -- including order-tracking
+  # and password-reset links that carry tokens in the path.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Nothing here needs a camera, a microphone or a wallet. Denying them means a
+  # compromised script cannot ask on the store's behalf.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+
+  # A year, subdomains included. Only meaningful over HTTPS, which this is.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+  # Cross-origin isolation for the document, without breaking the images and
+  # fonts that legitimately come from elsewhere.
+  Cross-Origin-Opener-Policy: same-origin
+  X-DNS-Prefetch-Control: off
+
+  # Report-Only. Origins below are the ones the app genuinely uses:
+  #   supabase.co        database, auth, storage, edge functions
+  #   fonts.googleapis   / fonts.gstatic  webfonts
+  #   storage.googleapis / images.unsplash  product and editorial imagery
+  #   thecourierguy      shipping rates and tracking
+  #   hook.eu1.make.com  automation webhooks
+  #   sentry.io          error reporting
+  # 'unsafe-inline' for styles is required by the CSS-in-JS the UI kit emits;
+  # scripts deliberately do NOT get it.
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://portal.thecourierguy.co.za https://hook.eu1.make.com https://*.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'

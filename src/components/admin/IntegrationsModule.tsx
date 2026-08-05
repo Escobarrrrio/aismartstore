@@ -20,7 +20,6 @@ const IntegrationsModule = () => {
     { id: "axiz", name: "Axiz Distributor", desc: "Product catalogue sync", icon: Package, key: "axiz_api_key" },
     { id: "yoco", name: "Yoco Payments", desc: "Payment processing", icon: CreditCard, key: "yoco_secret_key" },
     { id: "telnyx", name: "Telnyx SMS", desc: "SMS notifications", icon: Phone, key: "telnyx_api_key" },
-    { id: "openai", name: "OpenAI API", desc: "AI chatbot engine", icon: Bot, key: "openai_api_key" },
     { id: "make", name: "Make Pro", desc: "Workflow automation", icon: Zap, key: "make_webhook_url" },
   ];
 

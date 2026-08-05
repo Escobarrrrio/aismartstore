@@ -130,7 +130,7 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
 
   const handleSaveAll = async () => {
     setSaving(true);
-    const keys = ["yoco_secret_key", "notification_email", "openai_api_key", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "telnyx_api_key", "daily_budget", "monthly_budget", "openai_budget"];
+    const keys = ["yoco_secret_key", "notification_email", "make_webhook_url", "axiz_api_key", "axiz_markup_pct", "telnyx_api_key", "daily_budget", "monthly_budget"];
     await Promise.all(keys.map((k) => saveSetting(k, settings[k] || "")));
     toast({ title: "All settings saved", description: "Configuration updated across all modules." });
     setSaving(false);
@@ -316,7 +316,6 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
                 // Stripe's sk_live_ -- see supabase/functions/yoco-health for
                 // the fuller story of how that assumption cost a false "Fail".
                 { name: "Yoco Secret Key", key: "yoco_secret_key", placeholder: "yoco_live_...", sensitive: true },
-                { name: "OpenAI API Key", key: "openai_api_key", placeholder: "sk-...", sensitive: true },
                 { name: "Make Pro Webhook", key: "make_webhook_url", placeholder: "https://hook.eu1.make.com/..." },
                 { name: "Axiz API Key", key: "axiz_api_key", placeholder: "Your Axiz API key...", sensitive: true },
                 { name: "Telnyx API Key", key: "telnyx_api_key", placeholder: "KEY...", sensitive: true },
@@ -421,31 +420,14 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
                 <label className="block text-xs font-semibold mb-1.5">Monthly Budget (ZAR)</label>
                 <input type="number" value={settings.monthly_budget || "5000"} onChange={(e) => update("monthly_budget", e.target.value)} className="input-premium font-mono" />
               </div>
-              <div>
-                <label className="block text-xs font-semibold mb-1.5">OpenAI Budget (ZAR)</label>
-                <input type="number" value={settings.openai_budget || "1000"} onChange={(e) => update("openai_budget", e.target.value)} className="input-premium font-mono" />
-              </div>
             </div>
           </SectionCard>
-          <SectionCard title="Service Spend Breakdown" icon={<BarChart3 className="h-4 w-4" />}>
-            <div className="space-y-3">
-              {[
-                { service: "OpenAI (Chat)", spend: "R0.00", limit: "R1,000", pct: 0 },
-                { service: "Telnyx (SMS)", spend: "R0.00", limit: "R500", pct: 0 },
-                { service: "Make Pro (Automation)", spend: "R0.00", limit: "R300", pct: 0 },
-              ].map((svc, i) => (
-                <div key={i} className="p-3 rounded-xl border border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold">{svc.service}</span>
-                    <span className="text-xs text-muted-foreground">{svc.spend} / {svc.limit}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full gradient-brand transition-all" style={{ width: `${svc.pct}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
+          {/* "Service Spend Breakdown" lived here: three hardcoded rows reading
+              R0.00 against invented limits, for services that were never
+              queried. A panel that shows the same numbers whatever is actually
+              happening is worse than no panel -- it is a spend dashboard that
+              would read R0.00 through a runaway bill. The real figures, read
+              from spend_caps and spend_ledger, are in Admin -> Engine Room. */}
           <SectionCard title="Financial Controls" icon={<CreditCard className="h-4 w-4" />}>
             <div className="grid grid-cols-2 gap-2">
               <QuickAction label="Throttle AI Spend" icon={<TrendingDown className="h-4 w-4" />} variant="warning" onClick={() => confirmAction("throttle_spend", "Throttle AI Spending")} />
@@ -523,7 +505,6 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
                 { name: "Edge Functions", status: "ok" as const },
                 { name: "Yoco API", status: secretStatus(settings.yoco_secret_key) as "ok" | "warn" | "error" },
                 { name: "Axiz API", status: secretStatus(settings.axiz_api_key) as "ok" | "warn" | "error" },
-                { name: "OpenAI", status: secretStatus(settings.openai_api_key) as "ok" | "warn" | "error" },
               ].map((svc, i) => (
                 <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
                   <span className="text-sm font-medium">{svc.name}</span>

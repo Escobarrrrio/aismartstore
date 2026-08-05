@@ -259,7 +259,8 @@
       "Operating system": "Sistema operativo",
       "Warranty": "Garantia",
       "Supplier": "Fornecedor"
-    }
+    },
+    "back": "Voltar"
   },
   "notFound": {
     "message": "Ops! Página não encontrada",

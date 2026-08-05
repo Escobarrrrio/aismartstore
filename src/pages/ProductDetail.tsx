@@ -194,6 +194,31 @@ const ProductDetail = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8 md:py-12">
+        {/* Back.
+            The breadcrumb above already says where you are, but it does not
+            take you where you came from: a shopper who reached this page from
+            page 4 of the catalogue, or from a search, lands back at the top of
+            /products having lost their place. This goes back through history
+            when there is history to go back through, and falls back to the
+            catalogue when there is not (opened in a new tab, or arrived from
+            Google -- where "back" would otherwise leave the site entirely).
+            Sized at 44px minimum so it is a comfortable tap target on a phone,
+            which is where most of this traffic is. */}
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) navigate(-1);
+            else navigate("/products");
+          }}
+          className="inline-flex items-center gap-2 min-h-[44px] -ml-2 sm:-ml-3 pl-2 pr-3 sm:pl-3 sm:pr-4 mb-5 sm:mb-6 rounded-full
+                     text-sm font-semibold text-muted-foreground hover:text-foreground
+                     hover:bg-muted/70 active:bg-muted transition-colors
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        >
+          <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {t("productDetail.back")}
+        </button>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Images */}
           <div className="space-y-4">

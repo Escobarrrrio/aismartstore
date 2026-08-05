@@ -259,7 +259,8 @@
       "Operating system": "Bedryfstelsel",
       "Warranty": "Waarborg",
       "Supplier": "Verskaffer"
-    }
+    },
+    "back": "Terug"
   },
   "notFound": {
     "message": "Oeps! Bladsy nie gevind nie",

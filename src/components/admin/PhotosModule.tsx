@@ -28,6 +28,7 @@ import {
   Images, FolderUp, Loader2, Check, AlertTriangle, X, RefreshCw, Upload, Search,
 } from "lucide-react";
 import { matchFolders, folderOf, orderPhotos, MATCH_THRESHOLD, type ProductLike } from "@/lib/photoMatch";
+import CoverPhotoPicker from "./CoverPhotoPicker";
 import { resizeForWeb, formatBytes } from "@/lib/imageResize";
 
 interface ProductRow extends ProductLike {
@@ -125,6 +126,8 @@ const PhotosModule = () => {
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState("");
   const [story, setStory] = useState<Partial<Record<StoryKey, string>>>({});
+  /** Product whose photo grid is open, for choosing which one leads. */
+  const [coverFor, setCoverFor] = useState<ProductRow | null>(null);
   const folderInput = useRef<HTMLInputElement>(null);
 
   // `webkitdirectory` is not in React's typed attribute set, and setting it via
@@ -155,6 +158,21 @@ const PhotosModule = () => {
     //
     // One folder out of five worked, and the one that worked was the only one
     // alphabetically early enough to survive the cap.
+    // A product with no photo is, by the catalogue's own rules, deactivated --
+    // and a product with no photo is exactly the one you are here to upload a
+    // photo for. Loading only `is_active = true` therefore excluded precisely
+    // the products this screen exists to fix.
+    //
+    // That is why the Roborock Saros folder reported "no confident match" while
+    // the other five matched: the product is in the catalogue
+    // ("Roborock Saros 20 Ultimate AI Robot Vacuum Cleaner and Mop", R35,098.83,
+    // zero images) but it was never in the list to match against, and it could
+    // not be reached from the manual picker either.
+    //
+    // `or(...)` widens the load to include deactivated products that are only
+    // deactivated for want of a photograph. It deliberately does NOT pull in
+    // the ~172,000 rows with no price -- those are distributor noise, not
+    // products, and loading them would put this screen back where it started.
     const PAGE = 1000;
     const all: ProductRow[] = [];
     let from = 0;
@@ -164,7 +182,8 @@ const PhotosModule = () => {
       const { data, error } = await supabase
         .from("products")
         .select("id, name, brand, sku, images, stock_status, price, is_active")
-        .eq("is_active", true)
+        .or("is_active.eq.true,and(is_active.eq.false,images.is.null)")
+        .gt("price", 0)
         .order("name")
         .range(from, from + PAGE - 1);
 
@@ -309,6 +328,8 @@ const PhotosModule = () => {
 
     let totalLive = 0;
     let totalSkipped = 0;
+    /** Products that were hidden for having no photo and are now on the storefront. */
+    let reactivated = 0;
 
     for (const group of ready) {
       setStaged((prev) => prev.map((s) => (s.folder === group.folder ? { ...s, state: "uploading" } : s)));
@@ -348,13 +369,26 @@ const PhotosModule = () => {
         // The placeholder is dropped rather than kept: while it occupies
         // position one the product stays hidden from the home page, which is
         // the entire reason for uploading.
-        const existing = keepableImages(byId.get(group.productId!)?.images);
+        const target = byId.get(group.productId!);
+        const existing = keepableImages(target?.images);
+
+        // Uploading a photo to a product that was hidden *for having no photo*
+        // has to put it back on the storefront, or the upload achieved nothing
+        // visible and the screen has lied about "live". The gate it failed is
+        // the one just satisfied.
+        const wasHidden = target?.is_active === false;
+        const patch = {
+          images: [...urls, ...existing].slice(0, MAX_IMAGES_PER_PRODUCT),
+          ...(wasHidden ? { is_active: true } : {}),
+        };
+
         const { error } = await supabase
           .from("products")
-          .update({ images: [...urls, ...existing].slice(0, MAX_IMAGES_PER_PRODUCT) })
+          .update(patch)
           .eq("id", group.productId!);
         if (error) throw new Error(error.message);
 
+        if (wasHidden) reactivated += 1;
         totalLive += urls.length;
         totalSkipped += failures.length;
         setStaged((prev) =>
@@ -365,6 +399,7 @@ const PhotosModule = () => {
                   state: "done",
                   message:
                     `${urls.length} photo${urls.length === 1 ? "" : "s"} live` +
+                    (byId.get(group.productId!)?.is_active === false ? " · product put back on the storefront" : "") +
                     (failures.length ? ` · ${failures.length} could not be read and were skipped` : ""),
                 }
               : s,
@@ -386,7 +421,8 @@ const PhotosModule = () => {
     toast({
       title: totalLive > 0 ? "Photos applied" : "Nothing uploaded",
       description: totalLive > 0
-        ? `${totalLive} photo${totalLive === 1 ? "" : "s"} live${totalSkipped ? `, ${totalSkipped} skipped` : ""}. Refresh the storefront to see them.`
+        ? `${totalLive} photo${totalLive === 1 ? "" : "s"} live${totalSkipped ? `, ${totalSkipped} skipped` : ""}` +
+          (reactivated ? `. ${reactivated} product${reactivated === 1 ? " was" : "s were"} hidden for having no photo and ${reactivated === 1 ? "is" : "are"} now on the storefront.` : ". Refresh the storefront to see them.")
         : "Every photo failed — the reason is shown on each folder above.",
       variant: totalLive > 0 ? undefined : "destructive",
     });
@@ -731,13 +767,34 @@ const PhotosModule = () => {
                       this list gives no way to tell whether a product already
                       has an image -- which is precisely the question being
                       answered when the job is replacing an old one. */}
-                  <div className="h-10 w-10 shrink-0 rounded border border-border bg-white overflow-hidden grid place-items-center">
-                    {needsPhoto(p) ? (
-                      <Images className="h-4 w-4 text-muted-foreground/50" />
-                    ) : (
+                  {/* Clickable when there is more than one photo: this is the
+                      only route to choosing which one leads. `images[0]` is
+                      what the catalogue card, the home page, the newsletter and
+                      Google all show, and until now the file dialog's ordering
+                      picked it. */}
+                  {(p.images?.length ?? 0) > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => setCoverFor(p)}
+                      title={`Choose which of ${p.images!.length} photos leads`}
+                      aria-label={`Choose the cover photo for ${p.name}`}
+                      className="relative h-10 w-10 shrink-0 rounded border border-border bg-white overflow-hidden grid place-items-center
+                                 hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
                       <img src={p.images![0]} alt="" className="h-full w-full object-contain" />
-                    )}
-                  </div>
+                      <span className="absolute bottom-0 inset-x-0 bg-foreground/70 text-background text-[9px] font-bold leading-tight py-px">
+                        {p.images!.length}
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="h-10 w-10 shrink-0 rounded border border-border bg-white overflow-hidden grid place-items-center">
+                      {needsPhoto(p) ? (
+                        <Images className="h-4 w-4 text-muted-foreground/50" />
+                      ) : (
+                        <img src={p.images![0]} alt="" className="h-full w-full object-contain" />
+                      )}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{p.name}</p>
                     <p className="text-xs text-muted-foreground truncate">
@@ -767,6 +824,19 @@ const PhotosModule = () => {
           </p>
         )}
       </section>
+
+      {coverFor && (
+        <CoverPhotoPicker
+          productId={coverFor.id}
+          productName={coverFor.name}
+          images={coverFor.images ?? []}
+          onClose={() => setCoverFor(null)}
+          onChanged={(images) => {
+            setProducts((prev) => prev.map((x) => (x.id === coverFor.id ? { ...x, images } : x)));
+            setCoverFor((c) => (c ? { ...c, images } : c));
+          }}
+        />
+      )}
     </div>
   );
 };

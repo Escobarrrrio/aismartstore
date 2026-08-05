@@ -13,7 +13,6 @@ const SENSITIVE_KEYS = new Set<string>([
   "stripe_secret_key",
   "stripe_webhook_secret",
   "paypal_client_secret",
-  "openai_api_key",
   "resend_api_key",
   "axiz_api_key",
   "telnyx_api_key",

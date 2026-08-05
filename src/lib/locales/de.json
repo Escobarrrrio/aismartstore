@@ -259,7 +259,8 @@
       "Operating system": "Betriebssystem",
       "Warranty": "Garantie",
       "Supplier": "Lieferant"
-    }
+    },
+    "back": "Zurück"
   },
   "notFound": {
     "message": "Hoppla! Seite nicht gefunden",

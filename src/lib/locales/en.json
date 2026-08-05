@@ -259,7 +259,8 @@
       "Operating system": "Operating system",
       "Warranty": "Warranty",
       "Supplier": "Supplier"
-    }
+    },
+    "back": "Back"
   },
   "notFound": {
     "message": "Oops! Page not found",

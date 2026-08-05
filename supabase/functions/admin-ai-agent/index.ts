@@ -134,17 +134,14 @@ LIVE DATA SNAPSHOT (as of ${new Date().toISOString()}):
     // "this call was free" stay distinguishable downstream.
     let estimatedCostUsd: number | null = null;
     if (usage) {
-      const isOpenAi = provider.apiUrl.includes("api.openai.com");
-      // gpt-4o-mini published rates: $0.15 / 1M input tokens, $0.60 / 1M
-      // output tokens. Left null for the AI gateway fallback -- its
-      // per-token markup isn't publicly documented, so we log real tokens
-      // without guessing a dollar figure we can't verify.
-      estimatedCostUsd = isOpenAi
-        ? (Number(usage.prompt_tokens || 0) * 0.15 + Number(usage.completion_tokens || 0) * 0.60) / 1_000_000
-        : null;
+      // Left null deliberately. The gateway's per-token markup is not publicly
+      // documented, so the real token counts are logged without inventing a
+      // dollar figure that cannot be reconciled against an invoice. (The OpenAI
+      // branch that did price its own calls was removed with the provider.)
+      estimatedCostUsd = null;
       await supabase.from("ai_usage_log").insert({
         source: "admin-ai-agent",
-        provider: isOpenAi ? "openai" : "ai-gateway-fallback",
+        provider: "ai-gateway",
         model: provider.model,
         prompt_tokens: usage.prompt_tokens ?? null,
         completion_tokens: usage.completion_tokens ?? null,

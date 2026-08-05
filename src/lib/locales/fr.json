@@ -259,7 +259,8 @@
       "Operating system": "Système d'exploitation",
       "Warranty": "Garantie",
       "Supplier": "Fournisseur"
-    }
+    },
+    "back": "Retour"
   },
   "notFound": {
     "message": "Oups ! Page introuvable",

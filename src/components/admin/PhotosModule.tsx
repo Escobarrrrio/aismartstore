@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { matchFolders, folderOf, orderPhotos, MATCH_THRESHOLD, type ProductLike } from "@/lib/photoMatch";
 import CoverPhotoPicker from "./CoverPhotoPicker";
+import ProductPicker from "./ProductPicker";
 import { resizeForWeb, formatBytes } from "@/lib/imageResize";
 
 interface ProductRow extends ProductLike {
@@ -626,28 +627,21 @@ const PhotosModule = () => {
                       <Check className="h-4 w-4" /> Done
                     </span>
                   ) : (
-                    <select
-                      value={s.productId ?? ""}
+                    /* Searchable, because the native select this replaced
+                       listed all 3,488 products with no way to filter. The
+                       options were all present -- finding one meant scrolling
+                       three and a half thousand entries, so the manual
+                       override existed and could not be used. */
+                    <ProductPicker
+                      products={products}
+                      value={s.productId}
                       disabled={busy}
-                      onChange={(e) =>
+                      onChange={(productId) =>
                         setStaged((prev) =>
-                          prev.map((x) =>
-                            x.folder === s.folder ? { ...x, productId: e.target.value || null } : x,
-                          ),
+                          prev.map((x) => (x.folder === s.folder ? { ...x, productId } : x)),
                         )
                       }
-                      className="flex-1 rounded-lg border border-border bg-background px-2 py-2 text-sm"
-                    >
-                      <option value="">— skip this folder —</option>
-                      {/* Every active product, not just ones missing a photo --
-                          this dropdown is the manual-override path, and it must
-                          be able to do the thing this screen exists for:
-                          replace a photo the owner has already flagged as
-                          wrong, not only fill a gap. */}
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
+                    />
                   )}
                   {s.state === "uploading" && <Loader2 className="h-4 w-4 animate-spin" />}
                   {s.state === "error" && <AlertTriangle className="h-4 w-4 text-red-600" />}

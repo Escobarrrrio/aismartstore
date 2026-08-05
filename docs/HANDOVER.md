@@ -205,7 +205,13 @@ undisclosed is what kills a deal.
 5. **Six manually-sourced products** carry supplier-researched pricing recorded in `specifications` jsonb rather than an automated feed; these need manual re-checking.
 6. **Axiz upstream availability** — the distributor's catalogue API was degraded for a period around 3–4 August, causing the sync to stall on individual pages. A guard now distinguishes a broken page from a distributor outage and holds position safely during the latter rather than losing catalogue coverage; see `supabase/functions/axiz-sync/stall.ts`.
 7. **AI Pulse feeds** — several South African news sources (mybroadband, businesstech) return 403 to automated fetches behind Cloudflare.
-8. **Lovable platform dependency** — hosting and deploys run through Lovable. Migrating to another host is feasible (it is a standard Vite + Supabase app) but is work a buyer should scope.
+8. **Lovable platform dependency** — hosting and deploys run through Lovable. Migrating to another host is feasible (it is a standard Vite + Supabase app) but is work a buyer should scope. **A migration path is now built and tested**: `docs/migration/` contains the full schema as one file, a `migrate.sh` verified end to end against two real PostgreSQL 16 databases, and a step-by-step runbook. A second Supabase project (`okejdzkftwhccplyfluf`, eu-west-1) is provisioned and waiting. Two genuine platform couplings remain and both have documented replacements: the AI gateway (`LOVABLE_API_KEY`, replaceable with an OpenAI key already supported in `_shared/ai-provider.ts`) and authentication emails (replaceable with Supabase's own SMTP settings pointed at Resend — business email already goes through Resend directly).
+
+9. **The database could not be rebuilt from the repository until 5 August 2026, and this was only discovered by trying it.** Replaying all 85 migrations into an empty PostgreSQL 16 cluster produced 43 of the live database's 51 tables. Eight tables had no `CREATE TABLE` anywhere in source control; three more were missing columns that exist in production, including `products.audience`, which the home-page merchandising engine partitions on. Closed by two migrations; the rebuild now reproduces all 51 tables, all 90 RLS policies and both views exactly, verified by per-table column-signature hash against the live database.
+
+   The same exercise found a defect that existed **only** in source control: `log_order_changes()` used `COALESCE` across a `text` and an enum column, which aborts the INSERT it fires on — every checkout would have failed on a rebuilt database, at the last step, after payment. The live database carried a cast that had been applied directly and never written back into a migration. Both are fixed and the fix is tested.
+
+   A buyer should read this as what it is: the schema is now genuinely portable and that claim is mechanically verifiable (§12), but the history of direct-to-database changes means anything not exercised should be re-verified rather than assumed.
 
 ---
 
@@ -213,7 +219,7 @@ undisclosed is what kills a deal.
 
 **Accounts to transfer**
 - Domain registrar — aismartstore.co.za
-- Supabase project (`xwiqubcilptxzvdigsmp`) — or a full database + storage export
+- Supabase project (`xwiqubcilptxzvdigsmp`) — or a full database + storage export. A second, buyer-ready project (`okejdzkftwhccplyfluf`, eu-west-1) is provisioned; `docs/migration/RUNBOOK.md` moves the store onto it.
 - Lovable project / hosting
 - GitHub repository `Escobarrrrio/aismartstore`
 - Yoco merchant account (or buyer opens their own)
@@ -243,8 +249,9 @@ Nothing above needs to be taken on trust.
 | Traffic | Hosting analytics dashboard, or Google Search Console |
 | Automation is real | `SELECT jobname, schedule, active FROM cron.job;` then `sync_logs` for actual run outcomes |
 | Spend caps are enforced | `SELECT * FROM spend_caps;` — then try to raise one past its CHECK ceiling and watch it be rejected |
-| Code quality | Repository history, GitHub Actions run history, `npm test` (130 tests), `npx tsc --build --force` |
+| Code quality | Repository history, GitHub Actions run history, `npm test` (138 tests), `npx tsc --build --force` |
 | Security posture | Supabase advisors/linter; RLS policies in `supabase/migrations/` |
+| **The asset is portable** | Create an empty PostgreSQL 16 database, run `psql -f docs/migration/schema.sql`, then compare it to the live database: `SELECT table_name, md5(string_agg(column_name\|\|':'\|\|data_type\|\|':'\|\|is_nullable, ',' ORDER BY column_name)) FROM information_schema.columns WHERE table_schema='public' GROUP BY table_name ORDER BY 1;` — all 51 rows should match. This is the check that failed before 5 August 2026 and now passes. |
 
 Run them in front of the seller. Anything that does not reconcile with this
 document is a question worth asking before money changes hands.

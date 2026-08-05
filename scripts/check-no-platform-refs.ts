@@ -47,6 +47,11 @@ const ALLOWLISTED_FILES = new Set([
   // on purpose: a buyer finds it during diligence regardless, and finding it
   // undisclosed is what ends a deal.
   "docs/HANDOVER.md",
+  // The migration runbook (2026-08-05). It has to name `LOVABLE_API_KEY`
+  // exactly, because the reader's whole job at that step is to find that
+  // secret in a dashboard and replace it. A runbook that euphemises the
+  // identifier you are meant to search for fails at the one moment it is used.
+  "docs/migration/RUNBOOK.md",
 ]);
 
 const SUPPRESSION_MARKER = "lovable-ref-ok";

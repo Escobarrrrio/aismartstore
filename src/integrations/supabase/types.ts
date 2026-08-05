@@ -1939,6 +1939,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_command_metrics: { Args: never; Returns: Json }
       get_category_pricing: {
         Args: never
         Returns: {

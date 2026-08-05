@@ -15,6 +15,7 @@ import StoreFooter from "@/components/StoreFooter";
 import ChatWidget from "@/components/ChatWidget";
 import AudienceGuard from "@/components/AudienceGuard";
 import ScrollToTop from "@/components/ScrollToTop";
+import ScrollButtons from "@/components/ScrollButtons";
 import IdleSessionGuard from "@/components/IdleSessionGuard";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 
@@ -76,6 +77,7 @@ const App = () => (
                 <Sonner />
                 <BrowserRouter>
                   <ScrollToTop />
+                  <ScrollButtons />
                   {/* Ends abandoned sessions; inert for anonymous visitors. */}
                   <IdleSessionGuard />
                   <Suspense fallback={<RouteFallback />}>

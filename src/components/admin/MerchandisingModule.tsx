@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Home, RefreshCw, Sparkles, LayoutGrid, TrendingUp, Save, Search } from "lucide-react";
+import { Home, RefreshCw, Sparkles, LayoutGrid, TrendingUp, Save, Search, Pin, PinOff } from "lucide-react";
 
 /**
  * Admin control panel for the home-page merchandising engine.
@@ -81,6 +81,8 @@ const MerchandisingModule = () => {
   const [savingDials, setSavingDials] = useState(false);
   const [seoOn, setSeoOn] = useState(false);
   const [savingSeo, setSavingSeo] = useState(false);
+  const [pinnedProductId, setPinnedProductId] = useState<string | null>(null);
+  const [pinning, setPinning] = useState(false);
   const { toast } = useToast();
 
   const load = useCallback(async (which: SlotId) => {

@@ -18,6 +18,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import ScrollButtons from "@/components/ScrollButtons";
 import IdleSessionGuard from "@/components/IdleSessionGuard";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
+import { Analytics } from "@vercel/analytics/react";
 
 // Route-level code splitting: the Admin panel alone pulls in dozens of
 // modules (products, orders, customers, support, sync logs, automations,
@@ -75,6 +76,7 @@ const App = () => (
               <WishlistProvider>
                 <Toaster />
                 <Sonner />
+                <Analytics />
                 <BrowserRouter>
                   <ScrollToTop />
                   <ScrollButtons />

@@ -699,6 +699,42 @@ export type Database = {
           },
         ]
       }
+      home_showcase_pins: {
+        Row: {
+          pinned_at: string
+          pinned_by: string | null
+          product_id: string
+          slot: string
+        }
+        Insert: {
+          pinned_at?: string
+          pinned_by?: string | null
+          product_id: string
+          slot: string
+        }
+        Update: {
+          pinned_at?: string
+          pinned_by?: string | null
+          product_id?: string
+          slot?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_showcase_pins_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "home_showcase_pins_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       image_blocklist: {
         Row: {
           created_at: string
@@ -1988,6 +2024,7 @@ export type Database = {
         Returns: string
       }
       clean_feed_text: { Args: { p_text: string }; Returns: string }
+      clear_home_showcase_pin: { Args: { p_slot: string }; Returns: undefined }
       dblink: { Args: { "": string }; Returns: Record<string, unknown>[] }
       dblink_cancel_query: { Args: { "": string }; Returns: string }
       dblink_close: { Args: { "": string }; Returns: string }
@@ -2379,6 +2416,10 @@ export type Database = {
           p_kind: string
           p_severity?: string
         }
+        Returns: undefined
+      }
+      set_home_showcase_pin: {
+        Args: { p_product_id: string; p_slot: string }
         Returns: undefined
       }
       set_newsletter_interests: {

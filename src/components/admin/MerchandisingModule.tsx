@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Home, RefreshCw, Sparkles, LayoutGrid, TrendingUp, Save, Search } from "lucide-react";
+import { Home, RefreshCw, Sparkles, LayoutGrid, TrendingUp, Save, Search, Pin, PinOff } from "lucide-react";
 
 /**
  * Admin control panel for the home-page merchandising engine.
@@ -81,20 +81,24 @@ const MerchandisingModule = () => {
   const [savingDials, setSavingDials] = useState(false);
   const [seoOn, setSeoOn] = useState(false);
   const [savingSeo, setSavingSeo] = useState(false);
+  const [pinnedProductId, setPinnedProductId] = useState<string | null>(null);
+  const [pinning, setPinning] = useState(false);
   const { toast } = useToast();
 
   const load = useCallback(async (which: SlotId) => {
     setLoading(true);
     try {
-      const [showcase, candidates, settings] = await Promise.all([
+      const [showcase, candidates, settings, pin] = await Promise.all([
         supabase.rpc("get_home_showcase" as never, { p_slot: which, p_limit: 24 } as never),
         supabase.from("home_showcase_candidates" as never)
           .select("id, name, brand, category, price, in_stock, score")
           .order("score", { ascending: false })
           .limit(40),
         supabase.from("store_settings").select("key, value").or("key.like.merch.%,key.like.seo.%"),
+        supabase.from("home_showcase_pins").select("product_id").eq("slot", which).maybeSingle(),
       ]);
       setRows(Array.isArray(showcase.data) ? (showcase.data as ShowcaseRow[]) : []);
+      setPinnedProductId(((pin.data as { product_id?: string } | null)?.product_id) ?? null);
 
       const placed = new Set(
         (Array.isArray(showcase.data) ? (showcase.data as ShowcaseRow[]) : []).map((r) => r.id),
@@ -143,6 +147,47 @@ const MerchandisingModule = () => {
       setRebuilding(false);
     }
   };
+
+  const pinToTop = async (productId: string) => {
+    setPinning(true);
+    try {
+      const { error } = await supabase.rpc("set_home_showcase_pin" as never, {
+        p_slot: slot,
+        p_product_id: productId,
+      } as never);
+      if (error) throw error;
+      toast({ title: "Pinned to #1", description: "The home page has already been rebuilt." });
+      await load(slot);
+    } catch (e) {
+      toast({
+        title: "Could not pin",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setPinning(false);
+    }
+  };
+
+  const unpin = async () => {
+    setPinning(true);
+    try {
+      const { error } = await supabase.rpc("clear_home_showcase_pin" as never, { p_slot: slot } as never);
+      if (error) throw error;
+      toast({ title: "Pin removed", description: "Ranking is back to pure score order." });
+      await load(slot);
+    } catch (e) {
+      toast({
+        title: "Could not unpin",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setPinning(false);
+    }
+  };
+
+
 
   const saveDials = async () => {
     setSavingDials(true);
@@ -254,7 +299,15 @@ const MerchandisingModule = () => {
                   {r.rank}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-sm leading-snug">{r.name}</p>
+                  <p className="font-semibold text-sm leading-snug">
+                    {r.name}
+                    {r.rank === 1 && pinnedProductId === r.id && (
+                      <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary align-middle">
+                        <Pin className="h-3 w-3" />
+                        Pinned
+                      </span>
+                    )}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {[r.brand, r.category].filter(Boolean).join(" · ")} — {rands(r.price)}
                     {r.in_stock ? " · in stock" : " · backorder"}
@@ -271,14 +324,40 @@ const MerchandisingModule = () => {
                     ))}
                   </ul>
                 </div>
-                <div className="shrink-0 text-right">
-                  <div className="font-display font-extrabold text-lg leading-none">
-                    {Number(r.score ?? 0).toFixed(1)}
+                <div className="shrink-0 flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="font-display font-extrabold text-lg leading-none">
+                      {Number(r.score ?? 0).toFixed(1)}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
+                      score
+                    </div>
                   </div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
-                    score
-                  </div>
+                  {r.rank === 1 && pinnedProductId === r.id ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={unpin}
+                      disabled={pinning}
+                      title="Remove the pin and return to score order"
+                    >
+                      <PinOff className="h-3.5 w-3.5 mr-1.5" />
+                      Unpin
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => pinToTop(r.id)}
+                      disabled={pinning}
+                      title="Pin this product to the first position"
+                    >
+                      <Pin className="h-3.5 w-3.5 mr-1.5" />
+                      Pin to #1
+                    </Button>
+                  )}
                 </div>
+
               </li>
             ))}
           </ul>
@@ -303,10 +382,23 @@ const MerchandisingModule = () => {
                     {[c.brand, c.category].filter(Boolean).join(" · ")} — {rands(c.price)}
                   </span>
                 </span>
-                <span className="shrink-0 font-semibold tabular-nums">
-                  {Number(c.score ?? 0).toFixed(1)}
+                <span className="shrink-0 flex items-center gap-2">
+                  <span className="font-semibold tabular-nums">
+                    {Number(c.score ?? 0).toFixed(1)}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => pinToTop(c.id)}
+                    disabled={pinning}
+                    title="Pin this product to the first position"
+                  >
+                    <Pin className="h-3.5 w-3.5 mr-1.5" />
+                    Pin to #1
+                  </Button>
                 </span>
               </li>
+
             ))}
           </ul>
         </div>

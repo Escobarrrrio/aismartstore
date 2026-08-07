@@ -88,15 +88,17 @@ const MerchandisingModule = () => {
   const load = useCallback(async (which: SlotId) => {
     setLoading(true);
     try {
-      const [showcase, candidates, settings] = await Promise.all([
+      const [showcase, candidates, settings, pin] = await Promise.all([
         supabase.rpc("get_home_showcase" as never, { p_slot: which, p_limit: 24 } as never),
         supabase.from("home_showcase_candidates" as never)
           .select("id, name, brand, category, price, in_stock, score")
           .order("score", { ascending: false })
           .limit(40),
         supabase.from("store_settings").select("key, value").or("key.like.merch.%,key.like.seo.%"),
+        supabase.from("home_showcase_pins").select("product_id").eq("slot", which).maybeSingle(),
       ]);
       setRows(Array.isArray(showcase.data) ? (showcase.data as ShowcaseRow[]) : []);
+      setPinnedProductId(((pin.data as { product_id?: string } | null)?.product_id) ?? null);
 
       const placed = new Set(
         (Array.isArray(showcase.data) ? (showcase.data as ShowcaseRow[]) : []).map((r) => r.id),

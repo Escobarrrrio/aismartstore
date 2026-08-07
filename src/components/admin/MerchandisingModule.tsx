@@ -148,6 +148,47 @@ const MerchandisingModule = () => {
     }
   };
 
+  const pinToTop = async (productId: string) => {
+    setPinning(true);
+    try {
+      const { error } = await supabase.rpc("set_home_showcase_pin" as never, {
+        p_slot: slot,
+        p_product_id: productId,
+      } as never);
+      if (error) throw error;
+      toast({ title: "Pinned to #1", description: "The home page has already been rebuilt." });
+      await load(slot);
+    } catch (e) {
+      toast({
+        title: "Could not pin",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setPinning(false);
+    }
+  };
+
+  const unpin = async () => {
+    setPinning(true);
+    try {
+      const { error } = await supabase.rpc("clear_home_showcase_pin" as never, { p_slot: slot } as never);
+      if (error) throw error;
+      toast({ title: "Pin removed", description: "Ranking is back to pure score order." });
+      await load(slot);
+    } catch (e) {
+      toast({
+        title: "Could not unpin",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setPinning(false);
+    }
+  };
+
+
+
   const saveDials = async () => {
     setSavingDials(true);
     try {

@@ -299,7 +299,15 @@ const MerchandisingModule = () => {
                   {r.rank}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-sm leading-snug">{r.name}</p>
+                  <p className="font-semibold text-sm leading-snug">
+                    {r.name}
+                    {r.rank === 1 && pinnedProductId === r.id && (
+                      <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary align-middle">
+                        <Pin className="h-3 w-3" />
+                        Pinned
+                      </span>
+                    )}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {[r.brand, r.category].filter(Boolean).join(" · ")} — {rands(r.price)}
                     {r.in_stock ? " · in stock" : " · backorder"}
@@ -316,14 +324,40 @@ const MerchandisingModule = () => {
                     ))}
                   </ul>
                 </div>
-                <div className="shrink-0 text-right">
-                  <div className="font-display font-extrabold text-lg leading-none">
-                    {Number(r.score ?? 0).toFixed(1)}
+                <div className="shrink-0 flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="font-display font-extrabold text-lg leading-none">
+                      {Number(r.score ?? 0).toFixed(1)}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
+                      score
+                    </div>
                   </div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
-                    score
-                  </div>
+                  {r.rank === 1 && pinnedProductId === r.id ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={unpin}
+                      disabled={pinning}
+                      title="Remove the pin and return to score order"
+                    >
+                      <PinOff className="h-3.5 w-3.5 mr-1.5" />
+                      Unpin
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => pinToTop(r.id)}
+                      disabled={pinning}
+                      title="Pin this product to the first position"
+                    >
+                      <Pin className="h-3.5 w-3.5 mr-1.5" />
+                      Pin to #1
+                    </Button>
+                  )}
                 </div>
+
               </li>
             ))}
           </ul>

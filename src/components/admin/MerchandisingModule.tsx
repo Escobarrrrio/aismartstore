@@ -382,10 +382,23 @@ const MerchandisingModule = () => {
                     {[c.brand, c.category].filter(Boolean).join(" · ")} — {rands(c.price)}
                   </span>
                 </span>
-                <span className="shrink-0 font-semibold tabular-nums">
-                  {Number(c.score ?? 0).toFixed(1)}
+                <span className="shrink-0 flex items-center gap-2">
+                  <span className="font-semibold tabular-nums">
+                    {Number(c.score ?? 0).toFixed(1)}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => pinToTop(c.id)}
+                    disabled={pinning}
+                    title="Pin this product to the first position"
+                  >
+                    <Pin className="h-3.5 w-3.5 mr-1.5" />
+                    Pin to #1
+                  </Button>
                 </span>
               </li>
+
             ))}
           </ul>
         </div>

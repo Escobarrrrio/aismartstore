@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       </div>
       <p style="color:#94a3b8;font-size:11px;margin-top:20px;">
         AI Smart Store, a division of AI Job Chommie (Pty) Ltd. &middot;
-        <a href="https://xwiqubcilptxzvdigsmp.supabase.co/functions/v1/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribe_token)}" style="color:#94a3b8;">Unsubscribe</a>
+        <a href="${Deno.env.get("SUPABASE_URL")}/functions/v1/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribe_token)}" style="color:#94a3b8;">Unsubscribe</a>
       </p>
     </div>
     </div>`;

@@ -699,6 +699,42 @@ export type Database = {
           },
         ]
       }
+      home_showcase_pins: {
+        Row: {
+          pinned_at: string
+          pinned_by: string | null
+          product_id: string
+          slot: string
+        }
+        Insert: {
+          pinned_at?: string
+          pinned_by?: string | null
+          product_id: string
+          slot: string
+        }
+        Update: {
+          pinned_at?: string
+          pinned_by?: string | null
+          product_id?: string
+          slot?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_showcase_pins_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "home_showcase_pins_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       image_blocklist: {
         Row: {
           created_at: string
@@ -1988,6 +2024,41 @@ export type Database = {
         Returns: string
       }
       clean_feed_text: { Args: { p_text: string }; Returns: string }
+      clear_home_showcase_pin: { Args: { p_slot: string }; Returns: undefined }
+      dblink: { Args: { "": string }; Returns: Record<string, unknown>[] }
+      dblink_cancel_query: { Args: { "": string }; Returns: string }
+      dblink_close: { Args: { "": string }; Returns: string }
+      dblink_connect: { Args: { "": string }; Returns: string }
+      dblink_connect_u: { Args: { "": string }; Returns: string }
+      dblink_current_query: { Args: never; Returns: string }
+      dblink_disconnect:
+        | { Args: never; Returns: string }
+        | { Args: { "": string }; Returns: string }
+      dblink_error_message: { Args: { "": string }; Returns: string }
+      dblink_exec: { Args: { "": string }; Returns: string }
+      dblink_fdw_validator: {
+        Args: { catalog: unknown; options: string[] }
+        Returns: undefined
+      }
+      dblink_get_connections: { Args: never; Returns: string[] }
+      dblink_get_notify:
+        | { Args: { conname: string }; Returns: Record<string, unknown>[] }
+        | { Args: never; Returns: Record<string, unknown>[] }
+      dblink_get_pkey: {
+        Args: { "": string }
+        Returns: Database["public"]["CompositeTypes"]["dblink_pkey_results"][]
+        SetofOptions: {
+          from: "*"
+          to: "dblink_pkey_results"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      dblink_get_result: {
+        Args: { "": string }
+        Returns: Record<string, unknown>[]
+      }
+      dblink_is_busy: { Args: { "": string }; Returns: number }
       deactivate_blocked_products_batch: {
         Args: { batch_size?: number }
         Returns: number
@@ -2347,6 +2418,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_home_showcase_pin: {
+        Args: { p_product_id: string; p_slot: string }
+        Returns: undefined
+      }
       set_newsletter_interests: {
         Args: { _categories: string[]; _email: string; _subscriber_id: string }
         Returns: boolean
@@ -2406,7 +2481,10 @@ export type Database = {
       ticket_type: "return" | "refund" | "inquiry"
     }
     CompositeTypes: {
-      [_ in never]: never
+      dblink_pkey_results: {
+        position: number | null
+        colname: string | null
+      }
     }
   }
 }

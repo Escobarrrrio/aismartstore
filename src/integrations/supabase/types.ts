@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -1078,6 +1078,39 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string
+          id: number
+          path: string
+          session_id: string
+          source: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string
+          id?: never
+          path: string
+          session_id: string
+          source?: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string
+          id?: never
+          path?: string
+          session_id?: string
+          source?: string
+        }
+        Relationships: []
+      }
       payment_events: {
         Row: {
           amount_fee: number | null
@@ -1975,7 +2008,13 @@ export type Database = {
       }
     }
     Functions: {
+      admin_analytics_overview: {
+        Args: { p_since?: string; p_until?: string }
+        Returns: Json
+      }
       admin_command_metrics: { Args: never; Returns: Json }
+      admin_list_newsletter_subscribers: { Args: never; Returns: Json }
+      admin_list_users: { Args: never; Returns: Json }
       ai_pulse_enqueue_feeds: { Args: never; Returns: number }
       ai_pulse_headline_quality: { Args: { p_title: string }; Returns: number }
       ai_pulse_ingest_feed_responses: {
@@ -2010,55 +2049,23 @@ export type Database = {
         Returns: number
       }
       biz_repeat_factor: { Args: { p_price: number }; Returns: number }
-      build_ai_pulse_digest: {
-        Args: {
-          p_max_per_source?: number
-          p_min_score?: number
-          p_min_stories?: number
-          p_stories?: number
-        }
-        Returns: string
-      }
+      build_ai_pulse_digest:
+        | { Args: { p_days?: number; p_stories?: number }; Returns: string }
+        | {
+            Args: {
+              p_max_per_source?: number
+              p_min_score?: number
+              p_min_stories?: number
+              p_stories?: number
+            }
+            Returns: string
+          }
       classify_product_category: {
         Args: { p_category?: string; p_name: string }
         Returns: string
       }
       clean_feed_text: { Args: { p_text: string }; Returns: string }
       clear_home_showcase_pin: { Args: { p_slot: string }; Returns: undefined }
-      dblink: { Args: { "": string }; Returns: Record<string, unknown>[] }
-      dblink_cancel_query: { Args: { "": string }; Returns: string }
-      dblink_close: { Args: { "": string }; Returns: string }
-      dblink_connect: { Args: { "": string }; Returns: string }
-      dblink_connect_u: { Args: { "": string }; Returns: string }
-      dblink_current_query: { Args: never; Returns: string }
-      dblink_disconnect:
-        | { Args: never; Returns: string }
-        | { Args: { "": string }; Returns: string }
-      dblink_error_message: { Args: { "": string }; Returns: string }
-      dblink_exec: { Args: { "": string }; Returns: string }
-      dblink_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      dblink_get_connections: { Args: never; Returns: string[] }
-      dblink_get_notify:
-        | { Args: { conname: string }; Returns: Record<string, unknown>[] }
-        | { Args: never; Returns: Record<string, unknown>[] }
-      dblink_get_pkey: {
-        Args: { "": string }
-        Returns: Database["public"]["CompositeTypes"]["dblink_pkey_results"][]
-        SetofOptions: {
-          from: "*"
-          to: "dblink_pkey_results"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      dblink_get_result: {
-        Args: { "": string }
-        Returns: Record<string, unknown>[]
-      }
-      dblink_is_busy: { Args: { "": string }; Returns: number }
       deactivate_blocked_products_batch: {
         Args: { batch_size?: number }
         Returns: number
@@ -2070,12 +2077,12 @@ export type Database = {
         Returns: boolean
       }
       dispatch_ai_pulse_digest: { Args: never; Returns: string }
-      email_queue_dispatch: { Args: never; Returns: undefined }
       engine_room_snapshot: { Args: never; Returns: Json }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      functions_base_url: { Args: never; Returns: string }
       get_business_picks: {
         Args: { p_limit?: number }
         Returns: {
@@ -2173,27 +2180,20 @@ export type Database = {
           axiz_product_id: string
           cost_price: number
           id: string
+          last_synced_at: string
           margin_percentage: number
+          name: string
           selling_price: number
         }[]
       }
-      get_product_facets:
-        | {
-            Args: never
-            Returns: {
-              facet_type: string
-              facet_value: string
-              product_count: number
-            }[]
-          }
-        | {
-            Args: { filter_audience?: string }
-            Returns: {
-              facet_type: string
-              facet_value: string
-              product_count: number
-            }[]
-          }
+      get_product_facets: {
+        Args: never
+        Returns: {
+          facet_type: string
+          facet_value: string
+          product_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2201,7 +2201,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      invoke_edge_function: {
+        Args: { auth_mode?: string; body?: Json; fn_name: string }
+        Returns: number
+      }
       markup_for_category: { Args: { p_category: string }; Returns: number }
+      merch_apply_pin: {
+        Args: { p_slot: string; p_target?: number }
+        Returns: undefined
+      }
       merch_availability: {
         Args: { p_in_stock: boolean; p_stock_quantity: number }
         Returns: number
@@ -2295,6 +2303,10 @@ export type Database = {
       retention_sweep: {
         Args: { p_max_rows_per_table?: number }
         Returns: Json
+      }
+      retention_sweep_page_views: {
+        Args: { p_older_than?: string }
+        Returns: number
       }
       rl_sweep: { Args: { p_older_than?: string }; Returns: number }
       rl_take: {
@@ -2481,10 +2493,7 @@ export type Database = {
       ticket_type: "return" | "refund" | "inquiry"
     }
     CompositeTypes: {
-      dblink_pkey_results: {
-        position: number | null
-        colname: string | null
-      }
+      [_ in never]: never
     }
   }
 }

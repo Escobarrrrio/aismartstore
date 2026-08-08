@@ -27,6 +27,9 @@ import SystemHealthModule from "@/components/admin/SystemHealthModule";
 import SecurityModule from "@/components/admin/SecurityModule";
 import EngineRoomModule from "@/components/admin/EngineRoomModule";
 import NewsletterModule from "@/components/admin/NewsletterModule";
+import NewsletterSubscribersModule from "@/components/admin/NewsletterSubscribersModule";
+import AnalyticsModule from "@/components/admin/AnalyticsModule";
+import UsersModule from "@/components/admin/UsersModule";
 import QuotesModule from "@/components/admin/QuotesModule";
 import CostUsageModule from "@/components/admin/CostUsageModule";
 import IntegrationsModule from "@/components/admin/IntegrationsModule";
@@ -177,6 +180,7 @@ const Admin = () => {
 
         <div className="p-4 lg:p-6">
           {activeTab === "dashboard" && <DashboardModule products={products} orders={orders} customers={customers} onRefresh={reload.loadOrders} />}
+          {activeTab === "analytics" && <AnalyticsModule />}
           {activeTab === "products" && (loading.products ? <LoadingSkeleton /> : <ProductsModule products={products} onReload={reload.loadProducts} />)}
           {activeTab === "photos" && <PhotosModule />}
           {activeTab === "import" && <ImportModule />}
@@ -192,7 +196,9 @@ const Admin = () => {
 
           {activeTab === "returns" && <ReturnsModule />}
           {activeTab === "customers" && (loading.customers ? <LoadingSkeleton /> : <CustomersModule customers={customers} orders={orders} />)}
+          {activeTab === "users" && <UsersModule />}
           {activeTab === "newsletter" && <NewsletterModule />}
+          {activeTab === "newsletter-subscribers" && <NewsletterSubscribersModule />}
           {activeTab === "quotes" && <QuotesModule />}
           {activeTab === "compliance-audit" && <ComplianceAuditModule />}
           {activeTab === "support" && (loading.tickets ? <LoadingSkeleton /> : <SupportModule tickets={tickets} session={session} onReload={reload.loadTickets} />)}

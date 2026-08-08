@@ -1,4 +1,4 @@
-project_id = "xwiqubcilptxzvdigsmp"
+project_id = "okejdzkftwhccplyfluf"
 
 [functions]
   [functions.auth-email-hook]
@@ -22,4 +22,8 @@ project_id = "xwiqubcilptxzvdigsmp"
   [functions.payfast-webhook]
     verify_jwt = false
   [functions.yoco-webhook]
+    verify_jwt = false
+  [functions.stock-sanity-check]
+    verify_jwt = false
+  [functions.track-pageview]
     verify_jwt = false

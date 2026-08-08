@@ -3,7 +3,7 @@ import {
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
   HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard, ShieldCheck, Bot,
-  ReceiptText, Home, Gauge, Images, ChevronRight, TrendingUp,
+  ReceiptText, Home, Gauge, Images, ChevronRight, TrendingUp, BarChart3, UserCog,
 } from "lucide-react";
 import { useState } from "react";
 import Logo from "@/components/Logo";
@@ -14,8 +14,8 @@ export type AdminTab =
   | "edge-function-health"
   | "photos" | "settings" | "system-health" | "security" | "cost-usage" | "engine-room"
   | "integrations" | "backups" | "catalog-health" | "merchandising" | "sourcing"
-  | "notifications-mgmt" | "newsletter" | "quotes" | "email-previews"
-  | "compliance-audit"
+  | "notifications-mgmt" | "newsletter" | "newsletter-subscribers" | "quotes" | "email-previews"
+  | "compliance-audit" | "analytics" | "users"
   | "order-diagnostics" | "yoco-health" | "payment-events" | "email-health" | "ai-agent";
 
 
@@ -56,6 +56,7 @@ const SECTIONS: SectionDef[] = [
     title: "Today", defaultOpen: true,
     items: [
       { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+      { id: "analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" /> },
       { id: "orders", label: "Orders", icon: <ShoppingCart className="h-4 w-4" /> },
       { id: "support", label: "Support", icon: <HeadphonesIcon className="h-4 w-4" /> },
       { id: "quotes", label: "Quote Requests", icon: <FileSpreadsheet className="h-4 w-4" /> },
@@ -77,7 +78,9 @@ const SECTIONS: SectionDef[] = [
     title: "Customers",
     items: [
       { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
+      { id: "users", label: "Users", icon: <UserCog className="h-4 w-4" /> },
       { id: "newsletter", label: "Newsletter", icon: <Mail className="h-4 w-4" /> },
+      { id: "newsletter-subscribers", label: "Newsletter Subscribers", icon: <Users className="h-4 w-4" /> },
       { id: "ai-logs", label: "AI Conversations", icon: <MessageSquare className="h-4 w-4" /> },
       { id: "ai-agent", label: "AI Agent", icon: <Bot className="h-4 w-4" /> },
     ],

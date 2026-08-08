@@ -18,6 +18,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import ScrollButtons from "@/components/ScrollButtons";
 import IdleSessionGuard from "@/components/IdleSessionGuard";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
+import PageViewTracker from "@/components/PageViewTracker";
 
 // Route-level code splitting: the Admin panel alone pulls in dozens of
 // modules (products, orders, customers, support, sync logs, automations,
@@ -79,6 +80,7 @@ const App = () => (
                 <BrowserRouter>
                   <ScrollToTop />
                   <ScrollButtons />
+                  <PageViewTracker />
                   {/* Ends abandoned sessions; inert for anonymous visitors. */}
                   <IdleSessionGuard />
                   <Suspense fallback={<RouteFallback />}>

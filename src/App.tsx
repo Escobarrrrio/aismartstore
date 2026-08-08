@@ -18,6 +18,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import ScrollButtons from "@/components/ScrollButtons";
 import IdleSessionGuard from "@/components/IdleSessionGuard";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
+import PageViewTracker from "@/components/PageViewTracker";
 import { Analytics } from "@vercel/analytics/react";
 
 // Route-level code splitting: the Admin panel alone pulls in dozens of
@@ -29,6 +30,7 @@ const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Pitch = lazy(() => import("./pages/Pitch"));
 const Auth = lazy(() => import("./pages/Auth"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Account = lazy(() => import("./pages/Account"));
@@ -80,6 +82,7 @@ const App = () => (
                 <BrowserRouter>
                   <ScrollToTop />
                   <ScrollButtons />
+                  <PageViewTracker />
                   {/* Ends abandoned sessions; inert for anonymous visitors. */}
                   <IdleSessionGuard />
                   <Suspense fallback={<RouteFallback />}>
@@ -103,6 +106,7 @@ const App = () => (
                       <Route path="/terms" element={<StorefrontLayout><Terms /></StorefrontLayout>} />
                       <Route path="/cookies" element={<StorefrontLayout><CookiePolicy /></StorefrontLayout>} />
                       <Route path="/admin" element={<Admin />} />
+                      <Route path="/pitch" element={<Pitch />} />
                       <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
                     </Routes>
                   </Suspense>

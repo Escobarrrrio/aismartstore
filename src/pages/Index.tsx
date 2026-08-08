@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/contexts/CartContext";
 import { trackEvent } from "@/lib/analytics";
 import { fetchShowcase, mapShowcaseRow } from "@/lib/home-showcase";
+import PromoBanner from "@/components/PromoBanner";
 
 const Index = () => {
   const { products, loading } = useProducts();
@@ -199,6 +200,21 @@ const Index = () => {
         </p>
       )}
 
+      {/* Promo banners are spread one per section gap down the page rather than
+          stacked together, so they read as accents to the real catalogue below
+          them instead of a wall of ads up front. Each links straight into a
+          matching, real category filter — no banner claims a price or discount
+          that the destination page has to live up to. */}
+      <div className="container mx-auto px-4 pt-6">
+        <PromoBanner
+          src="/marketing/promo-top-brands.webp"
+          alt="Dell, HP, Lenovo and ASUS laptops"
+          to="/products?category=Laptops"
+          eyebrow="Top brands, in stock"
+          cta="Shop laptops"
+        />
+      </div>
+
       {/* AI-Ready Picks — showcase products explicitly flagged as AI-relevant */}
       {aiPicks.length > 0 && (
         <section className="section-padding">
@@ -232,6 +248,16 @@ const Index = () => {
         </section>
       )}
 
+      <div className="container mx-auto px-4">
+        <PromoBanner
+          src="/marketing/promo-copilot-ai.webp"
+          alt="Copilot+ PC AI-ready laptops"
+          to="/products?ai=1"
+          eyebrow="Just arrived"
+          cta="Browse AI gear"
+        />
+      </div>
+
       {/* Categories Section */}
       <section className="section-padding">
         <div className="container mx-auto px-4">
@@ -261,6 +287,16 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      <div className="container mx-auto px-4 pb-2">
+        <PromoBanner
+          src="/marketing/promo-lenovo-sale.webp"
+          alt="Lenovo laptop range"
+          to="/products?category=Laptops"
+          eyebrow="Power meets performance"
+          cta="Shop Lenovo"
+        />
+      </div>
 
       {/* Featured Products */}
       <section className="section-padding bg-muted/30">
@@ -317,6 +353,16 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      <div className="container mx-auto px-4 pt-4">
+        <PromoBanner
+          src="/marketing/promo-monitor-sale.webp"
+          alt="Monitors and displays"
+          to={`/products?category=${encodeURIComponent("Monitors & Displays")}`}
+          eyebrow="Level up your workspace"
+          cta="Shop monitors"
+        />
+      </div>
 
       {/* Benefits Section */}
       <section className="section-padding">

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Mail, MapPin, Phone, Shield, Truck, CreditCard } from "lucide-react";
+import { Mail, MapPin, Phone, Shield, Truck, CreditCard, Lock, ShieldCheck, BadgeCheck } from "lucide-react";
 import Logo from "@/components/Logo";
 import NewsletterSignup from "@/components/NewsletterSignup";
 
@@ -101,6 +101,28 @@ const StoreFooter = () => {
                 South Africa
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Trust & security band. Sits between the nav-link columns and the
+            copyright bar -- previously an empty gap. Every claim here is one
+            we can actually stand behind (real SSL, real POPIA/PAIA pages, real
+            Yoco integration) rather than a generic badge graphic, and the
+            TrustedSite mark (loaded sitewide via index.html) renders its own
+            seal independently once the site is verified on their end. */}
+        <div className="border-t border-background/[0.06] py-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            {[
+              { icon: Lock, label: "256-bit SSL encryption" },
+              { icon: ShieldCheck, label: "POPIA & PAIA compliant" },
+              { icon: CreditCard, label: "Secure Yoco payments" },
+              { icon: BadgeCheck, label: "Verified South African business" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-background/70">
+                <item.icon className="h-4 w-4 text-background/55 flex-shrink-0" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 

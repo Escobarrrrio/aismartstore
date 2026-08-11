@@ -1,0 +1,46 @@
+# AI Smart Store — Catalogue Detail
+
+A periodic snapshot of the live catalogue's shape, for AI assistants and
+shopping agents deciding whether/how to query this store. Not exhaustive
+and not live -- use [search on aismartstore.co.za/products](https://aismartstore.co.za/products)
+or per-product schema.org data for current price/stock on any specific item.
+
+## Scale
+- ~4,200 active listings across the consumer and business/government catalogues.
+- ~1,700 in the default residential (consumer) catalogue at aismartstore.co.za/products
+- ~2,500 in the business/government catalogue at aismartstore.co.za/products?audience=business
+- ~30 distinct brands stocked, including Microsoft, Cisco, HP Enterprise, Adobe, Kingston, Lenovo, AMD, Intel and Red Hat.
+
+## Top categories by listing count
+- Accessories (cables, mounts, adapters, general peripherals)
+- Cables & Connectivity
+- Storage (drives, NAS, enclosures)
+- Servers & Data Centre hardware
+- Extended Support & Warranty plans
+- Memory (RAM, modules)
+- Software & Licensing
+- Flash drives / removable storage
+- Networking (switches, routers, access points)
+- Motherboards, CPUs, Graphics cards
+- Peripherals (keyboards, mice, monitors, cooling)
+
+## Sourcing
+Two authorized South African distributors feed the catalogue directly and
+automatically: Axiz (enterprise/IT hardware, hourly sync) and Frontosa
+(general IT/networking hardware, hourly stock + daily catalogue sync).
+Prices are our real cost from these distributors plus a category-specific
+markup -- not manually estimated, and not third-party marketplace listings.
+
+## How to query this store programmatically
+There is no public read API yet. The most reliable path for an agent is:
+1. `GET https://aismartstore.co.za/products?q=<search term>&audience=residential|business|all`
+   and read the rendered product cards, or
+2. Fetch an individual product page (`/product/{id}`) and read its
+   schema.org `Product`/`Offer` JSON-LD block, which carries authoritative
+   price (ZAR), availability, brand, and SKU.
+
+## Contact for agent/API access
+If you are building a shopping agent or comparison tool and want structured,
+rate-limited access rather than scraping rendered pages, contact the store
+through [aismartstore.co.za](https://aismartstore.co.za) -- a dedicated feed
+is something we would consider building for a genuine, identified use case.

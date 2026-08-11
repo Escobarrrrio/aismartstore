@@ -37,6 +37,7 @@ const ProductDetail = () => {
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [storedSpecs, setStoredSpecs] = useState<Record<string, unknown> | null>(null);
+  const [videos, setVideos] = useState<string[]>([]);
   const [dispatchCity, setDispatchCity] = useState(DEFAULT_DISPATCH_CITY);
   // Defaults to the province the store dispatches from; the shopper can change
   // it to see a realistic window for where the parcel is actually going.
@@ -61,21 +62,25 @@ const ProductDetail = () => {
     return () => { cancelled = true; };
   }, [id, getProduct]);
 
-  // `specifications` isn't part of the shared Product type (only a handful of
-  // manually-sourced rows carry it), so it's fetched separately and treated as
-  // authoritative over anything derived from the product name.
+  // `specifications` and `videos` aren't part of the shared Product type
+  // (only a handful of rows carry either), so both are fetched separately
+  // rather than widening the type every page/RPC that returns a Product has
+  // to carry. specifications is treated as authoritative over anything
+  // derived from the product name.
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     setStoredSpecs(null);
+    setVideos([]);
     supabase
-      .from("products").select("specifications").eq("id", id).maybeSingle()
+      .from("products").select("specifications, videos").eq("id", id).maybeSingle()
       .then(({ data }) => {
         if (cancelled) return;
         const spec = data?.specifications;
         setStoredSpecs(spec && typeof spec === "object" && !Array.isArray(spec)
           ? (spec as Record<string, unknown>)
           : null);
+        setVideos(Array.isArray(data?.videos) ? (data.videos as string[]) : []);
       });
     return () => { cancelled = true; };
   }, [id]);
@@ -315,6 +320,25 @@ const ProductDetail = () => {
               failed={failedImages}
               onImageError={(i) => setFailedImages((f) => ({ ...f, [i]: true }))}
             />
+
+            {/* Demo/unboxing clips, when the admin has uploaded any. Native
+                controls, not the image lightbox -- a video already carries
+                its own play/pause/scrub UI, and wrapping it in the photo
+                viewer would fight the browser's own affordances. */}
+            {videos.length > 0 && (
+              <div className="space-y-3">
+                {videos.map((src, i) => (
+                  <video
+                    key={i}
+                    src={src}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full rounded-2xl border border-border bg-black"
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Details */}

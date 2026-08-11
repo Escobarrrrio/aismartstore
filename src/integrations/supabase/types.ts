@@ -1313,6 +1313,7 @@ export type Database = {
           stock_status: Database["public"]["Enums"]["stock_status"] | null
           track_competitors: boolean
           updated_at: string
+          videos: string[]
         }
         Insert: {
           audience?: string
@@ -1339,6 +1340,7 @@ export type Database = {
           stock_status?: Database["public"]["Enums"]["stock_status"] | null
           track_competitors?: boolean
           updated_at?: string
+          videos?: string[]
         }
         Update: {
           audience?: string
@@ -1365,6 +1367,7 @@ export type Database = {
           stock_status?: Database["public"]["Enums"]["stock_status"] | null
           track_competitors?: boolean
           updated_at?: string
+          videos?: string[]
         }
         Relationships: [
           {

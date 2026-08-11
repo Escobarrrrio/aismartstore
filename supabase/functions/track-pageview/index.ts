@@ -8,13 +8,16 @@ import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
  * together, and the client only calls this once the cookie-consent banner
  * has been accepted.
  *
- * Country and city are best-effort. This function does not have access to a
- * Vercel-style `x-vercel-ip-country` header -- the client calls Supabase's
- * own domain directly, bypassing Vercel entirely -- so a short, non-blocking
- * geo lookup runs against a keyless IP-geolocation API using the connecting
- * IP. If it's slow, rate-limited, or down, the pageview is still recorded
- * with country/city left null and shows as "Unknown" in the admin
- * dashboard. Tracking a visit must never depend on a third party being up.
+ * Country and city are best-effort. The primary path is the caller (the
+ * site's `/api/track` Vercel Edge Function) already knowing them for free,
+ * from Vercel's own `x-vercel-ip-country`/`x-vercel-ip-city` edge headers --
+ * no external call, no rate limit -- and passing them straight through in
+ * the request body. Only a caller that doesn't have that (a direct call to
+ * this function, bypassing Vercel entirely) falls back to a short,
+ * non-blocking lookup against a keyless IP-geolocation API using the
+ * connecting IP. If that's slow, rate-limited, or down, the pageview is
+ * still recorded with country/city left null and shows as "Unknown" in the
+ * admin dashboard. Tracking a visit must never depend on a third party.
  */
 
 const GEO_TIMEOUT_MS = 800;
@@ -53,7 +56,14 @@ Deno.serve(async (req) => {
     });
   }
 
-  let body: { path?: string; source?: string; device_type?: string; session_id?: string };
+  let body: {
+    path?: string;
+    source?: string;
+    device_type?: string;
+    session_id?: string;
+    country?: string;
+    city?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -71,15 +81,32 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Same header order guardrails.ts's callerKey() uses -- the last
-  // x-forwarded-for entry is the one the edge proxy itself wrote, and the
-  // hardest one for a client to forge.
-  const xff = req.headers.get("x-forwarded-for");
-  const connectingIp = xff
-    ? xff.split(",").map((p) => p.trim()).filter(Boolean).pop() ?? null
-    : req.headers.get("cf-connecting-ip") ?? req.headers.get("x-real-ip");
+  // Trust country/city from the request body only if they look like real
+  // Vercel geo-header values (2-letter ISO country code; a short city
+  // string) -- a malformed or hostile direct POST to this function falls
+  // straight through to the IP-lookup fallback below instead of polluting
+  // the dashboard with garbage.
+  const bodyCountry = typeof body.country === "string" && /^[A-Z]{2}$/.test(body.country)
+    ? body.country
+    : null;
+  const bodyCity = typeof body.city === "string" && body.city.trim()
+    ? body.city.trim().slice(0, 128)
+    : null;
 
-  const geo = await lookupGeo(connectingIp ?? null);
+  let geo: Geo;
+  if (bodyCountry || bodyCity) {
+    geo = { country: bodyCountry, city: bodyCity };
+  } else {
+    // Same header order guardrails.ts's callerKey() uses -- the last
+    // x-forwarded-for entry is the one the edge proxy itself wrote, and the
+    // hardest one for a client to forge.
+    const xff = req.headers.get("x-forwarded-for");
+    const connectingIp = xff
+      ? xff.split(",").map((p) => p.trim()).filter(Boolean).pop() ?? null
+      : req.headers.get("cf-connecting-ip") ?? req.headers.get("x-real-ip");
+
+    geo = await lookupGeo(connectingIp ?? null);
+  }
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,

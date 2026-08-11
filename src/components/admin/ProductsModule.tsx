@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Trash2, Plus, ImagePlus, Search, Filter, Edit2, Check, X, Package, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -6,6 +6,46 @@ import { promoteToCover } from "@/lib/coverPhoto";
 
 // Product photos are shown at ~600px; anything past this is bytes nobody sees.
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+
+// The New Product form is the one place in this screen where real work is
+// lost for free: switching admin tabs (Products -> Photos -> Products, say,
+// to go check something) unmounts this component, and every plain useState
+// with it -- typed fields, and photos that already finished uploading to
+// storage. Losing the *photos* is the expensive part: they are already
+// sitting in the bucket, uploaded, and the only thing that goes away is the
+// URL list that would have attached them to a product.
+//
+// sessionStorage survives a tab switch and a page reload (not a closed tab,
+// which is the right lifetime for a draft nobody asked to keep forever).
+const DRAFT_KEY = "ai-smart-store.admin.new-product-draft";
+
+interface NewProductDraft {
+  showAdd: boolean;
+  addForm: { name: string; description: string; price: string; category: string; brand: string; stockQuantity: string; isAiProduct: boolean };
+  images: string[];
+}
+
+const EMPTY_ADD_FORM = { name: "", description: "", price: "", category: "", brand: "", stockQuantity: "", isAiProduct: false };
+
+function loadDraft(): NewProductDraft {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return { showAdd: false, addForm: EMPTY_ADD_FORM, images: [] };
+    const parsed = JSON.parse(raw);
+    return {
+      showAdd: Boolean(parsed.showAdd),
+      addForm: { ...EMPTY_ADD_FORM, ...parsed.addForm },
+      images: Array.isArray(parsed.images) ? parsed.images : [],
+    };
+  } catch {
+    // A corrupted draft must never block the page from rendering.
+    return { showAdd: false, addForm: EMPTY_ADD_FORM, images: [] };
+  }
+}
+
+function clearDraft() {
+  sessionStorage.removeItem(DRAFT_KEY);
+}
 
 interface ProductsModuleProps {
   products: any[];
@@ -30,9 +70,23 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
   const [editForm, setEditForm] = useState<any>({});
   const [editImages, setEditImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [showAdd, setShowAdd] = useState(false);
-  const [addForm, setAddForm] = useState({ name: "", description: "", price: "", category: "", brand: "", stockQuantity: "", isAiProduct: false });
-  const [images, setImages] = useState<string[]>([]);
+  const [draftLoaded] = useState(loadDraft);
+  const [showAdd, setShowAdd] = useState(draftLoaded.showAdd);
+  const [addForm, setAddForm] = useState(draftLoaded.addForm);
+  const [images, setImages] = useState<string[]>(draftLoaded.images);
+
+  // Persist on every change, not just on unmount -- an admin tab switch
+  // unmounts this component without warning, so there is no unmount hook to
+  // catch the last edit reliably.
+  useEffect(() => {
+    if (!showAdd && !addForm.name && images.length === 0) {
+      // Nothing worth keeping -- don't leave an empty draft object sitting
+      // around forever.
+      clearDraft();
+      return;
+    }
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ showAdd, addForm, images }));
+  }, [showAdd, addForm, images]);
 
   const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
 
@@ -159,9 +213,10 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
       // this form actually shows up, matching the CSV-import fix earlier.
       audience: "residential",
     });
-    setAddForm({ name: "", description: "", price: "", category: "", brand: "", stockQuantity: "", isAiProduct: false });
+    setAddForm(EMPTY_ADD_FORM);
     setImages([]);
     setShowAdd(false);
+    clearDraft();
     onReload();
     toast({ title: "Product added!" });
   };

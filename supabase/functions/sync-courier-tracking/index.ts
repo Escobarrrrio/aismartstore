@@ -149,7 +149,10 @@ const handler = async (req: Request) => {
     };
 
     // ---------- Phase A: pull tracking numbers from the courier API ----------
-    const courierKey = Deno.env.get("COURIER_GUY_API_KEY") || await getSetting(supabase, "courier_guy_api_key");
+    // store_settings (Credential vault) first -- see axiz-sync's comment on
+    // the same precedence bug: a stale Deno secret must never silently
+    // override what the admin actually entered in Settings.
+    const courierKey = (await getSetting(supabase, "courier_guy_api_key")) || Deno.env.get("COURIER_GUY_API_KEY") || "";
     const apiBase = (await getSetting(supabase, "courier_guy_api_base")) || DEFAULT_API_BASE;
     summary.courier_api_configured = Boolean(courierKey);
 

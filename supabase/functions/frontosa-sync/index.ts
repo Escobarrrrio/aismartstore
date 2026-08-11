@@ -198,7 +198,10 @@ const handler = async (req: Request) => {
 
   const run = await startRun(supabase, "frontosa-sync");
 
-  const token = Deno.env.get("FRONTOSA_TOKEN") || (await getSetting(supabase, "frontosa_token"));
+  // store_settings (Credential vault) first -- see axiz-sync's comment on
+  // the same precedence bug: a stale Deno secret must never silently
+  // override what the admin actually entered in Settings.
+  const token = (await getSetting(supabase, "frontosa_token")) || Deno.env.get("FRONTOSA_TOKEN") || "";
   if (!token) {
     const msg = "FRONTOSA_TOKEN not configured (set it in Admin -> Settings -> Credential vault)";
     await finishRun(supabase, run, { status: "failed", items_synced: 0, items_failed: 0, error_details: msg });

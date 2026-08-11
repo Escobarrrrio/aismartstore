@@ -91,7 +91,10 @@ const handler = async (req: Request) => {
 
   const run = await startRun(supabase, "sync-competitor-prices");
 
-  const apiKey = Deno.env.get("SERPAPI_KEY") || (await getSetting(supabase, "serpapi_key"));
+  // store_settings (Credential vault) first -- see axiz-sync's comment on
+  // the same precedence bug: a stale Deno secret must never silently
+  // override what the admin actually entered in Settings.
+  const apiKey = (await getSetting(supabase, "serpapi_key")) || Deno.env.get("SERPAPI_KEY") || "";
   if (!apiKey) {
     const msg = "SERPAPI_KEY not configured (set it in Admin -> Sourcing & Pricing or as an edge function secret)";
     await finishRun(supabase, run, { status: "failed", items_synced: 0, items_failed: 0, error_details: msg });

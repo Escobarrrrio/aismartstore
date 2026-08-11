@@ -99,6 +99,11 @@ const SECRET_FIELDS = [
   // product) instead of scraping sites directly, the same trade-off that
   // made SerpAPI the right call for competitor pricing above.
   { name: "Tavily API Key", key: "tavily_api_key", placeholder: "tvly-…", sensitive: true },
+  // Powers frontosa-sync (Frontosa's dealer feed -- catalogue + live
+  // stock/pricing, same category-markup pricing as Axiz). A single token,
+  // not OAuth -- generate/rotate it any time from Frontosa's own account
+  // area, per their API docs.
+  { name: "Frontosa Token", key: "frontosa_token", placeholder: "Your Frontosa dealer feed token…", sensitive: true },
 ];
 
 const rand = (n: number | null | undefined) =>

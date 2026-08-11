@@ -112,6 +112,11 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
+async function getSetting(supabase: any, key: string): Promise<string> {
+  const { data } = await supabase.from("store_settings").select("value").eq("key", key).maybeSingle();
+  return ((data?.value as string) ?? "").trim();
+}
+
 async function getAxizToken(clientId: string, clientSecret: string, scope: string): Promise<string> {
   const res = await fetchAxiz(AXIZ_TOKEN_URL, {
     method: "POST",
@@ -161,9 +166,16 @@ Deno.serve(async (req) => {
     .single();
 
   try {
-    const clientId = Deno.env.get("AXIZ_CLIENT_ID");
-    const clientSecret = Deno.env.get("AXIZ_CLIENT_SECRET");
-    const scope = Deno.env.get("AXIZ_SCOPE");
+    // Edge function secrets first (Deno.env), falling back to store_settings
+    // -- same pattern sync-courier-tracking uses for courier_guy_api_key.
+    // The admin's Credential vault (Settings) can only ever write to
+    // store_settings, not to Deno secrets, so without this fallback there
+    // was literally no way to configure Axiz from the admin UI at all: an
+    // admin filling in "Axiz Client ID/Secret/Scope" there had those values
+    // saved but silently never read by this function.
+    const clientId = Deno.env.get("AXIZ_CLIENT_ID") || (await getSetting(supabase, "axiz_client_id"));
+    const clientSecret = Deno.env.get("AXIZ_CLIENT_SECRET") || (await getSetting(supabase, "axiz_client_secret"));
+    const scope = Deno.env.get("AXIZ_SCOPE") || (await getSetting(supabase, "axiz_scope"));
     if (!clientId || !clientSecret || !scope) {
       await supabase.from("sync_logs").update({
         status: "skipped",

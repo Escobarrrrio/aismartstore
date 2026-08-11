@@ -43,7 +43,16 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(JSON.stringify({ error: "invalid_json" }), { status: 400 });
   }
 
-  const country = req.headers.get("x-vercel-ip-country");
+  // Two independent geo signals, not one: the storefront is DNS-proxied
+  // through Cloudflare in front of Vercel, and Cloudflare stamps its own
+  // cf-ipcountry header on every request it forwards to origin (free, on
+  // every plan, no Worker required). Preferring Vercel's own header when
+  // present and falling back to Cloudflare's covers the case where either
+  // one is ever missing or wrong for a given request, rather than the
+  // whole pageview silently reading "Unknown" because of a single point of
+  // failure. Cloudflare's header is country-only (city needs an Enterprise
+  // plan or a Worker actually running compute) -- city stays Vercel-only.
+  const country = req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry");
   const city = req.headers.get("x-vercel-ip-city");
 
   try {

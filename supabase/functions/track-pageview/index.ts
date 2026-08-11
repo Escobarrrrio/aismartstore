@@ -82,11 +82,17 @@ Deno.serve(async (req) => {
   }
 
   // Trust country/city from the request body only if they look like real
-  // Vercel geo-header values (2-letter ISO country code; a short city
-  // string) -- a malformed or hostile direct POST to this function falls
-  // straight through to the IP-lookup fallback below instead of polluting
-  // the dashboard with garbage.
-  const bodyCountry = typeof body.country === "string" && /^[A-Z]{2}$/.test(body.country)
+  // Vercel/Cloudflare geo-header values (2-letter ISO country code; a
+  // short city string) -- a malformed or hostile direct POST to this
+  // function falls straight through to the IP-lookup fallback below
+  // instead of polluting the dashboard with garbage. "XX" and "T1" are
+  // Cloudflare's own placeholders for "couldn't determine" and "Tor exit
+  // node" respectively -- syntactically valid two-letter codes, but not
+  // real countries, so they're excluded explicitly rather than accepted
+  // as if they were.
+  const bodyCountry = typeof body.country === "string"
+    && /^[A-Z]{2}$/.test(body.country)
+    && body.country !== "XX" && body.country !== "T1"
     ? body.country
     : null;
   const bodyCity = typeof body.city === "string" && body.city.trim()

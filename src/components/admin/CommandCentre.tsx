@@ -77,7 +77,16 @@ const SECRET_FIELDS = [
   // sk_live_ -- see supabase/functions/yoco-health for the fuller story of how
   // that assumption cost a false "Fail" on a correctly configured key.
   { name: "Yoco Secret Key", key: "yoco_secret_key", placeholder: "yoco_live_…", sensitive: true },
-  { name: "Axiz API Key", key: "axiz_api_key", placeholder: "Your Axiz API key…", sensitive: true },
+  // axiz-sync authenticates against Axiz's identity server with OAuth2
+  // client-credentials (client ID + secret + scope), not a single API key
+  // -- there used to be a single "Axiz API Key" field here that saved to
+  // store_settings but nothing in axiz-sync ever read it, so filling it in
+  // silently did nothing. These three are what the sync actually uses (via
+  // a store_settings fallback when the equivalent edge function secret
+  // isn't set).
+  { name: "Axiz Client ID", key: "axiz_client_id", placeholder: "Your Axiz OAuth2 client ID…", sensitive: true },
+  { name: "Axiz Client Secret", key: "axiz_client_secret", placeholder: "Your Axiz OAuth2 client secret…", sensitive: true },
+  { name: "Axiz Scope", key: "axiz_scope", placeholder: "e.g. api1", sensitive: false },
   { name: "Telnyx API Key", key: "telnyx_api_key", placeholder: "KEY…", sensitive: true },
   { name: "Make Pro Webhook", key: "make_webhook_url", placeholder: "https://hook.eu1.make.com/…", sensitive: false },
   // Powers the Competitor Watch panel in Sourcing & Pricing (daily SerpAPI

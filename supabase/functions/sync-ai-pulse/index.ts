@@ -141,10 +141,26 @@ async function fetchOgImage(url: string, timeoutMs = 6000): Promise<string | nul
   }
 }
 
+// Every sibling scheduled function (cleanup-blocked-products,
+// sync-courier-tracking, engine-room-analyst, sync-competitor-prices) sets
+// this and handles OPTIONS -- this one never did. pg_cron's server-to-server
+// calls don't care (no browser, no CORS enforcement), which is why the
+// 6-hourly schedule always worked; the "Run now" button in Admin -> Edge
+// Function Health calls this from the browser via supabase.functions.invoke(),
+// and a cross-origin call with no Access-Control-Allow-Origin header is
+// exactly what the button clicking and reporting failure while the schedule
+// keeps working fine looks like from the admin's side.
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret",
+};
+
 // Named + assigned (rather than passed inline to Deno.serve) and gated
 // behind import.meta.main so test files can `import { ... } from "./index.ts"`
 // for the pure functions above without also starting an HTTP listener.
-const handler = async (_req: Request) => {
+const handler = async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -313,7 +329,7 @@ const handler = async (_req: Request) => {
   }
 
   return new Response(JSON.stringify({ results, errors }), {
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 };
 

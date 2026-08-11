@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -77,6 +78,12 @@ const App = () => (
               <WishlistProvider>
                 <Toaster />
                 <Sonner />
+                {/* Vercel's own visitor/pageview dashboard -- separate from
+                    PageViewTracker below, which feeds our first-party
+                    Admin > Analytics screen. Harmless to run both: this one
+                    costs nothing extra to ship and gives a glance at traffic
+                    right in the Vercel dashboard without an admin login. */}
+                <Analytics />
                 <BrowserRouter>
                   <ScrollToTop />
                   <ScrollButtons />

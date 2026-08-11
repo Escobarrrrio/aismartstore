@@ -80,6 +80,16 @@ const SECRET_FIELDS = [
   { name: "Axiz API Key", key: "axiz_api_key", placeholder: "Your Axiz API key…", sensitive: true },
   { name: "Telnyx API Key", key: "telnyx_api_key", placeholder: "KEY…", sensitive: true },
   { name: "Make Pro Webhook", key: "make_webhook_url", placeholder: "https://hook.eu1.make.com/…", sensitive: false },
+  // Powers the Competitor Watch panel in Sourcing & Pricing (daily SerpAPI
+  // Google Shopping lookups) -- see sync-competitor-prices. Free-tier
+  // accounts get 100 searches/month; the "Monthly search budget" field
+  // below keeps the sync well under that automatically.
+  { name: "SerpAPI Key", key: "serpapi_key", placeholder: "Your SerpAPI key…", sensitive: true },
+  // Not consumed by anything shipped yet -- stored here so it's ready the
+  // moment a feature needs real-time web search/research (Tavily's own
+  // product) instead of scraping sites directly, the same trade-off that
+  // made SerpAPI the right call for competitor pricing above.
+  { name: "Tavily API Key", key: "tavily_api_key", placeholder: "tvly-…", sensitive: true },
 ];
 
 const rand = (n: number | null | undefined) =>
@@ -176,7 +186,7 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
 
   const handleSaveAll = async () => {
     setSaving(true);
-    const keys = [...SECRET_FIELDS.map((f) => f.key), "notification_email", "min_sellable_price"];
+    const keys = [...SECRET_FIELDS.map((f) => f.key), "notification_email", "min_sellable_price", "serpapi_monthly_budget"];
     try {
       await Promise.all(keys.map((k) => saveSetting(k, settings[k] ?? "")));
       toast({ title: "Settings saved" });
@@ -349,6 +359,24 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
             />
             <p className="text-xs text-muted-foreground mt-1">
               Distributor lines below this are treated as feed artefacts, not products.
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" htmlFor="serpapi_monthly_budget">
+              SerpAPI monthly search budget
+            </label>
+            <input
+              id="serpapi_monthly_budget"
+              type="number"
+              min={0}
+              step="1"
+              value={settings.serpapi_monthly_budget ?? ""}
+              onChange={(e) => update("serpapi_monthly_budget", e.target.value)}
+              placeholder="90"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Competitor Watch (Sourcing &amp; Pricing) stops itself here each month, below your SerpAPI plan's real limit.
             </p>
           </div>
         </div>

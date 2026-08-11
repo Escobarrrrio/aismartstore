@@ -19,6 +19,8 @@ const SENSITIVE_KEYS = new Set<string>([
   "courier_guy_api_key",
   "make_webhook_url",
   "wise_account_details",
+  "serpapi_key",
+  "tavily_api_key",
 ]);
 
 function maskValue(v: string): string {

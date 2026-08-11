@@ -436,9 +436,17 @@ const Products = () => {
         }}
       />
 
-      {/* Header */}
-      <div className="bg-muted/50 border-b border-border">
-        <div className="container mx-auto px-4 py-8 md:py-12">
+      {/* Header — same gradient-wash-and-glow-orb treatment as the home page
+          hero, so the catalogue doesn't read as a plainer, second-class
+          screen the moment a shopper clicks through from it. */}
+      <div className="relative overflow-hidden border-b border-border">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-secondary/[0.03]" />
+        <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-gradient-to-bl from-primary/[0.05] to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+        <div className="container mx-auto px-4 py-8 md:py-12 relative">
+          <div className="inline-flex items-center gap-2 bg-primary/[0.06] rounded-full px-4 py-1.5 text-xs font-semibold text-primary mb-4">
+            <Package className="h-3.5 w-3.5" />
+            {audience === "business" ? "Business & government catalogue" : audience === "all" ? "Full catalogue" : t("products.title")}
+          </div>
           <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">{t("products.catalogueHeading")}</h1>
           <p className="text-muted-foreground" data-testid="results-count" data-total={total} data-loading={loading} data-audience={audience}>
             {loading

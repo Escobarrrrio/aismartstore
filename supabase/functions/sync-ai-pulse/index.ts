@@ -169,6 +169,9 @@ const handler = async (req: Request) => {
   const run = await startRun(supabase, "sync-ai-pulse");
   const results: Record<string, number> = { arxiv: 0, hn: 0, local: 0 };
   const errors: string[] = [];
+  /** Feeds whose publisher answers with a bot challenge -- see the catch in
+   *  the LOCAL_FEEDS loop. Reported, but not counted as failures. */
+  const blocked: string[] = [];
 
   try {
     const xml = await withRetry(async () => {
@@ -271,7 +274,24 @@ const handler = async (req: Request) => {
         })
       );
     } catch (e) {
-      errors.push(`${feed.source}: ${e.message}`);
+      // A publisher sitting behind a Cloudflare interactive challenge is a
+      // standing policy decision on their side, not an incident on ours.
+      // Probed directly: mybroadband/businesstech/techpoint answer a plain
+      // desktop-UA request with Cloudflare's "Just a moment..." JS
+      // challenge page, while techcentral and the rest return real RSS to
+      // the identical request -- so this is per-publisher bot protection,
+      // not something a header or a retry fixes. Getting through it would
+      // mean defeating an anti-bot control, which is not something worth
+      // doing for a news feed.
+      //
+      // Recording them separately keeps them out of `errors`, because
+      // otherwise every single run is stamped "partial" forever over three
+      // feeds that are never coming back -- and a status that is always
+      // yellow is one nobody reads, which costs us the real failure the
+      // day one actually happens.
+      const blockedByChallenge = /HTTP 403|HTTP 503/.test(e.message);
+      if (blockedByChallenge) blocked.push(feed.source);
+      else errors.push(`${feed.source}: ${e.message}`);
     }
   }
 
@@ -316,11 +336,19 @@ const handler = async (req: Request) => {
 
   const totalSynced = results.arxiv + results.hn + results.local;
   const runStatus = deriveRunStatus(totalSynced, errors.length);
+  // Blocked publishers are noted in the detail line so the reason stays
+  // visible, but they don't feed items_failed -- a permanent, understood
+  // upstream policy is not a run failure, and letting it drive the status
+  // means the badge never returns to green and stops carrying information.
+  const blockedNote = blocked.length
+    ? `bot-challenged upstream (not a failure): ${blocked.join(", ")}`
+    : "";
+  const detailLines = [...errors, blockedNote].filter(Boolean);
   await finishRun(supabase, run, {
     status: runStatus,
     items_synced: totalSynced,
     items_failed: errors.length,
-    error_details: errors.length ? errors.join("\n") : null,
+    error_details: detailLines.length ? detailLines.join("\n") : null,
   });
   if (runStatus !== "success") {
     await checkAndAlertOnFailureStreak(supabase, "sync-ai-pulse").catch((e) =>

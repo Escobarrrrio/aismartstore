@@ -166,16 +166,24 @@ Deno.serve(async (req) => {
     .single();
 
   try {
-    // Edge function secrets first (Deno.env), falling back to store_settings
-    // -- same pattern sync-courier-tracking uses for courier_guy_api_key.
-    // The admin's Credential vault (Settings) can only ever write to
-    // store_settings, not to Deno secrets, so without this fallback there
-    // was literally no way to configure Axiz from the admin UI at all: an
-    // admin filling in "Axiz Client ID/Secret/Scope" there had those values
-    // saved but silently never read by this function.
-    const clientId = Deno.env.get("AXIZ_CLIENT_ID") || (await getSetting(supabase, "axiz_client_id"));
-    const clientSecret = Deno.env.get("AXIZ_CLIENT_SECRET") || (await getSetting(supabase, "axiz_client_secret"));
-    const scope = Deno.env.get("AXIZ_SCOPE") || (await getSetting(supabase, "axiz_scope"));
+    // store_settings (the admin's Credential vault) first, falling back to
+    // a Deno.env secret only if the vault has nothing set.
+    //
+    // This used to be the other way around, and that was a real bug, not
+    // just a style choice: this project inherited whatever Deno secrets the
+    // old Lovable-managed environment had set, and if AXIZ_CLIENT_ID/SECRET
+    // were ever set there (even to a placeholder, or credentials for a
+    // different Axiz account), an admin pasting fresh, correct values into
+    // Settings would have them saved to store_settings but NEVER READ --
+    // this function would keep authenticating with the stale env value on
+    // every run, silently, with no way for the admin to tell from the UI
+    // that their input was being ignored. "invalid_client" after pasting
+    // credentials copied directly off Axiz's own site is exactly the
+    // symptom that produces. The vault is the only credential surface the
+    // admin can actually see and edit, so it has to be the one that wins.
+    const clientId = (await getSetting(supabase, "axiz_client_id")) || Deno.env.get("AXIZ_CLIENT_ID") || "";
+    const clientSecret = (await getSetting(supabase, "axiz_client_secret")) || Deno.env.get("AXIZ_CLIENT_SECRET") || "";
+    const scope = (await getSetting(supabase, "axiz_scope")) || Deno.env.get("AXIZ_SCOPE") || "";
     if (!clientId || !clientSecret || !scope) {
       await supabase.from("sync_logs").update({
         status: "skipped",

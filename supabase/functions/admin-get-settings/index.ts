@@ -21,6 +21,9 @@ const SENSITIVE_KEYS = new Set<string>([
   "wise_account_details",
   "serpapi_key",
   "tavily_api_key",
+  "axiz_client_id",
+  "axiz_client_secret",
+  "frontosa_token",
 ]);
 
 function maskValue(v: string): string {

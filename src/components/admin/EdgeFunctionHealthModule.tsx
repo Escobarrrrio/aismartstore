@@ -10,6 +10,10 @@ const TRACKED_FUNCTIONS: { source: string; label: string; schedule: string }[] =
   { source: "sync-ai-pulse", label: "AI Pulse sync", schedule: "every 6 hours" },
   { source: "cleanup-blocked-products", label: "Blocked-product cleanup", schedule: "daily 04:00" },
   { source: "sync-courier-tracking", label: "Courier tracking sync", schedule: "every 30 minutes" },
+  // "Run now" here calls with no body, which defaults to mode=stock (price/
+  // stock refresh only) -- the safer, faster manual action. The full
+  // catalogue pull (mode=catalog) only ever runs on its own daily schedule.
+  { source: "frontosa-sync", label: "Frontosa dealer feed", schedule: "stock hourly, catalogue daily 07:20" },
 ];
 
 type LogRow = {

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2, Plus, ImagePlus, Search, Filter, Edit2, Check, X, Package } from "lucide-react";
+import { Trash2, Plus, ImagePlus, Search, Filter, Edit2, Check, X, Package, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { promoteToCover } from "@/lib/coverPhoto";
 
 // Product photos are shown at ~600px; anything past this is bytes nobody sees.
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -272,9 +273,35 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
                             <div className="flex flex-col gap-1.5">
                               <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="px-2 py-1 rounded border border-primary bg-card text-sm w-36" />
                               <div className="flex items-center gap-1.5 flex-wrap">
+                                {/* editImages[0] is the cover everywhere -- catalogue card, home page,
+                                    newsletter, Google shopping result. The star promotes a photo to that
+                                    position instead of leaving it to whatever order the upload happened in. */}
                                 {editImages.map((img, i) => (
-                                  <div key={i} className="relative w-9 h-9 rounded border border-border overflow-hidden bg-muted">
+                                  <div
+                                    key={i}
+                                    className={`relative w-9 h-9 rounded border overflow-hidden bg-muted ${
+                                      i === 0 ? "border-primary ring-1 ring-primary" : "border-border"
+                                    }`}
+                                  >
                                     <img src={img} alt="" className="w-full h-full object-cover" />
+                                    {i === 0 ? (
+                                      <span
+                                        className="absolute bottom-0 left-0 bg-primary text-primary-foreground p-0.5 rounded-tr"
+                                        title="Home image"
+                                      >
+                                        <Star className="h-2.5 w-2.5 fill-current" />
+                                      </span>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        aria-label="Set as home image"
+                                        title="Set as home image"
+                                        onClick={() => setEditImages((prev) => promoteToCover(prev, i))}
+                                        className="absolute bottom-0 left-0 bg-foreground/70 text-white p-0.5 rounded-tr hover:bg-primary transition-colors"
+                                      >
+                                        <Star className="h-2.5 w-2.5" />
+                                      </button>
+                                    )}
                                     <button
                                       type="button"
                                       aria-label="Remove image"

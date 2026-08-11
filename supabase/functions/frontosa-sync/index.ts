@@ -336,6 +336,16 @@ const handler = async (req: Request) => {
       const markupPct = markupFor(existing.category, markupRules);
       const sellingPrice = sellingPriceFor(cost, markupPct);
       const publishable = sellingPrice >= minSellablePrice;
+      // Same split axiz-sync uses: a flat R15k cutoff routes almost the
+      // entire laptop range to the business catalogue regardless of price,
+      // so laptops get a higher cutoff. Every other category keeps R15k.
+      // Without this, `audience` never gets set on the stock pull at all --
+      // the column defaults to 'business' on the table, catalog mode never
+      // touches it either, and every Frontosa product landed on the
+      // consumer storefront's default view invisibly: all 744 active rows
+      // sat at audience='business', reachable only via the Business Portal.
+      const isLaptop = /laptop/i.test(existing.category ?? "");
+      const residentialCutoff = isLaptop ? 25000 : 15000;
 
       stockRows.push({
         sku,
@@ -355,6 +365,7 @@ const handler = async (req: Request) => {
         stock_status: qty > 0 ? "in_stock" : "out_of_stock",
         in_stock: qty > 0,
         is_active: publishable,
+        audience: sellingPrice <= residentialCutoff ? "residential" : "business",
         last_synced_at: now,
       });
       costsBySku.set(sku, { cost, sellingPrice, markupPct, supplierSku: item.code });

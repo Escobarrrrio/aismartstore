@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2, Plus, ImagePlus, Search, Filter, Edit2, Check, X, Package, Star } from "lucide-react";
+import { Trash2, Plus, ImagePlus, Search, Filter, Edit2, Check, X, Package, Star, VideoIcon, Film } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { promoteToCover } from "@/lib/coverPhoto";
 
 // Product photos are shown at ~600px; anything past this is bytes nobody sees.
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+// Demo/unboxing clips, not feature films -- 50MB is generous for a
+// phone-shot product clip and still bounded enough that an admin on
+// mobile data doesn't stall the whole upload waiting on one file.
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 // The New Product form is the one place in this screen where real work is
 // lost for free: switching admin tabs (Products -> Photos -> Products, say,
@@ -23,6 +27,7 @@ interface NewProductDraft {
   showAdd: boolean;
   addForm: { name: string; description: string; price: string; category: string; brand: string; stockQuantity: string; isAiProduct: boolean };
   images: string[];
+  videos: string[];
 }
 
 const EMPTY_ADD_FORM = { name: "", description: "", price: "", category: "", brand: "", stockQuantity: "", isAiProduct: false };
@@ -30,16 +35,17 @@ const EMPTY_ADD_FORM = { name: "", description: "", price: "", category: "", bra
 function loadDraft(): NewProductDraft {
   try {
     const raw = sessionStorage.getItem(DRAFT_KEY);
-    if (!raw) return { showAdd: false, addForm: EMPTY_ADD_FORM, images: [] };
+    if (!raw) return { showAdd: false, addForm: EMPTY_ADD_FORM, images: [], videos: [] };
     const parsed = JSON.parse(raw);
     return {
       showAdd: Boolean(parsed.showAdd),
       addForm: { ...EMPTY_ADD_FORM, ...parsed.addForm },
       images: Array.isArray(parsed.images) ? parsed.images : [],
+      videos: Array.isArray(parsed.videos) ? parsed.videos : [],
     };
   } catch {
     // A corrupted draft must never block the page from rendering.
-    return { showAdd: false, addForm: EMPTY_ADD_FORM, images: [] };
+    return { showAdd: false, addForm: EMPTY_ADD_FORM, images: [], videos: [] };
   }
 }
 
@@ -69,24 +75,27 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [editImages, setEditImages] = useState<string[]>([]);
+  const [editVideos, setEditVideos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [draftLoaded] = useState(loadDraft);
   const [showAdd, setShowAdd] = useState(draftLoaded.showAdd);
   const [addForm, setAddForm] = useState(draftLoaded.addForm);
   const [images, setImages] = useState<string[]>(draftLoaded.images);
+  const [videos, setVideos] = useState<string[]>(draftLoaded.videos);
 
   // Persist on every change, not just on unmount -- an admin tab switch
   // unmounts this component without warning, so there is no unmount hook to
   // catch the last edit reliably.
   useEffect(() => {
-    if (!showAdd && !addForm.name && images.length === 0) {
+    if (!showAdd && !addForm.name && images.length === 0 && videos.length === 0) {
       // Nothing worth keeping -- don't leave an empty draft object sitting
       // around forever.
       clearDraft();
       return;
     }
-    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ showAdd, addForm, images }));
-  }, [showAdd, addForm, images]);
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ showAdd, addForm, images, videos }));
+  }, [showAdd, addForm, images, videos]);
 
   const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
 
@@ -126,6 +135,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
     // delete it and add it again from scratch, losing its id, its order history
     // and its supplier metadata.
     setEditImages(Array.isArray(p.images) ? p.images : []);
+    setEditVideos(Array.isArray(p.videos) ? p.videos : []);
   };
 
   const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,6 +174,32 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
     setUploading(false);
   };
 
+  const handleEditVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    setUploadingVideo(true);
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_VIDEO_BYTES) {
+        toast({
+          title: "That video is too large",
+          description: `${file.name} is ${(file.size / 1024 / 1024).toFixed(1)}MB. Please keep clips under ${MAX_VIDEO_BYTES / 1024 / 1024}MB — shoppers on mobile data pay for every byte.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+      const ext = file.name.split(".").pop();
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("product-videos").upload(path, file);
+      if (error) {
+        toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+        continue;
+      }
+      const { data: urlData } = supabase.storage.from("product-videos").getPublicUrl(path);
+      setEditVideos((prev) => [...prev, urlData.publicUrl]);
+    }
+    setUploadingVideo(false);
+  };
+
   const saveEdit = async () => {
     if (!editingId) return;
     await supabase.from("products").update({
@@ -173,6 +209,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
       category: editForm.category,
       brand: editForm.brand,
       images: editImages,
+      videos: editVideos,
     }).eq("id", editingId);
     setEditingId(null);
     onReload();
@@ -193,6 +230,30 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
     }
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    setUploadingVideo(true);
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_VIDEO_BYTES) {
+        toast({
+          title: "That video is too large",
+          description: `${file.name} is ${(file.size / 1024 / 1024).toFixed(1)}MB. Please keep clips under ${MAX_VIDEO_BYTES / 1024 / 1024}MB — shoppers on mobile data pay for every byte.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+      const ext = file.name.split(".").pop();
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("product-videos").upload(path, file);
+      if (!error) {
+        const { data: urlData } = supabase.storage.from("product-videos").getPublicUrl(path);
+        setVideos((prev) => [...prev, urlData.publicUrl]);
+      }
+    }
+    setUploadingVideo(false);
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const qty = parseInt(addForm.stockQuantity) || 0;
@@ -203,6 +264,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
       category: addForm.category,
       brand: addForm.brand,
       images,
+      videos,
       stock_quantity: qty,
       in_stock: qty > 0,
       stock_status: qty > 0 ? "in_stock" : "out_of_stock",
@@ -215,6 +277,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
     });
     setAddForm(EMPTY_ADD_FORM);
     setImages([]);
+    setVideos([]);
     setShowAdd(false);
     clearDraft();
     onReload();
@@ -280,6 +343,20 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
                 <label className="w-12 h-12 rounded-md border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
                   <ImagePlus className="h-4 w-4 text-primary" />
                   <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+                </label>
+              </div>
+              <div className="flex gap-2">
+                {videos.map((vid, i) => (
+                  <div key={i} className="w-12 h-12 rounded-md overflow-hidden border border-border relative bg-muted">
+                    <video src={vid} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                    <button type="button" onClick={() => setVideos((prev) => prev.filter((_, j) => j !== i))} className="absolute top-0 right-0 bg-foreground/60 text-white p-0.5 rounded-bl"><X className="h-2.5 w-2.5" /></button>
+                  </div>
+                ))}
+                <label className={`w-12 h-12 rounded-md border-2 border-dashed flex items-center justify-center transition-colors ${
+                  uploadingVideo ? "border-border opacity-50 cursor-wait" : "border-border cursor-pointer hover:border-primary"
+                }`} title="Upload a demo/unboxing clip">
+                  <VideoIcon className="h-4 w-4 text-primary" />
+                  <input type="file" accept="video/*" multiple disabled={uploadingVideo} onChange={handleVideoUpload} className="hidden" />
                 </label>
               </div>
               <div className="ml-auto flex gap-2">
@@ -375,10 +452,37 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
                                          onChange={handleEditImageUpload} className="hidden" />
                                 </label>
                               </div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {editVideos.map((vid, i) => (
+                                  <div key={i} className="relative w-9 h-9 rounded border border-border overflow-hidden bg-muted">
+                                    <video src={vid} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      aria-label="Remove video"
+                                      onClick={() => setEditVideos((prev) => prev.filter((_, j) => j !== i))}
+                                      className="absolute top-0 right-0 bg-foreground/70 text-white p-0.5 rounded-bl"
+                                    >
+                                      <X className="h-2.5 w-2.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                                <label className={`w-9 h-9 rounded border-2 border-dashed flex items-center justify-center transition-colors ${
+                                  uploadingVideo ? "border-border opacity-50 cursor-wait" : "border-border cursor-pointer hover:border-primary"
+                                }`} title="Upload a demo/unboxing clip">
+                                  <VideoIcon className="h-3.5 w-3.5 text-primary" />
+                                  <input type="file" accept="video/*" multiple disabled={uploadingVideo}
+                                         onChange={handleEditVideoUpload} className="hidden" />
+                                </label>
+                              </div>
                             </div>
                           ) : (
                             <div>
-                              <p className="text-sm font-semibold truncate max-w-[200px]">{p.name}</p>
+                              <p className="text-sm font-semibold truncate max-w-[200px] flex items-center gap-1.5">
+                                {p.name}
+                                {Array.isArray(p.videos) && p.videos.length > 0 && (
+                                  <Film className="h-3 w-3 text-primary shrink-0" aria-label={`${p.videos.length} video${p.videos.length === 1 ? "" : "s"}`} />
+                                )}
+                              </p>
                               {p.last_synced_at && <p className="text-[10px] text-muted-foreground">Synced {new Date(p.last_synced_at).toLocaleDateString()}</p>}
                             </div>
                           )}

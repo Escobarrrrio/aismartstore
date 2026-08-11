@@ -6,7 +6,7 @@
 // ago, and you found out it had gone stale when a customer paid yesterday's
 // price against today's cost.
 //
-// Two halves:
+// Three sections:
 //
 //   Margin by category. Every product was priced cost x 1.17, from R200 cables
 //   to R35,000 workstations. Setting margin by department is what every serious
@@ -16,12 +16,18 @@
 //   computed in the browser. Aggregating client-side would mean shipping every
 //   active product to the page to add up -- which is exactly how the Photos
 //   screen came to silently work on the first 1,000 rows only.
+//
+//   Competitor Watch. A small, admin-curated list of products checked daily
+//   against SerpAPI's Google Shopping results (see sync-competitor-prices) --
+//   what everyone else in South Africa is charging for the same item, next to
+//   what it actually costs us. Suggest-only, deliberately: nothing here ever
+//   writes to a live price on its own. Apply is a click, not a cron job.
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, Plus, Trash2, TrendingUp, AlertTriangle, Clock, Check, RefreshCw,
+  Loader2, Plus, Trash2, TrendingUp, AlertTriangle, Clock, Check, RefreshCw, Eye, X, Search,
 } from "lucide-react";
 
 interface CategoryRow {
@@ -44,10 +50,42 @@ interface MarkupRule {
   note: string | null;
 }
 
+interface WatchRow {
+  product_id: string;
+  name: string;
+  brand: string | null;
+  our_price: number;
+  our_cost: number | null;
+  competitor_count: number;
+  market_min: number | null;
+  market_avg: number | null;
+  market_max: number | null;
+  suggested_price: number | null;
+  last_checked: string | null;
+}
+
+interface SearchResult {
+  id: string;
+  name: string;
+  brand: string | null;
+  price: number;
+  track_competitors: boolean;
+}
+
 const rand = (n: number | null | undefined): string =>
   n == null ? "—" : `R${Number(n).toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const pct = (n: number | null | undefined): string => (n == null ? "—" : `${Number(n).toFixed(1)}%`);
+
+const timeAgo = (iso: string | null): string => {
+  if (!iso) return "never";
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+};
 
 const SourcingModule = () => {
   const { toast } = useToast();
@@ -57,6 +95,67 @@ const SourcingModule = () => {
   const [saving, setSaving] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [newPercent, setNewPercent] = useState("");
+  const [watchRows, setWatchRows] = useState<WatchRow[]>([]);
+  const [watchLoading, setWatchLoading] = useState(true);
+  const [watchQuery, setWatchQuery] = useState("");
+  const [watchResults, setWatchResults] = useState<SearchResult[]>([]);
+  const [watchSearching, setWatchSearching] = useState(false);
+  const [watchBusyId, setWatchBusyId] = useState<string | null>(null);
+
+  const loadWatchlist = async () => {
+    setWatchLoading(true);
+    const { data, error } = await supabase.rpc("admin_competitor_pricing_overview");
+    if (error) toast({ title: "Could not load Competitor Watch", description: error.message, variant: "destructive" });
+    setWatchRows((data ?? []) as WatchRow[]);
+    setWatchLoading(false);
+  };
+
+  useEffect(() => { void loadWatchlist(); }, []);
+
+  useEffect(() => {
+    const q = watchQuery.trim();
+    if (q.length < 2) { setWatchResults([]); return; }
+    setWatchSearching(true);
+    const timer = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("admin_search_products_for_watch", { p_query: q });
+      if (!error) setWatchResults((data ?? []) as SearchResult[]);
+      setWatchSearching(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [watchQuery]);
+
+  const toggleWatch = async (productId: string, watch: boolean) => {
+    setWatchBusyId(productId);
+    const { error } = await supabase.rpc("admin_set_competitor_watch", { p_product_id: productId, p_watch: watch });
+    setWatchBusyId(null);
+    if (error) {
+      toast({ title: "Could not update watchlist", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (watch) {
+      toast({ title: "Added to Competitor Watch", description: "Checked once a day, within the monthly search budget." });
+      setWatchQuery("");
+      setWatchResults([]);
+    }
+    await loadWatchlist();
+  };
+
+  const applySuggestedPrice = async (row: WatchRow) => {
+    if (row.suggested_price == null) return;
+    if (!confirm(`Set ${row.name}'s price to ${rand(row.suggested_price)}? This changes the live price immediately.`)) return;
+    setWatchBusyId(row.product_id);
+    const { error } = await supabase.rpc("admin_apply_competitor_price", {
+      p_product_id: row.product_id,
+      p_price: row.suggested_price,
+    });
+    setWatchBusyId(null);
+    if (error) {
+      toast({ title: "Could not apply price", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Price updated", description: `${row.name} is now ${rand(row.suggested_price)}.` });
+    await loadWatchlist();
+  };
 
   const load = async () => {
     setLoading(true);
@@ -344,6 +443,138 @@ const SourcingModule = () => {
             </table>
           </div>
         )}
+      </section>
+
+      {/* --------------------------------------------------------- competitor watch */}
+      <section className="rounded-xl border border-border overflow-hidden">
+        <div className="px-4 sm:px-5 py-3 border-b border-border flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Competitor Watch
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Checked once a day against what everyone else in South Africa is charging. Suggest-only —
+              nothing here changes a price until you click Apply.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadWatchlist()}
+            disabled={watchLoading}
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-muted min-h-[40px] shrink-0"
+          >
+            <RefreshCw className={`h-4 w-4 ${watchLoading ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
+
+        <div className="p-4 sm:p-5 space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={watchQuery}
+              onChange={(e) => setWatchQuery(e.target.value)}
+              placeholder="Add a product to watch — search by name or brand…"
+              className="w-full rounded-lg border border-border bg-background pl-9 pr-3 py-2 text-sm"
+            />
+            {watchSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+            {watchResults.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-card shadow-lg divide-y divide-border max-h-64 overflow-y-auto">
+                {watchResults.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    disabled={r.track_competitors || watchBusyId === r.id}
+                    onClick={() => void toggleWatch(r.id, true)}
+                    className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-muted disabled:opacity-50 disabled:cursor-default"
+                  >
+                    <span className="truncate">
+                      <span className="font-medium">{r.name}</span>
+                      {r.brand && <span className="text-muted-foreground"> · {r.brand}</span>}
+                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {r.track_competitors ? "already watched" : rand(r.price)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {watchLoading ? (
+            <p className="text-sm text-muted-foreground inline-flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+            </p>
+          ) : watchRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nothing on the watchlist yet. Search above to add the products you most want priced competitively —
+              a free SerpAPI account covers a handful checked daily, so start with the ones that matter most.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[52rem]">
+                <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="text-left font-semibold px-4 py-2">Product</th>
+                    <th className="text-right font-semibold px-3 py-2">Our price</th>
+                    <th className="text-right font-semibold px-3 py-2">Our cost</th>
+                    <th className="text-right font-semibold px-3 py-2">Market range</th>
+                    <th className="text-right font-semibold px-3 py-2">Sources</th>
+                    <th className="text-right font-semibold px-3 py-2">Last checked</th>
+                    <th className="text-right font-semibold px-3 py-2">Suggested</th>
+                    <th className="text-right font-semibold px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {watchRows.map((r) => {
+                    const busy = watchBusyId === r.product_id;
+                    const meaningfullyDifferent = r.suggested_price != null && Math.round(r.suggested_price) !== Math.round(r.our_price);
+                    return (
+                      <tr key={r.product_id} className="hover:bg-muted/30">
+                        <td className="px-4 py-2 font-medium max-w-[16rem] truncate" title={r.name}>{r.name}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{rand(r.our_price)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{rand(r.our_cost)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                          {r.competitor_count > 0 ? `${rand(r.market_min)} – ${rand(r.market_max)}` : "—"}
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums">{r.competitor_count}</td>
+                        <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{timeAgo(r.last_checked)}</td>
+                        <td className={`px-3 py-2 text-right tabular-nums font-semibold ${meaningfullyDifferent ? "text-primary" : ""}`}>
+                          {rand(r.suggested_price)}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <span className="inline-flex items-center gap-1.5 justify-end">
+                            <button
+                              type="button"
+                              disabled={busy || r.suggested_price == null}
+                              onClick={() => void applySuggestedPrice(r)}
+                              className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-40"
+                            >
+                              Apply
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void toggleWatch(r.product_id, false)}
+                              aria-label={`Stop watching ${r.name}`}
+                              className="grid place-items-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            Market range is the last 30 days of matches found via SerpAPI's Google Shopping search, filtered to
+            plausible prices for the same item. Requires a SerpAPI key — set one in Settings → Credential vault.
+          </p>
+        </div>
       </section>
     </div>
   );

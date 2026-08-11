@@ -354,6 +354,51 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_prices: {
+        Row: {
+          competitor_name: string
+          currency: string
+          found_at: string
+          id: string
+          price: number
+          product_id: string
+          source_url: string | null
+        }
+        Insert: {
+          competitor_name: string
+          currency?: string
+          found_at?: string
+          id?: string
+          price: number
+          product_id: string
+          source_url?: string | null
+        }
+        Update: {
+          competitor_name?: string
+          currency?: string
+          found_at?: string
+          id?: string
+          price?: number
+          product_id?: string
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitor_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_access_log: {
         Row: {
           actor_id: string | null
@@ -1249,6 +1294,7 @@ export type Database = {
           brand_id: string | null
           category: string | null
           category_id: string | null
+          competitor_last_checked: string | null
           created_at: string
           description: string | null
           id: string
@@ -1265,6 +1311,7 @@ export type Database = {
           specifications: Json | null
           stock_quantity: number | null
           stock_status: Database["public"]["Enums"]["stock_status"] | null
+          track_competitors: boolean
           updated_at: string
         }
         Insert: {
@@ -1273,6 +1320,7 @@ export type Database = {
           brand_id?: string | null
           category?: string | null
           category_id?: string | null
+          competitor_last_checked?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1289,6 +1337,7 @@ export type Database = {
           specifications?: Json | null
           stock_quantity?: number | null
           stock_status?: Database["public"]["Enums"]["stock_status"] | null
+          track_competitors?: boolean
           updated_at?: string
         }
         Update: {
@@ -1297,6 +1346,7 @@ export type Database = {
           brand_id?: string | null
           category?: string | null
           category_id?: string | null
+          competitor_last_checked?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1313,6 +1363,7 @@ export type Database = {
           specifications?: Json | null
           stock_quantity?: number | null
           stock_status?: Database["public"]["Enums"]["stock_status"] | null
+          track_competitors?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -2012,9 +2063,43 @@ export type Database = {
         Args: { p_since?: string; p_until?: string }
         Returns: Json
       }
+      admin_apply_competitor_price: {
+        Args: { p_price: number; p_product_id: string }
+        Returns: undefined
+      }
       admin_command_metrics: { Args: never; Returns: Json }
+      admin_competitor_pricing_overview: {
+        Args: never
+        Returns: {
+          brand: string
+          competitor_count: number
+          last_checked: string
+          market_avg: number
+          market_max: number
+          market_min: number
+          name: string
+          our_cost: number
+          our_price: number
+          product_id: string
+          suggested_price: number
+        }[]
+      }
       admin_list_newsletter_subscribers: { Args: never; Returns: Json }
       admin_list_users: { Args: never; Returns: Json }
+      admin_search_products_for_watch: {
+        Args: { p_query: string }
+        Returns: {
+          brand: string
+          id: string
+          name: string
+          price: number
+          track_competitors: boolean
+        }[]
+      }
+      admin_set_competitor_watch: {
+        Args: { p_product_id: string; p_watch: boolean }
+        Returns: undefined
+      }
       ai_pulse_enqueue_feeds: { Args: never; Returns: number }
       ai_pulse_headline_quality: { Args: { p_title: string }; Returns: number }
       ai_pulse_ingest_feed_responses: {

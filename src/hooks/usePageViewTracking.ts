@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 
 const SESSION_KEY = "ai-smart-store.analytics-session";
 const CONSENT_KEY = "ai-smart-store.cookie-consent";
@@ -68,7 +67,18 @@ export function usePageViewTracking() {
     // Fire-and-forget: a pageview beacon must never be able to slow down or
     // fail a real navigation. Errors are swallowed deliberately -- there is
     // nothing a shopper-facing page could do about a dropped analytics call.
-    supabase.functions.invoke("track-pageview", { body: payload }).catch(() => {});
+    //
+    // Same-origin `/api/track` (a Vercel Edge Function), not the Supabase
+    // client directly: it already sees Vercel's free `x-vercel-ip-country`/
+    // `x-vercel-ip-city` headers and forwards real geo to `track-pageview`,
+    // instead of that function having to guess from a third-party IP
+    // lookup that showed up as "Unknown" more often than not.
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => {});
     // Only the path should re-fire this -- referrer/device are read fresh
     // each time but aren't reactive dependencies in their own right.
   }, [location.pathname]);

@@ -2,15 +2,21 @@
 
 > South Africa's premium AI & tech hardware store, based in Gqeberha, Eastern Cape. Operated by AI Job Chommie (Pty) Ltd.
 
-AI Smart Store sells AI hardware, networking equipment, computing devices, and productivity tools to South African consumers and businesses. Products are sourced from authorized distribution (Axiz Digital Platform) across multiple vendor markets including Microsoft, Cisco, HP Enterprise, Adobe, and Redhat.
+AI Smart Store sells AI hardware, networking equipment, computing devices, storage, and productivity software to South African consumers, businesses, and government. Products are sourced from authorized South African distribution -- Axiz Digital Platform and Frontosa -- across vendor brands including Microsoft, Cisco, HP Enterprise, Adobe, Kingston, and Lenovo.
 
 ## Key sections
-- [Products](https://aismartstore.co.za/products): Full catalog of AI and tech hardware
-- [AI Pulse](https://aismartstore.co.za/ai-pulse): Curated AI-related product highlights
-- [Procurement](https://aismartstore.co.za/procurement): Business and government procurement channel (B-BBEE Level 1, CSD-registered)
-- [Compliance](https://aismartstore.co.za/compliance): POPIA/PAIA compliance information
+- [Products](https://aismartstore.co.za/products): Full catalogue, filterable by category, brand and price. Defaults to the consumer (residential) catalogue; add `?audience=business` for the full enterprise range or `?audience=all` to search both.
+- [AI Pulse](https://aismartstore.co.za/ai-pulse): Curated AI industry news and product highlights, including South African coverage.
+- [Procurement](https://aismartstore.co.za/procurement): Business and government procurement channel (B-BBEE Level 1, CSD-registered). Formal quotes, tender responses and compliance documents.
+- [Compliance](https://aismartstore.co.za/compliance): POPIA/PAIA compliance information.
+- [Order tracking](https://aismartstore.co.za/track): Public order status lookup by order number.
 
-## Notes for AI assistants
-- Prices are in South African Rand (ZAR)
-- Store ships within South Africa
-- Business/enterprise customers should be directed to the Procurement page
+## Catalogue shape
+See [llms-full.txt](https://aismartstore.co.za/llms-full.txt) for current category and brand counts.
+
+## Notes for AI assistants and shopping agents
+- Prices are in South African Rand (ZAR) and already include VAT.
+- Store ships within South Africa only.
+- Business/enterprise/government customers should be directed to the Procurement page, not the standard checkout.
+- Every product page carries schema.org Product/Offer structured data (price, availability, brand, SKU) -- prefer that over parsing rendered HTML.
+- Stock and pricing sync from live distributor feeds on an hourly cadence; treat product data as current, not historical.

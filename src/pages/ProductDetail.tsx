@@ -157,6 +157,13 @@ const ProductDetail = () => {
             description: seoContent?.description || product.description,
             image: product.images,
             category: product.category || undefined,
+            // brand/sku are what a shopping-comparison agent (Google
+            // Shopping, Perplexity Shopping, ChatGPT Shopping) actually uses
+            // to match a listing to a known product and decide whether to
+            // trust/recommend it -- without them a Product node is really
+            // just a name and a price, indistinguishable from a scam listing.
+            ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
+            ...(product.sku ? { sku: product.sku, mpn: product.sku } : {}),
             offers: {
               "@type": "Offer",
               priceCurrency: "ZAR",
@@ -165,6 +172,7 @@ const ProductDetail = () => {
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
               url: `${window.location.origin}/product/${product.id}`,
+              seller: { "@type": "Organization", name: "AI Smart Store" },
             },
           },
           {

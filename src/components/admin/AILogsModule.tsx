@@ -35,7 +35,7 @@ const AILogsModule = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by session ID..."
-          className="input-premium pl-10"
+          className="input-premium input-premium-icon-l"
         />
       </div>
 

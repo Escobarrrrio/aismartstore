@@ -470,14 +470,21 @@ const Products = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
-        {/* Filter sidebar (desktop) */}
+        {/* Filter sidebar (desktop) -- was a flat card-flat box with plain
+            grey checkboxes and 11px counts: functionally complete (scope,
+            category, brand, price, AI/stock toggles) but visually read as
+            an afterthought next to the header above it. Same bold-colour
+            direction as the header: a real accent border, a coloured active
+            state on the scope switcher, and a section-label rhythm instead
+            of uniform grey uppercase everywhere. */}
         <aside className="hidden lg:block">
-          <div className="card-flat p-5 sticky top-24 space-y-5 max-h-[calc(100vh-7rem)] overflow-y-auto">
+          <div className="bg-card rounded-2xl border border-border/60 shadow-[0_1px_3px_hsl(var(--foreground)/0.04)] p-5 sticky top-24 space-y-6 max-h-[calc(100vh-7rem)] overflow-y-auto">
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wider mb-2.5">
+                <span className="w-1 h-3.5 rounded-full gradient-brand" aria-hidden="true" />
                 Catalogue
               </label>
-              <div role="radiogroup" aria-label="Catalogue scope" data-testid="catalogue-scope" className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-muted">
+              <div role="radiogroup" aria-label="Catalogue scope" data-testid="catalogue-scope" className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-muted">
                 {AUDIENCES.map((a) => {
                   const active = audience === a.value;
                   return (
@@ -489,8 +496,8 @@ const Products = () => {
                       title={a.hint}
                       data-testid={`scope-${a.value}`}
                       onClick={() => onAudienceChange(a.value)}
-                      className={`rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
-                        active ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                      className={`rounded-lg px-2 py-1.5 text-xs font-bold transition-all ${
+                        active ? "gradient-brand text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {a.label}
@@ -522,7 +529,10 @@ const Products = () => {
             />
 
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Price (ZAR)</label>
+              <label className="flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wider mb-2.5">
+                <span className="w-1 h-3.5 rounded-full gradient-brand" aria-hidden="true" />
+                Price (ZAR)
+              </label>
               <div className="flex gap-2">
                 <input type="number" min="0" placeholder="Min" value={minPrice}
                   onChange={(e) => { setMinPrice(e.target.value); setPage(0); }}
@@ -534,43 +544,50 @@ const Products = () => {
               {/* Chips derived from the real price spread of the current result
                   set — a fixed "Under R500" is noise in the enterprise catalogue. */}
               {priceChips.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex flex-wrap gap-1.5 mt-2.5">
                   {priceChips.map((p) => (
                     <button key={p} type="button"
                       onClick={() => { setMaxPrice(String(p)); setPage(0); }}
-                      className="text-[11px] px-2 py-1 rounded-full border border-input hover:border-primary hover:text-primary transition-colors">
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-border/70 hover:border-primary hover:bg-primary/5 hover:text-primary transition-colors">
                       Under {formatMoney(p)}
                     </button>
                   ))}
                 </div>
               )}
               {facets.priceMax > 0 && (
-                <p className="text-[11px] text-muted-foreground mt-2">
+                <p className="text-[11px] text-muted-foreground mt-2.5">
                   Available range: {formatMoney(facets.priceMin)} – {formatMoney(facets.priceMax)}
                 </p>
               )}
             </div>
 
-            <div className="border-t border-border pt-4 space-y-3">
+            <div className="border-t border-border pt-5 space-y-1">
               {/* Counts come from the same query as the grid, so the number
-                  beside a toggle is exactly what flipping it will show. */}
-              <label className={`flex items-center gap-3 text-sm ${facets.aiReady === 0 && !aiOnly ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}>
+                  beside a toggle is exactly what flipping it will show.
+                  Rows now shade in when checked so the two toggles read as
+                  real filter controls, not stray native checkboxes dropped
+                  into a plain list. */}
+              <label className={`flex items-center gap-3 text-sm px-2.5 py-2 -mx-2.5 rounded-lg transition-colors ${
+                facets.aiReady === 0 && !aiOnly ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-muted"
+              } ${aiOnly ? "bg-primary/[0.06]" : ""}`}>
                 <input type="checkbox" checked={aiOnly}
                   disabled={facets.aiReady === 0 && !aiOnly}
                   onChange={(e) => { setAiOnly(e.target.checked); setPage(0); }}
-                  className="w-4 h-4 accent-primary" />
-                <span className="inline-flex items-center gap-1.5 flex-1"><Sparkles className="h-3.5 w-3.5 text-primary" /> AI products only</span>
-                <span className="text-[11px] tabular-nums text-muted-foreground">{fmtCount(facets.aiReady)}</span>
+                  className="w-4 h-4 rounded accent-primary" />
+                <span className="inline-flex items-center gap-1.5 flex-1 font-medium"><Sparkles className="h-3.5 w-3.5 text-primary" /> AI products only</span>
+                <span className="text-[11px] font-semibold tabular-nums text-muted-foreground">{fmtCount(facets.aiReady)}</span>
               </label>
-              <label className={`flex items-center gap-3 text-sm ${facets.inStock === 0 && !inStockOnly ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}>
+              <label className={`flex items-center gap-3 text-sm px-2.5 py-2 -mx-2.5 rounded-lg transition-colors ${
+                facets.inStock === 0 && !inStockOnly ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-muted"
+              } ${inStockOnly ? "bg-primary/[0.06]" : ""}`}>
                 <input type="checkbox" checked={inStockOnly}
                   disabled={facets.inStock === 0 && !inStockOnly}
                   onChange={(e) => { setInStockOnly(e.target.checked); setPage(0); }}
-                  className="w-4 h-4 accent-primary" />
-                <span className="flex-1">In stock only</span>
-                <span className="text-[11px] tabular-nums text-muted-foreground">{fmtCount(facets.inStock)}</span>
+                  className="w-4 h-4 rounded accent-primary" />
+                <span className="flex-1 font-medium">In stock only</span>
+                <span className="text-[11px] font-semibold tabular-nums text-muted-foreground">{fmtCount(facets.inStock)}</span>
               </label>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed pt-3">
                 <PackageCheck className="h-3.5 w-3.5 inline mr-1" />
                 Need a formal quote, tender response or the full compliance pack?
                 Our <a href="/procurement" className="text-primary font-semibold hover:underline">Business Portal</a> handles
@@ -600,7 +617,7 @@ const Products = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder={t("products.searchPlaceholder")}
-                className="input-premium pl-10"
+                className="input-premium input-premium-icon-l"
               />
               {searchInput && (
                 <button
@@ -633,7 +650,7 @@ const Products = () => {
                   aria-label="Sort products"
                   value={sort}
                   onChange={(e) => onSortChange(e.target.value as SortOption)}
-                  className="input-premium pr-10 appearance-none cursor-pointer min-w-[180px]"
+                  className="input-premium input-premium-icon-r appearance-none cursor-pointer min-w-[180px]"
                 >
                   <option value="relevance">Relevance</option>
                   <option value="price_asc">Price: low to high</option>

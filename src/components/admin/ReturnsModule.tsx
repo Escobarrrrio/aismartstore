@@ -44,7 +44,7 @@ const ReturnsModule = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search returns..."
-          className="input-premium pl-10"
+          className="input-premium input-premium-icon-l"
         />
       </div>
 

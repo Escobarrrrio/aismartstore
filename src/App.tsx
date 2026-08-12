@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -84,6 +85,11 @@ const App = () => (
                     costs nothing extra to ship and gives a glance at traffic
                     right in the Vercel dashboard without an admin login. */}
                 <Analytics />
+                {/* Vercel Speed Insights: real-user Core Web Vitals (LCP,
+                    INP, CLS, TTFB, FCP) collected from actual visitors,
+                    shown in the same Vercel dashboard as Analytics above.
+                    /react (not /next) since this is a Vite SPA, not Next.js. */}
+                <SpeedInsights />
                 <BrowserRouter>
                   <ScrollToTop />
                   <ScrollButtons />

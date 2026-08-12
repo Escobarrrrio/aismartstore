@@ -232,6 +232,32 @@
   .input-premium::placeholder {
     @apply text-muted-foreground;
   }
+  /*
+   * Room for a leading/trailing icon on an .input-premium field.
+   *
+   * `px-4` above compiles to the shorthand `padding: .75rem 1rem`, and in the
+   * built stylesheet .input-premium lands AFTER Tailwind's own utility
+   * classes (custom @layer utilities entries are appended past the
+   * auto-generated ones). Same specificity, later source position wins --
+   * so a plain `pl-10`/`pr-10` on the element silently lost to this
+   * shorthand every time, and every icon-adorned search/select field in the
+   * app (Products search, mobile filter search, several Admin search boxes)
+   * rendered its icon overlapping the first 1-2 characters of the text
+   * instead of sitting in real, dedicated space.
+   *
+   * These three are declared after .input-premium on purpose: being later in
+   * the same file guarantees they win the same way .input-premium won
+   * against the plain utilities, without needing `!important` anywhere.
+   */
+  .input-premium-icon-l {
+    @apply pl-10;
+  }
+  .input-premium-icon-l-sm {
+    @apply pl-8;
+  }
+  .input-premium-icon-r {
+    @apply pr-10;
+  }
 
   /* Badge styles */
   .badge-success {

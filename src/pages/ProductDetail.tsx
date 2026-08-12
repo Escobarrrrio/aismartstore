@@ -67,20 +67,32 @@ const ProductDetail = () => {
   // rather than widening the type every page/RPC that returns a Product has
   // to carry. specifications is treated as authoritative over anything
   // derived from the product name.
+  //
+  // get_product_specifications, not a raw `.from("products").select(...)`:
+  // the stored jsonb carries supplier identity, sourcing links and (on a
+  // handful of manually-sourced rows) our actual cost and margin. Hiding
+  // those in the renderer alone still ships them to the browser -- visible
+  // in devtools regardless of what the UI draws. The RPC strips them
+  // server-side, so the browser never receives them in the first place.
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     setStoredSpecs(null);
     setVideos([]);
     supabase
-      .from("products").select("specifications, videos").eq("id", id).maybeSingle()
+      // `as never` on the RPC name: the generated types lag migrations
+      // applied out of band, same pattern as Procurement.tsx's
+      // get_business_showcase call. Re-typed on the next line instead.
+      .rpc("get_product_specifications" as never, { p_id: id } as never)
       .then(({ data }) => {
         if (cancelled) return;
-        const spec = data?.specifications;
+        const rows = data as unknown as { specifications: unknown; videos: unknown }[] | null;
+        const row = Array.isArray(rows) ? rows[0] : undefined;
+        const spec = row?.specifications;
         setStoredSpecs(spec && typeof spec === "object" && !Array.isArray(spec)
           ? (spec as Record<string, unknown>)
           : null);
-        setVideos(Array.isArray(data?.videos) ? (data.videos as string[]) : []);
+        setVideos(Array.isArray(row?.videos) ? (row.videos as string[]) : []);
       });
     return () => { cancelled = true; };
   }, [id]);

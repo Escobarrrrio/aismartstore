@@ -95,7 +95,7 @@ const NewsletterSubscribersModule = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name or email..."
-                className="input-premium pl-8 py-1.5 text-xs w-56"
+                className="input-premium input-premium-icon-l-sm py-1.5 text-xs w-56"
               />
             </div>
             <button onClick={load} className="text-xs text-primary font-semibold hover:underline flex items-center gap-1.5">

@@ -273,7 +273,7 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
                   onChange={(e) => setCatQuery(e.target.value)}
                   placeholder="Search categories…"
                   autoComplete="off"
-                  className="input-premium pl-10 pr-10"
+                  className="input-premium input-premium-icon-l input-premium-icon-r"
                 />
                 {catQuery && (
                   <button
@@ -306,7 +306,7 @@ export default function MobileFilterSheet(props: MobileFilterSheetProps) {
                   onChange={(e) => setBrandQuery(e.target.value)}
                   placeholder="Search brands…"
                   autoComplete="off"
-                  className="input-premium pl-10 pr-10"
+                  className="input-premium input-premium-icon-l input-premium-icon-r"
                 />
                 {brandQuery && (
                   <button

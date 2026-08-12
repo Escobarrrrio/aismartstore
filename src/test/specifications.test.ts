@@ -114,20 +114,52 @@ describe("buildSpecifications", () => {
   });
 
   it("lets supplier data win over derived values", () => {
-    const groups = buildSpecifications(base, { Capacity: "960GB (supplier confirmed)", supplier: "GeeWiz" });
+    const groups = buildSpecifications(base, { Capacity: "960GB (supplier confirmed)", warranty_months: 24 });
     const tech = groups.find((g) => g.title === "Technical specifications")!;
     expect(val(tech.items, "Capacity")).toBe("960GB (supplier confirmed)");
     expect(tech.items.filter((i) => i.label === "Capacity")).toHaveLength(1);
+    // Genuine customer-facing supplier data (warranty length) is not hidden.
+    expect(val(tech.items, "Warranty Months")).toBe("24");
   });
 
   it("hides internal bookkeeping keys from shoppers", () => {
     const groups = buildSpecifications(base, {
-      supplier: "GeeWiz", manually_sourced: true, checked_at: "2026-07-19", supplier_sku: "GW-T-123",
+      manually_sourced: true, checked_at: "2026-07-19", supplier_sku: "GW-T-123",
     });
     const labels = groups.flatMap((g) => g.items.map((i) => i.label.toLowerCase()));
     expect(labels).not.toContain("manually sourced");
     expect(labels).not.toContain("checked at");
     expect(labels).not.toContain("supplier sku");
-    expect(labels).toContain("supplier");
+  });
+
+  // Regression: HIDDEN_SPEC_KEYS listed `source_url`/`notes`, which never
+  // matched the actual stored keys (`product_url`/`note`) -- both leaked to
+  // every product page despite looking handled. And `supplier`,
+  // `supplier_status`, `markup_pct`, `supplier_cost_zar` were never on the
+  // list at all -- the last two are this store's real cost basis and profit
+  // margin, live on production data before this was caught.
+  it("hides supplier identity, sourcing links, and cost/margin data -- not just bookkeeping", () => {
+    const groups = buildSpecifications(base, {
+      supplier: "GeeWiz",
+      supplier_status: "confirmed",
+      product_url: "https://supplier.example/product/123",
+      note: "Internal note about this listing",
+      markup_pct: 17,
+      supplier_cost_zar: 1251,
+    });
+    const labels = groups.flatMap((g) => g.items.map((i) => i.label.toLowerCase()));
+    expect(labels).not.toContain("supplier");
+    expect(labels).not.toContain("supplier status");
+    expect(labels).not.toContain("product url");
+    expect(labels).not.toContain("note");
+    expect(labels).not.toContain("markup pct");
+    expect(labels).not.toContain("supplier cost zar");
+  });
+
+  it("still shows genuine customer-facing supplier data: warranty and lead time", () => {
+    const groups = buildSpecifications(base, { warranty_months: 12, lead_time_note: "14-20 day overseas lead time" });
+    const tech = groups.find((g) => g.title === "Technical specifications")!;
+    expect(val(tech.items, "Warranty Months")).toBe("12");
+    expect(val(tech.items, "Lead Time Note")).toBe("14-20 day overseas lead time");
   });
 });

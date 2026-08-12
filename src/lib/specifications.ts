@@ -121,8 +121,31 @@ const TECHNICAL_RULES: Rule[] = [
   },
 ];
 
-/** Internal bookkeeping on manually-sourced rows — not customer-facing. */
-const HIDDEN_SPEC_KEYS = new Set(["manually_sourced", "checked_at", "supplier_sku", "source_url", "notes"]);
+/**
+ * Internal bookkeeping on manually-sourced rows -- not customer-facing.
+ *
+ * This list was wrong on two counts that let real internal data reach the
+ * live product page: `source_url`/`notes` here never matched the actual
+ * stored keys (`product_url`/`note`), so both leaked despite looking
+ * handled, and `supplier`, `supplier_status`, `markup_pct` and
+ * `supplier_cost_zar` were never listed at all -- the last two are this
+ * store's literal cost basis and profit margin, live on 6 products at the
+ * time this was found. Verified against the actual distinct keys in
+ * production (`SELECT DISTINCT jsonb_object_keys(specifications) ...`)
+ * rather than trusted from memory, specifically to catch this class of
+ * mismatch instead of repeating it.
+ *
+ * `warranty_months`, `lead_time_note` and `barcodes` are deliberately NOT
+ * hidden -- they're genuine, non-sensitive customer-facing information
+ * (barcodes only survive here if they're a plain string; arrays/objects are
+ * already dropped below regardless of key name).
+ */
+const HIDDEN_SPEC_KEYS = new Set([
+  "manually_sourced", "checked_at", "supplier_sku", "supplier", "supplier_status",
+  "product_url", "source_url", "note", "notes", "pending_photo",
+  "markup_pct", "markup_percent", "markup_percentage",
+  "supplier_cost_zar", "cost", "cost_zar", "margin", "margin_pct", "margin_percentage",
+]);
 
 const titleCaseKey = (key: string) =>
   key.replace(/[_-]+/g, " ").replace(/\b[a-z]/g, (c) => c.toUpperCase());

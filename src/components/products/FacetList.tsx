@@ -55,15 +55,16 @@ const FacetList = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="flex items-center justify-between mb-2.5">
+        <label className="flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wider">
+          <span className="w-1 h-3.5 rounded-full gradient-brand" aria-hidden="true" />
           {label}
         </label>
         {selected && (
           <button
             type="button"
             onClick={() => onSelect("")}
-            className="text-[11px] text-primary hover:underline font-medium"
+            className="text-[11px] text-primary hover:underline font-semibold"
           >
             Clear
           </button>
@@ -104,9 +105,9 @@ const FacetList = ({
                     type="button"
                     disabled={unavailable}
                     onClick={() => onSelect(active ? "" : o.value)}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-left transition-colors ${
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-sm text-left transition-colors ${
                       active
-                        ? "bg-primary/10 text-primary font-semibold"
+                        ? "bg-primary/[0.07] text-primary font-semibold"
                         : unavailable
                           ? "text-muted-foreground/50 cursor-not-allowed"
                           : "hover:bg-muted text-foreground"
@@ -114,15 +115,17 @@ const FacetList = ({
                     aria-pressed={active}
                   >
                     <span
-                      className={`h-4 w-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-                        active ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                      className={`h-4 w-4 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+                        active ? "gradient-brand text-white shadow-sm" : "border border-input"
                       }`}
                       aria-hidden
                     >
-                      {active && <Check className="h-3 w-3" />}
+                      {active && <Check className="h-3 w-3" strokeWidth={3} />}
                     </span>
                     <span className="flex-1 truncate">{facetLabel(o.value)}</span>
-                    <span className={`text-[11px] tabular-nums ${active ? "text-primary" : "text-muted-foreground"}`}>
+                    <span className={`text-[11px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full ${
+                      active ? "bg-primary/10 text-primary" : "text-muted-foreground"
+                    }`}>
                       {fmt(o.count)}
                     </span>
                   </button>

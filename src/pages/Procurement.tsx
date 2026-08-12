@@ -145,24 +145,39 @@ const ProcurementPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    // Insert and return the row so we can prove ownership when unlocking the
-    // private compliance pack via the SECURITY DEFINER get_compliance_pack RPC.
-    const { data: inserted, error } = await supabase
-      .from("quote_requests")
-      .insert({
-        organisation_name: form.organisation_name,
-        entity_type: form.entity_type,
-        contact_name: form.contact_name,
-        email: form.email,
-        phone: form.phone || null,
-        requirements: form.requirements,
-        estimated_value: form.estimated_value ? Number(form.estimated_value) : null,
-      })
-      .select("id, email")
-      .single();
-    // PGRST116 = "no rows returned". The threat gate quarantined this
-    // submission: the BEFORE INSERT trigger returned NULL, so nothing was
-    // written and .single() has nothing to hand back.
+    // submit_quote_request, not a raw .from("quote_requests").insert().select():
+    // quote_requests has no SELECT policy for anon/authenticated (only
+    // admins), and Postgres requires an INSERT ... RETURNING row to satisfy
+    // a SELECT policy -- it raises an error rather than silently omitting
+    // it. That meant every real submission's .select("id, email") failed
+    // RLS regardless of how valid the data was: the row was actually
+    // written (the INSERT itself has its own, separate policy), but the
+    // visitor was always shown "Couldn't send your request", and the
+    // compliance-pack unlock below never ran for anyone. Verified directly
+    // against the database before and after this fix.
+    //
+    // This RPC (SECURITY DEFINER, same pattern as get_compliance_pack one
+    // step below) does the insert and hands back (id, email) itself,
+    // without ever needing the caller to have SELECT rights on the table --
+    // which would otherwise mean widening SELECT to anon and exposing every
+    // other submitter's name, email, phone and requirements to the world.
+    // `as never` on the RPC name: the generated types lag migrations
+    // applied out of band, same pattern used elsewhere in this codebase.
+    const { data, error } = await supabase.rpc("submit_quote_request" as never, {
+      p_organisation_name: form.organisation_name,
+      p_entity_type: form.entity_type,
+      p_contact_name: form.contact_name,
+      p_email: form.email,
+      p_phone: form.phone || null,
+      p_requirements: form.requirements,
+      p_estimated_value: form.estimated_value ? Number(form.estimated_value) : null,
+    } as never);
+    const rows = data as unknown as { id: string; email: string }[] | null;
+    const inserted = Array.isArray(rows) ? rows[0] : undefined;
+
+    // Zero rows back (no error) means the BEFORE INSERT threat-gate trigger
+    // quarantined this submission -- it returns NULL instead of NEW, so
+    // nothing was written and the RPC has nothing to hand back.
     //
     // Treated as sent on purpose. Telling the sender it failed hands a spammer
     // a free oracle for tuning payloads against the scorer, and the point of
@@ -173,7 +188,7 @@ const ProcurementPage = () => {
     // They do not get the compliance pack below, which is correct: unlocking it
     // requires a real quote_requests row to prove ownership against, and there
     // is deliberately no row.
-    if (error?.code === "PGRST116" || (!error && !inserted)) {
+    if (!error && !inserted) {
       setSubmitting(false);
       setSubmitted(true);
       return;

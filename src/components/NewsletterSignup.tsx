@@ -46,40 +46,54 @@ const NewsletterSignup = ({ source = "footer", variant = "footer" }: NewsletterS
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { data, error } = await supabase
-      .from("newsletter_subscribers")
-      .insert({ email, source })
-      .select("id")
-      .single();
+    // subscribe_to_newsletter, not a raw .from("newsletter_subscribers").insert().select():
+    // this table has no SELECT policy for anon (only admins -- see the
+    // subscriber-count comment above), and Postgres rolls back an entire
+    // INSERT ... RETURNING statement, not just the RETURNING clause, when
+    // the returned row fails a SELECT policy. Verified directly: every
+    // real signup was leaving zero rows behind, not a hidden-but-captured
+    // one -- the visitor was shown "Couldn't subscribe" and nothing was
+    // saved. Same SECURITY DEFINER pattern as get_newsletter_subscriber_count
+    // just above, applied to the write path this time.
+    // `as never` on the RPC name: the generated types lag migrations
+    // applied out of band, same pattern used elsewhere in this codebase.
+    const { data, error } = await supabase.rpc("subscribe_to_newsletter" as never, {
+      p_email: email,
+      p_source: source,
+    } as never);
     setSubmitting(false);
 
-    if (error) {
-      if (error.code === "23505") {
-        // Already on the list. We have no subscriber id, so ownership can't be
-        // proven and the topic chips are deliberately not offered rather than
-        // shown as controls that silently do nothing.
-        toast({ title: t("newsletter.alreadyTitle"), description: t("newsletter.alreadyBody") });
-        setSubscribed(true);
-        return;
-      }
-      // PGRST116 = "no rows returned". The threat gate quarantined this
-      // submission: the BEFORE INSERT trigger returned NULL, so nothing was
-      // written and .single() has nothing to hand back.
-      //
-      // Shown as success on purpose. A bot that sees an error learns which
-      // payloads trip the scorer and tunes against it -- the whole point of
-      // quarantining rather than rejecting is that the sender is told nothing.
-      // The submission is not lost: it sits in the Engine Room's quarantine,
-      // where a real person misjudged by a regex can be found and released.
-      if (error.code === "PGRST116") {
-        setSubscribed(true);
-        return;
-      }
-      toast({ title: t("newsletter.errorTitle"), description: error.message, variant: "destructive" });
+    if (error?.code === "23505") {
+      // Already on the list. We have no subscriber id, so ownership can't be
+      // proven and the topic chips are deliberately not offered rather than
+      // shown as controls that silently do nothing.
+      toast({ title: t("newsletter.alreadyTitle"), description: t("newsletter.alreadyBody") });
+      setSubscribed(true);
       return;
     }
 
-    setSubscriberId(data?.id ?? null);
+    const rows = data as unknown as { id: string }[] | null;
+    const inserted = Array.isArray(rows) ? rows[0] : undefined;
+
+    // Zero rows back (no error) means the BEFORE INSERT threat-gate trigger
+    // quarantined this submission -- it returns NULL instead of NEW, so
+    // nothing was written and the RPC has nothing to hand back.
+    //
+    // Shown as success on purpose. A bot that sees an error learns which
+    // payloads trip the scorer and tunes against it -- the whole point of
+    // quarantining rather than rejecting is that the sender is told nothing.
+    // The submission is not lost: it sits in the Engine Room's quarantine,
+    // where a real person misjudged by a regex can be found and released.
+    if (!error && !inserted) {
+      setSubscribed(true);
+      return;
+    }
+    if (error || !inserted) {
+      toast({ title: t("newsletter.errorTitle"), description: error?.message || "Please try again.", variant: "destructive" });
+      return;
+    }
+
+    setSubscriberId(inserted.id);
     setSubscribed(true);
     // Welcome email is dispatched server-side by a DB trigger on insert.
   };

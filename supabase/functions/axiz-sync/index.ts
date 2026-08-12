@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
     //
     // This used to be the other way around, and that was a real bug, not
     // just a style choice: this project inherited whatever Deno secrets the
-    // old Lovable-managed environment had set, and if AXIZ_CLIENT_ID/SECRET
+    // old Lovable-managed environment had set (lovable-ref-ok), and if AXIZ_CLIENT_ID/SECRET
     // were ever set there (even to a placeholder, or credentials for a
     // different Axiz account), an admin pasting fresh, correct values into
     // Settings would have them saved to store_settings but NEVER READ --

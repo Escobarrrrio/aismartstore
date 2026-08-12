@@ -32,15 +32,40 @@ Prices are our real cost from these distributors plus a category-specific
 markup -- not manually estimated, and not third-party marketplace listings.
 
 ## How to query this store programmatically
-There is no public read API yet. The most reliable path for an agent is:
-1. `GET https://aismartstore.co.za/products?q=<search term>&audience=residential|business|all`
-   and read the rendered product cards, or
-2. Fetch an individual product page (`/product/{id}`) and read its
-   schema.org `Product`/`Offer` JSON-LD block, which carries authoritative
-   price (ZAR), availability, brand, and SKU.
+There is a public, unauthenticated read API -- no signup, no key. Two ways
+to reach it, both same-origin:
+
+1. **Search / list**: `GET https://aismartstore.co.za/api/products`
+   Query params (all optional):
+   - `q` -- free-text search
+   - `category`, `brand` -- exact match, case-insensitive
+   - `audience` -- `residential` (default), `business`, or `all`
+   - `aiOnly=true` -- only AI-tagged products
+   - `inStockOnly=true`
+   - `minPrice`, `maxPrice` -- ZAR
+   - `sort` -- `relevance` (default), `price_asc`, `price_desc`, `newest`
+   - `page` (default `0`), `pageSize` (default `24`, max `50`)
+
+   Example: `GET https://aismartstore.co.za/api/products?q=laptop&maxPrice=15000&sort=price_asc`
+
+   Returns `{ results: [...], pagination: { page, pageSize, total, hasMore } }`.
+   Each result: `{ id, sku, slug, name, description, brand, category, price,
+   currency: "ZAR", inStock, stockQuantity, isAiProduct, audience, images, url }`.
+
+2. **Single product**: `GET https://aismartstore.co.za/api/products/{id}`
+   `{id}` may be the product's UUID or its SKU (the same SKU shown in a
+   product page's schema.org `Product` JSON-LD). Returns one result object
+   in the same shape as above, or `404` if it doesn't exist / isn't active.
+
+   Alternatively, fetch the rendered product page (`/product/{id}`) and read
+   its schema.org `Product`/`Offer` JSON-LD block directly.
+
+Both endpoints are rate-limited per caller (a generous burst, then a
+sustained per-minute cap) and return `429` with a `Retry-After` header if
+you exceed it -- back off and retry rather than hammering it. Responses are
+cacheable for about a minute (`Cache-Control` is set accordingly).
 
 ## Contact for agent/API access
-If you are building a shopping agent or comparison tool and want structured,
-rate-limited access rather than scraping rendered pages, contact the store
-through [aismartstore.co.za](https://aismartstore.co.za) -- a dedicated feed
-is something we would consider building for a genuine, identified use case.
+The API above is free and open for reasonable use. If you need a higher
+rate limit, bulk/paged export, or webhook-style change notifications,
+contact the store through [aismartstore.co.za](https://aismartstore.co.za).

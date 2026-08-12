@@ -436,19 +436,25 @@ const Products = () => {
         }}
       />
 
-      {/* Header — same gradient-wash-and-glow-orb treatment as the home page
-          hero, so the catalogue doesn't read as a plainer, second-class
-          screen the moment a shopper clicks through from it. */}
+      {/* Header — a real colour band, not the near-invisible 2-6% opacity
+          wash this used to share with the home hero. That version read as
+          plain white with a headline on it; the badge/glow strengths below
+          reuse the exact gradient-brand + white-text combo the "Smart Pick"
+          badge already ships in production (ProductCard.tsx), so this isn't
+          a new, unvetted colour pairing -- just the same one at header scale. */}
       <div className="relative overflow-hidden border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-secondary/[0.03]" />
-        <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-gradient-to-bl from-primary/[0.05] to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-        <div className="container mx-auto px-4 py-8 md:py-12 relative">
-          <div className="inline-flex items-center gap-2 bg-primary/[0.06] rounded-full px-4 py-1.5 text-xs font-semibold text-primary mb-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-secondary/[0.05] to-accent/[0.10]" />
+        <div className="absolute top-0 right-0 w-[480px] h-[480px] gradient-brand opacity-[0.14] rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute -bottom-24 -left-24 w-[320px] h-[320px] gradient-brand opacity-[0.08] rounded-full blur-3xl" />
+        <div className="container mx-auto px-4 py-10 md:py-14 relative">
+          <div className="inline-flex items-center gap-2 gradient-brand rounded-full px-4 py-1.5 text-xs font-bold text-white mb-5 shadow-sm">
             <Package className="h-3.5 w-3.5" />
             {audience === "business" ? "Business & government catalogue" : audience === "all" ? "Full catalogue" : t("products.title")}
           </div>
-          <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-2">{t("products.catalogueHeading")}</h1>
-          <p className="text-muted-foreground" data-testid="results-count" data-total={total} data-loading={loading} data-audience={audience}>
+          <h1 className="text-4xl md:text-5xl font-display font-extrabold tracking-tight mb-3">
+            <span className="gradient-brand-text">{t("products.catalogueHeading")}</span>
+          </h1>
+          <p className="text-muted-foreground text-base" data-testid="results-count" data-total={total} data-loading={loading} data-audience={audience}>
             {loading
               ? "Searching…"
               : query

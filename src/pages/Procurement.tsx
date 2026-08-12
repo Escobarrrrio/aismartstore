@@ -75,42 +75,43 @@ const ProcurementPage = () => {
 
   useEffect(() => {
     (async () => {
-      // Business/Government storefront: pull enterprise-tier catalogue via
-      // the search RPC with the business audience filter.
       trackEvent({ name: "storefront_viewed", audience: "business", surface: "procurement" });
-      const { data } = await supabase.rpc("search_products", {
-        search_query: "",
-        filter_ai_only: false,
-        sort_by: "price_desc",
-        page_number: 0,
-        page_size: 24,
-        filter_audience: "business",
-      });
-      const rows = (data as SearchRow[] | null) ?? [];
-      // total_count is the size of the whole business catalogue, not of this
-      // 24-row page — it's what the "browse everything" link below advertises.
-      const catalogueTotal = rows[0]?.total_count ? Number(rows[0].total_count) : rows.length;
-      setEnterpriseTotal(catalogueTotal);
-      let list = rows.filter((p) => Array.isArray(p.images) && !!p.images[0]);
 
-      // Re-rank by expected profit rather than price. `sort_by: "price_desc"`
-      // above still fetches the catalogue page and gives us total_count, but
-      // showing it in that order opened this page with a R24 137 302 storage
-      // array that was out of stock -- a deal nobody has ever closed from a web
-      // listing. get_business_picks ranks by margin x close-rate x repeat rate,
-      // capped at three per brand. Falls back to the fetched order if the RPC
-      // is unavailable, so the page never empties.
-      try {
-        const { data: picks } = await supabase.rpc("get_business_picks" as never, { p_limit: 12 } as never);
-        // `as never` on the RPC name (the generated types lag migrations applied
-        // out of band) makes the result `never`, so it is re-typed here.
-        const ranked = picks as unknown as SearchRow[] | null;
-        if (ranked && ranked.length > 0) {
-          list = ranked.filter((p) => Array.isArray(p.images) && !!p.images[0]);
-        }
-      } catch {
-        /* keep the fetched order */
+      // Real catalogue size for the "browse everything" link below -- a
+      // lightweight count, independent of the curated showcase (which is
+      // capped at 24 and ranked, not exhaustive).
+      const { count } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true)
+        .eq("audience", "business");
+      const catalogueTotal = count ?? 0;
+      setEnterpriseTotal(catalogueTotal);
+
+      // get_business_showcase() ranks by real demand/brand/availability/
+      // stocked-order-signal, NOT by price -- see business_merchandising_engine
+      // migration for the full reasoning. Falls back to a plain business-audience
+      // fetch (still not price-sorted) if the showcase is ever empty, so the
+      // page never renders blank.
+      let list: SearchRow[] = [];
+      const { data: picks } = await supabase.rpc("get_business_showcase" as never, { p_limit: 12 } as never);
+      // `as never` on the RPC name (the generated types lag migrations applied
+      // out of band) makes the result `never`, so it is re-typed here.
+      const ranked = picks as unknown as SearchRow[] | null;
+      if (ranked && ranked.length > 0) {
+        list = ranked.filter((p) => Array.isArray(p.images) && !!p.images[0]);
+      } else {
+        const { data } = await supabase.rpc("search_products", {
+          search_query: "",
+          filter_ai_only: false,
+          sort_by: "relevance",
+          page_number: 0,
+          page_size: 24,
+          filter_audience: "business",
+        });
+        list = ((data as SearchRow[] | null) ?? []).filter((p) => Array.isArray(p.images) && !!p.images[0]);
       }
+
       trackEvent({
         name: "product_list_returned",
         audience: "business",
@@ -274,7 +275,7 @@ const ProcurementPage = () => {
                   consumer storefront filtered to AI-flagged items — six
                   smart-home products, none of them tender-relevant. */}
               <Link
-                to="/products?audience=business&sort=price_desc"
+                to="/products?audience=business"
                 className="text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1 whitespace-nowrap"
               >
                 {enterpriseTotal > 0

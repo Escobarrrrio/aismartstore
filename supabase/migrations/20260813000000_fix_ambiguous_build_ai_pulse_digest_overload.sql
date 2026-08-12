@@ -1,0 +1,46 @@
+-- ===========================================================================
+-- AI Pulse daily digest has been failing every single run since whenever the
+-- second build_ai_pulse_digest() was created
+-- ===========================================================================
+--
+-- Engine Room showed the digest job "Failing" with:
+--   ERROR: function public.build_ai_pulse_digest() is not unique
+--   HINT: Could not choose a best candidate function.
+--
+-- There are two functions named build_ai_pulse_digest in this database:
+--
+--   1. build_ai_pulse_digest(p_days integer DEFAULT 7, p_stories integer
+--      DEFAULT 5) -- an older "AI Pulse Weekly" version. Pulls straight from
+--      ai_pulse_items with no per-source dedup, no minimum-quality bar, and
+--      no record of which stories have already been sent (so it could
+--      re-send the same story every run). utm_campaign=ai_pulse_weekly.
+--
+--   2. build_ai_pulse_digest(p_stories integer DEFAULT 5, p_min_stories
+--      integer DEFAULT 3, p_min_score numeric DEFAULT 55, p_max_per_source
+--      integer DEFAULT 2) -- the current "AI Pulse" daily version. Reads
+--      from ai_pulse_digest_candidates (a scored, deduped view -- 146 rows
+--      live right now), caps stories per source, enforces a minimum score
+--      and a minimum story count before drafting anything, records every
+--      story it uses into newsletter_story_sends (40 rows live) so the same
+--      story is never sent twice, and matches the daily cron job's own
+--      branding (utm_campaign=ai_pulse_daily).
+--
+-- Both signatures have every parameter defaulted, so dispatch_ai_pulse_digest
+-- calling public.build_ai_pulse_digest() with zero arguments is ambiguous --
+-- Postgres has two equally valid candidates and refuses to guess. That's
+-- confirmed to be the *only* caller of this function anywhere in the
+-- database, so this has been the digest's entire failure since the second
+-- (real, currently wired-up, data-backed) version was added alongside the
+-- first instead of replacing it.
+--
+-- FIX: drop the older 2-arg "weekly" version. The 4-arg version is the one
+-- with real production data behind it (candidates view + dedup log both
+-- populated) and is the one dispatch_ai_pulse_digest was clearly written
+-- for -- same retirement pattern already used once this session for the
+-- business_expected_value engine (20260812154500): when two ranking/build
+-- functions coexist ambiguously, keep the one the rest of the system
+-- actually depends on and drop the leftover, rather than patching call
+-- sites to disambiguate a function nothing should still be calling.
+-- ===========================================================================
+
+DROP FUNCTION IF EXISTS public.build_ai_pulse_digest(p_days integer, p_stories integer);

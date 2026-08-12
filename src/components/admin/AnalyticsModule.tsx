@@ -40,7 +40,7 @@ const StatCard = ({ label, value, icon }: { label: string; value: string | numbe
 
 /** A "Source"/"Page"/"Country" table: a two-column list ranked by visitors,
  *  each row's bar sized relative to the top row -- same visual language as
- *  the breakdown Lovable's own dashboard showed, rebuilt on our own,
+ *  the breakdown Lovable's own dashboard showed, rebuilt on our own, (lovable-ref-ok)
  *  first-party data so it keeps working after that project goes stale. */
 const BreakdownTable = <T extends Row>({
   title, icon, rows, labelKey, labelFormat,

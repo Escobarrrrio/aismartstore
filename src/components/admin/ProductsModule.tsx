@@ -72,6 +72,16 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [stockFilter, setStockFilter] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // The table used to render every row in `filtered` at once -- fine at a
+  // few dozen products, not at a real catalogue's size. `select("*")` with
+  // no limit means `products` here is the whole table, and every row's
+  // thumbnail was an eager (non-lazy) <img> to a distributor's own origin,
+  // not ours -- so opening this tab fired off thousands of simultaneous
+  // third-party image requests before a single one was ever scrolled into
+  // view. Paginating what actually mounts fixes both problems: far fewer
+  // DOM nodes, and far fewer in-flight requests at once.
+  const ROWS_PER_PAGE = 50;
+  const [page, setPage] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [editImages, setEditImages] = useState<string[]>([]);
@@ -105,6 +115,14 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
     const matchStock = !stockFilter || stockBadge(p).label.toLowerCase().includes(stockFilter.toLowerCase());
     return matchSearch && matchCat && matchStock;
   });
+
+  // A filter change can strand `page` past the new (shorter) result set --
+  // e.g. searching from page 4 of "everything" straight into a 2-page result.
+  useEffect(() => setPage(0), [search, categoryFilter, stockFilter]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
+  const safePage = Math.min(page, pageCount - 1);
+  const paged = filtered.slice(safePage * ROWS_PER_PAGE, safePage * ROWS_PER_PAGE + ROWS_PER_PAGE);
 
   const toggleSelect = (id: string) => {
     const next = new Set(selected);
@@ -386,7 +404,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
               {filtered.length === 0 ? (
                 <tr><td colSpan={9} className="px-4 py-10 text-center text-sm text-muted-foreground">No products found.</td></tr>
               ) : (
-                filtered.map((p) => {
+                paged.map((p) => {
                   const badge = stockBadge(p);
                   const isEditing = editingId === p.id;
                   return (
@@ -397,7 +415,7 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-3">
                           {p.images?.[0] ? (
-                            <img src={p.images[0]} alt="" className="w-9 h-9 rounded-md object-cover border border-border" />
+                            <img src={p.images[0]} alt="" loading="lazy" decoding="async" className="w-9 h-9 rounded-md object-cover border border-border" />
                           ) : (
                             <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center"><Package className="h-4 w-4 text-muted-foreground" /></div>
                           )}
@@ -539,7 +557,30 @@ const ProductsModule = ({ products, onReload }: ProductsModuleProps) => {
           </table>
         </div>
         <div className="px-4 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>{filtered.length} of {products.length} products</span>
+          <span>
+            {filtered.length === 0
+              ? `0 of ${products.length} products`
+              : `${safePage * ROWS_PER_PAGE + 1}–${Math.min(safePage * ROWS_PER_PAGE + ROWS_PER_PAGE, filtered.length)} of ${filtered.length} (${products.length} total)`}
+          </span>
+          {pageCount > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={safePage === 0}
+                className="px-2 py-1 rounded-md border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Prev
+              </button>
+              <span>Page {safePage + 1} of {pageCount}</span>
+              <button
+                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                disabled={safePage >= pageCount - 1}
+                className="px-2 py-1 rounded-md border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

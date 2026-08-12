@@ -27,3 +27,5 @@ project_id = "okejdzkftwhccplyfluf"
     verify_jwt = false
   [functions.track-pageview]
     verify_jwt = false
+  [functions.public-products-api]
+    verify_jwt = false

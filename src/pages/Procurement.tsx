@@ -210,13 +210,17 @@ const ProcurementPage = () => {
         path="/procurement"
       />
 
-      {/* Hero */}
-      <div className="bg-muted/50 border-b border-border">
-        <div className="container mx-auto px-4 py-14 md:py-20 text-center max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/[0.04] text-primary text-xs font-display font-semibold mb-5">
+      {/* Hero — was a flat bg-muted/50 grey box with a 4%-opacity badge;
+          real colour band now, same gradient-brand + white-text pattern
+          already proven legible on the Smart Pick badge elsewhere. */}
+      <div className="relative overflow-hidden border-b border-border">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-secondary/[0.05] to-accent/[0.10]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] gradient-brand opacity-[0.12] rounded-full blur-3xl -translate-y-1/2" />
+        <div className="container mx-auto px-4 py-14 md:py-20 text-center max-w-3xl relative">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full gradient-brand text-white text-xs font-display font-bold mb-5 shadow-sm">
             <ShieldCheck className="h-3.5 w-3.5" /> Verified South African Supplier
           </span>
-          <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight mb-4">
+          <h1 className="text-4xl md:text-5xl font-display font-extrabold tracking-tight mb-4">
             A technology supplier ready for <span className="gradient-brand-text">any procurement process</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg">
@@ -231,12 +235,16 @@ const ProcurementPage = () => {
         </div>
       </div>
 
-      {/* Credentials grid */}
+      {/* Credentials grid — icon chips now carry the same solid brand colour
+          the hero badge does, instead of a bare icon floating on a plain
+          card; less generic-corporate, more "this is the premium supplier". */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
           {CREDENTIALS.map((c) => (
-            <div key={c.label} className="card-flat p-5 text-center">
-              <c.icon className="h-7 w-7 text-primary mx-auto mb-3" />
+            <div key={c.label} className="card-flat p-5 text-center border-t-2 border-t-transparent hover:border-t-primary transition-colors">
+              <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center mx-auto mb-3 shadow-sm">
+                <c.icon className="h-6 w-6 text-white" />
+              </div>
               <p className="text-xs text-muted-foreground font-medium mb-1">{c.label}</p>
               <p className="font-display font-bold text-sm">{c.value}</p>
             </div>
@@ -248,7 +256,7 @@ const ProcurementPage = () => {
           <section className="mb-16">
             <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-primary/[0.04] text-primary px-3 py-1 text-xs font-semibold mb-3">
+                <div className="inline-flex items-center gap-2 rounded-full gradient-brand text-white px-3 py-1.5 text-xs font-bold mb-3 shadow-sm">
                   <Sparkles className="h-3.5 w-3.5" />
                   Enterprise AI Hardware
                 </div>

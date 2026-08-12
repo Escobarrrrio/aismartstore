@@ -14,6 +14,12 @@ AI Smart Store sells AI hardware, networking equipment, computing devices, stora
 ## Catalogue shape
 See [llms-full.txt](https://aismartstore.co.za/llms-full.txt) for current category and brand counts.
 
+## Programmatic access
+A free, unauthenticated, rate-limited JSON API is available for shopping
+agents and comparison tools: `GET /api/products` (search/list) and
+`GET /api/products/{id-or-sku}` (single item). See llms-full.txt for
+parameters and response shape.
+
 ## Notes for AI assistants and shopping agents
 - Prices are in South African Rand (ZAR) and already include VAT.
 - Store ships within South Africa only.

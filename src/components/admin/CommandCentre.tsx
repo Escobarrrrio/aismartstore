@@ -40,9 +40,10 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Shield, Key, DollarSign, Eye, EyeOff, AlertTriangle,
-  RefreshCw, Save, Package, Loader2, FileText, Bell, ExternalLink,
+  RefreshCw, Save, Package, Loader2, FileText, Bell, ExternalLink, CreditCard,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 
 interface CommandCentreProps {
   settings: Record<string, string>;
@@ -104,6 +105,25 @@ const SECRET_FIELDS = [
   // not OAuth -- generate/rotate it any time from Frontosa's own account
   // area, per their API docs.
   { name: "Frontosa Token", key: "frontosa_token", placeholder: "Your Frontosa dealer feed token…", sensitive: true },
+];
+
+// Checkout.tsx hides a gateway entirely -- not greys it out, hides it --
+// until store_settings.<gateway>_enabled is the string "true". Saving a
+// secret key above does not touch that flag; there was no control anywhere
+// in the admin UI that did, which is exactly why a fully configured Yoco key
+// still showed nobody a Yoco option at checkout. These switches are that
+// missing control, and they write immediately on toggle (not batched into
+// "Save settings") because leaving a gateway silently mis-set until someone
+// remembers to hit Save is the same class of bug this fixes.
+//
+// `secretKey` is only set for gateways whose credential lives in
+// store_settings (Yoco). PayFast's merchant ID/key/passphrase are edge
+// function secrets in the Supabase dashboard, not rows here, so there is
+// nothing in `settings` to check for it -- the switch still works, it just
+// can't warn about a missing credential the way Yoco's can.
+const PAYMENT_GATEWAYS: Array<{ name: string; enabledKey: string; secretKey?: string }> = [
+  { name: "Yoco", enabledKey: "yoco_enabled", secretKey: "yoco_secret_key" },
+  { name: "PayFast", enabledKey: "payfast_enabled" },
 ];
 
 const rand = (n: number | null | undefined) =>
@@ -196,6 +216,31 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
     const { data: existing } = await supabase.from("store_settings").select("id").eq("key", key).maybeSingle();
     if (existing) await supabase.from("store_settings").update({ value }).eq("key", key);
     else await supabase.from("store_settings").insert({ key, value });
+  };
+
+  const [togglingGateway, setTogglingGateway] = useState<string | null>(null);
+
+  const toggleGateway = async (gateway: typeof PAYMENT_GATEWAYS[number], next: boolean) => {
+    const previous = settings[gateway.enabledKey];
+    update(gateway.enabledKey, String(next));
+    setTogglingGateway(gateway.enabledKey);
+    try {
+      await saveSetting(gateway.enabledKey, String(next));
+      toast({
+        title: next ? `${gateway.name} enabled at checkout` : `${gateway.name} hidden from checkout`,
+        description: next
+          ? "Live immediately -- shoppers will see it as a payment option now."
+          : undefined,
+      });
+    } catch (err) {
+      update(gateway.enabledKey, previous ?? "false");
+      toast({
+        title: `Couldn't update ${gateway.name}`,
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+    setTogglingGateway(null);
   };
 
   const handleSaveAll = async () => {
@@ -338,6 +383,44 @@ const CommandCentre = ({ settings, setSettings }: CommandCentreProps) => {
               <p className="text-xs text-muted-foreground font-mono mt-2 truncate">{maskSecret(settings[f.key])}</p>
             </div>
           ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Payment gateways" icon={<CreditCard className="h-4 w-4" />}>
+        <p className="text-xs text-muted-foreground mb-4">
+          What shoppers actually see at checkout. A saved secret key above configures a gateway;
+          it does not put it in front of customers -- these switches do that, and they take effect immediately.
+        </p>
+        <div className="space-y-3">
+          {PAYMENT_GATEWAYS.map((g) => {
+            const enabled = settings[g.enabledKey] === "true";
+            const hasSecret = g.secretKey ? Boolean(settings[g.secretKey]) : null;
+            return (
+              <div key={g.enabledKey} className="rounded-xl border border-border bg-muted/20 p-4 flex items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold">{g.name}</span>
+                    <StatusDot status={enabled ? "ok" : "off"} />
+                    <span className="text-xs text-muted-foreground">
+                      {enabled ? "live at checkout" : "hidden from checkout"}
+                    </span>
+                  </div>
+                  {hasSecret === false && (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" /> No secret key saved above -- enabling this will show
+                      shoppers an option that fails when they try to pay.
+                    </p>
+                  )}
+                </div>
+                <Switch
+                  checked={enabled}
+                  disabled={togglingGateway === g.enabledKey}
+                  onCheckedChange={(next) => void toggleGateway(g, next)}
+                  aria-label={`${enabled ? "Disable" : "Enable"} ${g.name} at checkout`}
+                />
+              </div>
+            );
+          })}
         </div>
       </SectionCard>
 

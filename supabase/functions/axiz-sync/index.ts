@@ -532,6 +532,13 @@ Deno.serve(async (req) => {
       error_details: `v3: ${upstreamError ? "Axiz temporarily unavailable; cursor preserved" : message}`,
       completed_at: new Date().toISOString(),
     }).eq("id", logRow.id);
+    // A feed that stops feeding is invisible unless it says so: the sync ran
+    // every 15 minutes for eight days against rejected credentials and nobody
+    // was told. Four consecutive failures (one hour) now raises an alert once
+    // per streak, so stale ZAR pricing gets a human within the hour.
+    if (!upstreamError) {
+      try { await checkAndAlertOnFailureStreak(supabase, "axiz", 4); } catch { /* alerting must never mask the sync error */ }
+    }
     return new Response(JSON.stringify({
       status: upstreamError ? "deferred" : "error",
       retryable: upstreamError,

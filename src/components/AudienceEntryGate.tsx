@@ -1,6 +1,7 @@
-import { Home, Building2, ArrowRight } from "lucide-react";
+import { Home, Building2, ArrowRight, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAudience, type ShoppingMode } from "@/contexts/AudienceContext";
+import { useSession } from "@/hooks/useSession";
 import { trackEvent } from "@/lib/analytics";
 import Logo from "@/components/Logo";
 

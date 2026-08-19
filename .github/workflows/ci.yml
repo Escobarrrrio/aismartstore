@@ -1,10 +1,12 @@
 name: CI
 
+# Runs on every push to any branch and on every pull request, so a typing
+# regression (e.g. an analytics event emitted before its union member exists)
+# fails CI on the branch that introduced it rather than after it reaches main.
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:

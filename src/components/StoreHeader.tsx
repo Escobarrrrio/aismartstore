@@ -84,6 +84,8 @@ const StoreHeader = () => {
             <Search className="h-5 w-5" />
           </button>
 
+          <AudienceSwitcher className="hidden sm:block" />
+
           <LanguageCurrencySwitcher />
 
           {isAdmin && (

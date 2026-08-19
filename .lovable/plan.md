@@ -1,7 +1,7 @@
-# Consent-First Controls & Badge Removal
+# Consent-First Controls, Badge Removal, and Discovered Build Errors
 
 ## Goal
-Confirm and enforce a consent-based workflow for this project, remove the Lovable "Edit with Lovable" badge from the published site, and verify that hosting remains independent (Vercel).
+Confirm and enforce a consent-based workflow for this project, remove the Lovable "Edit with Lovable" badge from the published site, and fix the TypeScript build errors that are currently blocking the project.
 
 ## What we will do
 
@@ -14,7 +14,12 @@ Confirm and enforce a consent-based workflow for this project, remove the Lovabl
    - Going forward, any code or database change that is not explicitly requested will be surfaced for approval first.
    - Database migrations, schema changes, or data exports will only happen after explicit written consent.
 
-3. **Verify independent hosting status**
+3. **Fix current TypeScript build errors**
+   - Several admin modules (`AnalyticsModule`, `NewsletterSubscribersModule`, `SourcingModule`, `UsersModule`) are calling RPC names that are missing from the generated Supabase types.
+   - We will regenerate or update the types and/or add the missing RPC signatures so the build passes.
+   - This must be done before any further deployment.
+
+4. **Verify independent hosting status**
    - Confirm the published domain is using Vercel / custom-domain routing as expected.
    - Ensure no Lovable-managed hosting takeover is in progress.
 
@@ -28,3 +33,4 @@ Confirm and enforce a consent-based workflow for this project, remove the Lovabl
 
 - Self-hosting migration (already on Vercel).
 - Database credential exposure or export (not requested and not done without consent).
+

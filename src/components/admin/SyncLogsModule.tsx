@@ -1,10 +1,31 @@
-import { RefreshCw, CheckCircle, XCircle, Clock, ImageOff, Download } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Clock, ImageOff, Download, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Distributor feeds we expect to be alive. A feed that silently stops is the
+// expensive failure mode here: prices and stock freeze at whatever they were,
+// so the store keeps selling yesterday's ZAR price on today's cost.
+const FEEDS: { source: string; label: string; staleHours: number }[] = [
+  { source: "axiz", label: "Axiz", staleHours: 6 },
+  { source: "frontosa", label: "Frontosa", staleHours: 26 },
+];
+
+type FeedHealth = {
+  source: string;
+  label: string;
+  staleHours: number;
+  lastSuccess: string | null;
+  lastError: string | null;
+  lastErrorAt: string | null;
+};
+
+const hoursSince = (iso: string | null) =>
+  iso ? (Date.now() - new Date(iso).getTime()) / 3_600_000 : null;
+
 const SyncLogsModule = () => {
   const [logs, setLogs] = useState<any[]>([]);
+  const [health, setHealth] = useState<FeedHealth[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [validating, setValidating] = useState(false);
@@ -19,10 +40,29 @@ const SyncLogsModule = () => {
       .order("created_at", { ascending: false })
       .limit(50);
     setLogs(data || []);
+
+    const feedHealth = await Promise.all(
+      FEEDS.map(async (f) => {
+        const [{ data: ok }, { data: bad }] = await Promise.all([
+          supabase.from("sync_logs").select("completed_at, created_at").eq("source", f.source)
+            .eq("status", "success").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+          supabase.from("sync_logs").select("error_details, created_at").eq("source", f.source)
+            .eq("status", "error").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        ]);
+        return {
+          ...f,
+          lastSuccess: (ok as any)?.completed_at ?? (ok as any)?.created_at ?? null,
+          lastError: (bad as any)?.error_details ?? null,
+          lastErrorAt: (bad as any)?.created_at ?? null,
+        };
+      }),
+    );
+    setHealth(feedHealth);
     setLoading(false);
   };
 
   useEffect(() => { loadLogs(); }, []);
+
 
   // Loop an edge function until it reports done, refreshing logs after each pass.
   const runToCompletion = async (

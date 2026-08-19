@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { formatMoney } from "@/lib/currency";
 import { trackEvent } from "@/lib/analytics";
 import { AUDIENCES, facetLabel, parseAudience, priceChipsFor, type Audience } from "@/lib/facets";
+import { useAudience } from "@/contexts/AudienceContext";
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
@@ -82,7 +83,10 @@ const Products = () => {
   const urlBrand = searchParams.get("brand") || "";
   const urlAiOnly = searchParams.get("ai") === "1";
   const urlInStockOnly = searchParams.get("stock") === "1";
-  const urlAudience = parseAudience(searchParams.get("audience"));
+  // No ?audience= in the URL -> fall back to whatever the visitor chose at the
+  // entry gate, so a household shopper never lands in the enterprise catalogue.
+  const { mode: shoppingMode } = useAudience();
+  const urlAudience = parseAudience(searchParams.get("audience") ?? shoppingMode);
   const urlMinPrice = searchParams.get("min") || "";
   const urlMaxPrice = searchParams.get("max") || "";
   const urlSort = (searchParams.get("sort") || "relevance") as SortOption;

@@ -26,6 +26,10 @@ export type AnalyticsEvent =
   | { name: "filters_cleared_all"; page: string }
   // Catalogue scope switch on /products ("Home" / "Business" / "Everything").
   | { name: "audience_changed"; value: StorefrontAudience; page: string }
+  // First-visit entry gate: "shopping for my Home" vs "outfitting a Business".
+  | { name: "audience_selected"; value: "residential" | "business"; page: string }
+  // Bundle recommendation surfaced on a product page.
+  | { name: "recommendations_shown"; productId: string; count: number }
   // Storefront audience telemetry — proves the residential/business split in prod.
   | { name: "storefront_viewed"; audience: StorefrontAudience; surface: "home" | "products" | "procurement" | "header_search"; query?: string }
   | { name: "product_list_returned"; audience: StorefrontAudience; surface: "home" | "products" | "procurement" | "header_search"; count: number; total?: number; query?: string }

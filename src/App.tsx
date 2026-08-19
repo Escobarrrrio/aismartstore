@@ -12,6 +12,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { LocaleProvider } from "@/contexts/LocaleContext";
+import { AudienceProvider } from "@/contexts/AudienceContext";
 import StoreHeader from "@/components/StoreHeader";
 import StoreFooter from "@/components/StoreFooter";
 import ChatWidget from "@/components/ChatWidget";
@@ -74,6 +75,7 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <LocaleProvider>
+         <AudienceProvider>
           <ProductProvider>
             <CartProvider>
               <WishlistProvider>
@@ -125,6 +127,7 @@ const App = () => (
               </WishlistProvider>
             </CartProvider>
           </ProductProvider>
+         </AudienceProvider>
         </LocaleProvider>
       </TooltipProvider>
     </QueryClientProvider>

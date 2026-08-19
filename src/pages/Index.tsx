@@ -11,6 +11,7 @@ import { Product } from "@/contexts/CartContext";
 import { trackEvent } from "@/lib/analytics";
 import { fetchShowcase, mapShowcaseRow } from "@/lib/home-showcase";
 import PromoBanner from "@/components/PromoBanner";
+import AudienceEntryGate from "@/components/AudienceEntryGate";
 
 const Index = () => {
   const { products, loading } = useProducts();
@@ -139,6 +140,8 @@ const Index = () => {
 
   return (
     <div className="flex flex-col">
+      {/* First-visit routing layer: Home/Studies vs Business/Enterprise. */}
+      <AudienceEntryGate />
       <SEO
         title="AI & Enterprise Hardware in South Africa"
         description="Shop curated AI hardware, networking gear, computing devices, and enterprise software in South Africa. Distributor-backed pricing in ZAR with SA-wide delivery."

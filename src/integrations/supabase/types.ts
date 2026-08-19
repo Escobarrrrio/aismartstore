@@ -265,6 +265,33 @@ export type Database = {
         }
         Relationships: []
       }
+      b2b_ontology_rules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          note: string | null
+          pattern: string
+          rule_type: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          note?: string | null
+          pattern: string
+          rule_type: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          note?: string | null
+          pattern?: string
+          rule_type?: string
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           created_at: string
@@ -332,6 +359,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      category_complements: {
+        Row: {
+          complement_category: string
+          source_category: string
+          weight: number
+        }
+        Insert: {
+          complement_category: string
+          source_category: string
+          weight?: number
+        }
+        Update: {
+          complement_category?: string
+          source_category?: string
+          weight?: number
+        }
+        Relationships: []
       }
       category_markup: {
         Row: {
@@ -1142,6 +1187,56 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_copurchases: {
+        Row: {
+          product_id: string
+          refreshed_at: string
+          related_product_id: string
+          score: number
+        }
+        Insert: {
+          product_id: string
+          refreshed_at?: string
+          related_product_id: string
+          score?: number
+        }
+        Update: {
+          product_id?: string
+          refreshed_at?: string
+          related_product_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_copurchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_copurchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_copurchases_related_product_id_fkey"
+            columns: ["related_product_id"]
+            isOneToOne: false
+            referencedRelation: "home_showcase_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_copurchases_related_product_id_fkey"
+            columns: ["related_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -2019,6 +2114,16 @@ export type Database = {
         }
         Returns: string
       }
+      classify_product_audience: {
+        Args: {
+          p_brand: string
+          p_category: string
+          p_name: string
+          p_price: number
+          p_price_cap?: number
+        }
+        Returns: string
+      }
       classify_product_category: {
         Args: { p_category?: string; p_name: string }
         Returns: string
@@ -2194,6 +2299,22 @@ export type Database = {
               product_count: number
             }[]
           }
+      get_recommended_products: {
+        Args: { p_audience?: string; p_limit?: number; p_product_id: string }
+        Returns: {
+          audience: string
+          brand: string
+          category: string
+          id: string
+          images: string[]
+          in_stock: boolean
+          is_ai_product: boolean
+          name: string
+          price: number
+          reason: string
+          score: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2291,6 +2412,7 @@ export type Database = {
           slot: string
         }[]
       }
+      refresh_product_copurchases: { Args: never; Returns: number }
       refresh_product_facets_cache: { Args: never; Returns: number }
       retention_sweep: {
         Args: { p_max_rows_per_table?: number }
@@ -2348,67 +2470,37 @@ export type Database = {
           product_count: number
         }[]
       }
-      search_products:
-        | {
-            Args: {
-              filter_ai_only?: boolean
-              filter_brand?: string
-              filter_category?: string
-              filter_in_stock_only?: boolean
-              max_price?: number
-              min_price?: number
-              page_number?: number
-              page_size?: number
-              search_query?: string
-              sort_by?: string
-            }
-            Returns: {
-              brand: string
-              category: string
-              description: string
-              id: string
-              images: string[]
-              in_stock: boolean
-              is_ai_product: boolean
-              name: string
-              price: number
-              sku: string
-              slug: string
-              stock_quantity: number
-              total_count: number
-            }[]
-          }
-        | {
-            Args: {
-              filter_ai_only?: boolean
-              filter_audience?: string
-              filter_brand?: string
-              filter_category?: string
-              filter_in_stock_only?: boolean
-              max_price?: number
-              min_price?: number
-              page_number?: number
-              page_size?: number
-              search_query?: string
-              sort_by?: string
-            }
-            Returns: {
-              audience: string
-              brand: string
-              category: string
-              description: string
-              id: string
-              images: string[]
-              in_stock: boolean
-              is_ai_product: boolean
-              name: string
-              price: number
-              sku: string
-              slug: string
-              stock_quantity: number
-              total_count: number
-            }[]
-          }
+      search_products: {
+        Args: {
+          filter_ai_only?: boolean
+          filter_audience?: string
+          filter_brand?: string
+          filter_category?: string
+          filter_in_stock_only?: boolean
+          max_price?: number
+          min_price?: number
+          page_number?: number
+          page_size?: number
+          search_query?: string
+          sort_by?: string
+        }
+        Returns: {
+          audience: string
+          brand: string
+          category: string
+          description: string
+          id: string
+          images: string[]
+          in_stock: boolean
+          is_ai_product: boolean
+          name: string
+          price: number
+          sku: string
+          slug: string
+          stock_quantity: number
+          total_count: number
+        }[]
+      }
       sec_log: {
         Args: {
           p_actor?: string

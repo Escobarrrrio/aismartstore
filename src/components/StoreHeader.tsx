@@ -157,6 +157,9 @@ const StoreHeader = () => {
       {menuOpen && (
         <div id="mobile-nav-menu" className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-1 max-w-full">
+            <div className="sm:hidden pb-2">
+              <AudienceSwitcher />
+            </div>
             {[
               { to: "/", label: t("nav.home") },
               { to: "/products", label: t("nav.products") },

@@ -32,7 +32,10 @@ interface Props {
  * on `quote_requests` / `compliance_documents`.
  */
 const AudienceGuard = ({ allow, children }: Props) => {
-  const [session, setSession] = useState<any>(null);
+  // `undefined` = still resolving. Starting at `null` would briefly render the
+  // signed-out state (and, for business pages, the sign-in wall) to a shopper
+  // who is in fact already logged in.
+  const [session, setSession] = useState<any>(undefined);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
@@ -97,7 +100,13 @@ const AudienceGuard = ({ allow, children }: Props) => {
   };
 
   // Wait for both checks to resolve before deciding.
-  const stillChecking = customerType === undefined || (session && isAdmin === null);
+  const stillChecking =
+    session === undefined || customerType === undefined || (session && isAdmin === null);
+
+  // The business / government portal carries trade pricing, compliance packs
+  // and quoting, so unlike the residential storefront it is not browsable
+  // anonymously: a visitor must be a registered, signed-in buyer.
+  const needsSignIn = allow === "business" && session === null;
   const blocked =
     !stillChecking &&
     !isAdmin &&
@@ -118,6 +127,35 @@ const AudienceGuard = ({ allow, children }: Props) => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="animate-pulse text-sm text-muted-foreground">Verifying access…</div>
+      </div>
+    );
+  }
+
+  if (needsSignIn) {
+    const back = encodeURIComponent(
+      typeof window !== "undefined" ? window.location.pathname + window.location.search : "/procurement",
+    );
+    return (
+      <div className="container mx-auto px-4 py-20">
+        <div className="max-w-xl mx-auto text-center card-flat p-10">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-5">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <h1 className="font-display font-extrabold text-2xl mb-2">Sign in to view the Business Portal</h1>
+          <p className="text-muted-foreground text-sm mb-6">
+            Trade pricing, compliance packs and quoting are reserved for registered business,
+            government and institutional buyers. Sign in or register and we'll bring you straight
+            back here.
+          </p>
+          <Link to={`/auth?redirect=${back}`} className="btn-primary px-6 py-3 text-sm inline-flex items-center gap-2">
+            Sign in or register <ArrowRight className="h-4 w-4" />
+          </Link>
+          <div className="mt-4">
+            <Link to="/" className="text-sm font-semibold text-primary hover:underline">
+              Continue to the residential store
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

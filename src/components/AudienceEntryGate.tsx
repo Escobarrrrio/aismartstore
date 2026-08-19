@@ -1,6 +1,7 @@
-import { Home, Building2, ArrowRight } from "lucide-react";
+import { Home, Building2, ArrowRight, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAudience, type ShoppingMode } from "@/contexts/AudienceContext";
+import { useSession } from "@/hooks/useSession";
 import { trackEvent } from "@/lib/analytics";
 import Logo from "@/components/Logo";
 
@@ -15,14 +16,20 @@ import Logo from "@/components/Logo";
  */
 const AudienceEntryGate = () => {
   const { mode, ready, setMode } = useAudience();
+  const session = useSession();
   const navigate = useNavigate();
 
   if (!ready || mode) return null;
 
+  // The business portal exposes trade pricing, compliance packs and quoting,
+  // so it is registered-buyers-only. Choosing it while signed out records the
+  // choice and hands off to sign-in, which returns here on success.
   const choose = (next: ShoppingMode) => {
     setMode(next);
     trackEvent({ name: "audience_selected", value: next, page: "/" });
-    if (next === "business") navigate("/procurement");
+    if (next === "business") {
+      navigate(session ? "/procurement" : "/auth?redirect=%2Fprocurement");
+    }
   };
 
   const options: {
@@ -31,6 +38,7 @@ const AudienceEntryGate = () => {
     title: string;
     blurb: string;
     examples: string;
+    note?: string;
   }[] = [
     {
       value: "residential",
@@ -45,6 +53,7 @@ const AudienceEntryGate = () => {
       title: "A Business or Enterprise",
       blurb: "Infrastructure, licensing and government procurement.",
       examples: "Servers · Networking · Licensing · Care packs · Quotes",
+      note: "Sign-in required — reserved for registered business & government buyers",
     },
   ];
 
@@ -73,7 +82,7 @@ const AudienceEntryGate = () => {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-          {options.map(({ value, Icon, title, blurb, examples }) => (
+          {options.map(({ value, Icon, title, blurb, examples, note }) => (
             <button
               key={value}
               type="button"
@@ -87,6 +96,12 @@ const AudienceEntryGate = () => {
               <span className="block font-display font-bold text-lg text-foreground">{title}</span>
               <span className="block text-sm text-muted-foreground mt-2">{blurb}</span>
               <span className="block text-xs text-muted-foreground/80 mt-3">{examples}</span>
+              {note && (
+                <span className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+                  <Lock className="h-3 w-3" aria-hidden="true" />
+                  {note}
+                </span>
+              )}
               <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
                 Continue
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />

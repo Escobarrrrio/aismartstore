@@ -8,6 +8,7 @@ import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from "@/components/ImageLightbox";
 import RecommendedBundle from "@/components/RecommendedBundle";
+import AiCapabilityPanel from "@/components/AiCapabilityPanel";
 import { useAudience } from "@/contexts/AudienceContext";
 import { buildSpecifications } from "@/lib/specifications";
 import { generateContent, faqJsonLd } from "@/lib/product-content";
@@ -577,6 +578,8 @@ const ProductDetail = () => {
             </div>
           )}
           <p className="text-xs text-muted-foreground mt-4">{t("productDetail.specSource")}</p>
+
+          {product && <AiCapabilityPanel productId={product.id} />}
         </div>
 
         {product && (

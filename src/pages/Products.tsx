@@ -499,6 +499,25 @@ const Products = () => {
         </div>
       </div>
 
+      {scopeLocked && (
+        <div className="container mx-auto px-4 pt-6">
+          <div
+            role="status"
+            data-testid="scope-locked-notice"
+            className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm"
+          >
+            <Lock className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+            <span className="text-muted-foreground">{t("products.businessLockedNotice")}</span>
+            <Link
+              to={`/auth?redirect=${encodeURIComponent("/products?audience=business")}`}
+              className="font-semibold text-primary hover:underline"
+            >
+              {t("products.signInToView")}
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
         {/* Filter sidebar (desktop) -- was a flat card-flat box with plain
             grey checkboxes and 11px counts: functionally complete (scope,
@@ -523,14 +542,19 @@ const Products = () => {
                       type="button"
                       role="radio"
                       aria-checked={active}
-                      title={a.hint}
+                      title={a.value !== "residential" && signedOut ? t("products.businessLockedHint") : a.hint}
                       data-testid={`scope-${a.value}`}
                       onClick={() => onAudienceChange(a.value)}
                       className={`rounded-lg px-2 py-1.5 text-xs font-bold transition-all ${
                         active ? "gradient-brand text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      {a.label}
+                      <span className="inline-flex items-center justify-center gap-1">
+                        {a.value !== "residential" && signedOut && (
+                          <Lock className="h-3 w-3" aria-hidden="true" />
+                        )}
+                        {a.label}
+                      </span>
                     </button>
                   );
                 })}

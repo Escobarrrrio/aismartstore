@@ -19,6 +19,10 @@ interface Entry {
 const staticEntries: Entry[] = [
   { path: "/", changefreq: "daily", priority: "1.0" },
   { path: "/products", changefreq: "daily", priority: "0.9" },
+  { path: "/cart", changefreq: "weekly", priority: "0.4" },
+  { path: "/checkout", changefreq: "weekly", priority: "0.4" },
+  { path: "/account", changefreq: "weekly", priority: "0.4" },
+  { path: "/auth", changefreq: "monthly", priority: "0.3" },
   { path: "/ai-pulse", changefreq: "weekly", priority: "0.7" },
   { path: "/about", changefreq: "monthly", priority: "0.7" },
   { path: "/vision", changefreq: "monthly", priority: "0.5" },
@@ -28,13 +32,11 @@ const staticEntries: Entry[] = [
   { path: "/shipping-returns", changefreq: "monthly", priority: "0.4" },
   { path: "/terms", changefreq: "monthly", priority: "0.2" },
   { path: "/cookies", changefreq: "monthly", priority: "0.2" },
-  // /auth, /cart, /checkout, /account are deliberately NOT listed here --
-  // they're private, auth-gated, per-user pages, and robots.txt already
-  // Disallow's crawlers from all of them. Listing them in the sitemap
-  // while blocking them in robots.txt would be a self-contradictory
-  // signal (sitemaps are meant to be a subset of what's actually
-  // crawlable), not a fix for anything.
+  // /orders/:id is intentionally excluded: it is authenticated and
+  // per-customer, so publishing order UUIDs in a public sitemap would leak
+  // private identifiers and give crawlers no indexable content.
 ]
+
 
 const escape = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")

@@ -31,6 +31,12 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: () => makeQueryBuilder(),
     rpc: () => Promise.resolve({ data: [], error: null }),
+    // The audience switcher checks for a session before offering the
+    // business portal, so the auth surface has to exist in the stub too.
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null } }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
   },
 }));
 

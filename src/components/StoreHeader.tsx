@@ -8,6 +8,7 @@ import LanguageCurrencySwitcher from "@/components/LanguageCurrencySwitcher";
 import Logo from "@/components/Logo";
 import HeaderSearch from "@/components/HeaderSearch";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import AudienceSwitcher from "@/components/AudienceSwitcher";
 
 
 const StoreHeader = () => {
@@ -83,6 +84,8 @@ const StoreHeader = () => {
             <Search className="h-5 w-5" />
           </button>
 
+          <AudienceSwitcher className="hidden sm:block" />
+
           <LanguageCurrencySwitcher />
 
           {isAdmin && (
@@ -154,6 +157,9 @@ const StoreHeader = () => {
       {menuOpen && (
         <div id="mobile-nav-menu" className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-1 max-w-full">
+            <div className="sm:hidden pb-2">
+              <AudienceSwitcher />
+            </div>
             {[
               { to: "/", label: t("nav.home") },
               { to: "/products", label: t("nav.products") },

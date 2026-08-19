@@ -5,6 +5,7 @@ import { HelmetProvider } from "react-helmet-async";
 import i18n from "@/lib/i18n";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { ProductProvider } from "@/contexts/ProductContext";
+import { AudienceProvider } from "@/contexts/AudienceContext";
 import Index from "@/pages/Index";
 
 // ProductContext, Index's AI-picks query, and the hero's StorefrontShowcase
@@ -38,9 +39,11 @@ const renderHome = () =>
     <HelmetProvider>
       <MemoryRouter>
         <LocaleProvider>
-          <ProductProvider>
-            <Index />
-          </ProductProvider>
+          <AudienceProvider>
+            <ProductProvider>
+              <Index />
+            </ProductProvider>
+          </AudienceProvider>
         </LocaleProvider>
       </MemoryRouter>
     </HelmetProvider>

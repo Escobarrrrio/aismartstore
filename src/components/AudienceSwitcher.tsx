@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Home, Building2, Check, ChevronDown } from "lucide-react";
 import { useAudience, type ShoppingMode } from "@/contexts/AudienceContext";
+import { useSession } from "@/hooks/useSession";
 import { trackEvent } from "@/lib/analytics";
 
 /**
@@ -20,6 +21,7 @@ const OPTIONS: { value: ShoppingMode; label: string; Icon: typeof Home }[] = [
 const AudienceSwitcher = ({ className = "" }: { className?: string }) => {
   const { mode, ready, setMode } = useAudience();
   const [open, setOpen] = useState(false);
+  const session = useSession();
   const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -49,7 +51,13 @@ const AudienceSwitcher = ({ className = "" }: { className?: string }) => {
     if (next === mode) return;
     setMode(next);
     trackEvent({ name: "audience_selected", value: next, page: window.location.pathname });
-    navigate(next === "business" ? "/procurement" : "/products");
+    // Business portal is registered-buyers-only: send signed-out shoppers
+    // through sign-in first, then straight into procurement.
+    if (next === "business") {
+      navigate(session ? "/procurement" : "/auth?redirect=%2Fprocurement");
+      return;
+    }
+    navigate("/products");
   };
 
   return (

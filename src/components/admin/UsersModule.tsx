@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { adminRpc } from "@/lib/admin-rpc";
 import { useToast } from "@/hooks/use-toast";
+
 
 interface UserRow {
   id: string;

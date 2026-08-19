@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart3, Users, Eye, Globe2, Monitor, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { adminRpc } from "@/lib/admin-rpc";
 import { useToast } from "@/hooks/use-toast";
+
 
 interface Row { visitors: number }
 interface SourceRow extends Row { source: string }

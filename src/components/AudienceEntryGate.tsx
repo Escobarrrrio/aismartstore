@@ -16,14 +16,20 @@ import Logo from "@/components/Logo";
  */
 const AudienceEntryGate = () => {
   const { mode, ready, setMode } = useAudience();
+  const session = useSession();
   const navigate = useNavigate();
 
   if (!ready || mode) return null;
 
+  // The business portal exposes trade pricing, compliance packs and quoting,
+  // so it is registered-buyers-only. Choosing it while signed out records the
+  // choice and hands off to sign-in, which returns here on success.
   const choose = (next: ShoppingMode) => {
     setMode(next);
     trackEvent({ name: "audience_selected", value: next, page: "/" });
-    if (next === "business") navigate("/procurement");
+    if (next === "business") {
+      navigate(session ? "/procurement" : "/auth?redirect=%2Fprocurement");
+    }
   };
 
   const options: {

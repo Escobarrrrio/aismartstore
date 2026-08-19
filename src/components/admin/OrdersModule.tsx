@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History, Download, Printer } from "lucide-react";
+import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History, Download, Printer, PackageCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function escapeHtml(s: string): string {
@@ -341,6 +341,37 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                           </button>
                         </div>
                       </div>
+
+                      {/* Fulfilment progress -- pending -> paid -> packed ->
+                          shipped -> delivered. Cancelled/returned orders fall
+                          off the happy path, so the strip is hidden for them
+                          rather than showing a misleading half-done bar. */}
+                      {FULFILMENT_STEPS.includes((order.order_status || order.status) as typeof FULFILMENT_STEPS[number]) && (
+                        <div className="pt-2" data-testid="fulfilment-progress">
+                          <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Fulfilment</p>
+                          <ol className="flex flex-wrap items-center gap-1.5">
+                            {FULFILMENT_STEPS.map((step, i) => {
+                              const currentIndex = FULFILMENT_STEPS.indexOf((order.order_status || order.status) as typeof FULFILMENT_STEPS[number]);
+                              const done = i <= currentIndex;
+                              return (
+                                <li key={step} className="flex items-center gap-1.5">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold border ${
+                                      done ? "gradient-brand text-white border-transparent" : "bg-muted text-muted-foreground border-border"
+                                    }`}
+                                    aria-current={i === currentIndex ? "step" : undefined}
+                                  >
+                                    {step.charAt(0).toUpperCase() + step.slice(1)}
+                                  </span>
+                                  {i < FULFILMENT_STEPS.length - 1 && (
+                                    <span className="h-px w-3 bg-border" aria-hidden="true" />
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ol>
+                        </div>
+                      )}
 
                       {/* Quick actions */}
                       <div className="flex flex-wrap gap-2 pt-2 pb-1">

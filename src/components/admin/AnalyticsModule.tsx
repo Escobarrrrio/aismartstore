@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart3, Users, Eye, Globe2, Monitor, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { adminRpc } from "@/lib/admin-rpc";
 import { useToast } from "@/hooks/use-toast";
+
 
 interface Row { visitors: number }
 interface SourceRow extends Row { source: string }
@@ -94,7 +95,7 @@ const AnalyticsModule = () => {
   const load = useCallback(async (days: number) => {
     setLoading(true);
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-    const { data: result, error } = await supabase.rpc("admin_analytics_overview", {
+    const { data: result, error } = await adminRpc<Overview>("admin_analytics_overview", {
       p_since: since,
       p_until: new Date().toISOString(),
     });
@@ -103,7 +104,8 @@ const AnalyticsModule = () => {
       toast({ title: "Couldn't load analytics", description: error.message, variant: "destructive" });
       return;
     }
-    setData(result as unknown as Overview);
+    setData(result);
+
   }, [toast]);
 
   useEffect(() => { load(rangeDays); }, [rangeDays, load]);

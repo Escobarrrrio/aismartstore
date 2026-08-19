@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History, Download, Printer } from "lucide-react";
+import { Search, RefreshCw, Truck, ChevronDown, ChevronUp, Mail, ShoppingCart, Clock, CheckCircle2, DollarSign, XCircle, History, Download, Printer, PackageCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function escapeHtml(s: string): string {
@@ -64,13 +64,18 @@ interface OrdersModuleProps {
   onReload: () => void;
 }
 
-const statusOptions = ["pending", "paid", "shipped", "delivered", "returned", "cancelled"];
+const statusOptions = ["pending", "paid", "packed", "shipped", "delivered", "returned", "cancelled"];
+
+// Fulfilment happy path, in order. Used for the per-order progress strip so an
+// admin can see at a glance where a parcel sits without reading the audit log.
+const FULFILMENT_STEPS = ["pending", "paid", "packed", "shipped", "delivered"] as const;
 const paymentOptions = ["unpaid", "paid", "refunded", "partially_refunded"];
 
 const statusBadge = (status: string) => {
   const map: Record<string, string> = {
     pending: "bg-amber-50 text-amber-700 border-amber-200",
     paid: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    packed: "bg-indigo-50 text-indigo-700 border-indigo-200",
     shipped: "bg-blue-50 text-blue-700 border-blue-200",
     delivered: "bg-teal-50 text-teal-700 border-teal-200",
     returned: "bg-red-50 text-red-700 border-red-200",
@@ -116,10 +121,37 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
     return matchSearch && matchStatus;
   });
 
-  const updateOrderStatus = async (id: string, field: "order_status" | "payment_status" | "status", value: string) => {
-    await supabase.from("orders").update({ [field]: value } as any).eq("id", id);
+  // Every fulfilment move writes the status AND tells the customer. Silently
+  // swallowing the update error (the old behaviour) meant a failed write looked
+  // identical to a successful one until the next reload contradicted it.
+  const updateOrderStatus = async (
+    id: string,
+    field: "order_status" | "payment_status" | "status",
+    value: string,
+    opts: { notify?: boolean } = {},
+  ) => {
+    const { error } = await supabase.from("orders").update({ [field]: value } as any).eq("id", id);
+    if (error) {
+      toast({ title: "Could not update order", description: error.message, variant: "destructive" });
+      return;
+    }
     onReload();
-    toast({ title: "Order updated" });
+    toast({ title: `Order marked ${value.replace(/_/g, " ")}` });
+
+    if (opts.notify) {
+      const { error: mailError } = await supabase.functions.invoke("notify-order", {
+        body: { orderId: id, event: "status_update", status: value },
+      });
+      if (mailError) {
+        toast({
+          title: "Status saved, customer not notified",
+          description: mailError.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Customer notified by email" });
+      }
+    }
   };
 
   const updateTracking = async (id: string, tracking: string) => {
@@ -264,7 +296,7 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                               <label className="text-[10px] font-semibold text-muted-foreground">Order Status</label>
                               <select
                                 value={order.order_status || order.status || "pending"}
-                                onChange={(e) => updateOrderStatus(order.id, "order_status", e.target.value)}
+                                onChange={(e) => updateOrderStatus(order.id, "order_status", e.target.value, { notify: true })}
                                 className="w-full mt-0.5 px-2 py-1.5 rounded-md border border-input bg-card text-xs"
                               >
                                 {statusOptions.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
@@ -310,6 +342,37 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                         </div>
                       </div>
 
+                      {/* Fulfilment progress -- pending -> paid -> packed ->
+                          shipped -> delivered. Cancelled/returned orders fall
+                          off the happy path, so the strip is hidden for them
+                          rather than showing a misleading half-done bar. */}
+                      {FULFILMENT_STEPS.includes((order.order_status || order.status) as typeof FULFILMENT_STEPS[number]) && (
+                        <div className="pt-2" data-testid="fulfilment-progress">
+                          <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Fulfilment</p>
+                          <ol className="flex flex-wrap items-center gap-1.5">
+                            {FULFILMENT_STEPS.map((step, i) => {
+                              const currentIndex = FULFILMENT_STEPS.indexOf((order.order_status || order.status) as typeof FULFILMENT_STEPS[number]);
+                              const done = i <= currentIndex;
+                              return (
+                                <li key={step} className="flex items-center gap-1.5">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold border ${
+                                      done ? "gradient-brand text-white border-transparent" : "bg-muted text-muted-foreground border-border"
+                                    }`}
+                                    aria-current={i === currentIndex ? "step" : undefined}
+                                  >
+                                    {step.charAt(0).toUpperCase() + step.slice(1)}
+                                  </span>
+                                  {i < FULFILMENT_STEPS.length - 1 && (
+                                    <span className="h-px w-3 bg-border" aria-hidden="true" />
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ol>
+                        </div>
+                      )}
+
                       {/* Quick actions */}
                       <div className="flex flex-wrap gap-2 pt-2 pb-1">
                         <button
@@ -319,7 +382,13 @@ const OrdersModule = ({ orders, onReload }: OrdersModuleProps) => {
                           <CheckCircle2 className="h-3 w-3" /> Mark paid
                         </button>
                         <button
-                          onClick={() => updateOrderStatus(order.id, "order_status", "shipped")}
+                          onClick={() => updateOrderStatus(order.id, "order_status", "packed", { notify: true })}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-display font-semibold hover:bg-indigo-100 transition-colors"
+                        >
+                          <PackageCheck className="h-3 w-3" /> Mark packed
+                        </button>
+                        <button
+                          onClick={() => updateOrderStatus(order.id, "order_status", "shipped", { notify: true })}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-display font-semibold hover:bg-blue-100 transition-colors"
                         >
                           <Truck className="h-3 w-3" /> Mark shipped

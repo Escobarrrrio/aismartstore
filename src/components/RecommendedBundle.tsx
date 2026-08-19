@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Package, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney } from "@/lib/currency";
 import { trackEvent } from "@/lib/analytics";
@@ -39,6 +40,7 @@ interface Props {
 }
 
 const RecommendedBundle = ({ productId, audience, title = "Complete the setup", limit = 8 }: Props) => {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<RecommendedRow[]>([]);
 
   useEffect(() => {
@@ -82,46 +84,29 @@ const RecommendedBundle = ({ productId, audience, title = "Complete the setup", 
       <details className="mb-8 group">
         <summary className="cursor-pointer text-xs font-semibold text-primary hover:underline list-none inline-flex items-center gap-1.5">
           <Info className="h-3.5 w-3.5" aria-hidden="true" />
-          Why am I seeing this?
+          {t("recommendWhy.trigger")}
         </summary>
         <div className="mt-3 rounded-xl border border-border bg-muted/40 p-4 text-xs text-muted-foreground space-y-2 max-w-2xl">
-          <p>
-            We work down four signals and stop at the first one that returns enough stocked,
-            in-catalogue items for the section you're shopping:
-          </p>
+          <p>{t("recommendWhy.intro")}</p>
           <ol className="list-decimal pl-4 space-y-1">
-            <li>
-              <span className="font-semibold text-foreground">Bought together</span> — what real
-              customers paid for alongside this item.
-            </li>
-            <li>
-              <span className="font-semibold text-foreground">Curated complements</span> — a
-              hand-maintained map of which category pairs with which (a laptop pulls docks,
-              monitors and storage, never more laptops).
-            </li>
-            <li>
-              <span className="font-semibold text-foreground">Same-brand accessories</span> — for
-              fit and warranty consistency.
-            </li>
-            <li>
-              <span className="font-semibold text-foreground">Popular peripherals</span> in this
-              catalogue, when the item is too new to have any history.
-            </li>
+            {([1, 2, 3, 4] as const).map((tier) => (
+              <li key={tier}>
+                <span className="font-semibold text-foreground">{t(`recommendWhy.tier${tier}Label`)}</span>
+                {" — "}
+                {t(`recommendWhy.tier${tier}Text`)}
+              </li>
+            ))}
           </ol>
           {hasCoPurchase ? (
             <p>
-              Rows tagged <span className="font-semibold text-foreground">Frequently bought together</span>{" "}
-              came from actual order history. The rest are complements.
+              {t("recommendWhy.hasHistoryPrefix")}{" "}
+              <span className="font-semibold text-foreground">{t("recommendWhy.hasHistoryTag")}</span>{" "}
+              {t("recommendWhy.hasHistorySuffix")}
             </p>
           ) : (
-            <p>
-              This product has no purchase history yet, so everything below comes from the
-              complement rules rather than from other shoppers.
-            </p>
+            <p>{t("recommendWhy.noHistory")}</p>
           )}
-          <p>
-            We never mix Home and Business catalogues, and out-of-stock items are excluded.
-          </p>
+          <p>{t("recommendWhy.scopeNote")}</p>
         </div>
       </details>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

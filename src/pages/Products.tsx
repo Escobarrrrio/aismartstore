@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import MobileFilterSheet from "@/components/products/MobileFilterSheet";
 import FacetList from "@/components/products/FacetList";
 import SEO from "@/components/SEO";
-import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Sparkles, PackageCheck } from "lucide-react";
+import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Sparkles, PackageCheck, Lock } from "lucide-react";
 import type { Product } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { formatMoney } from "@/lib/currency";
 import { trackEvent } from "@/lib/analytics";
 import { AUDIENCES, facetLabel, parseAudience, priceChipsFor, type Audience } from "@/lib/facets";
 import { useAudience } from "@/contexts/AudienceContext";
+import { useSession } from "@/hooks/useSession";
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
@@ -104,6 +105,26 @@ const Products = () => {
   const [sort, setSort] = useState<SortOption>(urlSort);
   const [page, setPage] = useState(urlPage);
   const [showFilters, setShowFilters] = useState(false);
+
+  // ── Business catalogue is registered-buyers-only ─────────────────────────
+  // The scope switcher and a hand-typed ?audience=business are the two ways
+  // enterprise SKUs leaked onto the public grid, so the lock lives here (where
+  // the query is actually built) rather than on the switcher alone. `session`
+  // is undefined until resolved — never lock during that window or a signed-in
+  // buyer gets bumped back to the residential grid on every refresh.
+  const navigate = useNavigate();
+  const session = useSession();
+  const signedOut = session === null;
+  const [scopeLocked, setScopeLocked] = useState(false);
+
+  useEffect(() => {
+    if (signedOut && audience !== "residential") {
+      setAudience("residential");
+      setCategory(""); setBrand(""); setMinPrice(""); setMaxPrice(""); setPage(0);
+      setScopeLocked(true);
+      trackEvent({ name: "business_scope_blocked", page: "/products" });
+    }
+  }, [signedOut, audience]);
 
   // Fire storefront_viewed once per mount so audience split can be validated
   // in prod analytics.
@@ -366,11 +387,16 @@ const Products = () => {
   // the shopper on an empty grid. The search term is kept, since that's the one
   // thing they clearly still want.
   const onAudienceChange = useCallback((next: Audience) => {
+    if (next !== "residential" && signedOut) {
+      navigate(`/auth?redirect=${encodeURIComponent(`/products?audience=${next}`)}`);
+      return;
+    }
+    setScopeLocked(false);
     setAudience(next);
     setCategory(""); setBrand(""); setMinPrice(""); setMaxPrice("");
     setPage(0);
     trackEvent({ name: "audience_changed", value: next, page: "/products" });
-  }, []);
+  }, [signedOut, navigate]);
 
   // Facet setters with analytics tracking. Selecting a value fires
   // "facet_selected"; clearing (empty string) fires "facet_cleared".
@@ -473,6 +499,25 @@ const Products = () => {
         </div>
       </div>
 
+      {scopeLocked && (
+        <div className="container mx-auto px-4 pt-6">
+          <div
+            role="status"
+            data-testid="scope-locked-notice"
+            className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm"
+          >
+            <Lock className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+            <span className="text-muted-foreground">{t("products.businessLockedNotice")}</span>
+            <Link
+              to={`/auth?redirect=${encodeURIComponent("/products?audience=business")}`}
+              className="font-semibold text-primary hover:underline"
+            >
+              {t("products.signInToView")}
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
         {/* Filter sidebar (desktop) -- was a flat card-flat box with plain
             grey checkboxes and 11px counts: functionally complete (scope,
@@ -497,14 +542,19 @@ const Products = () => {
                       type="button"
                       role="radio"
                       aria-checked={active}
-                      title={a.hint}
+                      title={a.value !== "residential" && signedOut ? t("products.businessLockedHint") : a.hint}
                       data-testid={`scope-${a.value}`}
                       onClick={() => onAudienceChange(a.value)}
                       className={`rounded-lg px-2 py-1.5 text-xs font-bold transition-all ${
                         active ? "gradient-brand text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      {a.label}
+                      <span className="inline-flex items-center justify-center gap-1">
+                        {a.value !== "residential" && signedOut && (
+                          <Lock className="h-3 w-3" aria-hidden="true" />
+                        )}
+                        {a.label}
+                      </span>
                     </button>
                   );
                 })}

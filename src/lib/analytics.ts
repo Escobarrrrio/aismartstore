@@ -34,6 +34,8 @@ export type AnalyticsEvent =
   | { name: "storefront_viewed"; audience: StorefrontAudience; surface: "home" | "products" | "procurement" | "header_search"; query?: string }
   | { name: "product_list_returned"; audience: StorefrontAudience; surface: "home" | "products" | "procurement" | "header_search"; count: number; total?: number; query?: string }
   | { name: "audience_guard_blocked"; allow: "residential" | "business"; actual: "residential" | "business" | "anonymous" }
+  // Signed-out visitor tried to reach the business/full catalogue scope.
+  | { name: "business_scope_blocked"; page: string }
   | { name: "business_upgrade_requested" };
 
 type AnyRecord = Record<string, unknown>;

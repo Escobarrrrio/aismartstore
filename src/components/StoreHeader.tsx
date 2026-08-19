@@ -8,6 +8,7 @@ import LanguageCurrencySwitcher from "@/components/LanguageCurrencySwitcher";
 import Logo from "@/components/Logo";
 import HeaderSearch from "@/components/HeaderSearch";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import AudienceSwitcher from "@/components/AudienceSwitcher";
 
 
 const StoreHeader = () => {

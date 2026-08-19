@@ -304,7 +304,10 @@
     "clearFilters": "Clear Filters",
     "viewDetails": "View Details",
     "addToCart": "Add to Cart",
-    "catalogueHeading": "AI Hardware & Technology Catalogue"
+    "catalogueHeading": "AI Hardware & Technology Catalogue",
+    "businessLockedNotice": "The business & government catalogue is reserved for registered buyers.",
+    "businessLockedHint": "Sign in to unlock the business & government catalogue",
+    "signInToView": "Sign in to view"
   },
   "chat": {
     "openLabel": "Open customer support chat",
@@ -366,5 +369,79 @@
     "afterCutoff": "today's cut-off has passed",
     "chooseProvince": "Delivery province",
     "businessDaysNote": "Business days only. Weekends and South African public holidays are excluded."
+  },
+  "aiSpecs": {
+    "panelTitle": "What this machine can actually do",
+    "panelSubtitle": "Specs translated into real work — measured from the manufacturer's published hardware, not marketing.",
+    "explainMetric": "What does {{metric}} mean?",
+    "metric": {
+      "npu": {
+        "label": "NPU",
+        "outcomeHigh": "Meets the Copilot+ requirement, so live translation, background blur and on-device assistants run locally instead of in the cloud.",
+        "outcomeBase": "Handles everyday AI features like noise removal and camera effects without draining the battery.",
+        "tooltip": "TOPS = trillions of AI operations per second. 40+ TOPS is Microsoft's Copilot+ bar; below that, AI features still work but lean on the cloud."
+      },
+      "gpu": {
+        "label": "Graphics",
+        "outcome": "Enough graphics power for local image generation, video editing and model fine-tuning.",
+        "tooltip": "The graphics chip does the heavy lifting for image, video and AI model work. A dedicated GPU is far faster than built-in graphics."
+      },
+      "ram": {
+        "label": "Memory",
+        "outcomeHigh": "Room to run large local AI models and heavy multitasking at the same time.",
+        "outcomeMid": "Comfortable for local AI assistants, big spreadsheets and dozens of browser tabs.",
+        "outcomeBase": "Fine for everyday study and office work; tight for large local AI models.",
+        "tooltip": "RAM is the workspace your machine thinks in. Local AI models must fit in it — 16GB is the practical floor, 32GB+ is comfortable."
+      }
+    },
+    "useCase": {
+      "copilot_plus": {
+        "label": "Copilot+ ready",
+        "blurb": "40+ TOPS NPU, so Windows AI features run on the device.",
+        "tooltip": "Microsoft requires a 40 TOPS NPU for Copilot+ features like Recall, Live Captions and Cocreator."
+      },
+      "video_rendering": {
+        "label": "Great for video rendering",
+        "blurb": "Dedicated graphics and memory headroom for timeline exports.",
+        "tooltip": "Video exports lean on the GPU. This hardware shortens render waits in Premiere, DaVinci Resolve and CapCut."
+      },
+      "image_generation": {
+        "label": "Local image generation",
+        "blurb": "Runs Stable Diffusion-class models without a subscription.",
+        "tooltip": "Enough graphics memory to generate images on your own machine instead of paying per image in the cloud."
+      },
+      "data_science": {
+        "label": "Ideal for data science",
+        "blurb": "Memory and compute for large datasets and model training.",
+        "tooltip": "Suited to pandas, notebooks and training smaller models locally without waiting on shared servers."
+      },
+      "student_essentials": {
+        "label": "Student essentials",
+        "blurb": "Everything needed for research, writing and online classes.",
+        "tooltip": "Comfortably handles browser research, documents, video calls and light AI study tools."
+      },
+      "all_day_battery_ai": {
+        "label": "All-day AI on battery",
+        "blurb": "Efficient NPU keeps AI features on without killing runtime.",
+        "tooltip": "The NPU runs AI tasks at a fraction of the power the main processor would use, so battery life survives."
+      }
+    }
+  },
+  "recommendWhy": {
+    "trigger": "Why am I seeing this?",
+    "intro": "We work down four signals and stop at the first one that returns enough stocked, in-catalogue items for the section you're shopping:",
+    "tier1Label": "Bought together",
+    "tier1Text": "what real customers paid for alongside this item.",
+    "tier2Label": "Curated complements",
+    "tier2Text": "a hand-maintained map of which category pairs with which (a laptop pulls docks, monitors and storage, never more laptops).",
+    "tier3Label": "Same-brand accessories",
+    "tier3Text": "for fit and warranty consistency.",
+    "tier4Label": "Popular peripherals",
+    "tier4Text": "in this catalogue, when the item is too new to have any history.",
+    "hasHistoryPrefix": "Rows tagged",
+    "hasHistoryTag": "Frequently bought together",
+    "hasHistorySuffix": "came from actual order history. The rest are complements.",
+    "noHistory": "This product has no purchase history yet, so everything below comes from the complement rules rather than from other shoppers.",
+    "scopeNote": "We never mix Home and Business catalogues, and out-of-stock items are excluded."
   }
 }

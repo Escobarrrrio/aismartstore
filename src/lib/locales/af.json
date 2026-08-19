@@ -304,7 +304,10 @@
     "clearFilters": "Verwyder Filters",
     "viewDetails": "Bekyk Besonderhede",
     "addToCart": "Voeg by Mandjie",
-    "catalogueHeading": "KI-hardeware- en tegnologiekatalogus"
+    "catalogueHeading": "KI-hardeware- en tegnologiekatalogus",
+    "businessLockedNotice": "Die besigheids- en regeringskatalogus is net vir geregistreerde kopers.",
+    "businessLockedHint": "Meld aan om die besigheids- en regeringskatalogus te ontsluit",
+    "signInToView": "Meld aan om te sien"
   },
   "chat": {
     "openLabel": "Open customer support chat",
@@ -366,5 +369,79 @@
     "afterCutoff": "vandag se afsnytyd is verby",
     "chooseProvince": "Afleweringsprovinsie",
     "businessDaysNote": "Slegs werksdae. Naweke en Suid-Afrikaanse openbare vakansiedae uitgesluit."
+  },
+  "aiSpecs": {
+    "panelTitle": "Wat hierdie masjien werklik kan doen",
+    "panelSubtitle": "Spesifikasies vertaal na regte werk — gemeet aan die vervaardiger se gepubliseerde hardeware, nie bemarking nie.",
+    "explainMetric": "Wat beteken {{metric}}?",
+    "metric": {
+      "npu": {
+        "label": "NPU",
+        "outcomeHigh": "Voldoen aan die Copilot+-vereiste, dus loop lewendige vertaling, agtergrondvervaging en toestel-assistente plaaslik.",
+        "outcomeBase": "Hanteer daaglikse KI-funksies soos geraasverwydering en kamera-effekte sonder om die battery te dreineer.",
+        "tooltip": "TOPS = triljoene KI-bewerkings per sekonde. 40+ TOPS is Microsoft se Copilot+-maatstaf; daaronder werk KI steeds, maar leun op die wolk."
+      },
+      "gpu": {
+        "label": "Grafika",
+        "outcome": "Genoeg grafiese krag vir plaaslike beeldgenerering, videoredigering en modelverfyning.",
+        "tooltip": "Die grafiese skyfie doen die swaar werk vir beeld-, video- en KI-modelwerk. 'n Toegewyde GPU is baie vinniger as ingeboude grafika."
+      },
+      "ram": {
+        "label": "Geheue",
+        "outcomeHigh": "Ruimte om groot plaaslike KI-modelle en swaar multitaak gelyktydig te loop.",
+        "outcomeMid": "Gemaklik vir plaaslike KI-assistente, groot sigblaaie en dosyne oortjies.",
+        "outcomeBase": "Goed vir daaglikse studie en kantoorwerk; knap vir groot plaaslike KI-modelle.",
+        "tooltip": "RAM is die werkruimte waarin jou masjien dink. Plaaslike KI-modelle moet daarin pas — 16GB is die praktiese minimum, 32GB+ is gemaklik."
+      }
+    },
+    "useCase": {
+      "copilot_plus": {
+        "label": "Copilot+ gereed",
+        "blurb": "40+ TOPS NPU, dus loop Windows se KI-funksies op die toestel.",
+        "tooltip": "Microsoft vereis 'n 40 TOPS NPU vir Copilot+-funksies soos Recall, Live Captions en Cocreator."
+      },
+      "video_rendering": {
+        "label": "Ideaal vir video-render",
+        "blurb": "Toegewyde grafika en geheue-ruimte vir uitvoere.",
+        "tooltip": "Video-uitvoere leun op die GPU. Hierdie hardeware verkort wagtye in Premiere, DaVinci Resolve en CapCut."
+      },
+      "image_generation": {
+        "label": "Plaaslike beeldgenerering",
+        "blurb": "Loop Stable Diffusion-klas modelle sonder 'n intekening.",
+        "tooltip": "Genoeg grafiese geheue om beelde op jou eie masjien te skep in plaas van per beeld in die wolk te betaal."
+      },
+      "data_science": {
+        "label": "Ideaal vir datawetenskap",
+        "blurb": "Geheue en krag vir groot datastelle en modelopleiding.",
+        "tooltip": "Geskik vir pandas, notaboeke en die plaaslike opleiding van kleiner modelle."
+      },
+      "student_essentials": {
+        "label": "Studente-noodsaaklikhede",
+        "blurb": "Alles vir navorsing, skryfwerk en aanlyn klasse.",
+        "tooltip": "Hanteer navorsing, dokumente, videogesprekke en ligte KI-studiehulpmiddels gemaklik."
+      },
+      "all_day_battery_ai": {
+        "label": "Heeldag-KI op battery",
+        "blurb": "Doeltreffende NPU hou KI aan sonder om batterytyd te sloop.",
+        "tooltip": "Die NPU loop KI-take teen 'n breukdeel van die krag wat die hoofverwerker sou gebruik."
+      }
+    }
+  },
+  "recommendWhy": {
+    "trigger": "Hoekom sien ek dit?",
+    "intro": "Ons werk deur vier seine en stop by die eerste een wat genoeg voorraad-items in jou katalogus oplewer:",
+    "tier1Label": "Saam gekoop",
+    "tier1Text": "wat regte kliënte saam met hierdie item betaal het.",
+    "tier2Label": "Gekeurde aanvullings",
+    "tier2Text": "'n handgehoue kaart van watter kategorie by watter pas ('n skootrekenaar trek dokke, monitors en berging, nooit meer skootrekenaars nie).",
+    "tier3Label": "Selfde-handelsmerk bykomstighede",
+    "tier3Text": "vir passing en waarborg-konsekwentheid.",
+    "tier4Label": "Gewilde randapparatuur",
+    "tier4Text": "in hierdie katalogus, wanneer die item te nuut is vir enige geskiedenis.",
+    "hasHistoryPrefix": "Rye gemerk",
+    "hasHistoryTag": "Gereeld saam gekoop",
+    "hasHistorySuffix": "kom uit werklike bestelgeskiedenis. Die res is aanvullings.",
+    "noHistory": "Hierdie produk het nog geen aankoopgeskiedenis nie, dus kom alles hieronder uit die aanvullingsreëls.",
+    "scopeNote": "Ons meng nooit Huis- en Besigheidskatalogusse nie, en uit-voorraad items word uitgesluit."
   }
 }

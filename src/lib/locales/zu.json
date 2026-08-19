@@ -304,7 +304,10 @@
     "clearFilters": "Sula Izihlungi",
     "viewDetails": "Buka Imininingwane",
     "addToCart": "Engeza Ekalishini",
-    "catalogueHeading": "Ikhathalogi ye-Hardware ne-Tekhnoloji ye-AI"
+    "catalogueHeading": "Ikhathalogi ye-Hardware ne-Tekhnoloji ye-AI",
+    "businessLockedNotice": "Ikhathalogu yebhizinisi nokahulumeni igcinelwe abathengi ababhalisile.",
+    "businessLockedHint": "Ngena ukuze uvule ikhathalogu yebhizinisi nokahulumeni",
+    "signInToView": "Ngena ukuze ubone"
   },
   "chat": {
     "openLabel": "Open customer support chat",
@@ -366,5 +369,79 @@
     "afterCutoff": "isikhathi sanamuhla sesiphelile",
     "chooseProvince": "Isifundazwe sokulethwa",
     "businessDaysNote": "Izinsuku zomsebenzi kuphela. Impelasonto namaholide omphakathi aseNingizimu Afrika akubalwa."
+  },
+  "aiSpecs": {
+    "panelTitle": "Lokho lo mshini ongakwenza ngempela",
+    "panelSubtitle": "Imininingwane ihunyushelwe emsebenzini wangempela — isuselwa kuhadiwe oshicilelwe umkhiqizi, hhayi ekukhangiseni.",
+    "explainMetric": "Isho ukuthini i-{{metric}}?",
+    "metric": {
+      "npu": {
+        "label": "NPU",
+        "outcomeHigh": "Meets the Copilot+ requirement, so live translation, background blur and on-device assistants run locally instead of in the cloud.",
+        "outcomeBase": "Handles everyday AI features like noise removal and camera effects without draining the battery.",
+        "tooltip": "TOPS = trillions of AI operations per second. 40+ TOPS is Microsoft's Copilot+ bar; below that, AI features still work but lean on the cloud."
+      },
+      "gpu": {
+        "label": "Graphics",
+        "outcome": "Enough graphics power for local image generation, video editing and model fine-tuning.",
+        "tooltip": "The graphics chip does the heavy lifting for image, video and AI model work. A dedicated GPU is far faster than built-in graphics."
+      },
+      "ram": {
+        "label": "Memory",
+        "outcomeHigh": "Room to run large local AI models and heavy multitasking at the same time.",
+        "outcomeMid": "Comfortable for local AI assistants, big spreadsheets and dozens of browser tabs.",
+        "outcomeBase": "Fine for everyday study and office work; tight for large local AI models.",
+        "tooltip": "RAM is the workspace your machine thinks in. Local AI models must fit in it — 16GB is the practical floor, 32GB+ is comfortable."
+      }
+    },
+    "useCase": {
+      "copilot_plus": {
+        "label": "Copilot+ ready",
+        "blurb": "40+ TOPS NPU, so Windows AI features run on the device.",
+        "tooltip": "Microsoft requires a 40 TOPS NPU for Copilot+ features like Recall, Live Captions and Cocreator."
+      },
+      "video_rendering": {
+        "label": "Great for video rendering",
+        "blurb": "Dedicated graphics and memory headroom for timeline exports.",
+        "tooltip": "Video exports lean on the GPU. This hardware shortens render waits in Premiere, DaVinci Resolve and CapCut."
+      },
+      "image_generation": {
+        "label": "Local image generation",
+        "blurb": "Runs Stable Diffusion-class models without a subscription.",
+        "tooltip": "Enough graphics memory to generate images on your own machine instead of paying per image in the cloud."
+      },
+      "data_science": {
+        "label": "Ideal for data science",
+        "blurb": "Memory and compute for large datasets and model training.",
+        "tooltip": "Suited to pandas, notebooks and training smaller models locally without waiting on shared servers."
+      },
+      "student_essentials": {
+        "label": "Student essentials",
+        "blurb": "Everything needed for research, writing and online classes.",
+        "tooltip": "Comfortably handles browser research, documents, video calls and light AI study tools."
+      },
+      "all_day_battery_ai": {
+        "label": "All-day AI on battery",
+        "blurb": "Efficient NPU keeps AI features on without killing runtime.",
+        "tooltip": "The NPU runs AI tasks at a fraction of the power the main processor would use, so battery life survives."
+      }
+    }
+  },
+  "recommendWhy": {
+    "trigger": "Kungani ngibona lokhu?",
+    "intro": "Sisebenzisa izimpawu ezine bese sima kweyokuqala eletha izinto ezanele ezisesitokweni kukhathalogu yakho:",
+    "tier1Label": "Kuthengwa ndawonye",
+    "tier1Text": "what real customers paid for alongside this item.",
+    "tier2Label": "Okuhambisanayo okukhethiwe",
+    "tier2Text": "a hand-maintained map of which category pairs with which (a laptop pulls docks, monitors and storage, never more laptops).",
+    "tier3Label": "Izisetshenziswa zomkhiqizi ofanayo",
+    "tier3Text": "for fit and warranty consistency.",
+    "tier4Label": "Izisetshenziswa ezidumile",
+    "tier4Text": "in this catalogue, when the item is too new to have any history.",
+    "hasHistoryPrefix": "Rows tagged",
+    "hasHistoryTag": "Frequently bought together",
+    "hasHistorySuffix": "came from actual order history. The rest are complements.",
+    "noHistory": "This product has no purchase history yet, so everything below comes from the complement rules rather than from other shoppers.",
+    "scopeNote": "Asixubi amakhathalogu Asekhaya nawebhizinisi, futhi okungekho esitokweni kuyakhishwa."
   }
 }

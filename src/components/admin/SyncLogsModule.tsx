@@ -166,6 +166,37 @@ const SyncLogsModule = () => {
         </div>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-2">
+        {health.map((f) => {
+          const age = hoursSince(f.lastSuccess);
+          const stale = age == null || age > f.staleHours;
+          return (
+            <div key={f.source}
+              className={`card-flat p-4 border ${stale ? "border-destructive/40" : "border-border/60"}`}>
+              <div className="flex items-center gap-2">
+                {stale
+                  ? <AlertTriangle className="h-4 w-4 text-destructive" />
+                  : <CheckCircle className="h-4 w-4 text-[hsl(160,84%,39%)]" />}
+                <span className="font-semibold text-sm">{f.label} feed</span>
+                <span className={stale ? "badge-danger ml-auto" : "badge-success ml-auto"}>
+                  {stale ? "stale" : "live"}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {f.lastSuccess
+                  ? `Last successful sync ${age! < 1 ? "under an hour" : `${Math.floor(age!)}h`} ago — ${new Date(f.lastSuccess).toLocaleString()}`
+                  : "No successful sync on record — prices and stock are not being refreshed."}
+              </p>
+              {stale && f.lastError && (
+                <p className="text-xs text-destructive mt-1 break-words">
+                  Last error{f.lastErrorAt ? ` (${new Date(f.lastErrorAt).toLocaleString()})` : ""}: {f.lastError.slice(0, 200)}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       <div className="card-flat overflow-hidden">
         <table className="w-full table-premium">
           <thead>

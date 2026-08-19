@@ -32,7 +32,10 @@ interface Props {
  * on `quote_requests` / `compliance_documents`.
  */
 const AudienceGuard = ({ allow, children }: Props) => {
-  const [session, setSession] = useState<any>(null);
+  // `undefined` = still resolving. Starting at `null` would briefly render the
+  // signed-out state (and, for business pages, the sign-in wall) to a shopper
+  // who is in fact already logged in.
+  const [session, setSession] = useState<any>(undefined);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));

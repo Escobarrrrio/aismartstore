@@ -100,7 +100,8 @@ const AudienceGuard = ({ allow, children }: Props) => {
   };
 
   // Wait for both checks to resolve before deciding.
-  const stillChecking = customerType === undefined || (session && isAdmin === null);
+  const stillChecking =
+    session === undefined || customerType === undefined || (session && isAdmin === null);
 
   // The business / government portal carries trade pricing, compliance packs
   // and quoting, so unlike the residential storefront it is not browsable

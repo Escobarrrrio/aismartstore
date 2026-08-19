@@ -1306,6 +1306,10 @@ export type Database = {
       }
       products: {
         Row: {
+          ai_gpu_model: string | null
+          ai_npu_tops: number | null
+          ai_ram_gb: number | null
+          ai_use_cases: string[]
           audience: string
           brand: string | null
           brand_id: string | null
@@ -1330,6 +1334,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_gpu_model?: string | null
+          ai_npu_tops?: number | null
+          ai_ram_gb?: number | null
+          ai_use_cases?: string[]
           audience?: string
           brand?: string | null
           brand_id?: string | null
@@ -1354,6 +1362,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_gpu_model?: string | null
+          ai_npu_tops?: number | null
+          ai_ram_gb?: number | null
+          ai_use_cases?: string[]
           audience?: string
           brand?: string | null
           brand_id?: string | null
@@ -2173,6 +2185,10 @@ export type Database = {
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
+      }
+      derive_ai_specs: {
+        Args: { p_category: string; p_name: string; p_price: number }
+        Returns: Json
       }
       dispatch_ai_pulse_digest: { Args: never; Returns: string }
       email_queue_dispatch: { Args: never; Returns: undefined }

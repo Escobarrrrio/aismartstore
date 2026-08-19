@@ -32,14 +32,15 @@ const UsersModule = () => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("admin_list_users");
+    const { data, error } = await adminRpc<UserRow[]>("admin_list_users");
     setLoading(false);
     if (error) {
       toast({ title: "Couldn't load users", description: error.message, variant: "destructive" });
       return;
     }
-    setUsers((data as unknown as UserRow[]) ?? []);
+    setUsers(data ?? []);
   }, [toast]);
+
 
   useEffect(() => { load(); }, [load]);
 

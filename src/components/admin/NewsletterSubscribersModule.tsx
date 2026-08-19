@@ -34,14 +34,15 @@ const NewsletterSubscribersModule = () => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("admin_list_newsletter_subscribers");
+    const { data, error } = await adminRpc<SubscriberRow[]>("admin_list_newsletter_subscribers");
     setLoading(false);
     if (error) {
       toast({ title: "Couldn't load subscribers", description: error.message, variant: "destructive" });
       return;
     }
-    setSubscribers((data as unknown as SubscriberRow[]) ?? []);
+    setSubscribers(data ?? []);
   }, [toast]);
+
 
   useEffect(() => { load(); }, [load]);
 

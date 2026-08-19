@@ -107,10 +107,11 @@ const SourcingModule = () => {
 
   const loadWatchlist = async () => {
     setWatchLoading(true);
-    const { data, error } = await supabase.rpc("admin_competitor_pricing_overview");
+    const { data, error } = await adminRpc<WatchRow[]>("admin_competitor_pricing_overview");
     if (error) toast({ title: "Could not load Competitor Watch", description: error.message, variant: "destructive" });
-    setWatchRows((data ?? []) as WatchRow[]);
+    setWatchRows(data ?? []);
     setWatchLoading(false);
+
   };
 
   useEffect(() => { void loadWatchlist(); }, []);
@@ -120,8 +121,9 @@ const SourcingModule = () => {
     if (q.length < 2) { setWatchResults([]); return; }
     setWatchSearching(true);
     const timer = setTimeout(async () => {
-      const { data, error } = await supabase.rpc("admin_search_products_for_watch", { p_query: q });
-      if (!error) setWatchResults((data ?? []) as SearchResult[]);
+      const { data, error } = await adminRpc<SearchResult[]>("admin_search_products_for_watch", { p_query: q });
+      if (!error) setWatchResults(data ?? []);
+
       setWatchSearching(false);
     }, 300);
     return () => clearTimeout(timer);
@@ -129,7 +131,8 @@ const SourcingModule = () => {
 
   const toggleWatch = async (productId: string, watch: boolean) => {
     setWatchBusyId(productId);
-    const { error } = await supabase.rpc("admin_set_competitor_watch", { p_product_id: productId, p_watch: watch });
+    const { error } = await adminRpc("admin_set_competitor_watch", { p_product_id: productId, p_watch: watch });
+
     setWatchBusyId(null);
     if (error) {
       toast({ title: "Could not update watchlist", description: error.message, variant: "destructive" });
@@ -147,10 +150,11 @@ const SourcingModule = () => {
     if (row.suggested_price == null) return;
     if (!confirm(`Set ${row.name}'s price to ${rand(row.suggested_price)}? This changes the live price immediately.`)) return;
     setWatchBusyId(row.product_id);
-    const { error } = await supabase.rpc("admin_apply_competitor_price", {
+    const { error } = await adminRpc("admin_apply_competitor_price", {
       p_product_id: row.product_id,
       p_price: row.suggested_price,
     });
+
     setWatchBusyId(null);
     if (error) {
       toast({ title: "Could not apply price", description: error.message, variant: "destructive" });

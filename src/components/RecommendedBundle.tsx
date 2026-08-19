@@ -69,9 +69,59 @@ const RecommendedBundle = ({ productId, audience, title = "Complete the setup", 
   return (
     <section className="mt-16 border-t border-border pt-12" data-testid="recommended-bundle">
       <h2 className="font-display font-bold text-xl mb-2">{title}</h2>
-      <p className="text-sm text-muted-foreground mb-8">
+      <p className="text-sm text-muted-foreground mb-3">
         Picked to work with this product — not more of the same thing.
       </p>
+
+      {/* Recommendations are opaque by default, and opaque recommendations get
+          ignored. This spells out which signal produced the row the shopper is
+          actually looking at, including the honest "we don't have purchase
+          history for this SKU yet" case. */}
+      <details className="mb-8 group">
+        <summary className="cursor-pointer text-xs font-semibold text-primary hover:underline list-none inline-flex items-center gap-1.5">
+          <Info className="h-3.5 w-3.5" aria-hidden="true" />
+          Why am I seeing this?
+        </summary>
+        <div className="mt-3 rounded-xl border border-border bg-muted/40 p-4 text-xs text-muted-foreground space-y-2 max-w-2xl">
+          <p>
+            We work down four signals and stop at the first one that returns enough stocked,
+            in-catalogue items for the section you're shopping:
+          </p>
+          <ol className="list-decimal pl-4 space-y-1">
+            <li>
+              <span className="font-semibold text-foreground">Bought together</span> — what real
+              customers paid for alongside this item.
+            </li>
+            <li>
+              <span className="font-semibold text-foreground">Curated complements</span> — a
+              hand-maintained map of which category pairs with which (a laptop pulls docks,
+              monitors and storage, never more laptops).
+            </li>
+            <li>
+              <span className="font-semibold text-foreground">Same-brand accessories</span> — for
+              fit and warranty consistency.
+            </li>
+            <li>
+              <span className="font-semibold text-foreground">Popular peripherals</span> in this
+              catalogue, when the item is too new to have any history.
+            </li>
+          </ol>
+          {hasCoPurchase ? (
+            <p>
+              Rows tagged <span className="font-semibold text-foreground">Frequently bought together</span>{" "}
+              came from actual order history. The rest are complements.
+            </p>
+          ) : (
+            <p>
+              This product has no purchase history yet, so everything below comes from the
+              complement rules rather than from other shoppers.
+            </p>
+          )}
+          <p>
+            We never mix Home and Business catalogues, and out-of-stock items are excluded.
+          </p>
+        </div>
+      </details>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {rows.map((p) => (
           <Link key={p.id} to={`/product/${p.id}`} className="card-premium overflow-hidden group">

@@ -7,6 +7,8 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from "@/components/ImageLightbox";
+import RecommendedBundle from "@/components/RecommendedBundle";
+import { useAudience } from "@/contexts/AudienceContext";
 import { buildSpecifications } from "@/lib/specifications";
 import { generateContent, faqJsonLd } from "@/lib/product-content";
 import { useStoreFlag } from "@/hooks/useStoreFlag";

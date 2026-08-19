@@ -578,6 +578,8 @@ const ProductDetail = () => {
             </div>
           )}
           <p className="text-xs text-muted-foreground mt-4">{t("productDetail.specSource")}</p>
+
+          {product && <AiCapabilityPanel productId={product.id} />}
         </div>
 
         {product && (

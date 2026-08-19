@@ -98,6 +98,11 @@ const AudienceGuard = ({ allow, children }: Props) => {
 
   // Wait for both checks to resolve before deciding.
   const stillChecking = customerType === undefined || (session && isAdmin === null);
+
+  // The business / government portal carries trade pricing, compliance packs
+  // and quoting, so unlike the residential storefront it is not browsable
+  // anonymously: a visitor must be a registered, signed-in buyer.
+  const needsSignIn = allow === "business" && session === null;
   const blocked =
     !stillChecking &&
     !isAdmin &&

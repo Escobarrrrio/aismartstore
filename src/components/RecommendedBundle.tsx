@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Package } from "lucide-react";
+import { Package, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney } from "@/lib/currency";
 import { trackEvent } from "@/lib/analytics";
@@ -65,6 +65,8 @@ const RecommendedBundle = ({ productId, audience, title = "Complete the setup", 
   }, [productId, audience, limit]);
 
   if (rows.length === 0) return null;
+
+  const hasCoPurchase = rows.some((r) => r.reason?.toLowerCase().includes("bought together"));
 
   return (
     <section className="mt-16 border-t border-border pt-12" data-testid="recommended-bundle">

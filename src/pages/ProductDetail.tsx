@@ -119,7 +119,14 @@ const ProductDetail = () => {
     [product, seoEngineOn, storedSpecs],
   );
 
-  // Related products (from currently loaded page)
+  // Cross-sell scope: never leak enterprise SKUs into a household shopper's
+  // page, and vice versa. Falls back to the product's own audience so a direct
+  // link (search result, shared URL) still recommends coherently.
+  const { mode: shoppingMode } = useAudience();
+  const recoAudience: "residential" | "business" | "all" = shoppingMode ?? "all";
+
+  // Same-category fallback from the loaded page, only used if the engine
+  // returns nothing (brand-new SKU with no complements mapped yet).
   const related = product
     ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
     : [];
@@ -572,7 +579,11 @@ const ProductDetail = () => {
           <p className="text-xs text-muted-foreground mt-4">{t("productDetail.specSource")}</p>
         </div>
 
-        {/* Related products */}
+        {product && (
+          <RecommendedBundle productId={product.id} audience={recoAudience} />
+        )}
+
+        {/* Related products (fallback) */}
         {related.length > 0 && (
           <div className="mt-16 border-t border-border pt-12">
             <div className="flex items-center justify-between mb-8">

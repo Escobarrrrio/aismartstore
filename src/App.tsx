@@ -12,6 +12,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { LocaleProvider } from "@/contexts/LocaleContext";
+import { AudienceProvider } from "@/contexts/AudienceContext";
 import StoreHeader from "@/components/StoreHeader";
 import StoreFooter from "@/components/StoreFooter";
 import ChatWidget from "@/components/ChatWidget";

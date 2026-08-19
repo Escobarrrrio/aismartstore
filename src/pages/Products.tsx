@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import MobileFilterSheet from "@/components/products/MobileFilterSheet";
 import FacetList from "@/components/products/FacetList";
 import SEO from "@/components/SEO";
-import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Sparkles, PackageCheck } from "lucide-react";
+import { Package, Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Sparkles, PackageCheck, Lock } from "lucide-react";
 import type { Product } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { formatMoney } from "@/lib/currency";
 import { trackEvent } from "@/lib/analytics";
 import { AUDIENCES, facetLabel, parseAudience, priceChipsFor, type Audience } from "@/lib/facets";
 import { useAudience } from "@/contexts/AudienceContext";
+import { useSession } from "@/hooks/useSession";
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest";
 
@@ -104,6 +105,26 @@ const Products = () => {
   const [sort, setSort] = useState<SortOption>(urlSort);
   const [page, setPage] = useState(urlPage);
   const [showFilters, setShowFilters] = useState(false);
+
+  // ── Business catalogue is registered-buyers-only ─────────────────────────
+  // The scope switcher and a hand-typed ?audience=business are the two ways
+  // enterprise SKUs leaked onto the public grid, so the lock lives here (where
+  // the query is actually built) rather than on the switcher alone. `session`
+  // is undefined until resolved — never lock during that window or a signed-in
+  // buyer gets bumped back to the residential grid on every refresh.
+  const navigate = useNavigate();
+  const session = useSession();
+  const signedOut = session === null;
+  const [scopeLocked, setScopeLocked] = useState(false);
+
+  useEffect(() => {
+    if (signedOut && audience !== "residential") {
+      setAudience("residential");
+      setCategory(""); setBrand(""); setMinPrice(""); setMaxPrice(""); setPage(0);
+      setScopeLocked(true);
+      trackEvent({ name: "business_scope_blocked", page: "/products" });
+    }
+  }, [signedOut, audience]);
 
   // Fire storefront_viewed once per mount so audience split can be validated
   // in prod analytics.
@@ -366,11 +387,16 @@ const Products = () => {
   // the shopper on an empty grid. The search term is kept, since that's the one
   // thing they clearly still want.
   const onAudienceChange = useCallback((next: Audience) => {
+    if (next !== "residential" && signedOut) {
+      navigate(`/auth?redirect=${encodeURIComponent(`/products?audience=${next}`)}`);
+      return;
+    }
+    setScopeLocked(false);
     setAudience(next);
     setCategory(""); setBrand(""); setMinPrice(""); setMaxPrice("");
     setPage(0);
     trackEvent({ name: "audience_changed", value: next, page: "/products" });
-  }, []);
+  }, [signedOut, navigate]);
 
   // Facet setters with analytics tracking. Selecting a value fires
   // "facet_selected"; clearing (empty string) fires "facet_cleared".

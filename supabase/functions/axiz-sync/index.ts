@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getAuthContext } from "../_shared/auth-guard.ts";
 import { withRetry } from "../_shared/retry.ts";
+import { checkAndAlertOnFailureStreak } from "../_shared/alerts.ts";
 
 
 // =====================================================================

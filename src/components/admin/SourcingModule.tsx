@@ -24,8 +24,10 @@
 //   writes to a live price on its own. Apply is a click, not a cron job.
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { adminRpc } from "@/lib/admin-rpc";
 import { useToast } from "@/hooks/use-toast";
+
 
 import {
   Loader2, Plus, Trash2, TrendingUp, AlertTriangle, Clock, Check, RefreshCw, Eye, X, Search,

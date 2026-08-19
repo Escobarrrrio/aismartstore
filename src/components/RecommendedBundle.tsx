@@ -40,6 +40,7 @@ interface Props {
 }
 
 const RecommendedBundle = ({ productId, audience, title = "Complete the setup", limit = 8 }: Props) => {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<RecommendedRow[]>([]);
 
   useEffect(() => {

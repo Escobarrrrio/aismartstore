@@ -2576,7 +2576,14 @@ export type Database = {
     }
     Enums: {
       app_role: "customer" | "admin"
-      order_status: "pending" | "paid" | "shipped" | "delivered" | "returned"
+      order_status:
+        | "pending"
+        | "paid"
+        | "packed"
+        | "shipped"
+        | "delivered"
+        | "returned"
+        | "cancelled"
       payment_status: "unpaid" | "paid" | "refunded" | "partially_refunded"
       return_status:
         | "requested"
@@ -2718,7 +2725,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["customer", "admin"],
-      order_status: ["pending", "paid", "shipped", "delivered", "returned"],
+      order_status: [
+        "pending",
+        "paid",
+        "packed",
+        "shipped",
+        "delivered",
+        "returned",
+        "cancelled",
+      ],
       payment_status: ["unpaid", "paid", "refunded", "partially_refunded"],
       return_status: [
         "requested",

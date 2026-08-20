@@ -443,5 +443,21 @@
     "hasHistorySuffix": "came from actual order history. The rest are complements.",
     "noHistory": "This product has no purchase history yet, so everything below comes from the complement rules rather than from other shoppers.",
     "scopeNote": "We never mix Home and Business catalogues, and out-of-stock items are excluded."
+  },
+  "audienceGate": {
+    "title": "Who are you shopping for?",
+    "subtitle": "We keep home tech and enterprise infrastructure strictly separate, so you only ever see gear that is actually meant for you.",
+    "homeTitle": "My Home or Studies",
+    "homeBlurb": "Everyday tech for households, students and creators.",
+    "homeExamples": "Laptops · Monitors · Peripherals · Smart home · Storage",
+    "bizTitle": "A Business or Enterprise",
+    "bizBlurb": "Infrastructure, licensing and government procurement.",
+    "bizExamples": "Servers · Networking · Licensing · Care packs · Quotes",
+    "bizNote": "Sign-in required — reserved for registered business & government buyers",
+    "continue": "Continue",
+    "switchNote": "You can switch at any time from the catalogue scope selector.",
+    "switcherLabel": "Shopping for",
+    "home": "Home / Studies",
+    "business": "Business / Enterprise"
   }
 }

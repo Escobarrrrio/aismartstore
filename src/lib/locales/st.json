@@ -443,5 +443,21 @@
     "hasHistorySuffix": "came from actual order history. The rest are complements.",
     "noHistory": "This product has no purchase history yet, so everything below comes from the complement rules rather than from other shoppers.",
     "scopeNote": "Ha re kopanye dikataloko tsa Lapeng le tsa Khoebo, mme dintho tse seng teng setokong di a tloswa."
+  },
+  "audienceGate": {
+    "title": "U rekela mang?",
+    "subtitle": "Re boloka theknoloji ya lapeng le meralo ya dikgwebo di arohane ka ho feletseng, e le hore o bone feela thepa e etseditsweng wena.",
+    "homeTitle": "Lelapa la ka kapa dithuto",
+    "homeBlurb": "Theknoloji ya letsatsi le letsatsi bakeng sa malapa, baithuti le bahlahisi.",
+    "homeExamples": "Dilaptop · Dimonithara · Disebediswa · Lelapa le bohlale · Polokelo",
+    "bizTitle": "Kgwebo kapa setheo",
+    "bizBlurb": "Meralo, dilaesense le theko ya mmuso.",
+    "bizExamples": "Diserver · Marang-rang · Dilaesense · Diphutheloana tsa tlhokomelo · Ditlhahiso",
+    "bizNote": "Ho kena ho a hlokahala — bakeng sa bareki ba dikgwebo le mmuso ba ngodisitsweng",
+    "continue": "Tswela pele",
+    "switchNote": "O ka fetola neng kapa neng ho tswa ho khetho ya katalog.",
+    "switcherLabel": "O rekela",
+    "home": "Lelapa / Dithuto",
+    "business": "Kgwebo / Setheo"
   }
 }

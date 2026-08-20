@@ -443,5 +443,21 @@
     "hasHistorySuffix": "came from actual order history. The rest are complements.",
     "noHistory": "This product has no purchase history yet, so everything below comes from the complement rules rather than from other shoppers.",
     "scopeNote": "Asidibanisi iikhathalogu zaseKhaya nezoShishino, kwaye izinto ezingekho estokweni ziyakhutshwa."
+  },
+  "audienceGate": {
+    "title": "Uthengela bani?",
+    "subtitle": "Sigcina itekhnoloji yasekhaya kunye neziseko zoshishino zahlukene ngokupheleleyo, ukuze ubone kuphela izixhobo ezenzelwe wena.",
+    "homeTitle": "Ikhaya lam okanye izifundo",
+    "homeBlurb": "Itekhnoloji yemihla ngemihla yamakhaya, abafundi nabadali.",
+    "homeExamples": "Ii-laptop · Iimonitha · Izixhobo · Ikhaya elikrelekrele · Ugcino",
+    "bizTitle": "Ishishini okanye umbutho",
+    "bizBlurb": "Iziseko, amaphepha-mvume kunye nokuthengwa ngurhulumente.",
+    "bizExamples": "Ii-server · Uthungelwano · Amaphepha-mvume · Iipakethe zenkxaso · Iikoutheshini",
+    "bizNote": "Kufuneka ungene — kubhaliswe abathengi beshishini noorhulumente kuphela",
+    "continue": "Qhubeka",
+    "switchNote": "Ungatshintsha nangaliphi na ixesha kwisikhethi sekhathalogu.",
+    "switcherLabel": "Uthengela",
+    "home": "Ikhaya / Izifundo",
+    "business": "Ishishini / Umbutho"
   }
 }

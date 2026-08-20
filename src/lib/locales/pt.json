@@ -366,5 +366,21 @@
     "afterCutoff": "o corte de hoje já passou",
     "chooseProvince": "Província de entrega",
     "businessDaysNote": "Apenas dias úteis. Fins de semana e feriados sul-africanos excluídos."
+  },
+  "audienceGate": {
+    "title": "Para quem está a comprar?",
+    "subtitle": "Mantemos a tecnologia doméstica e a infraestrutura empresarial rigorosamente separadas, para que veja apenas equipamento pensado para si.",
+    "homeTitle": "A minha casa ou estudos",
+    "homeBlurb": "Tecnologia do dia a dia para famílias, estudantes e criadores.",
+    "homeExamples": "Portáteis · Monitores · Periféricos · Casa inteligente · Armazenamento",
+    "bizTitle": "Uma empresa",
+    "bizBlurb": "Infraestrutura, licenciamento e compras públicas.",
+    "bizExamples": "Servidores · Redes · Licenças · Pacotes de suporte · Orçamentos",
+    "bizNote": "Início de sessão obrigatório — reservado a compradores empresariais e públicos registados",
+    "continue": "Continuar",
+    "switchNote": "Pode mudar a qualquer momento no seletor de catálogo.",
+    "switcherLabel": "A comprar para",
+    "home": "Casa / Estudos",
+    "business": "Empresa"
   }
 }

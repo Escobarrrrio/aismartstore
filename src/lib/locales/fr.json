@@ -366,5 +366,21 @@
     "afterCutoff": "l'heure limite d'aujourd'hui est dépassée",
     "chooseProvince": "Province de livraison",
     "businessDaysNote": "Jours ouvrés uniquement. Week-ends et jours fériés sud-africains exclus."
+  },
+  "audienceGate": {
+    "title": "Pour qui achetez-vous ?",
+    "subtitle": "Nous séparons strictement la technologie domestique et l'infrastructure d'entreprise, pour que vous ne voyiez que du matériel qui vous correspond.",
+    "homeTitle": "Ma maison ou mes études",
+    "homeBlurb": "Technologie du quotidien pour les foyers, les étudiants et les créateurs.",
+    "homeExamples": "Ordinateurs portables · Écrans · Périphériques · Maison connectée · Stockage",
+    "bizTitle": "Une entreprise",
+    "bizBlurb": "Infrastructure, licences et marchés publics.",
+    "bizExamples": "Serveurs · Réseau · Licences · Contrats de support · Devis",
+    "bizNote": "Connexion requise — réservé aux acheteurs professionnels et publics enregistrés",
+    "continue": "Continuer",
+    "switchNote": "Vous pouvez changer à tout moment via le sélecteur de catalogue.",
+    "switcherLabel": "Achats pour",
+    "home": "Maison / Études",
+    "business": "Entreprise"
   }
 }

@@ -443,5 +443,21 @@
     "hasHistorySuffix": "kom uit werklike bestelgeskiedenis. Die res is aanvullings.",
     "noHistory": "Hierdie produk het nog geen aankoopgeskiedenis nie, dus kom alles hieronder uit die aanvullingsreëls.",
     "scopeNote": "Ons meng nooit Huis- en Besigheidskatalogusse nie, en uit-voorraad items word uitgesluit."
+  },
+  "audienceGate": {
+    "title": "Vir wie koop jy?",
+    "subtitle": "Ons hou tuistegnologie en ondernemingsinfrastruktuur streng geskei, sodat jy net toerusting sien wat werklik vir jou bedoel is.",
+    "homeTitle": "My huis of studies",
+    "homeBlurb": "Alledaagse tegnologie vir huishoudings, studente en skeppers.",
+    "homeExamples": "Skootrekenaars · Monitors · Randapparatuur · Slim huis · Berging",
+    "bizTitle": "'n Besigheid of onderneming",
+    "bizBlurb": "Infrastruktuur, lisensiëring en staatsverkryging.",
+    "bizExamples": "Bedieners · Netwerke · Lisensies · Sorgpakkette · Kwotasies",
+    "bizNote": "Aanmelding vereis — slegs vir geregistreerde besigheids- en staatskopers",
+    "continue": "Gaan voort",
+    "switchNote": "Jy kan enige tyd wissel met die katalogus-omvangkieser.",
+    "switcherLabel": "Koop vir",
+    "home": "Huis / Studies",
+    "business": "Besigheid / Onderneming"
   }
 }

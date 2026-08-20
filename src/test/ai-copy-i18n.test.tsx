@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import i18n from "@/lib/i18n";
 import AiCapabilityPanel from "@/components/AiCapabilityPanel";
-import { deriveAiHighlights, deriveUseCaseBadges } from "@/lib/ai-specs";
+import { buildAiHighlights, useCaseMeta } from "@/lib/ai-specs";
 import en from "@/lib/locales/en.json";
 import af from "@/lib/locales/af.json";
 import xh from "@/lib/locales/xh.json";
@@ -45,9 +45,21 @@ const AI_LAPTOP = {
   ai_gpu_model: "RTX 4060",
   ai_ram_gb: 32,
   ai_use_cases: ["video_rendering", "data_science"],
-  name: "Test AI Laptop",
-  category: "Laptops",
-} as never;
+};
+
+// The panel loads its own specs by product id, so the client is stubbed to
+// hand back the fixture above regardless of the query.
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () => Promise.resolve({ data: AI_LAPTOP, error: null }),
+        }),
+      }),
+    }),
+  },
+}));
 
 describe("AI copy translation coverage", () => {
   afterEach(async () => {
@@ -97,8 +109,8 @@ describe("AI outcome badging renders in every portal language", () => {
   });
 
   it("derives highlights and badges from hardware specs", () => {
-    const highlights = deriveAiHighlights(AI_LAPTOP);
-    const badges = deriveUseCaseBadges(AI_LAPTOP);
+    const highlights = buildAiHighlights(AI_LAPTOP);
+    const badges = AI_LAPTOP.ai_use_cases.map(useCaseMeta).filter(Boolean);
     expect(highlights.length).toBeGreaterThan(0);
     expect(badges.length).toBeGreaterThan(0);
     // 45 TOPS must resolve to the Copilot+ outcome, not the baseline one.
@@ -108,7 +120,7 @@ describe("AI outcome badging renders in every portal language", () => {
   for (const code of ["en", ...SA_LOCALES] as const) {
     it(`renders the capability panel in "${code}" without leaking key paths`, async () => {
       await i18n.changeLanguage(code);
-      const { container, unmount } = render(<AiCapabilityPanel product={AI_LAPTOP} />);
+      const { container, unmount } = render(<AiCapabilityPanel productId="test-product" />);
 
       await waitFor(() => {
         expect(screen.getByText(LOCALES[code]["aiSpecs"] &&

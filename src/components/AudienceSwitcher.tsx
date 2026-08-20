@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Home, Building2, Check, ChevronDown } from "lucide-react";
 import { useAudience, type ShoppingMode } from "@/contexts/AudienceContext";
 import { useSession } from "@/hooks/useSession";
@@ -13,17 +14,19 @@ import { trackEvent } from "@/lib/analytics";
  * catalogues at any point without clearing storage. Rendered in the header,
  * so it follows the shopper across every page.
  */
-const OPTIONS: { value: ShoppingMode; label: string; Icon: typeof Home }[] = [
-  { value: "residential", label: "Home / Studies", Icon: Home },
-  { value: "business", label: "Business / Enterprise", Icon: Building2 },
+const OPTIONS: { value: ShoppingMode; labelKey: string; Icon: typeof Home }[] = [
+  { value: "residential", labelKey: "audienceGate.home", Icon: Home },
+  { value: "business", labelKey: "audienceGate.business", Icon: Building2 },
 ];
 
 const AudienceSwitcher = ({ className = "" }: { className?: string }) => {
   const { mode, ready, setMode } = useAudience();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const session = useSession();
   const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     if (!open) return;

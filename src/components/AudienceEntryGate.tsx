@@ -1,9 +1,11 @@
 import { Home, Building2, ArrowRight, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAudience, type ShoppingMode } from "@/contexts/AudienceContext";
 import { useSession } from "@/hooks/useSession";
 import { trackEvent } from "@/lib/analytics";
 import Logo from "@/components/Logo";
+
 
 /**
  * First-visit routing layer.

@@ -68,6 +68,7 @@ const ProcurementPage = () => {
   const [compliancePack, setCompliancePack] = useState<CompliancePack | null>(null);
   const [enterpriseAi, setEnterpriseAi] = useState<Product[]>([]);
   const [enterpriseTotal, setEnterpriseTotal] = useState(0);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [form, setForm] = useState({
     organisation_name: "", entity_type: "private", contact_name: "",
     email: "", phone: "", requirements: "", estimated_value: "",
@@ -76,6 +77,14 @@ const ProcurementPage = () => {
   useEffect(() => {
     (async () => {
       trackEvent({ name: "storefront_viewed", audience: "business", surface: "procurement" });
+
+      // The business catalogue is excluded server-side for signed-out
+      // visitors (RLS + the search RPCs clamp to residential), so there is
+      // nothing to fetch until they sign in -- show the sign-in panel
+      // instead of an empty section.
+      const { data: { session } } = await supabase.auth.getSession();
+      setSignedIn(!!session);
+      if (!session) return;
 
       // Real catalogue size for the "browse everything" link below -- a
       // lightweight count, independent of the curated showcase (which is
@@ -266,6 +275,24 @@ const ProcurementPage = () => {
             </div>
           ))}
         </div>
+
+        {/* The enterprise catalogue is reserved for registered buyers --
+            enforced by the database, mirrored here in the UI. */}
+        {signedIn === false && (
+          <section className="mb-16 card-flat p-8 text-center" data-testid="business-catalogue-locked">
+            <h2 className="text-2xl font-display font-extrabold mb-2">Enterprise catalogue is for registered buyers</h2>
+            <p className="text-muted-foreground text-sm max-w-xl mx-auto mb-5">
+              Business and government pricing, stock and SKUs are only shown to signed-in accounts.
+              Create a free account or sign in to browse the full enterprise range.
+            </p>
+            <Link
+              to={`/auth?redirect=${encodeURIComponent("/procurement")}`}
+              className="inline-flex items-center gap-2 rounded-full gradient-brand text-white px-5 py-2.5 text-sm font-bold"
+            >
+              Sign in to view the catalogue <ArrowRight className="h-4 w-4" />
+            </Link>
+          </section>
+        )}
 
         {/* Enterprise-grade AI catalogue */}
         {enterpriseAi.length > 0 && (

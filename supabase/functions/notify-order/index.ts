@@ -6,6 +6,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.1";
 import { getAuthContext, escapeHtml } from "../_shared/auth-guard.ts";
+import {
+  enqueueOrderEmail,
+  deliverQueued,
+  isOrderEmailStatus,
+  type OrderEmailStatus,
+} from "../_shared/order-email.ts";
 import { resolveEmailFromAddress } from "../_shared/email-from.ts";
 
 const corsHeaders = {
@@ -60,55 +66,22 @@ function buildOwnerHtml(order: any, itemRows: string) {
   </div>`;
 }
 
-function estimatedDeliveryWindow(order: any): { label: string; from: Date; to: Date } {
-  // Business-day ETA: 2 days processing + 3–5 day courier for ZA metros.
-  // If any item is out of stock, add a 3–7 day backorder window.
-  const items = (order.order_items || []) as any[];
-  const anyBackorder = items.some((i) => (i.products?.stock_quantity ?? 0) < i.quantity);
-  const start = new Date();
-  const addDays = (d: Date, n: number) => { const c = new Date(d); c.setDate(c.getDate() + n); return c; };
-  const from = addDays(start, anyBackorder ? 5 : 2);
-  const to = addDays(start, anyBackorder ? 12 : 7);
-  const fmt = (d: Date) => d.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
-  return { label: `${fmt(from)} – ${fmt(to)}${anyBackorder ? " (backorder)" : ""}`, from, to };
-}
-
-function buildCustomerHtml(order: any, itemRows: string) {
-  const eta = estimatedDeliveryWindow(order);
-  return `
-  <div style="background:#f4f4f7;padding:32px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="max-width:600px;margin:0 auto">
-    ${EMAIL_HEADER}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:28px 24px;color:#0f172a">
-    <h1 style="font-size:22px;margin:0 0 8px">Thank you for your order, ${escapeHtml(order.customer_name ?? "")}</h1>
-    <p style="color:#475569;margin:0 0 20px">We've received your order <strong>#${escapeHtml(String(order.id).slice(0, 8))}</strong> and it's now being prepared.</p>
-    <div style="background:#f1f5f9;border-radius:10px;padding:14px 16px;margin:0 0 20px">
-      <p style="margin:0 0 4px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.06em"><strong>Estimated delivery</strong></p>
-      <p style="margin:0;font-size:16px;font-weight:600">${escapeHtml(eta.label)}</p>
-      <p style="margin:6px 0 0;font-size:12px;color:#64748b">Shipping to: ${escapeHtml(order.address ?? "")}, ${escapeHtml(order.city ?? "")} ${escapeHtml(order.postal_code ?? "")}</p>
-    </div>
-    <table style="width:100%;border-collapse:collapse;border-top:1px solid #e2e8f0">
-      <thead><tr><th align="left" style="padding:8px 0">Item</th><th align="right" style="padding:8px 0">Qty</th><th align="right" style="padding:8px 0">Price</th></tr></thead>
-      <tbody>${itemRows}</tbody>
-    </table>
-    <p style="margin-top:24px;font-size:18px"><strong>Total: ${escapeHtml(formatZAR(Number(order.total_amount)))}</strong></p>
-    <p style="color:#64748b;font-size:13px;margin-top:32px">If you have any questions, just reply to this email — we're here to help.</p>
-    </div>
-    ${EMAIL_FOOTER}
-  </div>
-  </div>`;
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { orderId } = await req.json();
+    const body = await req.json();
+    const orderId = body?.orderId;
+    // `event: "status_update"` + `status` picks the editable per-status
+    // template; anything else falls back to the order-confirmation template.
+    const requestedStatus = body?.event === "status_update" ? body?.status : "confirmation";
     if (!orderId) {
       return new Response(JSON.stringify({ error: "orderId is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -161,7 +134,7 @@ Deno.serve(async (req) => {
       </tr>`).join("");
 
     const ownerHtml = buildOwnerHtml(order, itemRows);
-    const customerHtml = buildCustomerHtml(order, itemRows);
+
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) {
@@ -269,23 +242,34 @@ Deno.serve(async (req) => {
       }
     }
 
+    // The customer email is queued first and sent second. If Resend is down,
+    // the row stays on the queue and process-order-emails retries it with
+    // backoff -- the shopper eventually hears from us either way.
     if (order.customer_email) {
-      try {
-        const r = await resend.emails.send({
-          from: FROM_ADDRESS, to: [order.customer_email],
-          subject: `Your order is confirmed — ${order.id}`,
-          html: customerHtml,
-        });
-        results.customer = r;
-        await logSend("customer", order.customer_email, "order-confirmation",
-          r?.error ? "failed" : "sent",
-          r?.error ? (r.error.message ?? "resend error") : null,
-          (r as any)?.data?.id);
-      } catch (e) {
-        await logSend("customer", order.customer_email, "order-confirmation", "failed", (e as Error).message);
-        throw e;
+      const status: OrderEmailStatus = isOrderEmailStatus(requestedStatus) ? requestedStatus : "confirmation";
+      const queued = await enqueueOrderEmail(supabase, order, status);
+      results.customer = { queued: queued.queued, reason: queued.reason ?? null, status };
+
+      if (queued.queued && queued.id) {
+        const { data: row } = await supabase
+          .from("order_email_queue")
+          .select("id, order_id, template_status, recipient_email, subject, body_html, attempts, max_attempts")
+          .eq("id", queued.id)
+          .maybeSingle();
+        if (row) {
+          const outcome = await deliverQueued(supabase, resend, FROM_ADDRESS, row);
+          (results.customer as Record<string, unknown>).delivery = outcome;
+          await logSend(
+            "customer",
+            order.customer_email,
+            `order-${status}`,
+            outcome === "sent" ? "sent" : "failed",
+            outcome === "sent" ? null : "queued for retry",
+          );
+        }
       }
     }
+
 
 
     return new Response(JSON.stringify({ success: true, sent: true, results }), {

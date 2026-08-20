@@ -79,12 +79,12 @@ const AudienceEntryGate = () => {
           id="audience-gate-title"
           className="font-display font-extrabold text-2xl sm:text-3xl text-center text-foreground"
         >
-          Who are you shopping for?
+          {t("audienceGate.title")}
         </h1>
         <p className="text-muted-foreground text-center mt-3 max-w-lg mx-auto text-sm sm:text-base">
-          We keep home tech and enterprise infrastructure strictly separate, so you
-          only ever see gear that is actually meant for you.
+          {t("audienceGate.subtitle")}
         </p>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
           {options.map(({ value, Icon, title, blurb, examples, note }) => (

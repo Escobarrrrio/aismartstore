@@ -18,8 +18,10 @@ import Logo from "@/components/Logo";
  */
 const AudienceEntryGate = () => {
   const { mode, ready, setMode } = useAudience();
+  const { t } = useTranslation();
   const session = useSession();
   const navigate = useNavigate();
+
 
   if (!ready || mode) return null;
 

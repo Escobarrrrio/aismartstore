@@ -47,19 +47,20 @@ const AudienceEntryGate = () => {
     {
       value: "residential",
       Icon: Home,
-      title: "My Home or Studies",
-      blurb: "Everyday tech for households, students and creators.",
-      examples: "Laptops · Monitors · Peripherals · Smart home · Storage",
+      title: t("audienceGate.homeTitle"),
+      blurb: t("audienceGate.homeBlurb"),
+      examples: t("audienceGate.homeExamples"),
     },
     {
       value: "business",
       Icon: Building2,
-      title: "A Business or Enterprise",
-      blurb: "Infrastructure, licensing and government procurement.",
-      examples: "Servers · Networking · Licensing · Care packs · Quotes",
-      note: "Sign-in required — reserved for registered business & government buyers",
+      title: t("audienceGate.bizTitle"),
+      blurb: t("audienceGate.bizBlurb"),
+      examples: t("audienceGate.bizExamples"),
+      note: t("audienceGate.bizNote"),
     },
   ];
+
 
   return (
     <div

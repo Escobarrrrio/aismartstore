@@ -443,5 +443,21 @@
     "hasHistorySuffix": "came from actual order history. The rest are complements.",
     "noHistory": "This product has no purchase history yet, so everything below comes from the complement rules rather than from other shoppers.",
     "scopeNote": "Asixubi amakhathalogu Asekhaya nawebhizinisi, futhi okungekho esitokweni kuyakhishwa."
+  },
+  "audienceGate": {
+    "title": "Uthengela bani?",
+    "subtitle": "Sigcina ubuchwepheshe basekhaya nengqalasizinda yebhizinisi kuhlukene ngokuphelele, ukuze ubone kuphela impahla eyenzelwe wena.",
+    "homeTitle": "Ikhaya lami noma izifundo",
+    "homeBlurb": "Ubuchwepheshe bansuku zonke bemindeni, abafundi nabadali.",
+    "homeExamples": "Ama-laptop · Ama-monitor · Izinsiza · Ikhaya elihlakaniphile · Isitoreji",
+    "bizTitle": "Ibhizinisi noma inhlangano",
+    "bizBlurb": "Ingqalasizinda, amalayisensi nokuthenga kukahulumeni.",
+    "bizExamples": "Ama-server · Amanethiwekhi · Amalayisensi · Amaphakheji okunakekela · Izilinganiso",
+    "bizNote": "Kudingeka ungene ngemvume — okwabathengi bebhizinisi nohulumeni ababhalisiwe",
+    "continue": "Qhubeka",
+    "switchNote": "Ungashintsha noma nini kusikhethi sekhathalogi.",
+    "switcherLabel": "Uthengela",
+    "home": "Ikhaya / Izifundo",
+    "business": "Ibhizinisi / Inhlangano"
   }
 }

@@ -1,9 +1,11 @@
 import { Home, Building2, ArrowRight, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAudience, type ShoppingMode } from "@/contexts/AudienceContext";
 import { useSession } from "@/hooks/useSession";
 import { trackEvent } from "@/lib/analytics";
 import Logo from "@/components/Logo";
+
 
 /**
  * First-visit routing layer.
@@ -16,8 +18,10 @@ import Logo from "@/components/Logo";
  */
 const AudienceEntryGate = () => {
   const { mode, ready, setMode } = useAudience();
+  const { t } = useTranslation();
   const session = useSession();
   const navigate = useNavigate();
+
 
   if (!ready || mode) return null;
 
@@ -43,19 +47,20 @@ const AudienceEntryGate = () => {
     {
       value: "residential",
       Icon: Home,
-      title: "My Home or Studies",
-      blurb: "Everyday tech for households, students and creators.",
-      examples: "Laptops · Monitors · Peripherals · Smart home · Storage",
+      title: t("audienceGate.homeTitle"),
+      blurb: t("audienceGate.homeBlurb"),
+      examples: t("audienceGate.homeExamples"),
     },
     {
       value: "business",
       Icon: Building2,
-      title: "A Business or Enterprise",
-      blurb: "Infrastructure, licensing and government procurement.",
-      examples: "Servers · Networking · Licensing · Care packs · Quotes",
-      note: "Sign-in required — reserved for registered business & government buyers",
+      title: t("audienceGate.bizTitle"),
+      blurb: t("audienceGate.bizBlurb"),
+      examples: t("audienceGate.bizExamples"),
+      note: t("audienceGate.bizNote"),
     },
   ];
+
 
   return (
     <div
@@ -74,12 +79,12 @@ const AudienceEntryGate = () => {
           id="audience-gate-title"
           className="font-display font-extrabold text-2xl sm:text-3xl text-center text-foreground"
         >
-          Who are you shopping for?
+          {t("audienceGate.title")}
         </h1>
         <p className="text-muted-foreground text-center mt-3 max-w-lg mx-auto text-sm sm:text-base">
-          We keep home tech and enterprise infrastructure strictly separate, so you
-          only ever see gear that is actually meant for you.
+          {t("audienceGate.subtitle")}
         </p>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
           {options.map(({ value, Icon, title, blurb, examples, note }) => (
@@ -103,7 +108,7 @@ const AudienceEntryGate = () => {
                 </span>
               )}
               <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-                Continue
+                {t("audienceGate.continue")}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
               </span>
             </button>
@@ -111,8 +116,9 @@ const AudienceEntryGate = () => {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          You can switch at any time from the catalogue scope selector.
+          {t("audienceGate.switchNote")}
         </p>
+
       </div>
     </div>
   );

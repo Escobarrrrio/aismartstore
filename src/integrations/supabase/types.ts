@@ -1123,6 +1123,39 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string
+          id: number
+          path: string
+          session_id: string
+          source: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string
+          id?: never
+          path: string
+          session_id: string
+          source?: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string
+          id?: never
+          path?: string
+          session_id?: string
+          source?: string
+        }
+        Relationships: []
+      }
       payment_events: {
         Row: {
           amount_fee: number | null
@@ -2082,7 +2115,13 @@ export type Database = {
       }
     }
     Functions: {
+      admin_analytics_overview: {
+        Args: { p_since?: string; p_until?: string }
+        Returns: Json
+      }
       admin_command_metrics: { Args: never; Returns: Json }
+      admin_list_newsletter_subscribers: { Args: never; Returns: Json }
+      admin_list_users: { Args: never; Returns: Json }
       ai_pulse_enqueue_feeds: { Args: never; Returns: number }
       ai_pulse_headline_quality: { Args: { p_title: string }; Returns: number }
       ai_pulse_ingest_feed_responses: {
@@ -2433,6 +2472,10 @@ export type Database = {
       retention_sweep: {
         Args: { p_max_rows_per_table?: number }
         Returns: Json
+      }
+      retention_sweep_page_views: {
+        Args: { p_older_than?: string }
+        Returns: number
       }
       rl_sweep: { Args: { p_older_than?: string }; Returns: number }
       rl_take: {

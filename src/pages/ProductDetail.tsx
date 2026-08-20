@@ -124,7 +124,13 @@ const ProductDetail = () => {
   // page, and vice versa. Falls back to the product's own audience so a direct
   // link (search result, shared URL) still recommends coherently.
   const { mode: shoppingMode } = useAudience();
-  const recoAudience: "residential" | "business" | "all" = shoppingMode ?? "all";
+  // The comment above says "falls back to the product's own audience", but the
+  // code passed "all" — which is exactly how business gear (servers, care
+  // packs) surfaced in a household shopper's bundle. Honour the fallback.
+  const productAudience =
+    (product as { audience?: string } | null)?.audience === "business" ? "business" : "residential";
+  const recoAudience: "residential" | "business" = shoppingMode ?? productAudience;
+
 
   // Same-category fallback from the loaded page, only used if the engine
   // returns nothing (brand-new SKU with no complements mapped yet).

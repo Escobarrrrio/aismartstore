@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Home, Building2, Check, ChevronDown } from "lucide-react";
 import { useAudience, type ShoppingMode } from "@/contexts/AudienceContext";
 import { useSession } from "@/hooks/useSession";
@@ -13,17 +14,19 @@ import { trackEvent } from "@/lib/analytics";
  * catalogues at any point without clearing storage. Rendered in the header,
  * so it follows the shopper across every page.
  */
-const OPTIONS: { value: ShoppingMode; label: string; Icon: typeof Home }[] = [
-  { value: "residential", label: "Home / Studies", Icon: Home },
-  { value: "business", label: "Business / Enterprise", Icon: Building2 },
+const OPTIONS: { value: ShoppingMode; labelKey: string; Icon: typeof Home }[] = [
+  { value: "residential", labelKey: "audienceGate.home", Icon: Home },
+  { value: "business", labelKey: "audienceGate.business", Icon: Building2 },
 ];
 
 const AudienceSwitcher = ({ className = "" }: { className?: string }) => {
   const { mode, ready, setMode } = useAudience();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const session = useSession();
   const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     if (!open) return;
@@ -68,11 +71,11 @@ const AudienceSwitcher = ({ className = "" }: { className?: string }) => {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Shopping mode: ${current.label}. Change portal`}
+        aria-label={`${t("audienceGate.switcherLabel")}: ${t(current.labelKey)}`}
         className="flex items-center gap-1.5 h-10 px-2.5 sm:px-3 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
       >
         <CurrentIcon className="h-4 w-4 text-primary" aria-hidden="true" />
-        <span className="hidden lg:inline">{current.label}</span>
+        <span className="hidden lg:inline">{t(current.labelKey)}</span>
         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
       </button>
 
@@ -82,9 +85,9 @@ const AudienceSwitcher = ({ className = "" }: { className?: string }) => {
           className="absolute right-0 mt-2 w-60 rounded-xl border border-border bg-background shadow-lg p-1.5 z-50 animate-fade-in"
         >
           <p className="px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Shopping for
+            {t("audienceGate.switcherLabel")}
           </p>
-          {OPTIONS.map(({ value, label, Icon }) => (
+          {OPTIONS.map(({ value, labelKey, Icon }) => (
             <button
               key={value}
               type="button"
@@ -97,7 +100,8 @@ const AudienceSwitcher = ({ className = "" }: { className?: string }) => {
               }`}
             >
               <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-              <span className="flex-1">{label}</span>
+              <span className="flex-1">{t(labelKey)}</span>
+
               {value === mode && <Check className="h-4 w-4" aria-hidden="true" />}
             </button>
           ))}

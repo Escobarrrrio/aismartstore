@@ -13,7 +13,9 @@ import { checkAndAlertOnFailureStreak } from "../_shared/alerts.ts";
 // =====================================================================
 
 import { resolveStall, willReachLimit, type StallState } from "./stall.ts";
-import { partitionByGate } from "./gate.ts";
+import { isPublishable, partitionByGate } from "./gate.ts";
+import { hasAdminImages, mergeAdminImages } from "./preserve.ts";
+
 import { markupFor, sellingPriceFor } from "./markup.ts";
 
 const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
@@ -383,8 +385,31 @@ Deno.serve(async (req) => {
         // database describing products no shopper can reach, and the
         // distributor is re-read every 15 minutes so nothing is lost by
         // leaving them out.
+        // Admin-uploaded photography wins over the distributor feed. Without
+        // this, a photo the owner uploads through the Photos module is wiped
+        // by the next sync (every 15 minutes) because the upsert writes the
+        // distributor's `images` array straight over the top.
+        const existingImages = new Map<string, string[]>();
+        for (const skuBatch of chunk(rows.map((r: { sku: string }) => r.sku), 200)) {
+          const { data: existing, error: exErr } = await supabase
+            .from("products")
+            .select("sku, images")
+            .in("sku", skuBatch);
+          if (exErr) { notes.push(`image-preserve lookup: ${exErr.message}`); continue; }
+          for (const e of existing ?? []) {
+            existingImages.set(e.sku as string, (e.images ?? []) as string[]);
+          }
+        }
+        for (const r of rows) {
+          const stored = existingImages.get(r.sku);
+          if (!hasAdminImages(stored)) continue;
+          r.images = mergeAdminImages(r.images, stored);
+          r.is_active = isPublishable(r, minSellablePrice);
+        }
+
         const { store: storable, deactivate } = partitionByGate(rows, minSellablePrice);
         skippedUnpublishable += deactivate.length;
+
 
         // A SKU that is live today and fails the gate today must come DOWN,
         // not merely be skipped -- otherwise it sits on the storefront

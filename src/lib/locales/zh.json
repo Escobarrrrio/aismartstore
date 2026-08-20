@@ -366,5 +366,21 @@
     "afterCutoff": "已过今日截单时间",
     "chooseProvince": "配送省份",
     "businessDaysNote": "仅计工作日，不含周末及南非公共假日。"
+  },
+  "audienceGate": {
+    "title": "您为谁选购？",
+    "subtitle": "我们将家用科技与企业基础设施严格区分，让您只看到真正适合自己的设备。",
+    "homeTitle": "我的家庭或学习",
+    "homeBlurb": "面向家庭、学生和创作者的日常科技产品。",
+    "homeExamples": "笔记本电脑 · 显示器 · 外设 · 智能家居 · 存储",
+    "bizTitle": "企业或机构",
+    "bizBlurb": "基础设施、许可与政府采购。",
+    "bizExamples": "服务器 · 网络 · 许可 · 服务包 · 报价",
+    "bizNote": "需要登录 — 仅限已注册的企业与政府采购方",
+    "continue": "继续",
+    "switchNote": "您可以随时通过目录范围选择器切换。",
+    "switcherLabel": "选购对象",
+    "home": "家庭 / 学习",
+    "business": "企业 / 机构"
   }
 }

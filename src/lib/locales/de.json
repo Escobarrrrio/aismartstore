@@ -366,5 +366,21 @@
     "afterCutoff": "der heutige Annahmeschluss ist vorbei",
     "chooseProvince": "Lieferprovinz",
     "businessDaysNote": "Nur Werktage. Wochenenden und südafrikanische Feiertage ausgenommen."
+  },
+  "audienceGate": {
+    "title": "Für wen kaufen Sie ein?",
+    "subtitle": "Wir trennen Heimtechnik und Unternehmensinfrastruktur strikt, damit Sie nur Geräte sehen, die wirklich für Sie gedacht sind.",
+    "homeTitle": "Mein Zuhause oder Studium",
+    "homeBlurb": "Alltagstechnik für Haushalte, Studierende und Kreative.",
+    "homeExamples": "Laptops · Monitore · Peripherie · Smart Home · Speicher",
+    "bizTitle": "Ein Unternehmen",
+    "bizBlurb": "Infrastruktur, Lizenzierung und öffentliche Beschaffung.",
+    "bizExamples": "Server · Netzwerk · Lizenzen · Care Packs · Angebote",
+    "bizNote": "Anmeldung erforderlich — nur für registrierte Geschäfts- und Behördenkunden",
+    "continue": "Weiter",
+    "switchNote": "Sie können jederzeit über die Katalogauswahl wechseln.",
+    "switcherLabel": "Einkaufen für",
+    "home": "Zuhause / Studium",
+    "business": "Unternehmen"
   }
 }

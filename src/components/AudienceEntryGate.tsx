@@ -108,7 +108,7 @@ const AudienceEntryGate = () => {
                 </span>
               )}
               <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-                Continue
+                {t("audienceGate.continue")}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
               </span>
             </button>
@@ -116,8 +116,9 @@ const AudienceEntryGate = () => {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          You can switch at any time from the catalogue scope selector.
+          {t("audienceGate.switchNote")}
         </p>
+
       </div>
     </div>
   );

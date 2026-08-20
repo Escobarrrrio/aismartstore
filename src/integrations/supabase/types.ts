@@ -1014,6 +1014,101 @@ export type Database = {
           },
         ]
       }
+      order_email_queue: {
+        Row: {
+          attempts: number
+          body_html: string
+          created_at: string
+          id: string
+          idempotency_key: string | null
+          last_error: string | null
+          max_attempts: number
+          next_attempt_at: string
+          order_id: string
+          provider_message_id: string | null
+          recipient_email: string
+          sent_at: string | null
+          status: string
+          subject: string
+          template_status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          body_html: string
+          created_at?: string
+          id?: string
+          idempotency_key?: string | null
+          last_error?: string | null
+          max_attempts?: number
+          next_attempt_at?: string
+          order_id: string
+          provider_message_id?: string | null
+          recipient_email: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template_status: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          body_html?: string
+          created_at?: string
+          id?: string
+          idempotency_key?: string | null
+          last_error?: string | null
+          max_attempts?: number
+          next_attempt_at?: string
+          order_id?: string
+          provider_message_id?: string | null
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_email_queue_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_email_templates: {
+        Row: {
+          body_html: string
+          enabled: boolean
+          label: string
+          status: string
+          subject: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body_html: string
+          enabled?: boolean
+          label: string
+          status: string
+          subject: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body_html?: string
+          enabled?: boolean
+          label?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string

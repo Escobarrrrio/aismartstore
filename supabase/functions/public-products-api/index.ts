@@ -139,10 +139,17 @@ export async function handler(req: Request): Promise<Response> {
     return json({ error: "invalid_param", message: `sort must be one of ${VALID_SORTS.join(", ")}.` }, 400);
   }
 
-  const audience = (params.get("audience") ?? "residential").toLowerCase();
-  if (!VALID_AUDIENCES.includes(audience as typeof VALID_AUDIENCES[number])) {
+  const requestedAudience = (params.get("audience") ?? "residential").toLowerCase();
+  if (!VALID_AUDIENCES.includes(requestedAudience as typeof VALID_AUDIENCES[number])) {
     return json({ error: "invalid_param", message: `audience must be one of ${VALID_AUDIENCES.join(", ")}.` }, 400);
   }
+  // This feed is unauthenticated and runs with the service role, so RLS cannot
+  // protect it. B2B SKUs are reserved for signed-in buyers: clamp anything
+  // other than "residential" back down instead of erroring, so agents and
+  // crawlers still get a useful (consumer-only) response.
+  const audience = "residential";
+
+
 
   const { data, error } = await admin.rpc("search_products", {
     search_query: params.get("q") ?? "",

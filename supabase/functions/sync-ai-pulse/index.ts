@@ -4,6 +4,7 @@ import { startRun, finishRun, deriveRunStatus } from "../_shared/run-log.ts";
 import { checkAndAlertOnFailureStreak } from "../_shared/alerts.ts";
 import { getAuthContext } from "../_shared/auth-guard.ts";
 import { isInternalCaller } from "../_shared/cron-secret.ts";
+import { throttleSyncRequest } from "../_shared/sync-throttle.ts";
 
 
 // Pulls real, sourced AI content from legitimate, no-auth-required

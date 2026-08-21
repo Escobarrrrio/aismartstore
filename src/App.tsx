@@ -46,6 +46,7 @@ const Mission = lazy(() => import("./pages/Mission"));
 const ShippingReturns = lazy(() => import("./pages/ShippingReturns"));
 const Terms = lazy(() => import("./pages/Terms"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -118,6 +119,7 @@ const App = () => (
                       <Route path="/shipping-returns" element={<StorefrontLayout><ShippingReturns /></StorefrontLayout>} />
                       <Route path="/terms" element={<StorefrontLayout><Terms /></StorefrontLayout>} />
                       <Route path="/cookies" element={<StorefrontLayout><CookiePolicy /></StorefrontLayout>} />
+                      <Route path="/contact" element={<StorefrontLayout><Contact /></StorefrontLayout>} />
                       <Route path="/admin" element={<Admin />} />
                       <Route path="/pitch" element={<Pitch />} />
                       <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />

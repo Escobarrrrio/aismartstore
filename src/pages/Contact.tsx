@@ -18,7 +18,7 @@ import {
  * Contact & Support page.
  *
  * Anchors local search signals for "AI store near me" and related queries
- * by publishing the real Gqeberha address, a map, and multiple contact
+ * by publishing the real Gqeberha location, a map, and multiple contact
  * methods. The founder's story and B-BBEE credentials are repeated here as
  * trust signals because this is the page a hesitant shopper is most likely
  * to visit before placing a first order.
@@ -80,7 +80,7 @@ const Contact = () => {
     <div className="flex flex-col">
       <SEO
         title="Contact & Support"
-        description="Get in touch with AI Smart Store in Gelvandale, Gqeberha. Email, phone, WhatsApp and live chat support for South African AI and technology shoppers."
+        description="Get in touch with AI Smart Store in Gqeberha. Email, phone, WhatsApp and live chat support for South African AI and technology shoppers."
         path="/contact"
         ogType="website"
         jsonLd={[
@@ -96,7 +96,6 @@ const Contact = () => {
               areaServed: "ZA",
               address: {
                 "@type": "PostalAddress",
-                streetAddress: "Gelvandale",
                 addressLocality: "Gqeberha",
                 addressRegion: "Eastern Cape",
                 addressCountry: "ZA",
@@ -134,14 +133,14 @@ const Contact = () => {
           <div className="max-w-3xl mb-10">
             <p className="inline-flex items-center gap-2 text-[11px] font-display font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6">
               <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-              Gelvandale · Gqeberha · Eastern Cape
+              Gqeberha · Eastern Cape · South Africa
             </p>
             <h1 className="font-display font-extrabold text-4xl md:text-6xl leading-[1.03] tracking-tight mb-6">
               Contact & Support
             </h1>
             <p className="text-lg md:text-xl leading-relaxed text-muted-foreground">
-              We are a South African technology retailer run from Gelvandale,
-              Gqeberha. Reach us by email, phone, WhatsApp or live chat —
+              We are a South African technology retailer based in Gqeberha,
+              Eastern Cape. Reach us by email, phone, WhatsApp or live chat —
               every message is answered by the team that built this store.
             </p>
           </div>
@@ -181,23 +180,22 @@ const Contact = () => {
                 Visit us
               </p>
               <h2 className="font-display font-extrabold text-2xl md:text-4xl leading-tight mb-7">
-                Based in Gelvandale,
+                Based in Gqeberha,
                 <br />
-                Gqeberha.
+                Eastern Cape.
               </h2>
               <div className="space-y-5 text-base md:text-lg leading-relaxed text-muted-foreground">
                 <p>
-                  AI Smart Store operates from Gelvandale in the Northern Areas
-                  of Gqeberha, Eastern Cape. We do not hide behind a generic
-                  support desk — this is a real South African business with a
-                  real local address.
+                  AI Smart Store operates from Gqeberha in the Eastern Cape. We
+                  do not hide behind a generic support desk — this is a real
+                  South African business with a real local presence.
                 </p>
                 <address className="not-italic rounded-2xl border border-border bg-card p-6 text-foreground">
                   <p className="font-display font-bold text-lg mb-1">
                     AI Smart Store
                   </p>
-                  <p>Gelvandale</p>
-                  <p>Gqeberha, Eastern Cape</p>
+                  <p>Gqeberha</p>
+                  <p>Eastern Cape</p>
                   <p className="mt-1">South Africa</p>
                 </address>
                 <p className="inline-flex items-center gap-2 text-sm text-foreground font-medium">
@@ -209,16 +207,16 @@ const Contact = () => {
 
             <figure className="relative overflow-hidden rounded-3xl border border-border bg-card aspect-[4/3] lg:aspect-auto lg:min-h-[420px]">
               <iframe
-                title="AI Smart Store location — Gelvandale, Gqeberha"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=25.555%2C-33.900%2C25.595%2C-33.860&layer=mapnik&marker=-33.880%2C25.575"
+                title="AI Smart Store location — Gqeberha, Eastern Cape"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=25.520%2C-33.970%2C25.660%2C-33.830&layer=mapnik&marker=-33.900%2C25.590"
                 className="absolute inset-0 h-full w-full border-0"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                aria-label="Map showing Gelvandale, Gqeberha, Eastern Cape"
+                aria-label="Map showing Gqeberha, Eastern Cape"
               />
               <figcaption className="sr-only">
-                Map showing the Gelvandale area of Gqeberha, Eastern Cape,
-                South Africa, where AI Smart Store is based.
+                Map showing Gqeberha, Eastern Cape, South Africa, where AI
+                Smart Store is based.
               </figcaption>
             </figure>
           </div>
@@ -242,8 +240,8 @@ const Contact = () => {
           <div className="space-y-6 text-base md:text-lg leading-relaxed text-muted-foreground max-w-3xl">
             <p>
               AI Smart Store was coded from scratch by founder Fernando Steyn —
-              self-taught, in Gelvandale, Gqeberha, after a welding accident,
-              a bereavement and a house fire. What remained was one laptop, one
+              self-taught, in Gqeberha, after a welding accident, a
+              bereavement and a house fire. What remained was one laptop, one
               internet connection, and a refusal to quit.
             </p>
             <p>
@@ -254,9 +252,9 @@ const Contact = () => {
               real order management flow.
             </p>
             <p className="text-foreground font-medium">
-              Every order placed here is fulfilled by a business run from this
-              neighbourhood, by someone who lives in it. Buying from AI Smart
-              Store puts money into the Eastern Cape, not through it.
+              Every order placed here is fulfilled by a South African business
+              run by someone who lives in the community it serves. Buying from
+              AI Smart Store puts money into the Eastern Cape economy.
             </p>
           </div>
 

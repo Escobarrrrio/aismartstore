@@ -17,14 +17,9 @@ Deno.serve(async (req) => {
 
   // Cron/service-role callers present a secret; anyone else must be an admin.
   // Otherwise the free FX provider could be hammered through this endpoint.
-  const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";
-  const providedSecret = req.headers.get("x-internal-secret") ?? "";
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const isInternal =
-    (internalSecret.length > 0 && providedSecret === internalSecret) ||
-    (serviceRoleKey.length > 0 && authHeader === `Bearer ${serviceRoleKey}`);
-  if (!isInternal) {
+  // Secret validation goes through the shared helper so a rotated secret (and
+  // its grace-window predecessor) keeps working without a redeploy.
+  if (!(await isInternalCaller(req))) {
     const auth = await getAuthContext(req);
     if (!auth.userId || !auth.isAdmin) {
       return new Response(JSON.stringify({ error: "Admin role required" }), {

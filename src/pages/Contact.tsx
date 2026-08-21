@@ -1,4 +1,5 @@
 import SEO from "@/components/SEO";
+import { openChatWidget } from "@/components/ChatWidget";
 import { Link } from "react-router-dom";
 import {
   Mail,

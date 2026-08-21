@@ -3,6 +3,21 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "redirects": [
+    { "source": "/contact-us", "destination": "/contact", "permanent": true },
+    { "source": "/contact-us/", "destination": "/contact", "permanent": true },
+    { "source": "/contactus", "destination": "/contact", "permanent": true },
+    { "source": "/contact/", "destination": "/contact", "permanent": true },
+    { "source": "/contact.html", "destination": "/contact", "permanent": true },
+    { "source": "/contact-support", "destination": "/contact", "permanent": true },
+    { "source": "/get-in-touch", "destination": "/contact", "permanent": true },
+    { "source": "/support", "destination": "/contact", "permanent": true },
+    { "source": "/support/", "destination": "/contact", "permanent": true },
+    { "source": "/help", "destination": "/contact", "permanent": true },
+    { "source": "/customer-service", "destination": "/contact", "permanent": true },
+    { "source": "/pages/contact", "destination": "/contact", "permanent": true },
+    { "source": "/contact/:path*", "destination": "/contact", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/((?!api/.*).*)", "destination": "/index.html" }
   ],

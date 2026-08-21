@@ -1,0 +1,23 @@
+# Netlify / Cloudflare Pages redirect rules.
+#
+# Kept deliberately in step with the "redirects" block in vercel.json — a rule
+# that exists on one host and not the other silently disappears at cutover.
+#
+# Legacy contact URLs. Earlier drafts of the site (and a few externally linked
+# variants) pointed at /contact-us, /support and friends. Serving those as a
+# soft 404 through the SPA fallback leaves Google crawling dead variants and
+# splitting the local-SEO signal that /contact is meant to own. A 301 passes
+# the link equity across and gets the old URLs dropped from the index.
+/contact-us          /contact   301
+/contactus           /contact   301
+/contact.html        /contact   301
+/contact-support     /contact   301
+/get-in-touch        /contact   301
+/support             /contact   301
+/help                /contact   301
+/customer-service    /contact   301
+/pages/contact       /contact   301
+/contact/*           /contact   301
+
+# SPA fallback must stay last so the rules above win.
+/*                   /index.html   200

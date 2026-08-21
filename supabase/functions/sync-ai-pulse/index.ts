@@ -2,6 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { withRetry } from "../_shared/retry.ts";
 import { startRun, finishRun, deriveRunStatus } from "../_shared/run-log.ts";
 import { checkAndAlertOnFailureStreak } from "../_shared/alerts.ts";
+import { getAuthContext } from "../_shared/auth-guard.ts";
+
 
 // Pulls real, sourced AI content from legitimate, no-auth-required
 // feeds -- never fabricated. This deliberately does NOT ask an LLM to

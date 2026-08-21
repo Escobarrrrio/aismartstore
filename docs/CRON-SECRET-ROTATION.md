@@ -70,3 +70,34 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
 The Playwright spec `e2e/sync-endpoint-auth.spec.ts` asserts exactly this for
 both sync endpoints, and — when `PLAYWRIGHT_INTERNAL_CRON_SECRET` is provided —
 also asserts that the intended secret path succeeds.
+
+## Throttling on the sync endpoints
+
+The secret is the lock; the throttle stops anyone hammering the door. Both
+`sync-ai-pulse` and `sync-exchange-rates` run
+`_shared/sync-throttle.ts` **before** any credential check, so a guessing
+attempt is refused at the cheapest possible point:
+
+| Bucket | Limit | Purpose |
+| --- | --- | --- |
+| Per IP (SHA-256 of the address, first 8 bytes) | 3 requests/min | Stops scripted secret guessing |
+| Per endpoint, all callers | 30 requests/min | Caps a distributed/botnet flood |
+
+Over-budget callers get **429** with a truthful `Retry-After` derived from the
+bucket's real refill rate. The response never hints at whether the presented
+secret was valid — a throttle that leaks "close" is a guessing oracle.
+
+Implementation notes:
+
+- Built on the existing `public.rl_take()` token bucket, not a second
+  mechanism. It is atomic under concurrency (the `ON CONFLICT` update takes a
+  row lock, so a burst cannot race two requests past the same balance).
+- Rows are swept daily by the existing `guardrail-sweep` cron job, so the
+  limiter cannot be turned into a disk-fill vector.
+- **Fail-open** if `rl_take` errors. A throttle that takes the scheduled sync
+  offline during a database hiccup does more damage than the abuse it prevents.
+- Legitimate load is nowhere near these numbers: the schedules fire every few
+  hours, and an admin "Run now" click is a single request.
+
+Tuning: adjust the constants at the top of
+`supabase/functions/_shared/sync-throttle.ts` and redeploy both functions.

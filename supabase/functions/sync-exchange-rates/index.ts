@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { getAuthContext } from "../_shared/auth-guard.ts";
 import { isInternalCaller } from "../_shared/cron-secret.ts";
+import { throttleSyncRequest } from "../_shared/sync-throttle.ts";
 
 // Keeps exchange_rates current using a free, no-API-key-required FX
 // rate source. Runs daily via pg_cron. Without this, switching currency

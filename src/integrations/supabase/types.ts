@@ -798,6 +798,42 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_cron_secret_versions: {
+        Row: {
+          activated_at: string
+          created_at: string
+          expires_at: string | null
+          fingerprint: string
+          id: string
+          note: string | null
+          rotated_by: string | null
+          secret_sha256: string
+          status: string
+        }
+        Insert: {
+          activated_at?: string
+          created_at?: string
+          expires_at?: string | null
+          fingerprint: string
+          id?: string
+          note?: string | null
+          rotated_by?: string | null
+          secret_sha256: string
+          status?: string
+        }
+        Update: {
+          activated_at?: string
+          created_at?: string
+          expires_at?: string | null
+          fingerprint?: string
+          id?: string
+          note?: string | null
+          rotated_by?: string | null
+          secret_sha256?: string
+          status?: string
+        }
+        Relationships: []
+      }
       newsletter_campaigns: {
         Row: {
           body_html: string
@@ -2331,6 +2367,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      finalize_internal_cron_secret_rotation: { Args: never; Returns: number }
       get_business_picks: {
         Args: { p_limit?: number }
         Returns: {
@@ -2582,6 +2619,18 @@ export type Database = {
         }
         Returns: Json
       }
+      rotate_internal_cron_secret: {
+        Args: {
+          p_grace_minutes?: number
+          p_note?: string
+          p_rotated_by?: string
+        }
+        Returns: {
+          fingerprint: string
+          grace_until: string
+          new_secret: string
+        }[]
+      }
       score_business_product: {
         Args: {
           p_brand: string
@@ -2711,6 +2760,10 @@ export type Database = {
       threat_summary: { Args: never; Returns: Json }
       threat_sweep: { Args: never; Returns: number }
       threat_unblock: { Args: { p_key: string }; Returns: boolean }
+      verify_internal_cron_secret: {
+        Args: { p_secret: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "customer" | "admin"

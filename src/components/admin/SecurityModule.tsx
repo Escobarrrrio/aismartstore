@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, Users, Activity, Lock, Eye, EyeOff, LogOut, AlertTriangle, Key, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import CronSecretPanel from "@/components/admin/CronSecretPanel";
 
 type AuditRow = { event_type: string; actor_email: string | null; created_at: string };
 
@@ -59,6 +60,8 @@ const SecurityModule = () => {
 
   return (
     <div className="space-y-6">
+      <CronSecretPanel />
+
       {/* RBAC */}
       <div className="card-flat overflow-hidden">
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">

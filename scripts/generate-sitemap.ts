@@ -16,13 +16,14 @@ interface Entry {
   priority?: string
 }
 
+// Only publicly indexable routes belong here. /cart, /checkout, /account,
+// /auth and /orders/:id are all Disallow-ed in public/robots.txt, and listing
+// a disallowed URL in the sitemap is a self-contradiction Search Console
+// reports as "Submitted URL blocked by robots.txt" — it wastes crawl budget
+// and drags down the sitemap's overall status.
 const staticEntries: Entry[] = [
   { path: "/", changefreq: "daily", priority: "1.0" },
   { path: "/products", changefreq: "daily", priority: "0.9" },
-  { path: "/cart", changefreq: "weekly", priority: "0.4" },
-  { path: "/checkout", changefreq: "weekly", priority: "0.4" },
-  { path: "/account", changefreq: "weekly", priority: "0.4" },
-  { path: "/auth", changefreq: "monthly", priority: "0.3" },
   { path: "/ai-pulse", changefreq: "weekly", priority: "0.7" },
   { path: "/about", changefreq: "monthly", priority: "0.7" },
   { path: "/contact", changefreq: "monthly", priority: "0.8" },
@@ -33,10 +34,8 @@ const staticEntries: Entry[] = [
   { path: "/shipping-returns", changefreq: "monthly", priority: "0.4" },
   { path: "/terms", changefreq: "monthly", priority: "0.2" },
   { path: "/cookies", changefreq: "monthly", priority: "0.2" },
-  // /orders/:id is intentionally excluded: it is authenticated and
-  // per-customer, so publishing order UUIDs in a public sitemap would leak
-  // private identifiers and give crawlers no indexable content.
 ]
+
 
 
 const escape = (s: string) =>

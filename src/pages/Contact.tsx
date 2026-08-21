@@ -84,27 +84,84 @@ const Contact = () => {
         path="/contact"
         ogType="website"
         jsonLd={[
+          // LocalBusiness is emitted as its own top-level node (not only nested
+          // inside ContactPage) so Google can attach it to the entity for
+          // "AI Smart Store" directly — nested mainEntity alone is weaker for
+          // local "near me" intent. No streetAddress is published: this is an
+          // online-first business and a home-office street number would be both
+          // inaccurate as a walk-in address and a privacy problem.
+          {
+            "@context": "https://schema.org",
+            "@type": "OnlineStore",
+            "@id": "https://aismartstore.co.za/#business",
+            name: "AI Smart Store",
+            legalName: "AI Smart Store",
+            description:
+              "South African online retailer of AI-ready laptops, NPU hardware and smart technology, shipping nationwide from Gqeberha, Eastern Cape.",
+            founder: { "@type": "Person", name: "Fernando Steyn" },
+            url: "https://aismartstore.co.za",
+            telephone: "+27-41-001-0245",
+            email: "support@aismartstore.co.za",
+            priceRange: "R500 - R150000",
+            currenciesAccepted: "ZAR",
+            paymentAccepted: "Credit Card, Debit Card, EFT, Instant EFT",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: "Gqeberha",
+              addressRegion: "Eastern Cape",
+              postalCode: "6001",
+              addressCountry: "ZA",
+            },
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: -33.9608,
+              longitude: 25.6022,
+            },
+            areaServed: [
+              { "@type": "Country", name: "South Africa" },
+              { "@type": "City", name: "Gqeberha" },
+              { "@type": "City", name: "Port Elizabeth" },
+              { "@type": "AdministrativeArea", name: "Eastern Cape" },
+            ],
+            openingHoursSpecification: [
+              {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                opens: "08:00",
+                closes: "17:00",
+              },
+              {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: "Saturday",
+                opens: "09:00",
+                closes: "13:00",
+              },
+            ],
+            contactPoint: [
+              {
+                "@type": "ContactPoint",
+                contactType: "customer support",
+                telephone: "+27-41-001-0245",
+                email: "support@aismartstore.co.za",
+                areaServed: "ZA",
+                availableLanguage: ["en", "af", "xh", "zu"],
+              },
+              {
+                "@type": "ContactPoint",
+                contactType: "sales",
+                email: "sales@aismartstore.co.za",
+                areaServed: "ZA",
+                availableLanguage: ["en", "af"],
+              },
+            ],
+            sameAs: ["https://aismartstore.co.za/about"],
+          },
           {
             "@context": "https://schema.org",
             "@type": "ContactPage",
             name: "Contact & Support — AI Smart Store",
             url: "https://aismartstore.co.za/contact",
-            mainEntity: {
-              "@type": "LocalBusiness",
-              name: "AI Smart Store",
-              founder: { "@type": "Person", name: "Fernando Steyn" },
-              areaServed: "ZA",
-              address: {
-                "@type": "PostalAddress",
-                addressLocality: "Gqeberha",
-                addressRegion: "Eastern Cape",
-                addressCountry: "ZA",
-              },
-              telephone: "+27-41-001-0245",
-              email: "support@aismartstore.co.za",
-              url: "https://aismartstore.co.za",
-              sameAs: ["https://aismartstore.co.za/about"],
-            },
+            mainEntity: { "@id": "https://aismartstore.co.za/#business" },
           },
           {
             "@context": "https://schema.org",

@@ -41,6 +41,12 @@ const ChatWidget = () => {
     }
   }, [messages, open]);
 
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener(OPEN_CHAT_EVENT, handler);
+    return () => window.removeEventListener(OPEN_CHAT_EVENT, handler);
+  }, []);
+
   // Move focus into the panel when it opens (keyboard users shouldn't have
   // to tab past the whole page to reach it), and back to the launcher
   // button when it closes so focus isn't lost.

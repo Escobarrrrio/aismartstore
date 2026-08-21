@@ -166,22 +166,13 @@ const handler = async (req: Request) => {
   // Same gate every other scheduled sync uses: pg_cron/service-role callers
   // pass a secret, humans must be an admin. Without this anyone could loop
   // the endpoint and hammer a dozen third-party feeds from our egress IP.
-  {
-    const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";
-    const providedSecret = req.headers.get("x-internal-secret") ?? "";
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const isInternal =
-      (internalSecret.length > 0 && providedSecret === internalSecret) ||
-      (serviceRoleKey.length > 0 && authHeader === `Bearer ${serviceRoleKey}`);
-    if (!isInternal) {
-      const auth = await getAuthContext(req);
-      if (!auth.userId || !auth.isAdmin) {
-        return new Response(JSON.stringify({ error: "Admin role required" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+  if (!(await isInternalCaller(req))) {
+    const auth = await getAuthContext(req);
+    if (!auth.userId || !auth.isAdmin) {
+      return new Response(JSON.stringify({ error: "Admin role required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
   }
 

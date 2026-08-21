@@ -120,6 +120,15 @@ const App = () => (
                       <Route path="/terms" element={<StorefrontLayout><Terms /></StorefrontLayout>} />
                       <Route path="/cookies" element={<StorefrontLayout><CookiePolicy /></StorefrontLayout>} />
                       <Route path="/contact" element={<StorefrontLayout><Contact /></StorefrontLayout>} />
+                      {/* Legacy contact URLs.
+                          The real 301s live in vercel.json / public/_redirects and are what
+                          Google acts on. These client-side redirects are the belt-and-braces
+                          layer for any host that serves the SPA fallback without those rules:
+                          without them an old /contact-us link renders the 404 page instead of
+                          the support content. `replace` keeps the dead URL out of history. */}
+                      {LEGACY_CONTACT_PATHS.map((p) => (
+                        <Route key={p} path={p} element={<Navigate to="/contact" replace />} />
+                      ))}
                       <Route path="/admin" element={<Admin />} />
                       <Route path="/pitch" element={<Pitch />} />
                       <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />

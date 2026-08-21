@@ -21,6 +21,12 @@ const CRON_SECRET = process.env.PLAYWRIGHT_INTERNAL_CRON_SECRET || "";
 
 const ENDPOINTS = ["sync-ai-pulse", "sync-exchange-rates"] as const;
 
+// Serial, not parallel: these tests share one rate-limit bucket per endpoint.
+// Run concurrently they would throttle each other and the results would say
+// more about scheduling order than about the endpoints.
+test.describe.configure({ mode: "serial" });
+test.setTimeout(120_000);
+
 test.beforeEach(({}, info) => {
   test.skip(info.project.name !== "desktop-chromium", "API-level tests run once");
 });
@@ -43,33 +49,70 @@ async function post(fn: string, headers: Record<string, string>) {
   return { status, body };
 }
 
+// Every rejection below is asserted as "403 or 429", never as a bare 403.
+// These endpoints are throttled to 3 attempts/minute per IP, so the fourth
+// probe this file sends legitimately comes back 429 — and a suite that
+// insisted on 403 would fail precisely because the defence it is testing is
+// working. Both codes mean the same thing for our purposes: the request did
+// not run. 2xx is the only outcome that would be a real failure.
+const DENIED = [403, 429];
+
 for (const fn of ENDPOINTS) {
-  test(`${fn} rejects an unauthenticated caller with 403`, async () => {
+  test(`${fn} rejects an unauthenticated caller`, async () => {
     const { status } = await post(fn, {});
-    expect(status, `${fn} must not run for anonymous callers`).toBe(403);
+    expect(DENIED, `${fn} must not run for anonymous callers`).toContain(status);
   });
 
-  test(`${fn} rejects a wrong internal secret with 403`, async () => {
+  test(`${fn} rejects a wrong internal secret`, async () => {
     const { status } = await post(fn, { "x-internal-secret": "not-the-real-secret-0000" });
-    expect(status).toBe(403);
+    expect(DENIED).toContain(status);
   });
 
-  test(`${fn} rejects an empty internal secret with 403`, async () => {
+  test(`${fn} rejects an empty internal secret`, async () => {
     const { status } = await post(fn, { "x-internal-secret": "" });
-    expect(status).toBe(403);
+    expect(DENIED).toContain(status);
   });
 
-  test(`${fn} rejects a non-admin (anon) JWT with 403`, async () => {
+  test(`${fn} rejects a non-admin (anon) JWT`, async () => {
     const { status } = await post(fn, {
       apikey: SUPABASE_ANON,
       Authorization: `Bearer ${SUPABASE_ANON}`,
     });
-    expect(status).toBe(403);
+    expect(DENIED).toContain(status);
+  });
+
+  test(`${fn} throttles repeated secret-guessing with a 429 and Retry-After`, async () => {
+    // Six rapid guesses against a 3-per-minute bucket. The point is not that a
+    // wrong secret is refused (already covered) but that an attacker cannot
+    // make us evaluate thousands of guesses a minute.
+    const results: number[] = [];
+    let retryAfter: string | null = null;
+    const ctx = await request.newContext();
+    for (let i = 0; i < 6; i++) {
+      const res = await ctx.post(`${SUPABASE_URL}/functions/v1/${fn}`, {
+        headers: { "Content-Type": "application/json", "x-internal-secret": `guess-${i}` },
+        data: {},
+        timeout: 60_000,
+      });
+      results.push(res.status());
+      retryAfter = retryAfter ?? res.headers()["retry-after"] ?? null;
+    }
+    await ctx.dispose();
+
+    expect(results.filter((s) => s === 429).length, `expected throttling, got ${results.join(",")}`)
+      .toBeGreaterThan(0);
+    expect(results.some((s) => s < 400), "no guess may ever succeed").toBe(false);
+    // A 429 without Retry-After just invites the same traffic a second later.
+    expect(Number(retryAfter)).toBeGreaterThan(0);
   });
 
   test(`${fn} accepts the intended internal cron secret`, async () => {
     test.skip(!CRON_SECRET, "PLAYWRIGHT_INTERNAL_CRON_SECRET not provided");
+    // Wait out the bucket filled by the throttling test above so this asserts
+    // the auth path, not the rate limiter.
+    await new Promise((r) => setTimeout(r, 70_000));
     const { status } = await post(fn, { "x-internal-secret": CRON_SECRET });
     expect(status, `${fn} must run for the cron path`).toBeLessThan(400);
   });
 }
+

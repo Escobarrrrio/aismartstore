@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { getAuthContext } from "../_shared/auth-guard.ts";
 import { isInternalCaller } from "../_shared/cron-secret.ts";
+import { throttleSyncRequest } from "../_shared/sync-throttle.ts";
 
 // Keeps exchange_rates current using a free, no-API-key-required FX
 // rate source. Runs daily via pg_cron. Without this, switching currency
@@ -14,6 +15,12 @@ const SUPPORTED = ["ZAR", "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF"
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Throttle before any credential work, so guessing at the secret is cheap
+  // for us and expensive for the guesser. Also protects the free FX provider:
+  // a flood that got past the gate would burn their quota, not just ours.
+  const throttled = await throttleSyncRequest(req, "sync-exchange-rates", corsHeaders);
+  if (!throttled.ok) return throttled.response;
 
   // Cron/service-role callers present a secret; anyone else must be an admin.
   // Otherwise the free FX provider could be hammered through this endpoint.

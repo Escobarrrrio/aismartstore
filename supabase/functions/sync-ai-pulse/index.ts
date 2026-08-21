@@ -163,6 +163,14 @@ const corsHeaders = {
 // for the pure functions above without also starting an HTTP listener.
 const handler = async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  // Throttle FIRST, before any credential work. Anything after this point
+  // costs a hash comparison or a JWT round-trip, and an attacker spraying
+  // secret guesses should not get us to pay for that thousands of times a
+  // minute. Real callers (a 6-hourly cron run, an admin clicking "Run now")
+  // are nowhere near the budget.
+  const throttled = await throttleSyncRequest(req, "sync-ai-pulse", corsHeaders);
+  if (!throttled.ok) return throttled.response;
+
 
   // Same gate every other scheduled sync uses: pg_cron/service-role callers
   // pass a secret, humans must be an admin. Without this anyone could loop

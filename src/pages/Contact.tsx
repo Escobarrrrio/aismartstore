@@ -43,7 +43,8 @@ const CONTACT_METHODS = [
     icon: MessageCircle,
     label: "Live chat",
     value: "AI assistant",
-    href: "#",
+    // No href: this card opens the on-page assistant instead of navigating.
+    href: null,
     note: "24/7 help via the chat bubble",
   },
 ];

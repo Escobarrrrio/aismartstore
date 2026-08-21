@@ -21,6 +21,12 @@ const CRON_SECRET = process.env.PLAYWRIGHT_INTERNAL_CRON_SECRET || "";
 
 const ENDPOINTS = ["sync-ai-pulse", "sync-exchange-rates"] as const;
 
+// Serial, not parallel: these tests share one rate-limit bucket per endpoint.
+// Run concurrently they would throttle each other and the results would say
+// more about scheduling order than about the endpoints.
+test.describe.configure({ mode: "serial" });
+test.setTimeout(120_000);
+
 test.beforeEach(({}, info) => {
   test.skip(info.project.name !== "desktop-chromium", "API-level tests run once");
 });

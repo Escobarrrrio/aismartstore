@@ -2253,6 +2253,30 @@ export type Database = {
       admin_command_metrics: { Args: never; Returns: Json }
       admin_list_newsletter_subscribers: { Args: never; Returns: Json }
       admin_list_users: { Args: never; Returns: Json }
+      admin_order_email_audit: {
+        Args: { p_limit?: number; p_order_id?: string; p_status?: string }
+        Returns: {
+          attempts: number
+          created_at: string
+          customer_name: string
+          delivery_error: string
+          delivery_logged_at: string
+          delivery_status: string
+          id: string
+          last_error: string
+          max_attempts: number
+          next_attempt_at: string
+          order_id: string
+          order_short: string
+          provider_message_id: string
+          recipient_email: string
+          sent_at: string
+          status: string
+          subject: string
+          template_status: string
+        }[]
+      }
+      admin_requeue_order_email: { Args: { p_id: string }; Returns: boolean }
       ai_pulse_enqueue_feeds: { Args: never; Returns: number }
       ai_pulse_headline_quality: { Args: { p_title: string }; Returns: number }
       ai_pulse_ingest_feed_responses: {

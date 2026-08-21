@@ -2,6 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { withRetry } from "../_shared/retry.ts";
 import { startRun, finishRun, deriveRunStatus } from "../_shared/run-log.ts";
 import { checkAndAlertOnFailureStreak } from "../_shared/alerts.ts";
+import { getAuthContext } from "../_shared/auth-guard.ts";
+
 
 // Pulls real, sourced AI content from legitimate, no-auth-required
 // feeds -- never fabricated. This deliberately does NOT ask an LLM to
@@ -160,6 +162,29 @@ const corsHeaders = {
 // for the pure functions above without also starting an HTTP listener.
 const handler = async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Same gate every other scheduled sync uses: pg_cron/service-role callers
+  // pass a secret, humans must be an admin. Without this anyone could loop
+  // the endpoint and hammer a dozen third-party feeds from our egress IP.
+  {
+    const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";
+    const providedSecret = req.headers.get("x-internal-secret") ?? "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const isInternal =
+      (internalSecret.length > 0 && providedSecret === internalSecret) ||
+      (serviceRoleKey.length > 0 && authHeader === `Bearer ${serviceRoleKey}`);
+    if (!isInternal) {
+      const auth = await getAuthContext(req);
+      if (!auth.userId || !auth.isAdmin) {
+        return new Response(JSON.stringify({ error: "Admin role required" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+  }
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

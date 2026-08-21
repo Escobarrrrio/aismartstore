@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { getAuthContext } from "../_shared/auth-guard.ts";
 
 // Keeps exchange_rates current using a free, no-API-key-required FX
 // rate source. Runs daily via pg_cron. Without this, switching currency
@@ -9,11 +11,33 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPPORTED = ["ZAR", "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "CNY", "INR"];
 
-Deno.serve(async (_req) => {
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Cron/service-role callers present a secret; anyone else must be an admin.
+  // Otherwise the free FX provider could be hammered through this endpoint.
+  const internalSecret = Deno.env.get("INTERNAL_CRON_SECRET") ?? "";
+  const providedSecret = req.headers.get("x-internal-secret") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const isInternal =
+    (internalSecret.length > 0 && providedSecret === internalSecret) ||
+    (serviceRoleKey.length > 0 && authHeader === `Bearer ${serviceRoleKey}`);
+  if (!isInternal) {
+    const auth = await getAuthContext(req);
+    if (!auth.userId || !auth.isAdmin) {
+      return new Response(JSON.stringify({ error: "Admin role required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
+
 
   try {
     // open.er-api.com is free, no key, CORS-enabled, updated daily.

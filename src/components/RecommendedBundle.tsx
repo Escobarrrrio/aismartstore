@@ -47,7 +47,9 @@ const RecommendedBundle = ({ productId, audience, title = "Complete the setup", 
     let cancelled = false;
     if (!productId) return;
     (async () => {
-      const rpc = supabase.rpc as unknown as (
+      // Bound to the client: a bare `supabase.rpc` reference loses `this` and
+      // blows up before the request is ever sent, killing the whole bundle row.
+      const rpc = supabase.rpc.bind(supabase) as unknown as (
         name: string,
         args: Record<string, unknown>,
       ) => Promise<{ data: RecommendedRow[] | null; error: { message: string } | null }>;

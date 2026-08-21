@@ -17,6 +17,13 @@ interface Message {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
+// Any page can ask for the assistant to pop open (e.g. the "Live chat" card
+// on the Contact page) without needing a shared provider -- the widget is
+// mounted once in the storefront layout and listens for this event.
+export const OPEN_CHAT_EVENT = "aiss:open-chat";
+export const openChatWidget = () =>
+  window.dispatchEvent(new CustomEvent(OPEN_CHAT_EVENT));
+
 const ChatWidget = () => {
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -33,6 +40,12 @@ const ChatWidget = () => {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages, open]);
+
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener(OPEN_CHAT_EVENT, handler);
+    return () => window.removeEventListener(OPEN_CHAT_EVENT, handler);
+  }, []);
 
   // Move focus into the panel when it opens (keyboard users shouldn't have
   // to tab past the whole page to reach it), and back to the launcher

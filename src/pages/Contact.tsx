@@ -1,4 +1,5 @@
 import SEO from "@/components/SEO";
+import { openChatWidget } from "@/components/ChatWidget";
 import { Link } from "react-router-dom";
 import {
   Mail,
@@ -43,7 +44,8 @@ const CONTACT_METHODS = [
     icon: MessageCircle,
     label: "Live chat",
     value: "AI assistant",
-    href: "#",
+    // No href: this card opens the on-page assistant instead of navigating.
+    href: null,
     note: "24/7 help via the chat bubble",
   },
 ];
@@ -203,27 +205,42 @@ const Contact = () => {
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {CONTACT_METHODS.map(({ icon: Icon, label, value, href, note }) => (
-              <a
-                key={label}
-                href={href}
-                className="group rounded-2xl border border-border bg-card p-6 hover:border-primary/40 transition-colors"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+            {CONTACT_METHODS.map(({ icon: Icon, label, value, href, note }) => {
+              const cardClass =
+                "group text-left w-full rounded-2xl border border-border bg-card p-6 hover:border-primary/40 transition-colors";
+              const inner = (
+                <>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" aria-hidden="true" />
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" aria-hidden="true" />
-                </div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  {label}
-                </p>
-                <p className="font-display font-bold text-lg text-foreground mb-1">
-                  {value}
-                </p>
-                <p className="text-sm text-muted-foreground">{note}</p>
-              </a>
-            ))}
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                    {label}
+                  </p>
+                  <p className="font-display font-bold text-lg text-foreground mb-1">
+                    {value}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{note}</p>
+                </>
+              );
+
+              return href ? (
+                <a key={label} href={href} className={cardClass}>
+                  {inner}
+                </a>
+              ) : (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={openChatWidget}
+                  className={cardClass}
+                >
+                  {inner}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>

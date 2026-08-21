@@ -9,7 +9,9 @@ export const adminRpc = async <T = unknown>(
   fn: string,
   params?: Record<string, unknown>
 ): Promise<{ data: T | null; error: { message: string } | null }> => {
-  const rpc = supabase.rpc as unknown as (
+  // Must stay a method call on the client: `supabase.rpc` detached from its
+  // receiver throws "Cannot read properties of undefined (reading 'rest')".
+  const rpc = supabase.rpc.bind(supabase) as unknown as (
     name: string,
     args?: Record<string, unknown>
   ) => Promise<{ data: T | null; error: { message: string } | null }>;

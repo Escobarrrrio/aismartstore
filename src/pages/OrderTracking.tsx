@@ -171,6 +171,13 @@ const OrderTracking = () => {
         </div>
       ) : (
         <div className="card-flat p-6 mb-8">
+          <div className="flex items-center justify-end mb-4 print:hidden">
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {liveAt ? `Updated ${liveAt.toLocaleTimeString("en-ZA")}` : "Live updates on"}
+            </span>
+          </div>
+
           <div className="flex items-center justify-between">
             {STEPS.map((step, i) => {
               const done = i <= currentStepIndex;

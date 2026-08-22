@@ -3,7 +3,7 @@ import {
   Settings, FileSpreadsheet, LogOut, RefreshCw, MessageSquare,
   RotateCcw, Activity, Bell, Zap, Shield, DollarSign, Link2,
   HardDrive, Wrench, Search, Mail, Stethoscope, CreditCard, ShieldCheck, Bot,
-  ReceiptText, Home, Gauge, Images, ChevronRight, TrendingUp, BarChart3, UserCog,
+  ReceiptText, Home, Gauge, Images, ChevronRight, TrendingUp, BarChart3, UserCog, ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
 import Logo from "@/components/Logo";

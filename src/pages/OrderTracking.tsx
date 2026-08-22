@@ -5,14 +5,17 @@ import { useLocale } from "@/contexts/LocaleContext";
 import SEO from "@/components/SEO";
 import {
   Package, CheckCircle2, Truck, Home, RotateCcw, ExternalLink,
-  MapPin, ArrowLeft, ShieldCheck, Printer,
+  MapPin, ArrowLeft, ShieldCheck, Printer, Box,
 } from "lucide-react";
 
 const TRACK_PAGE = "https://portal.thecourierguy.co.za/track-parcel";
 
+// Mirrors FULFILMENT_STEPS in the admin OrdersModule so the customer sees the
+// same progression the shop actually moves an order through.
 const STEPS = [
   { key: "pending", label: "Order placed", icon: Package },
   { key: "paid", label: "Payment confirmed", icon: CheckCircle2 },
+  { key: "packed", label: "Packed", icon: Box },
   { key: "shipped", label: "Shipped", icon: Truck },
   { key: "delivered", label: "Delivered", icon: Home },
 ] as const;
@@ -44,6 +47,7 @@ const OrderTracking = () => {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<OrderRow | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [liveAt, setLiveAt] = useState<Date | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, sess) => {
@@ -75,6 +79,37 @@ const OrderTracking = () => {
       setLoading(false);
     })();
   }, [session, id]);
+
+  // Live status + tracking updates (no refresh needed)
+  useEffect(() => {
+    if (!session || !id) return;
+    const channel = supabase
+      .channel(`order-timeline-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` },
+        (payload) => {
+          const next = payload.new as Partial<OrderRow>;
+          setOrder((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  order_status: next.order_status ?? prev.order_status,
+                  tracking_number: next.tracking_number ?? prev.tracking_number,
+                  total_amount: next.total_amount ?? prev.total_amount,
+                }
+              : prev,
+          );
+          setLiveAt(new Date());
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session, id]);
+
+
 
   if (loading) {
     return (
@@ -136,6 +171,13 @@ const OrderTracking = () => {
         </div>
       ) : (
         <div className="card-flat p-6 mb-8">
+          <div className="flex items-center justify-end mb-4 print:hidden">
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {liveAt ? `Updated ${liveAt.toLocaleTimeString("en-ZA")}` : "Live updates on"}
+            </span>
+          </div>
+
           <div className="flex items-center justify-between">
             {STEPS.map((step, i) => {
               const done = i <= currentStepIndex;

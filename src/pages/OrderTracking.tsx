@@ -5,14 +5,17 @@ import { useLocale } from "@/contexts/LocaleContext";
 import SEO from "@/components/SEO";
 import {
   Package, CheckCircle2, Truck, Home, RotateCcw, ExternalLink,
-  MapPin, ArrowLeft, ShieldCheck, Printer,
+  MapPin, ArrowLeft, ShieldCheck, Printer, Box,
 } from "lucide-react";
 
 const TRACK_PAGE = "https://portal.thecourierguy.co.za/track-parcel";
 
+// Mirrors FULFILMENT_STEPS in the admin OrdersModule so the customer sees the
+// same progression the shop actually moves an order through.
 const STEPS = [
   { key: "pending", label: "Order placed", icon: Package },
   { key: "paid", label: "Payment confirmed", icon: CheckCircle2 },
+  { key: "packed", label: "Packed", icon: Box },
   { key: "shipped", label: "Shipped", icon: Truck },
   { key: "delivered", label: "Delivered", icon: Home },
 ] as const;

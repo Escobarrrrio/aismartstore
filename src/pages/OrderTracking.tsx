@@ -47,6 +47,7 @@ const OrderTracking = () => {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<OrderRow | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [liveAt, setLiveAt] = useState<Date | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, sess) => {

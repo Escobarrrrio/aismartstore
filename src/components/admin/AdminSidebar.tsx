@@ -16,7 +16,7 @@ export type AdminTab =
   | "integrations" | "backups" | "catalog-health" | "merchandising" | "sourcing"
   | "notifications-mgmt" | "newsletter" | "newsletter-subscribers" | "quotes" | "email-previews"
   | "compliance-audit" | "analytics" | "users"
-  | "order-emails" | "order-diagnostics" | "yoco-health" | "payment-events" | "email-health" | "ai-agent";
+  | "order-emails" | "order-email-audit" | "order-diagnostics" | "yoco-health" | "payment-events" | "email-health" | "ai-agent";
 
 
 interface AdminSidebarProps {
@@ -62,6 +62,7 @@ const SECTIONS: SectionDef[] = [
       { id: "quotes", label: "Quote Requests", icon: <FileSpreadsheet className="h-4 w-4" /> },
       { id: "returns", label: "Returns", icon: <RotateCcw className="h-4 w-4" /> },
       { id: "order-emails", label: "Order Emails", icon: <Mail className="h-4 w-4" /> },
+      { id: "order-email-audit", label: "Notification Audit", icon: <ClipboardList className="h-4 w-4" /> },
     ],
   },
   {

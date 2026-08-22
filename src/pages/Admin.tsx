@@ -38,6 +38,7 @@ import NotificationsModule from "@/components/admin/NotificationsModule";
 import EmailPreviewsModule from "@/components/admin/EmailPreviewsModule";
 import CatalogHealthModule from "@/components/admin/CatalogHealthModule";
 import OrderEmailTemplatesModule from "@/components/admin/OrderEmailTemplatesModule";
+import OrderEmailAuditModule from "@/components/admin/OrderEmailAuditModule";
 import MerchandisingModule from "@/components/admin/MerchandisingModule";
 import SourcingModule from "@/components/admin/SourcingModule";
 import ComplianceAuditModule from "@/components/admin/ComplianceAuditModule";
@@ -190,6 +191,7 @@ const Admin = () => {
           {activeTab === "sourcing" && <SourcingModule />}
           {activeTab === "orders" && (loading.orders ? <LoadingSkeleton /> : <OrdersModule orders={orders} onReload={reload.loadOrders} />)}
           {activeTab === "order-emails" && <OrderEmailTemplatesModule />}
+          {activeTab === "order-email-audit" && <OrderEmailAuditModule />}
           {activeTab === "order-diagnostics" && <OrderDiagnosticsModule />}
           {activeTab === "yoco-health" && <YocoHealthModule />}
           {activeTab === "payment-events" && <PaymentEventsModule />}

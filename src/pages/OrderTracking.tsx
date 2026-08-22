@@ -79,6 +79,37 @@ const OrderTracking = () => {
     })();
   }, [session, id]);
 
+  // Live status + tracking updates (no refresh needed)
+  useEffect(() => {
+    if (!session || !id) return;
+    const channel = supabase
+      .channel(`order-timeline-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` },
+        (payload) => {
+          const next = payload.new as Partial<OrderRow>;
+          setOrder((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  order_status: next.order_status ?? prev.order_status,
+                  tracking_number: next.tracking_number ?? prev.tracking_number,
+                  total_amount: next.total_amount ?? prev.total_amount,
+                }
+              : prev,
+          );
+          setLiveAt(new Date());
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session, id]);
+
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">

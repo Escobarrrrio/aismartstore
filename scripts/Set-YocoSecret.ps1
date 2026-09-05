@@ -94,6 +94,23 @@ if ($secret.StartsWith("sk_test_") -or $secret.StartsWith("sk_live_")) {
 
 Write-Host ""
 Write-Host "Format check: $(Get-FormatDescription -Value $secret)"
+
+# Yoco delivers webhooks through Svix (confirmed from the Svix-Webhooks
+# user-agent on real deliveries), and Svix signing secrets are always
+# "whsec_" + base64. A value in any other shape will load without error and
+# then fail every signature check -- which reads as "payments silently not
+# recording" rather than as a wrong secret. Warn loudly before that happens.
+if (-not $secret.StartsWith("whsec_")) {
+    Write-Host ""
+    Write-Host "WARNING: this does not start with 'whsec_'." -ForegroundColor Yellow
+    Write-Host "Yoco signs webhooks via Svix, whose secrets always look like" -ForegroundColor Yellow
+    Write-Host "  whsec_XXXXXXXXXXXXXXXXXXXXXXXXXXXX" -ForegroundColor Yellow
+    Write-Host "A value in another shape will be accepted here but will fail every" -ForegroundColor Yellow
+    Write-Host "signature check, so real payments will never be marked paid." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Find it in: Yoco dashboard -> Webhooks -> your endpoint -> signing secret." -ForegroundColor Yellow
+}
+
 Write-Host ""
 $confirm = Read-Host -Prompt "Set this secret now? [y/N]"
 if ($confirm.Trim().ToLower() -notin @("y", "yes")) {

@@ -12,6 +12,14 @@ import SEO from "@/components/SEO";
 import { captureCheckoutError, capturePaymentError, captureOrderError } from "@/lib/sentry";
 import { safeGatewayUrl } from "@/lib/safe-redirect";
 
+// Every field on this form is `required`, but nothing said so until the
+// browser refused to submit and pointed at one field at a time. Marking them
+// up front is the difference between filling a form once and discovering the
+// rules by being rejected.
+const RequiredMark = () => (
+  <span className="text-destructive ml-0.5" aria-label="required" title="Required">*</span>
+);
+
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const { currency, formatPrice } = useLocale();
@@ -374,35 +382,35 @@ const Checkout = () => {
           <h2 className="font-display font-bold text-lg">{t("checkout.shippingDetails")}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1.5">{t("checkout.fullName")}</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.fullName")}<RequiredMark /></label>
               <input name="name" value={form.name} onChange={handleChange} required className="input-premium" />
             </div>
             <div>
-              <label className="block text-xs font-semibold mb-1.5">{t("checkout.email")}</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.email")}<RequiredMark /></label>
               <input name="email" type="email" value={form.email} onChange={handleChange} required className="input-premium" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5">{t("checkout.phone")}</label>
+            <label className="block text-xs font-semibold mb-1.5">{t("checkout.phone")}<RequiredMark /></label>
             <input name="phone" value={form.phone} onChange={handleChange} required className="input-premium" />
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5">{t("checkout.address")}</label>
+            <label className="block text-xs font-semibold mb-1.5">{t("checkout.address")}<RequiredMark /></label>
             <textarea name="address" value={form.address} onChange={handleChange} required rows={2} className="input-premium resize-none" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1.5">{t("checkout.city")}</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.city")}<RequiredMark /></label>
               <input name="city" value={form.city} onChange={handleChange} required className="input-premium" />
             </div>
             <div>
-              <label className="block text-xs font-semibold mb-1.5">Province</label>
+              <label className="block text-xs font-semibold mb-1.5">Province<RequiredMark /></label>
               <select name="province" value={form.province} onChange={handleChange} required className="input-premium">
                 {SA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold mb-1.5">{t("checkout.postalCode")}</label>
+              <label className="block text-xs font-semibold mb-1.5">{t("checkout.postalCode")}<RequiredMark /></label>
               <input name="postalCode" value={form.postalCode} onChange={handleChange} required className="input-premium" />
             </div>
           </div>

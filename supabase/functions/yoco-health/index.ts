@@ -21,10 +21,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    const secretKey = Deno.env.get("YOCO_SECRET_KEY") ?? "";
-    const webhookSecret = Deno.env.get("YOCO_WEBHOOK_SECRET") ?? "";
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // create-yoco-checkout reads YOCO_SECRET_KEY, then falls back to
+    // store_settings.yoco_secret_key (the field the Admin -> Command Centre
+    // form actually writes to). This screen exists to answer "does checkout
+    // actually work", so it has to check the same two places checkout does --
+    // reading only the env var reported a correctly configured key as
+    // "not configured" whenever it had been set from the admin form instead.
+    let secretKey = Deno.env.get("YOCO_SECRET_KEY") ?? "";
+    let secretKeySource: "env" | "store_settings" | "none" = secretKey ? "env" : "none";
+    if (!secretKey) {
+      const { data } = await supabase
+        .from("store_settings").select("value").eq("key", "yoco_secret_key").maybeSingle();
+      if (data?.value) {
+        secretKey = data.value as string;
+        secretKeySource = "store_settings";
+      }
+    }
+
+    const webhookSecret = Deno.env.get("YOCO_WEBHOOK_SECRET") ?? "";
     const mode = detectYocoMode(secretKey);
 
     // Endpoint reachability (OPTIONS should always answer with `ok`).
@@ -40,7 +57,6 @@ Deno.serve(async (req) => {
       console.warn("[yoco-health] endpoint fetch failed:", (e as Error).message);
     }
 
-    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: events } = await supabase
       .from("automation_events")
       .select("id, event_type, status, error_message, payload, created_at")
@@ -58,6 +74,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       mode,
       secret_key_configured: Boolean(secretKey),
+      secret_key_source: secretKeySource,
       webhook_secret_configured: Boolean(webhookSecret),
       endpoint,
       endpoint_reachable: reachable,

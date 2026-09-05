@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, Zap, ShieldCheck } fro
 type YocoHealth = {
   mode: "live" | "test" | "unknown";
   secret_key_configured: boolean;
+  secret_key_source: "env" | "store_settings" | "none";
   webhook_secret_configured: boolean;
   endpoint: string;
   endpoint_reachable: boolean;
@@ -60,7 +61,15 @@ const YocoHealthModule = () => {
           ) : data ? (
             <>
               <Row label="Yoco mode" ok={data.mode === "live"} warn={data.mode === "test"} detail={data.mode.toUpperCase()} />
-              <Row label="YOCO_SECRET_KEY configured" ok={data.secret_key_configured} />
+              <Row
+                label="Yoco secret key configured"
+                ok={data.secret_key_configured}
+                detail={
+                  data.secret_key_source === "env" ? "function secret"
+                  : data.secret_key_source === "store_settings" ? "Admin → Command Centre"
+                  : "not set"
+                }
+              />
               <Row label="YOCO_WEBHOOK_SECRET configured" ok={data.webhook_secret_configured} />
               <Row label="Webhook endpoint reachable" ok={data.endpoint_reachable} detail={data.endpoint_status ? `HTTP ${data.endpoint_status}` : "no response"} />
               <Row label="Signature failures (24h)" ok={data.signature_failures_24h === 0} warn={data.signature_failures_24h > 0 && data.signature_failures_24h < 5} detail={String(data.signature_failures_24h)} />

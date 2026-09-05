@@ -53,7 +53,11 @@ def probe(label: str, headers: dict[str, str]) -> tuple[int, str]:
         timeout=30,
     )
     body = r.text[:120]
-    print(f"  {label:<32} -> {r.status_code}  {body}")
+    # Label the verdict inline. A bare "401" reads like a failure when it is in
+    # fact the pass condition here, which is exactly the wrong way round to
+    # learn about your own payment endpoint.
+    verdict = "EXPECTED (forgery refused)" if r.status_code == 401 else "PROBLEM"
+    print(f"  {label:<32} -> {r.status_code}  [{verdict}]  {body}")
     return r.status_code, body
 
 

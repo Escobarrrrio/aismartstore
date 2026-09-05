@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { sanitizeProductHtml, stripHtml } from "@/lib/sanitizeHtml";
 
 const DEFAULT_DISPATCH_CITY = "Gqeberha";
 
@@ -138,6 +139,17 @@ const ProductDetail = () => {
     ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
     : [];
 
+  // Distributor descriptions are HTML. Sanitised for display; flattened to
+  // plain text for meta/JSON-LD, which must never carry markup.
+  const descriptionHtml = useMemo(
+    () => (product?.description ? sanitizeProductHtml(product.description) : ""),
+    [product?.description]
+  );
+  const descriptionText = useMemo(
+    () => (product?.description ? stripHtml(product.description) : ""),
+    [product?.description]
+  );
+
   if (!resolved) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
@@ -173,7 +185,7 @@ const ProductDetail = () => {
     <div className="min-h-screen">
       <SEO
         title={product.name}
-        description={seoContent?.metaDescription || product.description || `${product.name} — available now at AI Smart Store. ${product.inStock ? "In stock" : "Currently out of stock"}, with secure checkout and SA-wide delivery.`}
+        description={seoContent?.metaDescription || descriptionText || `${product.name} — available now at AI Smart Store. ${product.inStock ? "In stock" : "Currently out of stock"}, with secure checkout and SA-wide delivery.`}
         path={`/product/${product.id}`}
         ogType="product"
         image={product.images[0]}
@@ -182,7 +194,7 @@ const ProductDetail = () => {
             "@context": "https://schema.org",
             "@type": "Product",
             name: product.name,
-            description: seoContent?.description || product.description,
+            description: seoContent?.description || descriptionText,
             image: product.images,
             category: product.category || undefined,
             // brand/sku are what a shopping-comparison agent (Google
@@ -412,9 +424,12 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            {product.description &&
-              product.description.trim().toLowerCase() !== product.name.trim().toLowerCase() && (
-              <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
+            {descriptionText &&
+              descriptionText.trim().toLowerCase() !== product.name.trim().toLowerCase() && (
+              <div
+                className="text-muted-foreground leading-relaxed mb-8 [&_p]:mb-3 [&_b]:font-semibold [&_b]:text-foreground [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1 [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-4 [&_h3]:mb-2 [&_h4]:font-semibold [&_h4]:text-foreground [&_h4]:mt-4 [&_h4]:mb-2 [&_table]:w-full [&_table]:mb-3 [&_td]:py-1 [&_td]:pr-4 [&_th]:py-1 [&_th]:pr-4 [&_th]:text-left [&_th]:font-semibold"
+                dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+              />
             )}
 
             {/* Quantity + Add to Cart */}

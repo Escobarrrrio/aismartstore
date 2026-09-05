@@ -13,9 +13,9 @@ import { describe, it, expect } from "vitest";
  * Run: `bunx vitest run src/test/filter-case-insensitivity.test.ts`
  */
 
-const SUPABASE_URL = "https://xwiqubcilptxzvdigsmp.supabase.co";
+const SUPABASE_URL = "https://okejdzkftwhccplyfluf.supabase.co";
 const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aXF1YmNpbHB0eHp2ZGlnc21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTY2NzcsImV4cCI6MjA4NzU5MjY3N30.aiRYqZ2H2VTNc64hU2XdeESEz4VcxOW6BQKvhb0v-4I";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rZWpkemtmdHdoY2NwbHlmbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDU0MjAsImV4cCI6MjEwMTUyMTQyMH0.JHSxZe_hSQtAH7nABmlRQlV2QlNJDYmOYbkcGnpKbj4";
 
 // Cap the fan-out so the suite stays quick; still enough coverage to catch a
 // regression where equality (not lower(...)) creeps back in.

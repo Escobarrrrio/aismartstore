@@ -9,9 +9,9 @@ import { test, expect, request } from "@playwright/test";
  */
 
 const SUPABASE_URL = process.env.PLAYWRIGHT_SUPABASE_URL
-  || "https://xwiqubcilptxzvdigsmp.supabase.co";
+  || "https://okejdzkftwhccplyfluf.supabase.co";
 const SUPABASE_ANON = process.env.PLAYWRIGHT_SUPABASE_ANON_KEY
-  || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aXF1YmNpbHB0eHp2ZGlnc21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTY2NzcsImV4cCI6MjA4NzU5MjY3N30.aiRYqZ2H2VTNc64hU2XdeESEz4VcxOW6BQKvhb0v-4I";
+  || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rZWpkemtmdHdoY2NwbHlmbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDU0MjAsImV4cCI6MjEwMTUyMTQyMH0.JHSxZe_hSQtAH7nABmlRQlV2QlNJDYmOYbkcGnpKbj4";
 
 test.beforeEach(({}, info) => {
   test.skip(info.project.name !== "desktop-chromium", "API-level tests run once");

@@ -15,7 +15,7 @@ import AxeBuilder from "@axe-core/playwright";
  */
 
 const AI_CHAT_GLOB = "**/functions/v1/ai-chat";
-const PROJECT_REF = "xwiqubcilptxzvdigsmp";
+const PROJECT_REF = "okejdzkftwhccplyfluf";
 const STORAGE_KEY = `sb-${PROJECT_REF}-auth-token`;
 
 async function seedSession(page: Page, accessToken: string | null) {

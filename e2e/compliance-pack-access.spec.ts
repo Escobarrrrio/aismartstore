@@ -13,7 +13,7 @@ import { test, expect, request } from "@playwright/test";
  *    and the log stays admin-only to anon readers.
  *
  * This file previously never actually exercised any of that: it pointed at
- * xwiqubcilptxzvdigsmp.supabase.co, a project this store stopped running on
+ * okejdzkftwhccplyfluf.supabase.co, a project this store stopped running on
  * during a prior platform migration, and posted `company`/`message` fields
  * to quote_requests -- columns that don't exist (the real ones are
  * `organisation_name`/`requirements`). Both were silent because

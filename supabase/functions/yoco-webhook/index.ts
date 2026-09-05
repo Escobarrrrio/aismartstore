@@ -9,6 +9,33 @@ import { captureEdgeError } from "../_shared/sentry.ts";
 
 const MAX_SKEW_SECONDS = 300; // 5 minute replay window
 
+// Standard Webhooks / Svix secrets are "whsec_<base64>", so the base64 body is
+// the key material. Some dashboards hand out a plain string instead, and
+// base64-decoding that threw, which surfaced as a 500 "Failed to decode base64"
+// for EVERY signed delivery -- including real ones from Yoco. A crash here does
+// not just fail a security check, it silently stops paid orders being marked
+// paid. Decode when the value really is base64, otherwise use the raw bytes.
+function secretToBytes(secret: string): Uint8Array {
+  const body = secret.replace(/^whsec_/, "");
+  if (/^[A-Za-z0-9+/]+={0,2}$/.test(body) && body.length % 4 === 0) {
+    try {
+      return Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
+    } catch {
+      // Looked like base64 but wasn't; fall through to raw bytes.
+    }
+  }
+  return new TextEncoder().encode(body);
+}
+
+// Length-independent compare, so a wrong signature cannot be narrowed down by
+// timing how long the rejection took.
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 async function verifyYocoSignature(rawBody: string, headers: Headers, secret: string) {
   const id = headers.get("webhook-id");
   const timestamp = headers.get("webhook-timestamp");
@@ -21,13 +48,23 @@ async function verifyYocoSignature(rawBody: string, headers: Headers, secret: st
   }
 
   const signedContent = `${id}.${timestamp}.${rawBody}`;
-  const secretBytes = Uint8Array.from(atob(secret.replace(/^whsec_/, "")), (c) => c.charCodeAt(0));
-  const key = await crypto.subtle.importKey(
-    "raw", secretBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
-  );
-  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedContent));
-  const expected = btoa(String.fromCharCode(...new Uint8Array(mac)));
-  const ok = sigHeader.split(" ").some((part) => part.split(",")[1] === expected);
+  let expected: string;
+  try {
+    const key = await crypto.subtle.importKey(
+      "raw", secretToBytes(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+    );
+    const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedContent));
+    expected = btoa(String.fromCharCode(...new Uint8Array(mac)));
+  } catch (e) {
+    // A secret we cannot turn into a key is a configuration fault, not a
+    // forged request. Name it as such so it is fixable from the logs instead
+    // of hiding inside a generic 500.
+    return { ok: false, reason: "malformed_secret", detail: (e as Error).message };
+  }
+
+  const ok = sigHeader
+    .split(" ")
+    .some((part) => timingSafeEqual(part.split(",")[1] ?? "", expected));
   return { ok, reason: ok ? "ok" : "signature_mismatch" };
 }
 
@@ -87,9 +124,20 @@ Deno.serve(async (req) => {
         source: "yoco", event_type: "webhook.signature_failed", status: "failed",
         error_message: verdict.reason, payload: meta,
       });
-      return new Response(JSON.stringify({ error: "Invalid signature", reason: verdict.reason }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // 503, not 401, when the fault is ours: Yoco retries a 503 but treats a
+      // 401 as "this endpoint is rejecting us", and a misconfigured secret
+      // must not look like an attacker in the dashboards either.
+      const configFault = verdict.reason === "malformed_secret";
+      return new Response(
+        JSON.stringify({
+          error: configFault ? "Webhook misconfigured" : "Invalid signature",
+          reason: verdict.reason,
+        }),
+        {
+          status: configFault ? 503 : 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const payload = JSON.parse(rawBody);

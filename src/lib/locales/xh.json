@@ -214,6 +214,7 @@
     "products": "Iimveliso",
     "inStock": "Iyafumaneka",
     "outOfStock": "Iphelile",
+    "lowStock": "Kusele {{count}} kuphela esitokhweni",
     "addedToCart": "Yongezelwe Enqwelweni!",
     "addToCart": "Yongeza Enqwelweni",
     "freeDelivery": "Courier Delivery",

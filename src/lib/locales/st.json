@@ -214,6 +214,7 @@
     "products": "Lihlahisoa",
     "inStock": "E Teng",
     "outOfStock": "E Felile",
+    "lowStock": "Ho setse {{count}} feela sethaleng",
     "addedToCart": "E ekelitsoe Setlolong!",
     "addToCart": "Eketsa Setlolong",
     "freeDelivery": "Courier Delivery",

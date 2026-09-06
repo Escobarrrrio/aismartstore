@@ -214,6 +214,7 @@
     "products": "Imikhiqizo",
     "inStock": "Iyatholakala",
     "outOfStock": "Iphelile",
+    "lowStock": "Kusele {{count}} kuphela esitokini",
     "addedToCart": "Yengezwe Ekalishini!",
     "addToCart": "Engeza Ekalishini",
     "freeDelivery": "Courier Delivery",

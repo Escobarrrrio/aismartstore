@@ -214,6 +214,7 @@
     "products": "产品",
     "inStock": "有库存",
     "outOfStock": "缺货",
+    "lowStock": "仅剩 {{count}} 件库存",
     "addedToCart": "已加入购物车！",
     "addToCart": "加入购物车",
     "freeDelivery": "Courier Delivery",

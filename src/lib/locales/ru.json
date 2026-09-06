@@ -214,6 +214,7 @@
     "products": "Товары",
     "inStock": "В Наличии",
     "outOfStock": "Нет в Наличии",
+    "lowStock": "Осталось всего {{count}} в наличии",
     "addedToCart": "Добавлено в Корзину!",
     "addToCart": "В Корзину",
     "freeDelivery": "Courier Delivery",

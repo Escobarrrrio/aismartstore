@@ -25,6 +25,9 @@ import { sanitizeProductHtml, stripHtml } from "@/lib/sanitizeHtml";
 
 const DEFAULT_DISPATCH_CITY = "Gqeberha";
 
+/** The subset of search_products' return row this page actually uses. */
+type RelatedRow = { id: string; name: string; price: number | string; images: string[] | null };
+
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -133,11 +136,46 @@ const ProductDetail = () => {
   const recoAudience: "residential" | "business" = shoppingMode ?? productAudience;
 
 
-  // Same-category fallback from the loaded page, only used if the engine
-  // returns nothing (brand-new SKU with no complements mapped yet).
-  const related = product
-    ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
-    : [];
+  // Same-category fallback, only shown if the recommendation engine returns
+  // nothing (brand-new SKU with no complements mapped yet).
+  //
+  // This used to filter `products` from context -- which is documented on
+  // that context as "only the first 24 newest products site-wide", never the
+  // full catalogue. On a store with thousands of SKUs across dozens of
+  // categories, the odds that page happens to hold another item in THIS
+  // product's category are close to zero, so the fallback silently showed
+  // nothing on almost every product page rather than falling back to
+  // anything at all. Queried directly instead, scoped the same way the main
+  // catalogue is (category + audience), so it actually has something to show.
+  const [related, setRelated] = useState<Product[]>([]);
+  useEffect(() => {
+    if (!product?.category) { setRelated([]); return; }
+    let cancelled = false;
+    supabase
+      .rpc("search_products" as never, {
+        search_query: "",
+        filter_category: product.category,
+        page_number: 0,
+        page_size: 5,
+        filter_audience: recoAudience,
+      } as never)
+      .then(({ data }) => {
+        if (cancelled) return;
+        const rows = (data as unknown as RelatedRow[]) ?? [];
+        setRelated(
+          rows
+            .filter((r) => r.id !== product.id)
+            .slice(0, 4)
+            .map((r) => ({
+              id: r.id,
+              name: r.name,
+              price: Number(r.price),
+              images: r.images ?? [],
+            } as Product)),
+        );
+      });
+    return () => { cancelled = true; };
+  }, [product?.category, product?.id, recoAudience]);
 
   // Distributor descriptions are HTML. Sanitised for display; flattened to
   // plain text for meta/JSON-LD, which must never carry markup.
@@ -415,22 +453,56 @@ const ProductDetail = () => {
               <span className="text-3xl font-display font-extrabold">
                 {formatPrice(product.price)}
               </span>
-              <span className={`text-sm font-semibold ${product.inStock ? 'text-[hsl(160,84%,39%)]' : 'text-destructive'}`}>
-                {product.inStock
-                  ? (typeof product.stockQuantity === "number"
-                      ? `${t("productDetail.inStock")} (${product.stockQuantity} available)`
-                      : t("productDetail.inStock"))
-                  : t("productDetail.outOfStock")}
-              </span>
+              {(() => {
+                // Real urgency, not manufactured: this is the actual
+                // last-synced stock count, not a countdown someone typed in.
+                // Below LOW_STOCK_THRESHOLD it earns amber + a sharper
+                // wording; otherwise the existing calm "in stock" reading.
+                const LOW_STOCK_THRESHOLD = 5;
+                const qty = product.stockQuantity;
+                const isLow = product.inStock && typeof qty === "number" && qty > 0 && qty <= LOW_STOCK_THRESHOLD;
+                const colour = !product.inStock
+                  ? "text-destructive"
+                  : isLow
+                    ? "text-amber-600 dark:text-amber-500"
+                    : "text-[hsl(160,84%,39%)]";
+                const label = !product.inStock
+                  ? t("productDetail.outOfStock")
+                  : isLow
+                    ? t("productDetail.lowStock", { count: qty, defaultValue: `Only ${qty} left in stock` })
+                    : typeof qty === "number"
+                      ? `${t("productDetail.inStock")} (${qty} available)`
+                      : t("productDetail.inStock");
+                return <span className={`text-sm font-semibold ${colour}`}>{label}</span>;
+              })()}
             </div>
 
-            {descriptionText &&
-              descriptionText.trim().toLowerCase() !== product.name.trim().toLowerCase() && (
-              <div
-                className="text-muted-foreground leading-relaxed mb-8 [&_p]:mb-3 [&_b]:font-semibold [&_b]:text-foreground [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1 [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-4 [&_h3]:mb-2 [&_h4]:font-semibold [&_h4]:text-foreground [&_h4]:mt-4 [&_h4]:mb-2 [&_table]:w-full [&_table]:mb-3 [&_td]:py-1 [&_td]:pr-4 [&_th]:py-1 [&_th]:pr-4 [&_th]:text-left [&_th]:font-semibold"
-                dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-              />
-            )}
+            {(() => {
+              const hasRealDescription =
+                descriptionText && descriptionText.trim().toLowerCase() !== product.name.trim().toLowerCase();
+              // Most of the catalogue arrives from a distributor feed with no
+              // real description at all -- the sync writes the same string
+              // into both name and description, which the check above
+              // correctly detects and hides, but that left nothing at all
+              // next to the price and Add to Cart button on most product
+              // pages. seoContent's lead paragraph is built from the same
+              // real facts (brand, category, specs, price) and never invents
+              // anything, so it is a safe stand-in for exactly this gap --
+              // not a duplicate of the fuller "About" section further down,
+              // which still only appears when seoContent is on.
+              if (hasRealDescription) {
+                return (
+                  <div
+                    className="text-muted-foreground leading-relaxed mb-8 [&_p]:mb-3 [&_b]:font-semibold [&_b]:text-foreground [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1 [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-4 [&_h3]:mb-2 [&_h4]:font-semibold [&_h4]:text-foreground [&_h4]:mt-4 [&_h4]:mb-2 [&_table]:w-full [&_table]:mb-3 [&_td]:py-1 [&_td]:pr-4 [&_th]:py-1 [&_th]:pr-4 [&_th]:text-left [&_th]:font-semibold"
+                    dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                  />
+                );
+              }
+              if (seoContent?.description) {
+                return <p className="text-muted-foreground leading-relaxed mb-8">{seoContent.description}</p>;
+              }
+              return null;
+            })()}
 
             {/* Quantity + Add to Cart */}
             <div className="flex flex-col sm:flex-row gap-3 mb-8">

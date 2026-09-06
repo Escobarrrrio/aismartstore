@@ -214,6 +214,7 @@
     "products": "Produkte",
     "inStock": "In Voorraad",
     "outOfStock": "Uitverkoop",
+    "lowStock": "Slegs {{count}} oor in voorraad",
     "addedToCart": "Bygevoeg by Mandjie!",
     "addToCart": "Voeg by Mandjie",
     "freeDelivery": "Courier Delivery",

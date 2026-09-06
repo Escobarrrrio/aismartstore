@@ -214,6 +214,7 @@
     "products": "Produits",
     "inStock": "En Stock",
     "outOfStock": "Épuisé",
+    "lowStock": "Plus que {{count}} en stock",
     "addedToCart": "Ajouté au Panier !",
     "addToCart": "Ajouter au Panier",
     "freeDelivery": "Courier Delivery",

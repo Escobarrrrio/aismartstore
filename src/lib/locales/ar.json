@@ -214,6 +214,7 @@
     "products": "المنتجات",
     "inStock": "متوفر",
     "outOfStock": "غير متوفر",
+    "lowStock": "متبقٍ {{count}} فقط في المخزون",
     "addedToCart": "تمت الإضافة إلى السلة!",
     "addToCart": "أضف إلى السلة",
     "freeDelivery": "Courier Delivery",

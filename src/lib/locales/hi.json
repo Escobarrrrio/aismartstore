@@ -214,6 +214,7 @@
     "products": "उत्पाद",
     "inStock": "स्टॉक में",
     "outOfStock": "स्टॉक खत्म",
+    "lowStock": "स्टॉक में केवल {{count}} बचे हैं",
     "addedToCart": "कार्ट में जोड़ा गया!",
     "addToCart": "कार्ट में जोड़ें",
     "freeDelivery": "Courier Delivery",

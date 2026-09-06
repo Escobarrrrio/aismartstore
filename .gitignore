@@ -29,3 +29,6 @@ bun.lock*
 
 # tsc --build incremental cache
 *.tsbuildinfo
+
+# Bulk image attach run reports
+image_attach_report.csv

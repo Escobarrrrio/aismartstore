@@ -296,37 +296,69 @@ const Products = () => {
     }
   }, [buildRpcArgs, cacheKey]);
 
+  // Every other fetch in this file (facets, ProductDetail's getProduct, etc.)
+  // guards against an out-of-order response with a `cancelled` flag from the
+  // effect that started it. This one did not: category/brand/audience can all
+  // change within a few hundred ms of each other (a filter click landing
+  // right as the signed-out-in-business-mode correction effect resets
+  // audience back to residential, for one concrete case), firing overlapping
+  // `search_products` calls -- and with no guard, whichever response happened
+  // to arrive last won, even if it was answering an older, already-abandoned
+  // filter selection. A shopper clicking "Laptops" could see whatever the
+  // previous, slower request for a different category returned. A ref-based
+  // request counter (not a per-effect boolean) is used because more than two
+  // requests can overlap here, not just the immediately-previous one.
+  const searchRequestSeq = useRef(0);
+
   const runSearch = useCallback(async () => {
+    const mySeq = ++searchRequestSeq.current;
     const key = cacheKey(page);
     // Hydrate instantly from prefetch cache when available.
     const cached = prefetchCache.current.get(key);
     if (cached) {
+      if (searchRequestSeq.current !== mySeq) return;
       setRows(cached.rows);
       setTotal(cached.total);
       setLoading(false);
     } else {
       setLoading(true);
-      const { data, error } = await supabase.rpc("search_products", buildRpcArgs(page));
-      if (error) {
+      // "Searching…" is driven directly by `loading`, and nothing else on the
+      // page can clear it once the count header renders it -- so if the RPC
+      // call itself throws (a network blip, a CORS failure, anything short of
+      // the resolved {data, error} shape this code otherwise handles) rather
+      // than rejecting cleanly, `setLoading(false)` below was simply never
+      // reached and the grid was stuck reading "Searching…" indefinitely,
+      // showing whatever the previous, now-stale render had left behind.
+      // try/finally guarantees the spinner clears either way.
+      try {
+        const { data, error } = await supabase.rpc("search_products", buildRpcArgs(page));
+        if (searchRequestSeq.current !== mySeq) return; // a newer filter selection has since fired
+        if (error) {
+          setRows([]);
+          setTotal(0);
+        } else {
+          const list = (data as Row[]) || [];
+          const rowsOut = list.map(toProduct);
+          const totalOut = list[0]?.total_count ? Number(list[0].total_count) : list.length;
+          setRows(rowsOut);
+          setTotal(totalOut);
+          prefetchCache.current.set(key, { rows: rowsOut, total: totalOut });
+          trackEvent({
+            name: "product_list_returned",
+            audience,
+            surface: "products",
+            count: rowsOut.length,
+            total: totalOut,
+            query: query || undefined,
+          });
+        }
+      } catch {
+        if (searchRequestSeq.current !== mySeq) return;
         setRows([]);
         setTotal(0);
-      } else {
-        const list = (data as Row[]) || [];
-        const rowsOut = list.map(toProduct);
-        const totalOut = list[0]?.total_count ? Number(list[0].total_count) : list.length;
-        setRows(rowsOut);
-        setTotal(totalOut);
-        prefetchCache.current.set(key, { rows: rowsOut, total: totalOut });
-        trackEvent({
-          name: "product_list_returned",
-          audience,
-          surface: "products",
-          count: rowsOut.length,
-          total: totalOut,
-          query: query || undefined,
-        });
+      } finally {
+        if (searchRequestSeq.current === mySeq) setLoading(false);
       }
-      setLoading(false);
     }
     // Kick off background prefetch of the next page so pagination is instant.
     // Only prefetch if there IS a next page (based on total we now know).

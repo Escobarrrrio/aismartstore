@@ -86,7 +86,7 @@ const Products = () => {
   const urlInStockOnly = searchParams.get("stock") === "1";
   // No ?audience= in the URL -> fall back to whatever the visitor chose at the
   // entry gate, so a household shopper never lands in the enterprise catalogue.
-  const { mode: shoppingMode } = useAudience();
+  const { mode: shoppingMode, setMode: setShoppingMode } = useAudience();
   const urlAudience = parseAudience(searchParams.get("audience") ?? shoppingMode);
   const urlMinPrice = searchParams.get("min") || "";
   const urlMaxPrice = searchParams.get("max") || "";
@@ -425,10 +425,17 @@ const Products = () => {
     }
     setScopeLocked(false);
     setAudience(next);
+    // Keep the global shopping-mode context (localStorage `ais.shopping_mode`)
+    // in lockstep with this in-page selection. Without this, picking "Home"
+    // never stuck: the URL-sync effect below omits ?audience= for residential
+    // (it's the default), so on the very next render `urlAudience` falls back
+    // to `shoppingMode` -- which, left unset here, was still "business" -- and
+    // the re-hydration effect snapped local `audience` right back to it.
+    if (next === "residential" || next === "business") setShoppingMode(next);
     setCategory(""); setBrand(""); setMinPrice(""); setMaxPrice("");
     setPage(0);
     trackEvent({ name: "audience_changed", value: next, page: "/products" });
-  }, [signedOut, navigate]);
+  }, [signedOut, navigate, setShoppingMode]);
 
   // Facet setters with analytics tracking. Selecting a value fires
   // "facet_selected"; clearing (empty string) fires "facet_cleared".

@@ -20,7 +20,18 @@ import { markupFor, sellingPriceFor } from "./markup.ts";
 
 const AXIZ_TOKEN_URL = "https://identity.goaxiz.co.za/connect/token";
 const AXIZ_API_BASE = "https://api.goaxiz.co.za";
-const PAGE_SIZE = 1000;
+// 1000 was more than Axiz could return inside AXIZ_REQUEST_TIMEOUT_MS. The
+// sync sat on "market 14 page 3 timed out after 20s / no progress at cursor
+// 0:3" across every run, syncing 0 items each time: the page aborted, the
+// cursor never advanced, and each cron run spent itself retrying the same
+// request. The visible symptom was a catalogue much smaller than Axiz's own
+// site -- 12 active laptops against their full range -- because most of the
+// feed was simply never reached.
+//
+// Smaller pages come back well inside the timeout. Four of them per run still
+// moves 1600 SKUs, and the wall-clock budget below stops the run cleanly
+// either way.
+const PAGE_SIZE = 400;
 // 8 pages/run was overrunning the gateway timeout (15x 504 in 24h). Fewer pages
 // plus the wall-clock budget below means every run finishes and saves its cursor.
 const PAGES_PER_RUN = 4;
@@ -35,7 +46,11 @@ const PAGES_PER_RUN = 4;
 const UPSERT_BATCH_SIZE = 75;
 /** Don't subdivide below this — past it the timeout isn't about batch size. */
 const MIN_UPSERT_BATCH_SIZE = 20;
-const AXIZ_REQUEST_TIMEOUT_MS = 20_000;
+// Raised with the smaller page size: 20s was not enough headroom for a slow
+// page even after shrinking it, and the run budget below allows ~35s per page
+// across four pages without approaching the gateway's own limit. A page that
+// still cannot answer in 35s is a genuine upstream problem, not impatience.
+const AXIZ_REQUEST_TIMEOUT_MS = 35_000;
 /** Wall-clock budget for one invocation, comfortably under the gateway timeout. */
 const RUN_BUDGET_MS = 110_000;
 

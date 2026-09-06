@@ -261,7 +261,7 @@ def main() -> int:
         todo = todo[:args.limit]
 
     rows = []
-    for brand, code, _p, prod in already:
+    for brand, code, prod in already:
         rows.append({"brand": brand, "code": code, "sku": prod["sku"], "action": "skipped-has-images",
                      "images": len(prod.get("images") or []), "activated": "", "error": ""})
     for brand, code in unmatched:

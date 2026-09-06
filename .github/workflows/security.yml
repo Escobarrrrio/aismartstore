@@ -76,7 +76,15 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # "latest" makes the action call GitHub's release API to resolve a
+          # version on every run, unauthenticated (~60 req/hour, shared across
+          # every GitHub Actions runner on this IP range) -- "Failed to
+          # resolve latest Supabase CLI release: rate limit exceeded" started
+          # failing this job outright once pushes got frequent enough today.
+          # Pinning removes the resolve call entirely. Matches the version
+          # already in use locally; bump deliberately, not by drifting back to
+          # "latest".
+          version: 2.114.0
       - name: Link project
         if: steps.check.outputs.skip == 'false'
         env:

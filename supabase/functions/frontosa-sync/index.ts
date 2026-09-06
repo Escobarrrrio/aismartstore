@@ -94,6 +94,23 @@ interface FrontosaStockItem {
   [key: string]: unknown; // qty_{branch} / more_{branch} -- branch names aren't known ahead of time
 }
 
+// Frontosa bakes their own display markers straight into `desc` -- "!!" on
+// 2130 of 6365 items, a leading "*" on another 861 (measured live; 47% of
+// their whole catalogue). Both showed up verbatim on the storefront:
+// "!!Amd G34 6128 2G 8xcore -no f" as the product name, and then again inside
+// the generated "About this product" paragraph, which quotes the name
+// directly. Safe to strip outright rather than translate into a customer
+// badge: item.status is already captured separately as supplier_status and
+// deliberately hidden from the spec table (HIDDEN_SPEC_KEYS), so whatever
+// "!!" vs "*" is meant to signal on Frontosa's own site is not information
+// this store is otherwise missing -- it is pure redundant decoration once the
+// structured field already exists. Their actual meaning was never confirmed
+// against Frontosa's docs, which is exactly why this drops the character
+// rather than inventing a "Clearance"/"Hot Deal" label for it.
+function stripFrontosaMarker(s: string): string {
+  return s.replace(/^(?:!{2,}|\*)\s*/, "");
+}
+
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -289,8 +306,8 @@ const handler = async (req: Request) => {
         const category = item.pid != null ? (categoryLookup.get(String(item.pid)) ?? String(item.pid)) : null;
         rows.push({
           sku: `${SKU_PREFIX}${item.code}`,
-          name: item.desc || item.code,
-          description: item.blurb || item.desc || null,
+          name: stripFrontosaMarker(item.desc || item.code),
+          description: item.blurb || item.desc ? stripFrontosaMarker(item.blurb || item.desc || "") : null,
           category,
           brand,
           ...(hasImages ? { images } : {}),

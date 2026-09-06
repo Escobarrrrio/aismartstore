@@ -24,12 +24,27 @@ import { markupFor, sellingPriceFor, type MarkupRule } from "./markup.ts";
 //   mode=catalog -- both endpoints (full refresh), for the once-daily cron.
 //   mode=stock (default) -- stock.asp only, updating price/qty/status on
 //     rows the catalog pull already created. Never creates new products by
-//     itself -- an item stock.asp mentions that catalog.asp never brought
-//     in (imageless, or not synced yet) has nothing to attach a price to.
+//     itself -- an item stock.asp mentions that catalog.asp has not brought
+//     in yet has no name to insert against.
 //
 // Same publish gate as axiz-sync: a row needs a real cost and at least one
-// image to go live. No image means no listing, not a listing with a
+// image to GO LIVE. No image means no listing, not a listing with a
 // placeholder -- consistent with why axiz-sync's own gate exists.
+//
+// But unlisted is not the same as unstored, and it used to be. An imageless
+// item was dropped on the floor, which meant Frontosa's own admission that
+// they "do not have a full catalog of images" translated directly into a
+// catalogue this store could never sell, and -- worse -- a product with no
+// row, so no photo could ever be attached to it afterwards. The owner had
+// 726 folders of product photography that matched almost nothing for exactly
+// that reason. Imageless items are now stored, priced and classified, and
+// held hidden by products_enforce_blocklist until a photo arrives.
+//
+// The storage argument that justifies axiz-sync's harsher gate does not
+// transfer here, and the asymmetry is deliberate: Axiz has ~172,000
+// unpublishable SKUs (~500MB at current row size), Frontosa has ~6,300
+// (~18MB against 35MB used). Do not "fix" the inconsistency by making these
+// two match.
 //
 // v2: both endpoints return their FULL catalogue in one shot (no paging,
 // unlike Axiz) -- but that catalogue is 6,382 items. The first deployed
@@ -223,7 +238,9 @@ const handler = async (req: Request) => {
 
     let synced = 0;
     let failed = 0;
-    let skippedNoImage = 0;
+    // Not "skipped" any more -- these are stored, just unlisted until a photo
+    // arrives. The count is the size of the photography backlog.
+    let catalogedWithoutImage = 0;
     let skippedNotCataloged = 0;
     const notes: string[] = [];
     const now = new Date().toISOString();
@@ -250,10 +267,24 @@ const handler = async (req: Request) => {
         const images = (item.images ?? [])
           .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
           .map((u) => (/^https?:\/\//i.test(u) ? u : `${imageBase}${u.trim()}`));
-        if (images.length === 0) {
-          skippedNoImage++;
-          continue;
-        }
+        // An item without a photo used to be dropped here. Frontosa say
+        // plainly that they "do not have a full catalog of images but are
+        // growing this slowly over time", so dropping meant the store could
+        // never carry most of their range -- and, worse, the product had no
+        // row, so no photo could ever be attached to it later. The owner had
+        // 726 folders of product photography that matched almost nothing for
+        // exactly this reason.
+        //
+        // Now it is stored unlisted instead. `images` is omitted from the
+        // payload rather than set to [] -- two reasons, both load-bearing:
+        // products_enforce_blocklist forces is_active := false when images is
+        // null, so the database guarantees it stays off the storefront
+        // without this code asserting it; and PhotosModule's worklist query
+        // matches `images.is.null`, which an empty array does not satisfy.
+        // Sent as [] these rows would be stored and then invisible to the one
+        // screen built to fix them.
+        const hasImages = images.length > 0;
+        if (!hasImages) catalogedWithoutImage++;
         const brand = item.bid != null ? (brandLookup.get(String(item.bid)) ?? String(item.bid)) : null;
         const category = item.pid != null ? (categoryLookup.get(String(item.pid)) ?? String(item.pid)) : null;
         rows.push({
@@ -262,7 +293,7 @@ const handler = async (req: Request) => {
           description: item.blurb || item.desc || null,
           category,
           brand,
-          images,
+          ...(hasImages ? { images } : {}),
           specifications: {
             supplier: "Frontosa",
             supplier_sku: item.code,
@@ -300,12 +331,29 @@ const handler = async (req: Request) => {
     // is the only NOT NULL products column without a default, so it's the
     // only field besides category/images this needs to carry through to
     // keep the upsert below valid on its (never-taken) insert branch.
-    const { data: existingRows } = await supabase
-      .from("products")
-      .select("sku, name, category, images")
-      .like("sku", `${SKU_PREFIX}%`);
+    // Paginated deliberately. PostgREST caps an unbounded select at 1000 rows
+    // and says nothing about it. That was harmless while only ~790 FR- rows
+    // existed, but the catalogue pull below now stores imageless products too,
+    // taking this well past 6000: an unpaginated read would return an
+    // arbitrary first 1000, every other SKU would miss `existingBySku`, and
+    // the stock pull would file ~85% of the catalogue under
+    // `skippedNotCataloged` and quietly stop updating its prices. Same failure
+    // and same fix as PhotosModule.load().
+    const existingRows: { sku: string; name: string; category: string | null; images: string[] | null }[] = [];
+    const READ_PAGE = 1000;
+    for (let from = 0; ; from += READ_PAGE) {
+      const { data: page, error: readErr } = await supabase
+        .from("products")
+        .select("sku, name, category, images")
+        .like("sku", `${SKU_PREFIX}%`)
+        .range(from, from + READ_PAGE - 1);
+      if (readErr) { notes.push(`existing-row read: ${readErr.message}`); break; }
+      const rows = page ?? [];
+      existingRows.push(...(rows as typeof existingRows));
+      if (rows.length < READ_PAGE) break;
+    }
     const existingBySku = new Map<string, { name: string; category: string | null; images: string[] }>(
-      (existingRows ?? []).map((r: any) => [r.sku as string, { name: r.name, category: r.category, images: r.images ?? [] }]),
+      existingRows.map((r) => [r.sku, { name: r.name, category: r.category, images: r.images ?? [] }]),
     );
 
     const stockRows: Record<string, unknown>[] = [];
@@ -327,26 +375,28 @@ const handler = async (req: Request) => {
         skippedNotCataloged++;
         continue;
       }
-      if (existing.images.length === 0) {
-        skippedNoImage++;
-        continue;
-      }
+      // A row without a photo is no longer skipped -- it still gets a real
+      // price, stock level and audience. It stays hidden from shoppers
+      // (is_active is held false by products_enforce_blocklist), but it
+      // becomes a complete, priced, searchable row that the Photos worklist
+      // can offer -- that screen filters on `price > 0`, so leaving these at
+      // the column default of 0 would store them and still hide them from the
+      // one place they can be fixed.
+      const hasImages = existing.images.length > 0;
+      if (!hasImages) catalogedWithoutImage++;
 
       const qty = totalQty(item);
       const markupPct = markupFor(existing.category, markupRules);
       const sellingPrice = sellingPriceFor(cost, markupPct);
       const publishable = sellingPrice >= minSellablePrice;
-      // Same split axiz-sync uses: a flat R15k cutoff routes almost the
-      // entire laptop range to the business catalogue regardless of price,
-      // so laptops get a higher cutoff. Every other category keeps R15k.
-      // Without this, `audience` never gets set on the stock pull at all --
-      // the column defaults to 'business' on the table, catalog mode never
-      // touches it either, and every Frontosa product landed on the
-      // consumer storefront's default view invisibly: all 744 active rows
-      // sat at audience='business', reachable only via the Business Portal.
-      const isLaptop = /laptop/i.test(existing.category ?? "");
-      const residentialCutoff = isLaptop ? 25000 : 15000;
-
+      // `audience` is deliberately not set here any more. It used to be a
+      // price cutoff (laptops <= R25k, everything else <= R15k) computed in
+      // each sync separately, which classified by what a product cost rather
+      // than what it is -- a R64 fibre patch lead read as consumer stock.
+      // classify_product_audience() now owns it, applied by the
+      // products_classify_audience trigger, so it is an invariant of the
+      // table and cannot drift between the two distributor syncs. Setting it
+      // here would be overwritten by that trigger on the same statement.
       stockRows.push({
         sku,
         name: existing.name,
@@ -359,13 +409,28 @@ const handler = async (req: Request) => {
         // The result was all 745 synced products landing is_active = false
         // with no error anywhere. Sending the real images keeps the
         // trigger's precondition true so it leaves is_active alone.
-        images: existing.images,
+        // Two payload shapes, deliberately, and the difference matters.
+        //
+        // With a photo: `images` is resent unchanged and `is_active` asserted.
+        // products_enforce_blocklist is BEFORE INSERT OR UPDATE OF images, and
+        // on an upsert Postgres fires BEFORE INSERT against the *proposed* row
+        // before it detects the conflict -- so a payload that omits `images`
+        // presents the empty default, the trigger sets is_active := false, and
+        // that trigger-modified row becomes `excluded` for the DO UPDATE. That
+        // is how 745 synced products once all landed inactive with no error
+        // anywhere. Resending the real images keeps the trigger's precondition
+        // true so it leaves is_active alone.
+        //
+        // Without a photo: send neither. Omitting `images` means the trigger
+        // never fires on a column this row is not changing, and omitting
+        // `is_active` means nothing here can flip a photoless product live.
+        // It stays hidden because the database holds it hidden, not because
+        // this function remembered to ask.
+        ...(hasImages ? { images: existing.images, is_active: publishable } : {}),
         price: sellingPrice,
         stock_quantity: qty,
         stock_status: qty > 0 ? "in_stock" : "out_of_stock",
         in_stock: qty > 0,
-        is_active: publishable,
-        audience: sellingPrice <= residentialCutoff ? "residential" : "business",
         last_synced_at: now,
       });
       costsBySku.set(sku, { cost, sellingPrice, markupPct, supplierSku: item.code });
@@ -400,7 +465,7 @@ const handler = async (req: Request) => {
     }
 
     const status = deriveRunStatus(synced, failed);
-    const summary = `mode=${mode} | synced ${synced} | skipped (no image): ${skippedNoImage} | skipped (not catalogued yet): ${skippedNotCataloged}${notes.length ? " | " + notes.slice(0, 20).join("; ") : ""}`;
+    const summary = `mode=${mode} | synced ${synced} | cataloged without image: ${catalogedWithoutImage} | skipped (not catalogued yet): ${skippedNotCataloged}${notes.length ? " | " + notes.slice(0, 20).join("; ") : ""}`;
     await finishRun(supabase, run, { status, items_synced: synced, items_failed: failed, error_details: summary });
     if (status === "failed") {
       await checkAndAlertOnFailureStreak(supabase, "frontosa-sync").catch((e) =>
@@ -408,7 +473,7 @@ const handler = async (req: Request) => {
       );
     }
 
-    return new Response(JSON.stringify({ ok: true, mode, synced, failed, skippedNoImage, skippedNotCataloged }), {
+    return new Response(JSON.stringify({ ok: true, mode, synced, failed, catalogedWithoutImage, skippedNotCataloged }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

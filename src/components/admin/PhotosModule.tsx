@@ -183,7 +183,14 @@ const PhotosModule = () => {
       const { data, error } = await supabase
         .from("products")
         .select("id, name, brand, sku, images, stock_status, price, is_active")
-        .or("is_active.eq.true,and(is_active.eq.false,images.is.null)")
+        // A photoless product is `images IS NULL` *or* `images = '{}'`, and
+        // both occur: the column defaults to an empty array, so a sync that
+        // omits `images` (which frontosa-sync does deliberately, so a daily
+        // catalogue refresh cannot wipe a photo an admin uploaded by hand)
+        // lands an empty array rather than a null. Matching only null hid
+        // ~3000 imageless products from the one screen that exists to give
+        // them a photo.
+        .or("is_active.eq.true,and(is_active.eq.false,or(images.is.null,images.eq.{}))")
         .gt("price", 0)
         .order("name")
         .range(from, from + PAGE - 1);

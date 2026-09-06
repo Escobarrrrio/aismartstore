@@ -8,7 +8,13 @@ import { toast } from "sonner";
 // so the store keeps selling yesterday's ZAR price on today's cost.
 const FEEDS: { source: string; label: string; staleHours: number }[] = [
   { source: "axiz", label: "Axiz", staleHours: 6 },
-  { source: "frontosa", label: "Frontosa", staleHours: 26 },
+  // "frontosa-sync", not "frontosa": axiz-sync writes its own row with a
+  // literal source of "axiz", while frontosa-sync logs through
+  // startRun(supabase, "frontosa-sync"), which records the function name. The
+  // shorter spelling matched nothing, so the Frontosa row on this screen sat
+  // permanently blank -- the exact silent-feed failure this panel exists to
+  // catch was invisible for the feed most likely to have it.
+  { source: "frontosa-sync", label: "Frontosa", staleHours: 26 },
 ];
 
 type FeedHealth = {
@@ -46,8 +52,12 @@ const SyncLogsModule = () => {
         const [{ data: ok }, { data: bad }] = await Promise.all([
           supabase.from("sync_logs").select("completed_at, created_at").eq("source", f.source)
             .eq("status", "success").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+          // Both spellings: _shared/run-log.ts records a bad run as "failed",
+          // while the syncs that write their own row use "error". Matching
+          // only "error" meant every run-log-based function -- Frontosa
+          // included -- could never surface a failure here.
           supabase.from("sync_logs").select("error_details, created_at").eq("source", f.source)
-            .eq("status", "error").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+            .in("status", ["failed", "error"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
         ]);
         return {
           ...f,

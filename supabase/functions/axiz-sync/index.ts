@@ -317,15 +317,17 @@ Deno.serve(async (req) => {
           const imgs = normalizeImages(item.imageGallery);
           const publishable = cost > 0 && imgs.length > 0 && sellingPrice >= minSellablePrice;
           if (cost > 0 && imgs.length > 0 && sellingPrice < minSellablePrice) underpriced++;
-          // Laptops get a higher residential cutoff than the R15k store-wide
-          // default: this distributor's laptop range is almost entirely
-          // corporate Dell models (3Y onsite warranties etc.), and today's
-          // realistic consumer laptop price floor sits well above R15k --
-          // a flat R15k rule was routing nearly the whole category to the
-          // Business Portal regardless of whether it's actually enterprise
-          // gear. Every other category keeps the original R15k line.
-          const isLaptop = /laptop/i.test(item.productCategory ?? "");
-          const residentialCutoff = isLaptop ? 25000 : 15000;
+          // `audience` is deliberately not set here. It used to be decided by
+          // price alone (laptops <= R25k, everything else <= R15k), which put
+          // 520 pieces of enterprise kit -- RHEL subscriptions, Aruba campus
+          // APs, LTO labels, ProLiant riser kits -- in front of household
+          // shoppers, because being cheap was read as being consumer.
+          //
+          // classify_product_audience() now owns it, applied by the
+          // products_classify_audience trigger, so the classification is an
+          // invariant of the table rather than something each writer has to
+          // remember. Same arrangement as `category`, and for the same reason:
+          // a batch fix that the next sync overwrites is not a fix.
           return {
             sku: String(item.productCode),
             slug: slugify(name, String(item.productCode)),
@@ -342,7 +344,6 @@ Deno.serve(async (req) => {
             images: imgs,
             is_active: publishable,
             is_ai_product: ai,
-            audience: sellingPrice <= residentialCutoff ? "residential" : "business",
             last_synced_at: now,
             _cost: cost,
             _axiz_id: String(item.productCode),
